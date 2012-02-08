@@ -1,0 +1,9 @@
+# To get started
+lein deps
+lein javac
+lein protobuf compile
+lein compile
+
+# For debian
+lein uberjar
+lein deb

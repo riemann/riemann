@@ -1,0 +1,12 @@
+.cake
+pom.xml
+*.jar
+*.war
+*.deb
+lib
+classes
+build
+.lein-deps-sum
+.lein-failures
+protosrc/
+reimann-*.zip

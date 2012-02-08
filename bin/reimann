@@ -1,0 +1,9 @@
+#!/bin/bash
+if [ -z "$1" ]
+then
+  config="/etc/reimann/reimann.config"
+else
+  config=$1
+fi
+
+java -jar /usr/lib/reimann/reimann.jar "$config"

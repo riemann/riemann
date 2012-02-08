@@ -1,0 +1,11 @@
+#flatland and #leiningen, including jodaro, ninjudd, raynes, and amalloy,
+helped with protobufs parsing, leiningen, and general clojure questions.
+
+Showyou, my employer, gave me the problems I needed Reimann for, and the time to solve them.
+
+John Mullerleile (jrecursive) was deeply involved in talking through the
+concept and structure of Reimann, as well as offering advice around the JVM.
+
+C Scott Andreas (cscotta) gave many helpful suggestions around the JVM, Maven,
+high_scale_lib. Our conversations filled my head with many excellent algorithms
+and ideas.
