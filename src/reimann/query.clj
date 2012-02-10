@@ -13,6 +13,16 @@
                   parser (QueryParser. tokens)]
           (.getTree (.expr parser))))
 
+(defn- make-regex [string]
+  "Convert a string like \"foo%\" into /^foo.*$/"
+  (let [tokens (re-seq #"%|[^%]+" string)
+        pairs (map (fn [token]
+                     (case token
+                        "%" ".*"
+                       (java.util.regex.Pattern/quote token)))
+                   tokens)]
+    (re-pattern (str "^" (apply str pairs) "$"))))
+
 (defn node-ast [node]
   "The AST for a given parse node"
   (let [n    (.getText node)
@@ -27,9 +37,8 @@
       ">="  (list 'when (first kids) (apply list '>= kids))
       "<"   (list 'when (first kids) (apply list '< kids))
       "<="  (list 'when (first kids) (apply list '<= kids))
-      "=~"  (list 'when (first kids) (list 're-find 
-                               (re-pattern (.replaceAll (last kids) "%" ".*"))
-                               (first kids)))
+      "=~"  (list 'when (first kids) (list 're-find (make-regex (last kids))
+                                           (first kids)))
       "!="  (list 'not (apply list '= kids))
       "("           :useless
       ")"           :useless

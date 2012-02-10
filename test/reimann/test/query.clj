@@ -106,9 +106,9 @@
             [{:state 1}]))
 
 (deftest wildcard
-         (f "host =~ \"%s\""
-            [{:host "s"} {:host "foos"}]
-            [{:host "a"} {}]))
+         (f "host =~ \"%s.\""
+            [{:host "s."} {:host "foos."}]
+            [{:host "a."} {:host "s.murf"} {}]))
 
 (deftest inequality
          (f "metric_f > 1e10"
