@@ -15,7 +15,7 @@
         
          ; Regex
          (let [r (ref nil)
-               s (service? #"^f" (fn [e] (dosync (ref-set r e))))]
+               s (match :service #"^f" (fn [e] (dosync (ref-set r e))))]
            (s {:service "bar"})
            (is (= nil (deref r)))
 
@@ -301,3 +301,30 @@
 
            (Thread/sleep 110)
            (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))
+
+(deftest coalesce-test
+         (let [out (ref [])
+               s (coalesce (register out))
+               a {:service 1 :state "ok" :time (unix-time)}
+               b {:service 2 :state "ok" :time (unix-time)}
+               c {:service 1 :state "bad" :time (unix-time)}
+               d {:service 1 :state "ok" :time (unix-time) :ttl 0.01}
+               e {:service 3 :state "ok" :time (unix-time)}]
+
+           (s a)
+           (is (= (set (deref out)) #{a}))
+
+           (s b)
+           (is (= (set (deref out)) #{a b}))
+
+           (s c)
+           (is (= (set (deref out)) #{b c}))
+
+           (s d)
+           (is (= (set (deref out)) #{b d}))
+
+           ; Wait for ttl expiry of d
+           (Thread/sleep 11)
+
+           (s e)
+           (is (= (set (deref out)) #{b e}))))

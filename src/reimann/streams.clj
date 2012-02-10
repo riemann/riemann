@@ -206,6 +206,34 @@
           (when-not (empty? events)
             (call-rescue events children)))))))
 
+(defn expired? [event]
+  "Tests whether an event has expired."
+      (let [ttl (or (:ttl event) index/default-ttl)
+            age (- (unix-time) (:time event))]
+        (> age ttl)))
+
+(defn coalesce [& children]
+  "Combines events over time. Coalesce remembers the most recent event for each service that passes through it (limited by :ttl). Every time it receives an event, it passes on *all* events it remembers.
+  
+  Use coalesce to combine states that arrive at different times--for instance, to average the CPU use over several hosts."
+  (let [past (ref {})]
+    (fn [event]
+      ; Expire old events
+      (dosync
+        (ref-set past
+                 (let [p (deref past)]
+                   (reduce (fn [res [k v]]
+                             (if (expired? v)
+                               (dissoc res k)
+                               res))
+                           p p))))
+      
+      ; Add event to memory
+      (let [events (vals
+        (dosync (alter past assoc [(:host event) (:service event)] event)))]
+        
+        ; Pass on
+        (call-rescue events children)))))
 
 (defn append [reference]
   "Conj events onto the given reference"
@@ -239,14 +267,14 @@
           true))))
 
 ; Shortcuts for match
-(defn description? [value & children] (apply match :description value children))
-(defn host? [value & children] (apply match :host value children))
-(defn metric? [value & children] (apply match :metric_f value children))
-(defn service? [value & children] (apply match :service value children))
-(defn state? [value & children] (apply match :state value children))
-(defn time? [value & children] (apply match :time value children))
+;(defn description [value & children] (apply match :description value children))
+;(defn host [value & children] (apply match :host value children))
+;(defn metric [value & children] (apply match :metric_f value children))
+;(defn service [value & children] (apply match :service value children))
+;(defn state [value & children] (apply match :state value children))
+;(defn time [value & children] (apply match :time value children))
 
-(defn expired? [& children]
+(defn expired [& children]
   "Passes on events with state expired"
   (apply match :state "expired" children))
 
