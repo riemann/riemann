@@ -3,6 +3,9 @@ pom.xml
 *.jar
 *.war
 *.deb
+*~
+.*.swp
+*.log
 lib
 classes
 build
