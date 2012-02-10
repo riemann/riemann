@@ -314,10 +314,10 @@
     (let [e (if (nil? (event k)) (assoc event k v) event)]
       (call-rescue e children))))
 
-(defn adapt [[field f & args] & children]
+(defn adjust [[field f & args] & children]
   "Passes on a changed version of each event by applying f to (field event) & args.
 
-  (adapt [:service str \" rate\"] ...)
+  (adjust [:service str \" rate\"] ...)
  
   takes {:service \"foo\"} and emits {:service \"foo rate\"}"
   (fn [event]

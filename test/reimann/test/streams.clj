@@ -379,9 +379,9 @@
            (s e)
            (is (= (set (deref out)) #{b e}))))
 
-(deftest adapt-test
+(deftest adjust-test
          (let [out (ref nil)
-               s (adapt [:state str " 2"] (register out))]
+               s (adjust [:state str " 2"] (register out))]
            
            (s {})
            (is (= (deref out) {:state " 2"}))
