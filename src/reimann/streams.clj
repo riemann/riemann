@@ -1,6 +1,6 @@
 (ns reimann.streams
   (:use reimann.common)
-  (:use reimann.folds)
+  (:require [reimann.folds :as folds])
   (:require [reimann.index :as index])
   (:require [reimann.client])
   (:use [clojure.contrib.math])
@@ -15,6 +15,11 @@
          (catch Exception e#
            (log :warn (str child# " threw") e#))))
      true))
+
+(defn combine [f & children]
+  "Returns a function which takes a seq of events. Combines events with f, then forwards the result to children."
+  (fn [events]
+    (call-rescue (f events) children)))
 
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
@@ -128,7 +133,7 @@
                 (fn [r event] (dosync (alter r conj event)))
                 (fn [r start end]
                   (let [samples (dosync
-                                  (sorted-sample (deref r) points))]
+                                  (folds/sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn sum-over-time [& children]

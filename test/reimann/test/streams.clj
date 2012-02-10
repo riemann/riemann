@@ -1,8 +1,30 @@
 (ns reimann.test.streams
   (:use [reimann.streams])
   (:use [reimann.common])
+  (:use [reimann.folds :as folds])
   (:require [reimann.index :as index])
   (:use [clojure.test]))
+
+(deftest combine-test
+         (let [r (ref nil)
+               sum (combine folds/sum (register r))
+               min (combine folds/minimum (register r))
+               max (combine folds/maximum (register r))
+               mean (combine folds/mean (register r))
+               median (combine folds/median (register r))
+               events [{:metric_f 1}
+                       {:metric_f 0}
+                       {:metric_f -2}]]
+           (sum events)
+           (is (= (deref r) {:metric_f -1}))
+           (min events)
+           (is (= (deref r) {:metric_f -2}))
+           (max events)
+           (is (= (deref r) {:metric_f 1}))
+           (mean events)
+           (is (= (deref r) {:metric_f -1/3}))
+           (median events)
+           (is (= (deref r) {:metric_f 0}))))
 
 (deftest match-test
          (let [r (ref nil)
