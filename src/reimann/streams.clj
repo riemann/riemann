@@ -131,7 +131,7 @@
                                   (sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
 
-(defn sum [& children]
+(defn sum-over-time [& children]
   "Sums all metric_fs together. Emits the most recent event each time this
   stream is called, but with summed metric_f."
   (let [sum (ref 0)]
@@ -140,7 +140,7 @@
             event (assoc event :metric_f s)]
         (call-rescue event children)))))
 
-(defn mean [children]
+(defn mean-over-time [children]
   "Emits the most recent event each time this stream is called, but with the
   average of all received metric_fs."
   (let [sum (ref nil)
