@@ -288,9 +288,23 @@
                            fork-name)))]
          (call-rescue event fork)))))
 
-; Passes on events only when (f event) differs from that of the previous event.
 (defn changed [pred & children]
-  (let [previous (ref nil)]
+  "Passes on events only when (f event) differs from that of the previous event.. May take options:
+  
+  :init   The initial value to assume for (pred event).
+  
+  ; Print all state changes
+  (changed :state prn)
+
+  ; Assume states *were* ok the first time we see them.
+  (changed :state {:init \"ok\"} prn)"
+  (let [options (first children)
+        previous (ref
+                   (when (map? options)
+                     (:init options)))
+        children (if (map? options)
+                   (rest children)
+                   children)]
     (fn [event]
       (when
         (dosync

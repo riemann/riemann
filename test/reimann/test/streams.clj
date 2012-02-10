@@ -175,6 +175,8 @@
          (let [output (ref [])
                r (changed :state
                           (fn [event] (dosync (alter output conj event))))
+               r2 (changed :state {:init :ok} 
+                           (append output))
                states [:ok :bad :bad :ok :ok :ok :evil :bad]]
            
            ; Apply states
@@ -183,6 +185,14 @@
 
            ; Check output
            (is (= [:ok :bad :ok :evil :bad]
+                  (vec (map (fn [s] (:state s)) (deref output)))))
+
+           ; Test with init
+           (dosync (ref-set output []))
+           (doseq [state states]
+             (r2 {:state state}))
+           
+           (is (= [:bad :ok :evil :bad]
                   (vec (map (fn [s] (:state s)) (deref output)))))))
            
 (deftest within-test
