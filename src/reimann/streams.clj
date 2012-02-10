@@ -6,8 +6,8 @@
   (:use [clojure.contrib.math])
   (:use [clojure.contrib.logging]))
 
-; Call each fn, in order, with event. Rescues and logs any failure.
 (defmacro call-rescue [event children]
+  "Call each child, in order, with event. Rescues and logs any failure."
   `(do
      (doseq [child# ~children]
        (try
@@ -73,12 +73,11 @@
             t (or (event :time) (unix-time))]
         (bin event t)))))
 
-; Partitions events by time (fast variant). Over interval seconds, adds events
-; to a bin, created with (create). When the interval is complete, calls (finish
-; bin start-time end-time)
-;
 ; This leaks a thread. Need to think about dynamic scheduling/expiry.
 (defn part-time-fast [interval create add finish]
+ "Partitions events by time (fast variant). Over interval seconds, adds events
+  to a bin, created with (create). When the interval is complete, calls (finish
+  bin start-time end-time)"
   (let [current (ref (create))
         start (ref (unix-time))
         switcher (.start (new Thread (bound-fn []
@@ -100,9 +99,9 @@
       (dosync
         (add (deref current) event)))))
 
-; Take the sum of every event over interval seconds and divide by the interval
-; size.
 (defn rate [interval & children]
+  "Take the sum of every event over interval seconds and divide by the interval
+  size."
   (part-time-fast interval
       (fn [] {:count (ref 0)
               :state (ref {})})
@@ -132,18 +131,18 @@
                                   (sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
 
-; Sums all metric_fs together. Emits the most recent event each time this stream
-; is called, but with summed metric_f.
 (defn sum [& children]
+  "Sums all metric_fs together. Emits the most recent event each time this
+  stream is called, but with summed metric_f."
   (let [sum (ref 0)]
     (fn [event]
       (let [s (dosync (commute sum + (:metric_f event)))
             event (assoc event :metric_f s)]
         (call-rescue event children)))))
 
-; Emits the most recent event each time this stream is called, but with the
-; average of all received metric_fs.
 (defn mean [children]
+  "Emits the most recent event each time this stream is called, but with the
+  average of all received metric_fs."
   (let [sum (ref nil)
         total (ref 0)]
     (fn [event]
@@ -208,24 +207,24 @@
             (call-rescue events children)))))))
 
 
-; Conj events onto the given reference
 (defn append [reference]
+  "Conj events onto the given reference"
   (fn [event]
     (dosync
       (alter reference conj event))))
 
-; Set reference to the most recent event that passes through.
 (defn register [reference]
+  "Set reference to the most recent event that passes through."
   (fn [event]
     (dosync (ref-set reference event))))
 
-; Prints an event to stdout
 (defn stdout [event]
+  "Prints an event to stdout"
   (fn [event]
     (prn event)))
 
-; Sends a map to a client, coerced to state
 (defn fwd [client]
+  "Sends a map to a client, coerced to state"
   (fn [statelike]
     (reimann.client/send-state client statelike)))
 
@@ -251,9 +250,9 @@
   "Passes on events with state expired"
   (apply match :state "expired" children))
 
-; Transforms an event by associng a set of new k:v pairs
 (defmulti with (fn [& args] (map? (first args))))
 (defmethod with true [m & children]
+  "Transforms an event by associng a set of new k:v pairs"
   (fn [event]
 ;    Merge on protobufs is broken; nil values aren't applied.
 ;    (let [e (merge event m)]
@@ -267,11 +266,11 @@
     (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
-; Splits stream by field.
-; Every time an event arrives with a new value of field, this macro invokes
-; its enclosed form to return a *new*, distinct stream for that particular
-; value.
 (defmacro by [field & children]
+  "Splits stream by field.
+  Every time an event arrives with a new value of field, this macro invokes
+  its enclosed form to return a *new*, distinct stream for that particular
+  value."
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
@@ -315,9 +314,9 @@
               true)))
         (call-rescue event children)))))
 
-; Passes on events only when their metric falls within the given inclusive
-; range. (within [0 1] (fn [event] do-something))
 (defn within [r & children]
+  "Passes on events only when their metric falls within the given inclusive
+  range. (within [0 1] (fn [event] do-something))"
   (fn [event]
     (when (<= (first r) (:metric_f event) (last r))
       (call-rescue event children))))
