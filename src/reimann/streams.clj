@@ -294,6 +294,17 @@
     (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
+(defn adapt [[field f & args] & children]
+  "Passes on a changed version of each event by applying f to (field event) & args.
+
+  (adapt [:service str \" rate\"] ...)
+ 
+  takes {:service \"foo\"} and emits {:service \"foo rate\"}"
+  (fn [event]
+    (let [value (apply f (field event) args)
+          event (assoc event field value)]
+      (call-rescue event children))))
+
 (defmacro by [field & children]
   "Splits stream by field.
   Every time an event arrives with a new value of field, this macro invokes

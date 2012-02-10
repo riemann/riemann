@@ -328,3 +328,13 @@
 
            (s e)
            (is (= (set (deref out)) #{b e}))))
+
+(deftest adapt-test
+         (let [out (ref nil)
+               s (adapt [:state str " 2"] (register out))]
+           
+           (s {})
+           (is (= (deref out) {:state " 2"}))
+           
+           (s {:state "hey" :service "bar"})
+           (is (= (deref out) {:state "hey 2" :service "bar"}))))
