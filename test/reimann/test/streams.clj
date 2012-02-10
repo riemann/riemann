@@ -74,6 +74,34 @@
            (doseq [e events] (s e))
            (is (= expect (deref r)))))
 
+(deftest default-kv
+         (let [r (ref nil)
+               s (default :service "foo" (register r))]
+           (s {:service nil})
+           (is (= {:service "foo"} (deref r)))
+
+           (s {:service "foo"})
+           (is (= {:service "foo"} (deref r)))
+
+           (s {:service "bar" :test "baz"})
+           (is (= {:service "bar" :test "baz"} (deref r)))))
+
+(deftest default-map
+         (let [r (ref nil)
+               s (default {:service "foo" :state nil} (register r))]
+           (s (event {:service nil}))
+           (is (= "foo" (:service (deref r))))
+           (is (= nil (:state (deref r))))
+
+           (s (event {:service "foo"}))
+           (is (= "foo" (:service (deref r))))
+           (is (= nil (:state (deref r))))
+
+           (s (event {:service "bar" :host "baz" :state "evil"}))
+           (is (= "bar" (:service (deref r))))
+           (is (= "baz" (:host (deref r))))
+           (is (= "evil" (:state (deref r))))))
+
 (deftest with-kv
          (let [r (ref nil)
                s (with :service "foo" (fn [e] (dosync (ref-set r e))))]

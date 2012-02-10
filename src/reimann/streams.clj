@@ -299,6 +299,21 @@
     (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
+(defmulti default (fn [& args] (map? (first args))))
+(defmethod default true [defaults & children]
+  "Transforms an event by associng a set of new key:value pairs, wherever the
+  event has a nil value for that key."
+  (fn [event]
+;    Merge on protobufs is broken; nil values aren't applied.
+    (let [e (reduce (fn [m, [k, v]]
+                      (if (nil? (m k)) (assoc m k v) m))
+                    event defaults)]
+      (call-rescue e children))))
+(defmethod default false [k v & children]
+  (fn [event]
+    (let [e (if (nil? (event k)) (assoc event k v) event)]
+      (call-rescue e children))))
+
 (defn adapt [[field f & args] & children]
   "Passes on a changed version of each event by applying f to (field event) & args.
 
