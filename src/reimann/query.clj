@@ -1,4 +1,5 @@
 (ns reimann.query
+  (:use reimann.common)
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
            (reimann QueryLexer QueryParser)))
@@ -40,7 +41,7 @@
       "=~"  (list 'when (first kids) (list 're-find (make-regex (last kids))
                                            (first kids)))
       "!="  (list 'not (apply list '= kids))
-      "tagged"      (list 'when 'tags (list 'tags (first kids)))
+      "tagged"      (list 'when 'tags (list 'member? (first kids) 'tags))
       "("           :useless
       ")"           :useless
       "nil"         nil
@@ -71,5 +72,6 @@
                    description (:description event)
                    metric_f    (:metric_f event)
                    time        (:time event)
-                   tags        (:tags event)]
+                   tags        (:tags event)
+                   member?     reimann.common/member?]
         ast))))

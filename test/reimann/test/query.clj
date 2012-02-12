@@ -50,7 +50,7 @@
               ; "state =~ \"%foo%\""          '(re-find #".*foo.*" state)
 
               ; Tags
-              "tagged \"cat\""              '(when tags (tags "cat"))
+              "tagged \"cat\""              '(when tags (member? "cat" tags))
 
               ; Boolean operators
               "not host = 1"                '(not (= host 1))

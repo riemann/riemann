@@ -36,7 +36,7 @@
 
              (is (= (set (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))
                     #{(state {:metric_f 2.0 :time 2})
-                      (state {:tags #{"whiskers" "paws"} :time 2})
+                      (state {:tags ["whiskers" "paws"] :time 2})
                       (state {:service "miao" :host "cat" :time 3})}))
 
              (finally

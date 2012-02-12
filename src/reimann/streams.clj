@@ -286,9 +286,8 @@
   (tagged \"foo\" prn)
   (tagged [\"foo\" \"bar\" prn])"
   (fn [event]
-    (let [s (set (:tags event))]
-      (when (every? (fn [required] (s required)) tags)
-        (call-rescue event children)))))
+    (when (subset? tags (:tags event))
+      (call-rescue event children))))
 
 (defn expired [& children]
   "Passes on events with state expired"

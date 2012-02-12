@@ -3,7 +3,8 @@
   (:import [java.util Date])
   (:use gloss.core)
   (:require gloss.io)
-  (:use [clojure.contrib.math]))
+  (:use [clojure.contrib.math])
+  (:require clojure.set))
 
 ; Don't mangle underscores into dashes. <sigh>
 (. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
@@ -59,3 +60,22 @@
                      (unix-time)))]
     (apply protobuf State
       (apply concat (merge opts {:time t})))))
+
+(defn member? [r s]
+  "Is e present in s?"
+  (some (fn [e] (= r e)) s))
+
+(defn subset? [required s]
+  "Are all required present in s?"
+  (clojure.set/subset? (set required) (set s)))
+
+(defn overlap? [a b]
+  "Do a and b have any elements in common?"
+  (some (fn [e]
+          (some (fn [r] (= e r)) a)) b))
+
+(defn disjoint? [a b]
+  "Do a and b have no elements in common?"
+  (not-any? (fn [e] 
+             (some (fn [r] (= e r)) a))
+           b))
