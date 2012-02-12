@@ -74,6 +74,7 @@ field	: ('host'
 	| 'description'
 	| 'metric_f'
 	| 'metric'
+	| 'ttl'
 	| 'time'
 	);
 

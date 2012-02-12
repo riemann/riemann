@@ -12,6 +12,7 @@
               "metric_f = true"     '(= metric_f true)
               "metric = true"       '(= metric true)
               "time = true"         '(= time true)
+              "ttl = 64"            '(= ttl 64)
 
               ; Literals
               "true"  true

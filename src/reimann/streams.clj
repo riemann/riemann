@@ -429,13 +429,14 @@
   "Rewrites lists recursively. Replaces (metric x y z) with a test matching
   (:metric event) to any of x, y, or z, either by = or re-find. Replaces any
   other instance of metric with (:metric event). Does the same for host,
-  service, event, state, time, tags, metric_f, and description."
+  service, event, state, time, ttl, tags, metric_f, and description."
   (let [syms #{'host 
                'service 
                'state 
                'metric
                'metric_f
-               'time 
+               'time
+               'ttl
                'description 
                'tags}]
     (if (list? expr)

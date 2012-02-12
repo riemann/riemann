@@ -15,6 +15,36 @@
          ret# ~expr]
      (/ (- (. System (nanoTime)) start#) 1000000000.0)))
 
+(deftest serialization
+         (let [core (core)
+               out (ref [])
+               server (reimann.server/tcp-server core)
+               stream (reimann.streams/append out)
+               client (reimann.client/tcp-client)
+               events [{:host "shiiiiire!"}
+                       {:service "baaaaaginnnns!"}
+                       {:state "middling"}
+                       {:description "well and truly fucked"}
+                       {:tags ["oh" "sam"]}
+                       {:metric -1000}
+                       {:time 1234}
+                       {:ttl 12}]]
+           
+           (try
+             (dosync
+               (alter (core :servers) conj server)
+               (alter (core :streams) conj stream))
+
+             ; Send events
+             (doseq [e events] (send-event client e))
+
+             (doseq [[in out] (map (fn [a b] [a b]) events (deref out))]
+               (is (every? (fn [k] (= (in k) (out k))) (keys in))))
+
+             (finally
+               (close-client client)
+               (stop core)))))
+
 (deftest query-test
          (let [core (core)
                index (index)

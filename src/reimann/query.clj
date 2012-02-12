@@ -55,6 +55,7 @@
       "metric_f"    'metric_f
       "metric"      'metric
       "time"        'time
+      "ttl"         'ttl
       (when n (read-string n)))))
 
 (defn ast [string]
@@ -75,5 +76,6 @@
                    metric      (:metric event)
                    time        (:time event)
                    tags        (:tags event)
+                   ttl         (:ttl event)
                    member?     reimann.common/member?]
         ast))))
