@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-12 01:00:05
+// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-12 11:28:52
 package reimann;
 
 import org.antlr.runtime.*;
@@ -11,7 +11,7 @@ import org.antlr.runtime.tree.*;
 
 public class QueryParser extends Parser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "TAGGED", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric'", "'metric_f'", "'time'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "TAGGED", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric_f'", "'metric'", "'time'"
     };
     public static final int LESSER_EQUAL=11;
     public static final int EXPONENT=20;
@@ -2276,7 +2276,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "field"
-    // src/reimann/Query.g:71:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' ) ;
+    // src/reimann/Query.g:71:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'metric' | 'time' ) ;
     public final QueryParser.field_return field() throws RecognitionException {
         QueryParser.field_return retval = new QueryParser.field_return();
         retval.start = input.LT(1);
@@ -2288,8 +2288,8 @@ public class QueryParser extends Parser {
         CommonTree set81_tree=null;
 
         try {
-            // src/reimann/Query.g:71:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' ) )
-            // src/reimann/Query.g:71:9: ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' )
+            // src/reimann/Query.g:71:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'metric' | 'time' ) )
+            // src/reimann/Query.g:71:9: ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'metric' | 'time' )
             {
             root_0 = (CommonTree)adaptor.nil();
 

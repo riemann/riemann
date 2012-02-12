@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-12 01:00:05
+// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-12 11:28:52
 package reimann;
 
 import org.antlr.runtime.*;
@@ -496,10 +496,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__34;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/reimann/Query.g:26:7: ( 'metric' )
-            // src/reimann/Query.g:26:9: 'metric'
+            // src/reimann/Query.g:26:7: ( 'metric_f' )
+            // src/reimann/Query.g:26:9: 'metric_f'
             {
-            match("metric"); 
+            match("metric_f"); 
 
 
             }
@@ -517,10 +517,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__35;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/reimann/Query.g:27:7: ( 'metric_f' )
-            // src/reimann/Query.g:27:9: 'metric_f'
+            // src/reimann/Query.g:27:7: ( 'metric' )
+            // src/reimann/Query.g:27:9: 'metric'
             {
-            match("metric_f"); 
+            match("metric"); 
 
 
             }
@@ -1400,8 +1400,8 @@ public class QueryLexer extends Lexer {
         "\5\uffff\1\5\3\uffff\1\14\1\15\5\uffff\1\31\2\uffff\1\34\1\35\5"+
         "\uffff\1\4\1\6\1\10\1\7\1\12\1\11\11\uffff\1\32\1\33\1\uffff\1\2"+
         "\14\uffff\1\1\1\3\1\uffff\1\21\11\uffff\1\20\1\uffff\1\16\1\30\1"+
-        "\uffff\1\22\5\uffff\1\17\1\uffff\1\24\2\uffff\1\13\3\uffff\1\26"+
-        "\1\23\3\uffff\1\27\2\uffff\1\25";
+        "\uffff\1\22\5\uffff\1\17\1\uffff\1\24\2\uffff\1\13\3\uffff\1\27"+
+        "\1\23\3\uffff\1\26\2\uffff\1\25";
     static final String DFA13_specialS =
         "\143\uffff}>";
     static final String[] DFA13_transitionS = {

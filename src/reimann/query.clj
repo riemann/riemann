@@ -53,7 +53,7 @@
       "state"       'state
       "description" 'description
       "metric_f"    'metric_f
-      "metric"    'metric
+      "metric"      'metric
       "time"        'time
       (when n (read-string n)))))
 

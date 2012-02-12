@@ -73,6 +73,7 @@ field	: ('host'
 	| 'state'
 	| 'description'
 	| 'metric_f'
+	| 'metric'
 	| 'time'
 	);
 
