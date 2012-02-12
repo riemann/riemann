@@ -420,7 +420,13 @@
   (:metric_f event) to any of x, y, or z, either by = or re-find. Replaces any
   other instance of metric_f with (:metric_f event). Does the same for host,
   service, event, state, time, and description."
-  (let [syms #{'host 'service 'state 'metric_f 'time 'description}]
+  (let [syms #{'host 
+               'service 
+               'state 
+               'metric_f 
+               'time 
+               'description 
+               'tags}]
     (if (list? expr)
       ; This is a list.
       (if (syms (first expr))

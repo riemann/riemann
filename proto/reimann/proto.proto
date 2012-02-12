@@ -17,6 +17,7 @@ message Event {
   optional string service = 3;
   optional string host = 4;
   optional string description = 5;
+  repeated string tags = 7;
   optional float metric_f = 15;
 }
 
