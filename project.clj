@@ -1,4 +1,4 @@
-(defproject reimann "0.0.1-SNAPSHOT"
+(defproject reimann "0.0.2-SNAPSHOT"
   :description "reimann: folds events into states"
   :url "http://github.com/aphyr/ustate"
   :repositories {
