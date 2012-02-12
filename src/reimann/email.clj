@@ -1,22 +1,54 @@
 (ns reimann.email
   (:use reimann.common)
-  (:use postal.core))
+  (:use postal.core)
+  (:use [clojure.contrib.string :only [join]]))
 
 ; Sends emails about events.
 
-(defn email-event [opts event]
-  "Send event with the given configuration (:host, :port, :user, :to, etc)"
-  (send-message 
-    (merge {:subject (str (:host event) " "
-                          (:service event) " "
-                          (:state event))
-            :body (str (:host event) " "
-                       (:service event) " "
-                       (:state event) " ("
-                       (:metric event) ")\nat "
-                       (time-at (:time event)) "\n\n"
-                       (:description event))}
-           opts)))
+(defn- human-uniq [things, type]
+  "Returns a human-readable string describing things, e.g.
+
+  importer
+  api1, api2, api4
+  23 services"
+  (let [things (distinct things)]
+    (case (count things)
+      0 nil
+      1 (first things)
+      2 (str (first things) " and " (nth things 1))
+      3 (join ", " things)
+      4 (join ", " things)
+      (str (count things) " " type))))
+
+(defn- subject [events]
+  "Constructs a subject line for a set of events."
+  (join " " (keep identity 
+        [(human-uniq (map :host events) "hosts")
+         (human-uniq (map :service events) "services")
+         (human-uniq (map :state events) "states")])))
+
+(defn- body [events]
+  "Constructs a body for a set of events."
+  (join "\n\n"
+        (map 
+          (fn [event]
+            (:host event) " "
+            (:service event) " "
+            (:state event) " ("
+            (:metric event) ")\nat "
+            (time-at (:time event)) " "
+            "tags: " (join ", " (:tags event)) 
+            "\n"
+            (:description event))
+          events)))
+
+(defn email-event [opts events]
+  "Send event(s) with the given configuration (:host, :port, :user, :to, etc)"
+  (let [events (flatten [events])]
+    (send-message 
+      (merge {:subject (subject events)
+              :body    (body events)}
+             opts))))
 
 (defn mailer [opts]
   "Returns a mailer which creates email streams, which take events. The mailer
