@@ -76,7 +76,8 @@
                    :host nil
                    :state "expired"}))))
 
-(deftest sum
+(comment
+  (deftest sum
          (let [core (core)
                done (ref [])
                server (reimann.server/tcp-server core)
@@ -100,7 +101,7 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (stop core))))))
 
 (deftest percentiles
          (let [core (core)

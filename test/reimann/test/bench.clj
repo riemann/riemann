@@ -6,6 +6,7 @@
   (:use [reimann.streams])
   (:use [clojure.test]))
 
+(comment
 (deftest sum-test
          (let [final (ref nil)
                core (core)
@@ -33,4 +34,4 @@
             (is (= (* threads n) (:metric_f (deref final)))) 
 
             (finally
-              (stop core)))))
+              (stop core))))))
