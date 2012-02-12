@@ -44,6 +44,20 @@
            (s {:service "foo"})
            (is (= {:service "foo"} (deref r)))))
 
+(deftest tagged-test
+         (let [r (ref [])
+               s (tagged ["kitten" "cat"] (append r))
+               events [{:tags ["kitten" "cat"]}
+                       {:tags ["kitten", "cat", "meow"]}
+                       {:tags ["dog" "cat"]}
+                       {:tags ["cat"]}
+                       {:tags []}
+                       {}]]
+           (doseq [e events] (s e))
+           (is (= (deref r)
+                  [{:tags ["kitten" "cat"]}
+                   {:tags ["kitten", "cat", "meow"]}]))))
+
 (deftest where-event
          (let [r (ref [])
                s (where (or (= "good" (:service event))

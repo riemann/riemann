@@ -3,6 +3,7 @@
   (:require [reimann.folds :as folds])
   (:require [reimann.index :as index])
   (:require [reimann.client])
+  (:require [clojure.set])
   (:use [clojure.contrib.math])
   (:use [clojure.contrib.logging]))
 
@@ -278,6 +279,16 @@
 ;(defn service [value & children] (apply match :service value children))
 ;(defn state [value & children] (apply match :state value children))
 ;(defn time [value & children] (apply match :time value children))
+
+(defn tagged [tags & children]
+  "Passes on events where all tags are present.
+
+  (tagged \"foo\" prn)
+  (tagged [\"foo\" \"bar\" prn])"
+  (fn [event]
+    (let [s (set (:tags event))]
+      (when (every? (fn [required] (s required)) tags)
+        (call-rescue event children)))))
 
 (defn expired [& children]
   "Passes on events with state expired"
