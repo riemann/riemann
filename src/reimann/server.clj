@@ -26,11 +26,11 @@
       ; Handle query
       (let [ast (query/ast (:string (:query msg)))]
         (if-let [i (deref (:index core))]
-          (protobuf Msg :ok true :states (index/search i ast))
-          (protobuf Msg :ok false :error "no index")))
+          {:ok true :states (index/search i ast)}
+          {:ok false :error "no index"}))
 
       ; Generic acknowledge 
-      (protobuf Msg :ok true))))
+      {:ok true})))
 
 ; Returns a handler that applies messages to the given streams (by reference)
 (defn handler [core]
@@ -39,7 +39,7 @@
       (when buffer
         ; channel isn't closed; this is our message
         (try
-          (enqueue channel (protobuf-dump (handle core buffer)))
+          (enqueue channel (encode (handle core buffer)))
           (catch java.nio.channels.ClosedChannelException e
             (log :warn (str "channel closed")))
           (catch com.google.protobuf.InvalidProtocolBufferException e

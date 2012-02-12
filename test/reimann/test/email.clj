@@ -10,5 +10,5 @@
                     :service "email test"
                     :state "ok"
                     :description "all clear, uh, situation normal"
-                    :metric_f 3.14159
+                    :metric 3.14159
                     :time (unix-time)})))

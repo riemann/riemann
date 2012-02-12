@@ -23,16 +23,16 @@
                                         :frame (finite-block :int32)})))))
 
 ; Send bytes over the given client and await reply, no error handling.
-(defn send-message-raw [client, raw]
+(defn send-message-raw [client raw]
   (let [c (deref (:conn client))]
     (enqueue c raw)
     (wait-for-message c 5000)))
 
 ; Send a message over the given client, and await reply.
 ; Will retry connections once, then fail returning false.
-(defn send-message [client, message]
+(defn send-message [client message]
   (locking client
-    (let [raw (protobuf-dump message)]
+    (let [raw (encode message)]
        (try 
          (decode (send-message-raw client raw))
          (catch Exception e
@@ -46,28 +46,24 @@
 
 (defn query [client string]
   "Query the server for states in the index. Returns a list of states."
-  (let [resp (send-message client
-               (protobuf Msg :query
-                 (protobuf Query :string string)))]
+  (let [resp (send-message client 
+                           {:query (protobuf Query :string string)})]
     (:states resp)))
 
 ; Send an event Protobuf
 (defn send-event-protobuf [client event]
-  (send-message client
-    (protobuf Msg :events [event])))
+  (send-message client {:events [event]}))
 
 ; Send an event (any map; will be passed to (event)) over the given client
 (defn send-event [client eventmap]
-  (send-event-protobuf client (event eventmap)))
+  (send-message client {:events [eventmap]}))
 
 ; Send a state Protobuf
 (defn send-state-protobuf [client event]
-  (send-message client
-    (protobuf Msg :states [event])))
+  (send-message client {:states [event]}))
 
-; Send an event (any map; will be passed to (event)) over the given client
 (defn send-state [client statemap]
-  (send-state-protobuf client (state statemap)))
+  (send-message client {:states [statemap]}))
 
 (defstruct tcp-client-struct :host :port :conn)
 

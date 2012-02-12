@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-11 19:42:09
+// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-12 01:00:05
 package reimann;
 
 import org.antlr.runtime.*;
@@ -11,7 +11,7 @@ import org.antlr.runtime.tree.*;
 
 public class QueryParser extends Parser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "TAGGED", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric_f'", "'time'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "TAGGED", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric'", "'metric_f'", "'time'"
     };
     public static final int LESSER_EQUAL=11;
     public static final int EXPONENT=20;
@@ -38,6 +38,7 @@ public class QueryParser extends Parser {
     public static final int T__33=33;
     public static final int T__34=34;
     public static final int T__35=35;
+    public static final int T__36=36;
     public static final int NOT_EQUAL=8;
     public static final int TAGGED=14;
     public static final int UnicodeEscape=22;
@@ -341,7 +342,7 @@ public class QueryParser extends Parser {
             if ( (LA4_0==NOT) ) {
                 alt4=1;
             }
-            else if ( (LA4_0==TAGGED||LA4_0==24||(LA4_0>=26 && LA4_0<=35)) ) {
+            else if ( (LA4_0==TAGGED||LA4_0==24||(LA4_0>=26 && LA4_0<=36)) ) {
                 alt4=2;
             }
             else {
@@ -454,7 +455,7 @@ public class QueryParser extends Parser {
             	    if ( (LA7_0==NOT) ) {
             	        alt7=1;
             	    }
-            	    else if ( (LA7_0==TAGGED||LA7_0==24||(LA7_0>=26 && LA7_0<=35)) ) {
+            	    else if ( (LA7_0==TAGGED||LA7_0==24||(LA7_0>=26 && LA7_0<=36)) ) {
             	        alt7=2;
             	    }
             	    else {
@@ -589,7 +590,7 @@ public class QueryParser extends Parser {
             if ( (LA10_0==NOT) ) {
                 alt10=1;
             }
-            else if ( (LA10_0==TAGGED||LA10_0==24||(LA10_0>=26 && LA10_0<=35)) ) {
+            else if ( (LA10_0==TAGGED||LA10_0==24||(LA10_0>=26 && LA10_0<=36)) ) {
                 alt10=2;
             }
             else {
@@ -684,7 +685,7 @@ public class QueryParser extends Parser {
             if ( (LA11_0==24) ) {
                 alt11=1;
             }
-            else if ( (LA11_0==TAGGED||(LA11_0>=26 && LA11_0<=35)) ) {
+            else if ( (LA11_0==TAGGED||(LA11_0>=26 && LA11_0<=36)) ) {
                 alt11=2;
             }
             else {
@@ -2275,7 +2276,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "field"
-    // src/reimann/Query.g:71:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) ;
+    // src/reimann/Query.g:71:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' ) ;
     public final QueryParser.field_return field() throws RecognitionException {
         QueryParser.field_return retval = new QueryParser.field_return();
         retval.start = input.LT(1);
@@ -2287,13 +2288,13 @@ public class QueryParser extends Parser {
         CommonTree set81_tree=null;
 
         try {
-            // src/reimann/Query.g:71:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) )
-            // src/reimann/Query.g:71:9: ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' )
+            // src/reimann/Query.g:71:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' ) )
+            // src/reimann/Query.g:71:9: ( 'host' | 'service' | 'state' | 'description' | 'metric' | 'metric_f' | 'time' )
             {
             root_0 = (CommonTree)adaptor.nil();
 
             set81=(Token)input.LT(1);
-            if ( (input.LA(1)>=30 && input.LA(1)<=35) ) {
+            if ( (input.LA(1)>=30 && input.LA(1)<=36) ) {
                 input.consume();
                 adaptor.addChild(root_0, (CommonTree)adaptor.create(set81));
                 state.errorRecovery=false;
@@ -2388,13 +2389,13 @@ public class QueryParser extends Parser {
     static final String DFA12_minS =
         "\1\16\4\uffff\2\7\7\uffff";
     static final String DFA12_maxS =
-        "\1\43\4\uffff\2\17\7\uffff";
+        "\1\44\4\uffff\2\17\7\uffff";
     static final String DFA12_acceptS =
         "\1\uffff\1\1\1\2\1\3\1\4\2\uffff\1\10\1\11\1\6\1\13\1\5\1\7\1\12";
     static final String DFA12_specialS =
         "\16\uffff}>";
     static final String[] DFA12_transitionS = {
-            "\1\4\13\uffff\1\1\1\2\2\3\6\5",
+            "\1\4\13\uffff\1\1\1\2\2\3\7\5",
             "",
             "",
             "",
@@ -2449,21 +2450,21 @@ public class QueryParser extends Parser {
     public static final BitSet FOLLOW_EOF_in_expr139 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_and_in_or152 = new BitSet(new long[]{0x0000000000008022L});
     public static final BitSet FOLLOW_WS_in_or155 = new BitSet(new long[]{0x0000000000008020L});
-    public static final BitSet FOLLOW_OR_in_or158 = new BitSet(new long[]{0x0000000FFD00C040L});
-    public static final BitSet FOLLOW_WS_in_or161 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_OR_in_or158 = new BitSet(new long[]{0x0000001FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_or161 = new BitSet(new long[]{0x0000001FFD00C040L});
     public static final BitSet FOLLOW_and_in_or164 = new BitSet(new long[]{0x0000000000008022L});
     public static final BitSet FOLLOW_not_in_and175 = new BitSet(new long[]{0x0000000000008012L});
     public static final BitSet FOLLOW_primary_in_and179 = new BitSet(new long[]{0x0000000000008012L});
     public static final BitSet FOLLOW_WS_in_and183 = new BitSet(new long[]{0x0000000000008010L});
-    public static final BitSet FOLLOW_AND_in_and186 = new BitSet(new long[]{0x0000000FFD00C040L});
-    public static final BitSet FOLLOW_WS_in_and189 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_AND_in_and186 = new BitSet(new long[]{0x0000001FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_and189 = new BitSet(new long[]{0x0000001FFD00C040L});
     public static final BitSet FOLLOW_not_in_and193 = new BitSet(new long[]{0x0000000000008012L});
     public static final BitSet FOLLOW_primary_in_and197 = new BitSet(new long[]{0x0000000000008012L});
-    public static final BitSet FOLLOW_NOT_in_not208 = new BitSet(new long[]{0x0000000FFD00C040L});
-    public static final BitSet FOLLOW_WS_in_not211 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_NOT_in_not208 = new BitSet(new long[]{0x0000001FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_not211 = new BitSet(new long[]{0x0000001FFD00C040L});
     public static final BitSet FOLLOW_not_in_not215 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_primary_in_not219 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_24_in_primary236 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_24_in_primary236 = new BitSet(new long[]{0x0000001FFD00C040L});
     public static final BitSet FOLLOW_or_in_primary238 = new BitSet(new long[]{0x0000000002000000L});
     public static final BitSet FOLLOW_25_in_primary240 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_simple_in_primary254 = new BitSet(new long[]{0x0000000000000002L});

@@ -13,7 +13,7 @@
             :body (str (:host event) " "
                        (:service event) " "
                        (:state event) " ("
-                       (:metric_f event) ")\nat "
+                       (:metric event) ")\nat "
                        (time-at (:time event)) "\n\n"
                        (:description event))}
            opts)))

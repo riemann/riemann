@@ -28,8 +28,8 @@
              (doseq [f (map (fn [t] (future
                (let [c (ref 0)]
                  (dotimes [i (/ total threads)]
-                         (let [e {:metric_f 1 :time (unix-time)}]
-                           (dosync (commute c + (:metric_f e))))))))
+                         (let [e {:metric 1 :time (unix-time)}]
+                           (dosync (commute c + (:metric e))))))))
                             (range threads))]
                (deref f))))
 ; can do something like 1.9 million events/sec over 4 threads.  That suggests
@@ -113,13 +113,13 @@
               :state (ref {})})
       (fn [r event] (dosync
                       (ref-set (:state r) event)
-                      (alter (:count r) + (:metric_f event))))
+                      (alter (:count r) + (:metric event))))
       (fn [r start end]
         (let [event (dosync
                 (let [count (deref (r :count))
                       rate (/ count (- end start))]
                   (merge (deref (:state r)) 
-                         {:metric_f rate :time (round end)})))]
+                         {:metric rate :time (round end)})))]
           (call-rescue event children)))))
 
 (defn percentiles [interval points & children]
@@ -138,25 +138,25 @@
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn sum-over-time [& children]
-  "Sums all metric_fs together. Emits the most recent event each time this
-  stream is called, but with summed metric_f."
+  "Sums all metrics together. Emits the most recent event each time this
+  stream is called, but with summed metric."
   (let [sum (ref 0)]
     (fn [event]
-      (let [s (dosync (commute sum + (:metric_f event)))
-            event (assoc event :metric_f s)]
+      (let [s (dosync (commute sum + (:metric event)))
+            event (assoc event :metric s)]
         (call-rescue event children)))))
 
 (defn mean-over-time [children]
   "Emits the most recent event each time this stream is called, but with the
-  average of all received metric_fs."
+  average of all received metrics."
   (let [sum (ref nil)
         total (ref 0)]
     (fn [event]
       (let [m (dosync 
                 (let [t (commute total inc)
-                      s (commute sum + (:metric_f event))]
+                      s (commute sum + (:metric event))]
                   (/ s t)))
-            event (assoc event :metric_f m)]
+            event (assoc event :metric m)]
         (call-rescue event children)))))
 
 (defn throttle [n m & children]
@@ -275,7 +275,7 @@
 ; Shortcuts for match
 ;(defn description [value & children] (apply match :description value children))
 ;(defn host [value & children] (apply match :host value children))
-;(defn metric [value & children] (apply match :metric_f value children))
+;(defn metric [value & children] (apply match :metric value children))
 ;(defn service [value & children] (apply match :service value children))
 ;(defn state [value & children] (apply match :state value children))
 ;(defn time [value & children] (apply match :time value children))
@@ -387,25 +387,25 @@
   "Passes on events only when their metric falls within the given inclusive
   range. (within [0 1] (fn [event] do-something))"
   (fn [event]
-    (when (<= (first r) (:metric_f event) (last r))
+    (when (<= (first r) (:metric event) (last r))
       (call-rescue event children))))
 
 (defn without [r & children]
   "Passes on events only when their metric falls outside the given (inclusive) range."
   (fn [event]
-    (when (not (<= (first r) (:metric_f event) (last r)))
+    (when (not (<= (first r) (:metric event) (last r)))
       (call-rescue event children))))
 
 (defn over [x & children]
   "Passes on events only when their metric is greater than x"
   (fn [event]
-    (when (< x (:metric_f event))
+    (when (< x (:metric event))
       (call-rescue event children))))
 
 (defn under [x & children]
   "Passes on events only when their metric is smaller than x"
   (fn [event]
-    (when (> x (:metric_f event))
+    (when (> x (:metric event))
       (call-rescue event children))))
 
 (defn where-test [k v]
@@ -415,14 +415,15 @@
 
 ; Hack hack hack hack
 (defn where-rewrite [expr]
-  "Rewrites lists recursively. Replaces (metric_f x y z) with a test matching
-  (:metric_f event) to any of x, y, or z, either by = or re-find. Replaces any
-  other instance of metric_f with (:metric_f event). Does the same for host,
-  service, event, state, time, and description."
+  "Rewrites lists recursively. Replaces (metric x y z) with a test matching
+  (:metric event) to any of x, y, or z, either by = or re-find. Replaces any
+  other instance of metric with (:metric event). Does the same for host,
+  service, event, state, time, tags, metric_f, and description."
   (let [syms #{'host 
                'service 
                'state 
-               'metric_f 
+               'metric
+               'metric_f
                'time 
                'description 
                'tags}]
@@ -452,10 +453,10 @@
   'event is bound to the event under consideration. Examples:
 
   ; Match any state where metric is either 1, 2, 3, or 4.
-  (where (metric_f 1 2 3 4) ...)
+  (where (metric 1 2 3 4) ...)
   
   ; Match a state where the metric is negative AND the state is ok.
-  (where (and (> 0 metric_f)
+  (where (and (> 0 metric)
               (state \"ok\")) ...)
 
   ; Match a state where an arbitrary function f applied to the event is truthy.

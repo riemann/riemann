@@ -10,6 +10,7 @@
               "service = true"      '(= service true)
               "description = true"  '(= description true)
               "metric_f = true"     '(= metric_f true)
+              "metric = true"       '(= metric true)
               "time = true"         '(= time true)
 
               ; Literals
@@ -114,18 +115,18 @@
             [{:host "a."} {:host "s.murf"} {}]))
 
 (deftest inequality
-         (f "metric_f > 1e10"
-            [{:metric_f 1e11}]
-            [{:metric_f 1e10} {}])
-         (f "metric_f >= -1"
-            [{:metric_f 0} {:metric_f -1}]
-            [{:metric_f -2} {}])
-         (f "metric_f < 1.2e2"
-            [{:metric_f 1.5e1}]
-            [{:metric_f 1.2e2} {}])
-         (f "metric_f <= 1"
-            [{:metric_f 1} {:metric_f -20}]
-            [{:metric_f 2} {}]))
+         (f "metric > 1e10"
+            [{:metric 1e11}]
+            [{:metric 1e10} {}])
+         (f "metric >= -1"
+            [{:metric 0} {:metric -1}]
+            [{:metric -2} {}])
+         (f "metric < 1.2e2"
+            [{:metric 1.5e1}]
+            [{:metric 1.2e2} {}])
+         (f "metric <= 1"
+            [{:metric 1} {:metric -20}]
+            [{:metric 2} {}]))
 
 (deftest tagged
          (f "tagged \"cat\""
@@ -144,11 +145,11 @@
 
 (deftest fast
          (let [fun (fun (ast 
-                      "host =~ \"api %\" and state = \"ok\" and metric_f > 0"))
-               events (cycle [{:host "api 1" :state "ok" :metric_f 1.2}
-                              {:host "other" :state "ok" :metric_f 1.2}
-                              {:host "api 2" :state "no" :metric_f 1.2}
-                              {:host "api 3" :state "ok" :metric_f 0.5}
+                      "host =~ \"api %\" and state = \"ok\" and metric > 0"))
+               events (cycle [{:host "api 1" :state "ok" :metric 1.2}
+                              {:host "other" :state "ok" :metric 1.2}
+                              {:host "api 2" :state "no" :metric 1.2}
+                              {:host "api 3" :state "ok" :metric 0.5}
                               {}])]
            (time (doseq [e (take 1000 events)]
                    (fun e)))))

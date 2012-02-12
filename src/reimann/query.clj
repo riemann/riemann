@@ -53,6 +53,7 @@
       "state"       'state
       "description" 'description
       "metric_f"    'metric_f
+      "metric"    'metric
       "time"        'time
       (when n (read-string n)))))
 
@@ -71,6 +72,7 @@
                    state       (:state event)
                    description (:description event)
                    metric_f    (:metric_f event)
+                   metric      (:metric event)
                    time        (:time event)
                    tags        (:tags event)
                    member?     reimann.common/member?]

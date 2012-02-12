@@ -9,19 +9,19 @@
                :service "graphite test"
                :state "ok"
                :description "all clear, uh, situation normal"
-               :metric_f 3.14159
+               :metric 3.14159
                :time (unix-time)}))
          
          (let [g (graphite {})]
            (g {:service "graphite test"
                :state "ok"
                :description "all clear, uh, situation normal"
-               :metric_f 3.14159
+               :metric 3.14159
                :time (unix-time)}))
          
          (let [g (graphite {})]
            (g {:host "reimann.local"
                :state "ok"
                :description "all clear, uh, situation normal"
-               :metric_f 3.14159
+               :metric 3.14159
                :time (unix-time)})))

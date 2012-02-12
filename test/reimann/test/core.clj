@@ -29,15 +29,17 @@
                (ref-set (core :index) index))
 
              ; Send events
-             (send-event client {:metric_f 1 :time 1})
-             (send-event client {:metric_f 2 :time 3})
-             (send-event client {:tags ["whiskers" "paws"] :time 2})
+             (send-event client {:metric 1 :time 1})
+             (send-event client {:metric 2 :time 3})
+             (send-event client {:host "kitten" 
+                                 :tags ["whiskers" "paws"] :time 2})
              (send-event client {:service "miao" :host "cat" :time 3})
 
-             (is (= (set (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))
-                    #{(state {:metric_f 2.0 :time 2})
-                      (state {:tags ["whiskers" "paws"] :time 2})
-                      (state {:service "miao" :host "cat" :time 3})}))
+             (let [r (vec (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))]
+               (is (some (fn [e] (= e {:metric_f 2.0, :metric 2.0, :time 3})) r))
+               (is (some (fn [e] (= e {:host "kitten" :tags ["whiskers" "paws"] :time 2})) r))
+               (is (some (fn [e] (= e {:host "cat", :service "miao", :time 3})) r))
+               (is (= 3 (count r))))
 
              (finally
                (close-client client)
@@ -47,7 +49,7 @@
          (let [core (core)
                index (index)
                res (ref nil)
-               expired-stream (reimann.streams/expired? 
+               expired-stream (reimann.streams/expired 
                                 (fn [e] (dosync (ref-set res e))))
                stream (reimann.streams/update index)
                reaper (periodically-expire core 0.001)]
@@ -62,7 +64,7 @@
            (stream {:service 2 :ttl 1 :time (unix-time)})
 
            ; Wait for reaper to eat them
-           (Thread/sleep 5)
+           (Thread/sleep 10)
 
            ; Kill reaper
            (future-cancel reaper)
@@ -89,15 +91,15 @@
                (alter (core :streams) conj stream))
 
              ; Send some events over the network
-             (send-event client {:metric_f 1})
-             (send-event client {:metric_f 2})
-             (send-event client {:metric_f 3})
+             (send-event client {:metric 1})
+             (send-event client {:metric 2})
+             (send-event client {:metric 3})
              (close-client client)
              
              ; Confirm receipt
              (let [l (deref done)]
                (is (= [1 3 6] 
-                      (map (fn [x] (:metric_f x)) l))))
+                      (map (fn [x] (:metric x)) l))))
 
              (finally
                (close-client client)
@@ -113,6 +115,7 @@
            (try
              (dosync
                (alter (core :servers) conj server)
+               ; (alter (core :streams) conj prn)
                (alter (core :streams) conj stream))
 
              ; Wait until we aren't aligned... ugh, timing
@@ -120,7 +123,7 @@
 
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
-               (send-event client {:metric_f n :service "per"}))
+               (send-event client {:metric n :service "per"}))
              (close-client client)
              
              ; Wait for percentiles
@@ -130,10 +133,10 @@
              (let [events (deref out)
                    states (fmap first (group-by :service events))]
 
-               (is (= ((states "per 0.5") :metric_f) 50))
-               (is (= ((states "per 0.95") :metric_f) 95))
-               (is (= ((states "per 0.99") :metric_f) 99))
-               (is (= ((states "per 1") :metric_f) 100)))
+               (is (= ((states "per 0.5") :metric) 50))
+               (is (= ((states "per 0.95") :metric) 95))
+               (is (= ((states "per 0.99") :metric) 99))
+               (is (= ((states "per 1") :metric) 100)))
 
              (finally
                (close-client client)

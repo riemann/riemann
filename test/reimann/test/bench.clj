@@ -15,7 +15,7 @@
                n 100
                threads 10
                events (take n (repeatedly (fn [] 
-                        (event {:metric_f 1}))))]
+                        (event {:metric 1}))))]
 
            (dosync
              (alter (core :servers) conj server)
@@ -31,7 +31,7 @@
                                   (send-event-protobuf client e))
                                (close-client client))))
              
-            (is (= (* threads n) (:metric_f (deref final)))) 
+            (is (= (* threads n) (:metric (deref final)))) 
 
             (finally
               (stop core))))))

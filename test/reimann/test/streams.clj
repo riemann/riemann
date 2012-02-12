@@ -12,19 +12,19 @@
                max (combine folds/maximum (register r))
                mean (combine folds/mean (register r))
                median (combine folds/median (register r))
-               events [{:metric_f 1}
-                       {:metric_f 0}
-                       {:metric_f -2}]]
+               events [{:metric 1}
+                       {:metric 0}
+                       {:metric -2}]]
            (sum events)
-           (is (= (deref r) {:metric_f -1}))
+           (is (= (deref r) {:metric -1}))
            (min events)
-           (is (= (deref r) {:metric_f -2}))
+           (is (= (deref r) {:metric -2}))
            (max events)
-           (is (= (deref r) {:metric_f 1}))
+           (is (= (deref r) {:metric 1}))
            (mean events)
-           (is (= (deref r) {:metric_f -1/3}))
+           (is (= (deref r) {:metric -1/3}))
            (median events)
-           (is (= (deref r) {:metric_f 0}))))
+           (is (= (deref r) {:metric 0}))))
 
 (deftest match-test
          (let [r (ref nil)
@@ -61,15 +61,15 @@
 (deftest where-event
          (let [r (ref [])
                s (where (or (= "good" (:service event))
-                            (< 2 (:metric_f event)))
+                            (< 2 (:metric event)))
                         (fn [e] (dosync (alter r conj e))))
-               events [{:service "good" :metric_f 0}
-                       {:service "bad" :metric_f 0}
-                       {:metric_f 1}
-                       {:service "bad" :metric_f 1}
-                       {:service "bad" :metric_f 3}]
-               expect [{:service "good" :metric_f 0}
-                       {:service "bad" :metric_f 3}]]
+               events [{:service "good" :metric 0}
+                       {:service "bad" :metric 0}
+                       {:metric 1}
+                       {:service "bad" :metric 1}
+                       {:service "bad" :metric 3}]
+               expect [{:service "good" :metric 0}
+                       {:service "bad" :metric 3}]]
            (doseq [e events] (s e))
            (is (= expect (deref r)))))
 
@@ -174,7 +174,7 @@
            (dotimes [_ intervals]
              (dotimes [_ gen-rate]
                (Thread/sleep (int (* 1000 gen-period)))
-               (r {:metric_f 1 :time (unix-time)})))
+               (r {:metric 1 :time (unix-time)})))
 
            ; Give all futures time to complete
            (Thread/sleep (* 1000 interval))
@@ -183,16 +183,16 @@
            (let [o (deref output)]
              
              ; All events recorded
-             (is (approx-equal total (reduce + (map :metric_f o))))
+             (is (approx-equal total (reduce + (map :metric o))))
 
              ; Middle events should have the correct rate.
              (is (every? (fn [measured-rate] 
                            (approx-equal gen-rate measured-rate))
-                         (map :metric_f (drop 1 (drop-last o)))))
+                         (map :metric (drop 1 (drop-last o)))))
            
              ; First and last events should be complementary
-             (let [first-last (+ (:metric_f (first o))
-                                 (:metric_f (last o)))]
+             (let [first-last (+ (:metric (first o))
+                                 (:metric (last o)))]
                (is (or (approx-equal (* 2 gen-rate) first-last)
                        (approx-equal gen-rate first-last))))
 
@@ -211,15 +211,15 @@
              (doseq [f (map (fn [t] (future
                (let [c (ref 0)]
                  (dotimes [i (/ total threads)]
-                         (let [e {:metric_f 1.0 :time (unix-time)}]
-                           (dosync (commute c + (:metric_f e))))))))
+                         (let [e {:metric 1.0 :time (unix-time)}]
+                           (dosync (commute c + (:metric e))))))))
                             (range threads))]
                (deref f)))
 
            ; Generate events
            (doseq [f (map (fn [t] (future 
                                  (dotimes [i (/ total threads)]
-                                   (r {:metric_f 1 :time (unix-time)}))))
+                                   (r {:metric 1 :time (unix-time)}))))
                           (range threads))]
                    (deref f))
              
@@ -231,7 +231,7 @@
                  o (dosync (deref output))]
            
              ; All events recorded
-             (is (approx-equal total (reduce + (map :metric_f o))))
+             (is (approx-equal total (reduce + (map :metric o))))
 
              )))
 
@@ -266,8 +266,8 @@
                metrics [0.5 1 1.5 2 2.5]
                expect [1 1.5 2]]
            
-           (doseq [m metrics] (r {:metric_f m}))
-           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+           (doseq [m metrics] (r {:metric m}))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
 (deftest without-test
          (let [output (ref [])
@@ -276,8 +276,8 @@
                metrics [0.5 1 1.5 2 2.5]
                expect [0.5 2.5]]
            
-           (doseq [m metrics] (r {:metric_f m}))
-           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+           (doseq [m metrics] (r {:metric m}))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
 (deftest over-test
          (let [output (ref [])
@@ -286,8 +286,8 @@
                metrics [0.5 1 1.5 2 2.5]
                expect [2 2.5]]
            
-           (doseq [m metrics] (r {:metric_f m}))
-           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+           (doseq [m metrics] (r {:metric m}))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
 (deftest under-test
          (let [output (ref [])
@@ -296,8 +296,8 @@
                metrics [0.5 1 1.5 2 2.5]
                expect [0.5 1]]
            
-           (doseq [m metrics] (r {:metric_f m}))
-           (is (= expect (vec (map (fn [s] (:metric_f s)) (deref output)))))))
+           (doseq [m metrics] (r {:metric m}))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
 (deftest uupdate-test
          (let [i (index/index)

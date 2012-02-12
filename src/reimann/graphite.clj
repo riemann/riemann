@@ -47,7 +47,7 @@
 
     (fn [event]
       (let [string (str (join " " [(name event) 
-                                   (:metric_f event) 
+                                   (:metric event) 
                                    (int (:time event))])
                         "\n")]
         (locking sock

@@ -32,18 +32,49 @@
   "Returns the Date of a unix epoch time."
   (java.util.Date. (long unix-time)))
 
+(defn pre-dump-event [e]
+  (assoc e :metric_f (:metric e)))
+
+(defn post-load-event [e]
+  "Loads a protobuf event to an internal event."
+  (let [e (apply hash-map (apply concat e))
+        e (if (:metric_f e) (assoc e :metric (:metric_f e)) e)
+        e (if (:time e) e (assoc e :time (unix-time)))]
+    e))
+
 (defn decode [s]
   "Decode a gloss buffer to a Msg"
-  (let [buffer (gloss.io/contiguous s)]
-    (let [bytes (byte-array (.remaining buffer))]
-      (.get buffer bytes 0 (alength bytes))
-      (protobuf-load Msg bytes))))
+  (let [buffer (gloss.io/contiguous s)
+        bytes (byte-array (.remaining buffer))
+        _ (.get buffer bytes 0 (alength bytes))
+        msg (protobuf-load Msg bytes)]
+    ; Can't use a protobuf Msg here--it would coerce events and drop our
+    ; metric keys.
+    {:ok (:ok msg)
+          :error (:error msg)
+          :states (map post-load-event (:states msg))
+          :query (:query msg)
+          :events (map post-load-event (:events msg))}))
+
+(defn encode [msg]
+  "Builds and dumps a protobuf message from msg"
+  (let [msg (merge msg
+                   {:events (map pre-dump-event (:events msg))
+                    :states (map pre-dump-event (:states msg))})
+        pb (apply protobuf Msg (apply concat msg))]
+    (protobuf-dump pb)))
 
 ; Create a new event
 (defn event [opts]
   (let [t (round (or (opts :time)
                      (unix-time)))]
     (apply protobuf Event
+      (apply concat (merge opts {:time t})))))
+
+(defn state [opts]
+  (let [t (round (or (opts :time)
+                     (unix-time)))]
+    (apply protobuf State
       (apply concat (merge opts {:time t})))))
 
 (defn approx-equal 
@@ -53,13 +84,6 @@
   (if (= x y) true
     (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
       (< (- 1 tol) f (+ 1 tol))))))
-
-; Create a new state
-(defn state [opts]
-  (let [t (round (or (opts :time)
-                     (unix-time)))]
-    (apply protobuf State
-      (apply concat (merge opts {:time t})))))
 
 (defn member? [r s]
   "Is e present in s?"
