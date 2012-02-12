@@ -26,6 +26,24 @@
            (median events)
            (is (= (deref r) {:metric 0}))))
 
+(deftest counter-test
+         (let [r      (ref [])
+               s      (counter (append r))
+               events [{:metric 2}
+                       {}
+                       {:metric 1}
+                       {:metric 5}
+                       {:tags ["reset"] :metric -1}
+                       {:metric 2}]]
+           (doseq [e events] (s e))
+           
+           (is (= (deref r)
+                  [{:metric 2}
+                   {:metric 3}
+                   {:metric 8}
+                   {:tags ["reset"] :metric -1}
+                   {:metric 1}]))))
+
 (deftest match-test
          (let [r (ref nil)
                s (match :service "foo" (fn [e] (dosync (ref-set r e))))]

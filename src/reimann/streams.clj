@@ -137,6 +137,18 @@
                                   (folds/sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
 
+(defn counter [& children]
+  "Counts things. All metrics are summed together; passes on each event with
+  the summed metric. When an event has tag \"reset\", resets the counter to
+  zero and continues summing."
+  (let [counter (ref 0)]
+    (fn [event]
+      (when (member? "reset" (:tags event))
+        (dosync (ref-set counter 0)))
+      (when-let [m (:metric event)]
+        (let [c (dosync (alter counter + m))]
+          (call-rescue (assoc event :metric c) children))))))
+
 (defn sum-over-time [& children]
   "Sums all metrics together. Emits the most recent event each time this
   stream is called, but with summed metric."
