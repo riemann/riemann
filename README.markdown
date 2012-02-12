@@ -25,7 +25,7 @@ Events
 ======
 
 An event is a small serializable structure. It can be serialized to protocol
-buffers for network transport, and inside of Reimann is treated as a Map.
+buffers for network transport, and inside of Reimann is treated as a map:
 
     event {
       host: A hostname, e.g. "api1", "foo.com"
@@ -40,7 +40,7 @@ buffers for network transport, and inside of Reimann is treated as a Map.
               number of reqs/sec.
     }
 
-Reimann clients submit these events to the server over the network.
+Reimann clients submit these events to the server over the network. All fields are optional.
 
 Streams
 =======
