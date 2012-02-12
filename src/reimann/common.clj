@@ -1,10 +1,10 @@
 (ns reimann.common
-  (:use [protobuf.core])
   (:import [java.util Date])
-  (:use gloss.core)
   (:require gloss.io)
-  (:use [clojure.contrib.math])
-  (:require clojure.set))
+  (:require clojure.set)
+  (:use protobuf.core)
+  (:use gloss.core)
+  (:use clojure.contrib.math))
 
 ; Don't mangle underscores into dashes. <sigh>
 (. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
