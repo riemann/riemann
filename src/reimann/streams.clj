@@ -280,14 +280,25 @@
 ;(defn state [value & children] (apply match :state value children))
 ;(defn time [value & children] (apply match :time value children))
 
-(defn tagged [tags & children]
+(defn tagged-all [tags & children]
   "Passes on events where all tags are present.
 
-  (tagged \"foo\" prn)
-  (tagged [\"foo\" \"bar\" prn])"
+  (tagged-all \"foo\" prn)
+  (tagged-all [\"foo\" \"bar\"] prn)"
   (fn [event]
     (when (subset? tags (:tags event))
       (call-rescue event children))))
+(def tagged tagged-all)
+
+(defn tagged-any [tags & children]
+  "Passes on events where any of tags are present.
+
+  (tagged-any \"foo\" prn)
+  (tagged-all [\"foo\" \"bar\"] prn)"
+  (let [required (set tags)]
+    (fn [event]
+      (when (some required (:tags event))
+        (call-rescue event children)))))
 
 (defn expired [& children]
   "Passes on events with state expired"

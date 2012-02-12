@@ -58,6 +58,21 @@
                   [{:tags ["kitten" "cat"]}
                    {:tags ["kitten", "cat", "meow"]}]))))
 
+(deftest tagged-any-test
+         (let [r (ref [])
+               s (tagged-any ["kitten" "cat"] (append r))
+               events [{:tags ["kitten" "cat"]}
+                       {:tags ["cat", "dog"]}
+                       {:tags ["kitten"]}
+                       {:tags ["dog"]}
+                       {:tags []}
+                       {}]]
+           (doseq [e events] (s e))
+           (is (= (deref r)
+                  [{:tags ["kitten" "cat"]}
+                   {:tags ["cat", "dog"]}
+                   {:tags ["kitten"]}]))))
+
 (deftest where-event
          (let [r (ref [])
                s (where (or (= "good" (:service event))
