@@ -33,7 +33,11 @@ buffers for network transport, and inside of Reimann is treated as a Map.
       state: Any string less than 255 bytes, e.g. "ok", "warning", "critical"
       time: The time that the service entered this state, in unix time
       description: Freeform text
-      metric_f: A floating-point number associated with this event, e.g. the number of reqs/sec
+      tags: Freeform list of strings, e.g. ["rate", "fooproduct", "transient"]
+      ttl: A floating-point time, in seconds, that this event is considered
+           valid for. Expired states may be removed from the index.
+      metric: A floating-point number associated with this event, e.g. the 
+              number of reqs/sec.
     }
 
 Reimann clients submit these events to the server over the network.
@@ -102,16 +106,18 @@ The server will accept a repeated list of Events, and respond with a
 confirmation message with either an acknowledgement or an error. Check the `ok`
 boolean in the message; if false, message.error will be a descriptive string.
 
+Because protocol buffers is strongly typed, the metric field is represented on
+the wire as metric_f. At some point I'll add an int64 as well.
+
 Events are uniquely identified by host and service. Both allow null. Event.time
 is the time in unix epoch seconds and is optional. The server will generate a
 time for each event when received if you do not provide one. 
 
 You can also query states from the index using a basic query language. The
-grammar is specified in src/reimann/query.g. Examples:
-
-Just submit a Message with your query in message.query.string. Search queries
-will return a message with repeated States matching that expression. A null
-expression will return no states.
+grammar is specified in src/reimann/query.g. Just submit a Message with your
+query in message.query.string. Search queries will return a message with
+repeated States matching that expression. A null expression will return no
+states.
 
 Plan
 ====
@@ -125,7 +131,6 @@ aleph.tcp.
 - Use Korma/HSQL to implement a faster index for query-heavy installations.
 - Think more carefully about time-partitioning functions.
 - Reservoir sampling
-- Event tags
 - Moving averages
 - Resettable counters
 - Event pubsub
