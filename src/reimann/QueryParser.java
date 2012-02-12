@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-07 15:10:23
+// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/reimann/Query.g 2012-02-11 19:42:09
 package reimann;
 
 import org.antlr.runtime.*;
@@ -11,39 +11,40 @@ import org.antlr.runtime.tree.*;
 
 public class QueryParser extends Parser {
     public static final String[] tokenNames = new String[] {
-        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric_f'", "'time'"
+        "<invalid>", "<EOR>", "<DOWN>", "<UP>", "AND", "OR", "NOT", "APPROXIMATELY", "NOT_EQUAL", "EQUAL", "LESSER", "LESSER_EQUAL", "GREATER", "GREATER_EQUAL", "TAGGED", "WS", "String", "INT", "FLOAT", "ID", "EXPONENT", "EscapeSequence", "UnicodeEscape", "HexDigit", "'('", "')'", "'true'", "'false'", "'null'", "'nil'", "'host'", "'service'", "'state'", "'description'", "'metric_f'", "'time'"
     };
     public static final int LESSER_EQUAL=11;
-    public static final int EXPONENT=19;
+    public static final int EXPONENT=20;
     public static final int T__29=29;
     public static final int T__28=28;
     public static final int T__27=27;
     public static final int T__26=26;
     public static final int T__25=25;
     public static final int T__24=24;
-    public static final int T__23=23;
     public static final int APPROXIMATELY=7;
-    public static final int FLOAT=17;
-    public static final int INT=16;
+    public static final int FLOAT=18;
+    public static final int INT=17;
     public static final int NOT=6;
-    public static final int ID=18;
+    public static final int ID=19;
     public static final int AND=4;
     public static final int EOF=-1;
-    public static final int HexDigit=22;
+    public static final int HexDigit=23;
     public static final int T__30=30;
     public static final int T__31=31;
     public static final int T__32=32;
-    public static final int WS=14;
+    public static final int WS=15;
     public static final int GREATER=12;
     public static final int LESSER=10;
     public static final int T__33=33;
     public static final int T__34=34;
+    public static final int T__35=35;
     public static final int NOT_EQUAL=8;
-    public static final int UnicodeEscape=21;
+    public static final int TAGGED=14;
+    public static final int UnicodeEscape=22;
     public static final int EQUAL=9;
     public static final int OR=5;
-    public static final int String=15;
-    public static final int EscapeSequence=20;
+    public static final int String=16;
+    public static final int EscapeSequence=21;
     public static final int GREATER_EQUAL=13;
 
     // delegates
@@ -77,7 +78,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "expr"
-    // src/reimann/Query.g:24:1: expr : ( or EOF ) -> or ;
+    // src/reimann/Query.g:25:1: expr : ( or EOF ) -> or ;
     public final QueryParser.expr_return expr() throws RecognitionException {
         QueryParser.expr_return retval = new QueryParser.expr_return();
         retval.start = input.LT(1);
@@ -92,19 +93,19 @@ public class QueryParser extends Parser {
         RewriteRuleTokenStream stream_EOF=new RewriteRuleTokenStream(adaptor,"token EOF");
         RewriteRuleSubtreeStream stream_or=new RewriteRuleSubtreeStream(adaptor,"rule or");
         try {
-            // src/reimann/Query.g:24:6: ( ( or EOF ) -> or )
-            // src/reimann/Query.g:24:8: ( or EOF )
+            // src/reimann/Query.g:25:6: ( ( or EOF ) -> or )
+            // src/reimann/Query.g:25:8: ( or EOF )
             {
-            // src/reimann/Query.g:24:8: ( or EOF )
-            // src/reimann/Query.g:24:9: or EOF
+            // src/reimann/Query.g:25:8: ( or EOF )
+            // src/reimann/Query.g:25:9: or EOF
             {
-            pushFollow(FOLLOW_or_in_expr129);
+            pushFollow(FOLLOW_or_in_expr137);
             or1=or();
 
             state._fsp--;
 
             stream_or.add(or1.getTree());
-            EOF2=(Token)match(input,EOF,FOLLOW_EOF_in_expr131);  
+            EOF2=(Token)match(input,EOF,FOLLOW_EOF_in_expr139);  
             stream_EOF.add(EOF2);
 
 
@@ -123,7 +124,7 @@ public class QueryParser extends Parser {
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
             root_0 = (CommonTree)adaptor.nil();
-            // 24:17: -> or
+            // 25:17: -> or
             {
                 adaptor.addChild(root_0, stream_or.nextTree());
 
@@ -156,7 +157,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "or"
-    // src/reimann/Query.g:26:1: or : and ( ( WS )* OR ( WS )* and )* ;
+    // src/reimann/Query.g:27:1: or : and ( ( WS )* OR ( WS )* and )* ;
     public final QueryParser.or_return or() throws RecognitionException {
         QueryParser.or_return retval = new QueryParser.or_return();
         retval.start = input.LT(1);
@@ -176,18 +177,18 @@ public class QueryParser extends Parser {
         CommonTree WS6_tree=null;
 
         try {
-            // src/reimann/Query.g:26:4: ( and ( ( WS )* OR ( WS )* and )* )
-            // src/reimann/Query.g:26:6: and ( ( WS )* OR ( WS )* and )*
+            // src/reimann/Query.g:27:4: ( and ( ( WS )* OR ( WS )* and )* )
+            // src/reimann/Query.g:27:6: and ( ( WS )* OR ( WS )* and )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_and_in_or144);
+            pushFollow(FOLLOW_and_in_or152);
             and3=and();
 
             state._fsp--;
 
             adaptor.addChild(root_0, and3.getTree());
-            // src/reimann/Query.g:26:10: ( ( WS )* OR ( WS )* and )*
+            // src/reimann/Query.g:27:10: ( ( WS )* OR ( WS )* and )*
             loop3:
             do {
                 int alt3=2;
@@ -200,9 +201,9 @@ public class QueryParser extends Parser {
 
                 switch (alt3) {
             	case 1 :
-            	    // src/reimann/Query.g:26:11: ( WS )* OR ( WS )* and
+            	    // src/reimann/Query.g:27:11: ( WS )* OR ( WS )* and
             	    {
-            	    // src/reimann/Query.g:26:11: ( WS )*
+            	    // src/reimann/Query.g:27:11: ( WS )*
             	    loop1:
             	    do {
             	        int alt1=2;
@@ -215,9 +216,9 @@ public class QueryParser extends Parser {
 
             	        switch (alt1) {
             	    	case 1 :
-            	    	    // src/reimann/Query.g:26:11: WS
+            	    	    // src/reimann/Query.g:27:11: WS
             	    	    {
-            	    	    WS4=(Token)match(input,WS,FOLLOW_WS_in_or147); 
+            	    	    WS4=(Token)match(input,WS,FOLLOW_WS_in_or155); 
             	    	    WS4_tree = (CommonTree)adaptor.create(WS4);
             	    	    adaptor.addChild(root_0, WS4_tree);
 
@@ -230,11 +231,11 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    OR5=(Token)match(input,OR,FOLLOW_OR_in_or150); 
+            	    OR5=(Token)match(input,OR,FOLLOW_OR_in_or158); 
             	    OR5_tree = (CommonTree)adaptor.create(OR5);
             	    root_0 = (CommonTree)adaptor.becomeRoot(OR5_tree, root_0);
 
-            	    // src/reimann/Query.g:26:19: ( WS )*
+            	    // src/reimann/Query.g:27:19: ( WS )*
             	    loop2:
             	    do {
             	        int alt2=2;
@@ -247,9 +248,9 @@ public class QueryParser extends Parser {
 
             	        switch (alt2) {
             	    	case 1 :
-            	    	    // src/reimann/Query.g:26:19: WS
+            	    	    // src/reimann/Query.g:27:19: WS
             	    	    {
-            	    	    WS6=(Token)match(input,WS,FOLLOW_WS_in_or153); 
+            	    	    WS6=(Token)match(input,WS,FOLLOW_WS_in_or161); 
             	    	    WS6_tree = (CommonTree)adaptor.create(WS6);
             	    	    adaptor.addChild(root_0, WS6_tree);
 
@@ -262,7 +263,7 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    pushFollow(FOLLOW_and_in_or156);
+            	    pushFollow(FOLLOW_and_in_or164);
             	    and7=and();
 
             	    state._fsp--;
@@ -304,7 +305,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "and"
-    // src/reimann/Query.g:28:1: and : ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )* ;
+    // src/reimann/Query.g:29:1: and : ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )* ;
     public final QueryParser.and_return and() throws RecognitionException {
         QueryParser.and_return retval = new QueryParser.and_return();
         retval.start = input.LT(1);
@@ -328,19 +329,19 @@ public class QueryParser extends Parser {
         CommonTree WS12_tree=null;
 
         try {
-            // src/reimann/Query.g:28:5: ( ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )* )
-            // src/reimann/Query.g:28:7: ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )*
+            // src/reimann/Query.g:29:5: ( ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )* )
+            // src/reimann/Query.g:29:7: ( not | primary ) ( ( WS )* AND ( WS )* ( not | primary ) )*
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            // src/reimann/Query.g:28:7: ( not | primary )
+            // src/reimann/Query.g:29:7: ( not | primary )
             int alt4=2;
             int LA4_0 = input.LA(1);
 
             if ( (LA4_0==NOT) ) {
                 alt4=1;
             }
-            else if ( (LA4_0==23||(LA4_0>=25 && LA4_0<=34)) ) {
+            else if ( (LA4_0==TAGGED||LA4_0==24||(LA4_0>=26 && LA4_0<=35)) ) {
                 alt4=2;
             }
             else {
@@ -351,9 +352,9 @@ public class QueryParser extends Parser {
             }
             switch (alt4) {
                 case 1 :
-                    // src/reimann/Query.g:28:8: not
+                    // src/reimann/Query.g:29:8: not
                     {
-                    pushFollow(FOLLOW_not_in_and167);
+                    pushFollow(FOLLOW_not_in_and175);
                     not8=not();
 
                     state._fsp--;
@@ -363,9 +364,9 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // src/reimann/Query.g:28:14: primary
+                    // src/reimann/Query.g:29:14: primary
                     {
-                    pushFollow(FOLLOW_primary_in_and171);
+                    pushFollow(FOLLOW_primary_in_and179);
                     primary9=primary();
 
                     state._fsp--;
@@ -377,16 +378,16 @@ public class QueryParser extends Parser {
 
             }
 
-            // src/reimann/Query.g:28:23: ( ( WS )* AND ( WS )* ( not | primary ) )*
+            // src/reimann/Query.g:29:23: ( ( WS )* AND ( WS )* ( not | primary ) )*
             loop8:
             do {
                 int alt8=2;
                 alt8 = dfa8.predict(input);
                 switch (alt8) {
             	case 1 :
-            	    // src/reimann/Query.g:28:24: ( WS )* AND ( WS )* ( not | primary )
+            	    // src/reimann/Query.g:29:24: ( WS )* AND ( WS )* ( not | primary )
             	    {
-            	    // src/reimann/Query.g:28:24: ( WS )*
+            	    // src/reimann/Query.g:29:24: ( WS )*
             	    loop5:
             	    do {
             	        int alt5=2;
@@ -399,9 +400,9 @@ public class QueryParser extends Parser {
 
             	        switch (alt5) {
             	    	case 1 :
-            	    	    // src/reimann/Query.g:28:24: WS
+            	    	    // src/reimann/Query.g:29:24: WS
             	    	    {
-            	    	    WS10=(Token)match(input,WS,FOLLOW_WS_in_and175); 
+            	    	    WS10=(Token)match(input,WS,FOLLOW_WS_in_and183); 
             	    	    WS10_tree = (CommonTree)adaptor.create(WS10);
             	    	    adaptor.addChild(root_0, WS10_tree);
 
@@ -414,11 +415,11 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    AND11=(Token)match(input,AND,FOLLOW_AND_in_and178); 
+            	    AND11=(Token)match(input,AND,FOLLOW_AND_in_and186); 
             	    AND11_tree = (CommonTree)adaptor.create(AND11);
             	    root_0 = (CommonTree)adaptor.becomeRoot(AND11_tree, root_0);
 
-            	    // src/reimann/Query.g:28:33: ( WS )*
+            	    // src/reimann/Query.g:29:33: ( WS )*
             	    loop6:
             	    do {
             	        int alt6=2;
@@ -431,9 +432,9 @@ public class QueryParser extends Parser {
 
             	        switch (alt6) {
             	    	case 1 :
-            	    	    // src/reimann/Query.g:28:33: WS
+            	    	    // src/reimann/Query.g:29:33: WS
             	    	    {
-            	    	    WS12=(Token)match(input,WS,FOLLOW_WS_in_and181); 
+            	    	    WS12=(Token)match(input,WS,FOLLOW_WS_in_and189); 
             	    	    WS12_tree = (CommonTree)adaptor.create(WS12);
             	    	    adaptor.addChild(root_0, WS12_tree);
 
@@ -446,14 +447,14 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    // src/reimann/Query.g:28:37: ( not | primary )
+            	    // src/reimann/Query.g:29:37: ( not | primary )
             	    int alt7=2;
             	    int LA7_0 = input.LA(1);
 
             	    if ( (LA7_0==NOT) ) {
             	        alt7=1;
             	    }
-            	    else if ( (LA7_0==23||(LA7_0>=25 && LA7_0<=34)) ) {
+            	    else if ( (LA7_0==TAGGED||LA7_0==24||(LA7_0>=26 && LA7_0<=35)) ) {
             	        alt7=2;
             	    }
             	    else {
@@ -464,9 +465,9 @@ public class QueryParser extends Parser {
             	    }
             	    switch (alt7) {
             	        case 1 :
-            	            // src/reimann/Query.g:28:38: not
+            	            // src/reimann/Query.g:29:38: not
             	            {
-            	            pushFollow(FOLLOW_not_in_and185);
+            	            pushFollow(FOLLOW_not_in_and193);
             	            not13=not();
 
             	            state._fsp--;
@@ -476,9 +477,9 @@ public class QueryParser extends Parser {
             	            }
             	            break;
             	        case 2 :
-            	            // src/reimann/Query.g:28:44: primary
+            	            // src/reimann/Query.g:29:44: primary
             	            {
-            	            pushFollow(FOLLOW_primary_in_and189);
+            	            pushFollow(FOLLOW_primary_in_and197);
             	            primary14=primary();
 
             	            state._fsp--;
@@ -526,7 +527,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "not"
-    // src/reimann/Query.g:30:1: not : NOT ( WS )* ( not | primary ) ;
+    // src/reimann/Query.g:31:1: not : NOT ( WS )* ( not | primary ) ;
     public final QueryParser.not_return not() throws RecognitionException {
         QueryParser.not_return retval = new QueryParser.not_return();
         retval.start = input.LT(1);
@@ -544,16 +545,16 @@ public class QueryParser extends Parser {
         CommonTree WS16_tree=null;
 
         try {
-            // src/reimann/Query.g:30:5: ( NOT ( WS )* ( not | primary ) )
-            // src/reimann/Query.g:30:7: NOT ( WS )* ( not | primary )
+            // src/reimann/Query.g:31:5: ( NOT ( WS )* ( not | primary ) )
+            // src/reimann/Query.g:31:7: NOT ( WS )* ( not | primary )
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            NOT15=(Token)match(input,NOT,FOLLOW_NOT_in_not200); 
+            NOT15=(Token)match(input,NOT,FOLLOW_NOT_in_not208); 
             NOT15_tree = (CommonTree)adaptor.create(NOT15);
             root_0 = (CommonTree)adaptor.becomeRoot(NOT15_tree, root_0);
 
-            // src/reimann/Query.g:30:12: ( WS )*
+            // src/reimann/Query.g:31:12: ( WS )*
             loop9:
             do {
                 int alt9=2;
@@ -566,9 +567,9 @@ public class QueryParser extends Parser {
 
                 switch (alt9) {
             	case 1 :
-            	    // src/reimann/Query.g:30:12: WS
+            	    // src/reimann/Query.g:31:12: WS
             	    {
-            	    WS16=(Token)match(input,WS,FOLLOW_WS_in_not203); 
+            	    WS16=(Token)match(input,WS,FOLLOW_WS_in_not211); 
             	    WS16_tree = (CommonTree)adaptor.create(WS16);
             	    adaptor.addChild(root_0, WS16_tree);
 
@@ -581,14 +582,14 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            // src/reimann/Query.g:30:16: ( not | primary )
+            // src/reimann/Query.g:31:16: ( not | primary )
             int alt10=2;
             int LA10_0 = input.LA(1);
 
             if ( (LA10_0==NOT) ) {
                 alt10=1;
             }
-            else if ( (LA10_0==23||(LA10_0>=25 && LA10_0<=34)) ) {
+            else if ( (LA10_0==TAGGED||LA10_0==24||(LA10_0>=26 && LA10_0<=35)) ) {
                 alt10=2;
             }
             else {
@@ -599,9 +600,9 @@ public class QueryParser extends Parser {
             }
             switch (alt10) {
                 case 1 :
-                    // src/reimann/Query.g:30:17: not
+                    // src/reimann/Query.g:31:17: not
                     {
-                    pushFollow(FOLLOW_not_in_not207);
+                    pushFollow(FOLLOW_not_in_not215);
                     not17=not();
 
                     state._fsp--;
@@ -611,9 +612,9 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // src/reimann/Query.g:30:23: primary
+                    // src/reimann/Query.g:31:23: primary
                     {
-                    pushFollow(FOLLOW_primary_in_not211);
+                    pushFollow(FOLLOW_primary_in_not219);
                     primary18=primary();
 
                     state._fsp--;
@@ -652,7 +653,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "primary"
-    // src/reimann/Query.g:33:1: primary : ( ( '(' or ')' ) -> ^( or ) | simple -> simple ) ;
+    // src/reimann/Query.g:34:1: primary : ( ( '(' or ')' ) -> ^( or ) | simple -> simple ) ;
     public final QueryParser.primary_return primary() throws RecognitionException {
         QueryParser.primary_return retval = new QueryParser.primary_return();
         retval.start = input.LT(1);
@@ -668,22 +669,22 @@ public class QueryParser extends Parser {
 
         CommonTree char_literal19_tree=null;
         CommonTree char_literal21_tree=null;
-        RewriteRuleTokenStream stream_23=new RewriteRuleTokenStream(adaptor,"token 23");
         RewriteRuleTokenStream stream_24=new RewriteRuleTokenStream(adaptor,"token 24");
+        RewriteRuleTokenStream stream_25=new RewriteRuleTokenStream(adaptor,"token 25");
         RewriteRuleSubtreeStream stream_or=new RewriteRuleSubtreeStream(adaptor,"rule or");
         RewriteRuleSubtreeStream stream_simple=new RewriteRuleSubtreeStream(adaptor,"rule simple");
         try {
-            // src/reimann/Query.g:33:9: ( ( ( '(' or ')' ) -> ^( or ) | simple -> simple ) )
-            // src/reimann/Query.g:33:12: ( ( '(' or ')' ) -> ^( or ) | simple -> simple )
+            // src/reimann/Query.g:34:9: ( ( ( '(' or ')' ) -> ^( or ) | simple -> simple ) )
+            // src/reimann/Query.g:34:12: ( ( '(' or ')' ) -> ^( or ) | simple -> simple )
             {
-            // src/reimann/Query.g:33:12: ( ( '(' or ')' ) -> ^( or ) | simple -> simple )
+            // src/reimann/Query.g:34:12: ( ( '(' or ')' ) -> ^( or ) | simple -> simple )
             int alt11=2;
             int LA11_0 = input.LA(1);
 
-            if ( (LA11_0==23) ) {
+            if ( (LA11_0==24) ) {
                 alt11=1;
             }
-            else if ( ((LA11_0>=25 && LA11_0<=34)) ) {
+            else if ( (LA11_0==TAGGED||(LA11_0>=26 && LA11_0<=35)) ) {
                 alt11=2;
             }
             else {
@@ -694,22 +695,22 @@ public class QueryParser extends Parser {
             }
             switch (alt11) {
                 case 1 :
-                    // src/reimann/Query.g:34:4: ( '(' or ')' )
+                    // src/reimann/Query.g:35:4: ( '(' or ')' )
                     {
-                    // src/reimann/Query.g:34:4: ( '(' or ')' )
-                    // src/reimann/Query.g:34:5: '(' or ')'
+                    // src/reimann/Query.g:35:4: ( '(' or ')' )
+                    // src/reimann/Query.g:35:5: '(' or ')'
                     {
-                    char_literal19=(Token)match(input,23,FOLLOW_23_in_primary228);  
-                    stream_23.add(char_literal19);
+                    char_literal19=(Token)match(input,24,FOLLOW_24_in_primary236);  
+                    stream_24.add(char_literal19);
 
-                    pushFollow(FOLLOW_or_in_primary230);
+                    pushFollow(FOLLOW_or_in_primary238);
                     or20=or();
 
                     state._fsp--;
 
                     stream_or.add(or20.getTree());
-                    char_literal21=(Token)match(input,24,FOLLOW_24_in_primary232);  
-                    stream_24.add(char_literal21);
+                    char_literal21=(Token)match(input,25,FOLLOW_25_in_primary240);  
+                    stream_25.add(char_literal21);
 
 
                     }
@@ -727,9 +728,9 @@ public class QueryParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 34:17: -> ^( or )
+                    // 35:17: -> ^( or )
                     {
-                        // src/reimann/Query.g:34:20: ^( or )
+                        // src/reimann/Query.g:35:20: ^( or )
                         {
                         CommonTree root_1 = (CommonTree)adaptor.nil();
                         root_1 = (CommonTree)adaptor.becomeRoot(stream_or.nextNode(), root_1);
@@ -743,9 +744,9 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // src/reimann/Query.g:35:6: simple
+                    // src/reimann/Query.g:36:6: simple
                     {
-                    pushFollow(FOLLOW_simple_in_primary246);
+                    pushFollow(FOLLOW_simple_in_primary254);
                     simple22=simple();
 
                     state._fsp--;
@@ -764,7 +765,7 @@ public class QueryParser extends Parser {
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
                     root_0 = (CommonTree)adaptor.nil();
-                    // 35:13: -> simple
+                    // 36:13: -> simple
                     {
                         adaptor.addChild(root_0, stream_simple.nextTree());
 
@@ -803,7 +804,7 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "simple"
-    // src/reimann/Query.g:38:1: fragment simple : ( t | f | nil | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal ) ;
+    // src/reimann/Query.g:39:1: fragment simple : ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal ) ;
     public final QueryParser.simple_return simple() throws RecognitionException {
         QueryParser.simple_return retval = new QueryParser.simple_return();
         retval.start = input.LT(1);
@@ -816,36 +817,38 @@ public class QueryParser extends Parser {
 
         QueryParser.nil_return nil25 = null;
 
-        QueryParser.approximately_return approximately26 = null;
+        QueryParser.tagged_return tagged26 = null;
 
-        QueryParser.lesser_return lesser27 = null;
+        QueryParser.approximately_return approximately27 = null;
 
-        QueryParser.lesser_equal_return lesser_equal28 = null;
+        QueryParser.lesser_return lesser28 = null;
 
-        QueryParser.greater_return greater29 = null;
+        QueryParser.lesser_equal_return lesser_equal29 = null;
 
-        QueryParser.greater_equal_return greater_equal30 = null;
+        QueryParser.greater_return greater30 = null;
 
-        QueryParser.not_equal_return not_equal31 = null;
+        QueryParser.greater_equal_return greater_equal31 = null;
 
-        QueryParser.equal_return equal32 = null;
+        QueryParser.not_equal_return not_equal32 = null;
+
+        QueryParser.equal_return equal33 = null;
 
 
 
         try {
-            // src/reimann/Query.g:39:8: ( ( t | f | nil | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal ) )
-            // src/reimann/Query.g:39:10: ( t | f | nil | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )
+            // src/reimann/Query.g:40:8: ( ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal ) )
+            // src/reimann/Query.g:40:10: ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            // src/reimann/Query.g:39:10: ( t | f | nil | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )
-            int alt12=10;
+            // src/reimann/Query.g:40:10: ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )
+            int alt12=11;
             alt12 = dfa12.predict(input);
             switch (alt12) {
                 case 1 :
-                    // src/reimann/Query.g:39:12: t
+                    // src/reimann/Query.g:40:12: t
                     {
-                    pushFollow(FOLLOW_t_in_simple266);
+                    pushFollow(FOLLOW_t_in_simple274);
                     t23=t();
 
                     state._fsp--;
@@ -855,9 +858,9 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 2 :
-                    // src/reimann/Query.g:39:16: f
+                    // src/reimann/Query.g:40:16: f
                     {
-                    pushFollow(FOLLOW_f_in_simple270);
+                    pushFollow(FOLLOW_f_in_simple278);
                     f24=f();
 
                     state._fsp--;
@@ -867,9 +870,9 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 3 :
-                    // src/reimann/Query.g:39:20: nil
+                    // src/reimann/Query.g:40:20: nil
                     {
-                    pushFollow(FOLLOW_nil_in_simple274);
+                    pushFollow(FOLLOW_nil_in_simple282);
                     nil25=nil();
 
                     state._fsp--;
@@ -879,86 +882,98 @@ public class QueryParser extends Parser {
                     }
                     break;
                 case 4 :
-                    // src/reimann/Query.g:40:5: approximately
+                    // src/reimann/Query.g:41:5: tagged
                     {
-                    pushFollow(FOLLOW_approximately_in_simple280);
-                    approximately26=approximately();
+                    pushFollow(FOLLOW_tagged_in_simple288);
+                    tagged26=tagged();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, approximately26.getTree());
+                    adaptor.addChild(root_0, tagged26.getTree());
 
                     }
                     break;
                 case 5 :
-                    // src/reimann/Query.g:41:5: lesser
+                    // src/reimann/Query.g:42:5: approximately
                     {
-                    pushFollow(FOLLOW_lesser_in_simple286);
-                    lesser27=lesser();
+                    pushFollow(FOLLOW_approximately_in_simple294);
+                    approximately27=approximately();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, lesser27.getTree());
+                    adaptor.addChild(root_0, approximately27.getTree());
 
                     }
                     break;
                 case 6 :
-                    // src/reimann/Query.g:42:5: lesser_equal
+                    // src/reimann/Query.g:43:5: lesser
                     {
-                    pushFollow(FOLLOW_lesser_equal_in_simple292);
-                    lesser_equal28=lesser_equal();
+                    pushFollow(FOLLOW_lesser_in_simple300);
+                    lesser28=lesser();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, lesser_equal28.getTree());
+                    adaptor.addChild(root_0, lesser28.getTree());
 
                     }
                     break;
                 case 7 :
-                    // src/reimann/Query.g:43:5: greater
+                    // src/reimann/Query.g:44:5: lesser_equal
                     {
-                    pushFollow(FOLLOW_greater_in_simple298);
-                    greater29=greater();
+                    pushFollow(FOLLOW_lesser_equal_in_simple306);
+                    lesser_equal29=lesser_equal();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, greater29.getTree());
+                    adaptor.addChild(root_0, lesser_equal29.getTree());
 
                     }
                     break;
                 case 8 :
-                    // src/reimann/Query.g:44:5: greater_equal
+                    // src/reimann/Query.g:45:5: greater
                     {
-                    pushFollow(FOLLOW_greater_equal_in_simple304);
-                    greater_equal30=greater_equal();
+                    pushFollow(FOLLOW_greater_in_simple312);
+                    greater30=greater();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, greater_equal30.getTree());
+                    adaptor.addChild(root_0, greater30.getTree());
 
                     }
                     break;
                 case 9 :
-                    // src/reimann/Query.g:45:5: not_equal
+                    // src/reimann/Query.g:46:5: greater_equal
                     {
-                    pushFollow(FOLLOW_not_equal_in_simple310);
-                    not_equal31=not_equal();
+                    pushFollow(FOLLOW_greater_equal_in_simple318);
+                    greater_equal31=greater_equal();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, not_equal31.getTree());
+                    adaptor.addChild(root_0, greater_equal31.getTree());
 
                     }
                     break;
                 case 10 :
-                    // src/reimann/Query.g:46:5: equal
+                    // src/reimann/Query.g:47:5: not_equal
                     {
-                    pushFollow(FOLLOW_equal_in_simple316);
-                    equal32=equal();
+                    pushFollow(FOLLOW_not_equal_in_simple324);
+                    not_equal32=not_equal();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, equal32.getTree());
+                    adaptor.addChild(root_0, not_equal32.getTree());
+
+                    }
+                    break;
+                case 11 :
+                    // src/reimann/Query.g:48:5: equal
+                    {
+                    pushFollow(FOLLOW_equal_in_simple330);
+                    equal33=equal();
+
+                    state._fsp--;
+
+                    adaptor.addChild(root_0, equal33.getTree());
 
                     }
                     break;
@@ -992,38 +1007,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "approximately"
-    // src/reimann/Query.g:48:1: approximately : field ( WS )* APPROXIMATELY ( WS )* value ;
+    // src/reimann/Query.g:51:1: approximately : field ( WS )* APPROXIMATELY ( WS )* value ;
     public final QueryParser.approximately_return approximately() throws RecognitionException {
         QueryParser.approximately_return retval = new QueryParser.approximately_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS34=null;
-        Token APPROXIMATELY35=null;
-        Token WS36=null;
-        QueryParser.field_return field33 = null;
+        Token WS35=null;
+        Token APPROXIMATELY36=null;
+        Token WS37=null;
+        QueryParser.field_return field34 = null;
 
-        QueryParser.value_return value37 = null;
+        QueryParser.value_return value38 = null;
 
 
-        CommonTree WS34_tree=null;
-        CommonTree APPROXIMATELY35_tree=null;
-        CommonTree WS36_tree=null;
+        CommonTree WS35_tree=null;
+        CommonTree APPROXIMATELY36_tree=null;
+        CommonTree WS37_tree=null;
 
         try {
-            // src/reimann/Query.g:49:2: ( field ( WS )* APPROXIMATELY ( WS )* value )
-            // src/reimann/Query.g:49:4: field ( WS )* APPROXIMATELY ( WS )* value
+            // src/reimann/Query.g:52:2: ( field ( WS )* APPROXIMATELY ( WS )* value )
+            // src/reimann/Query.g:52:4: field ( WS )* APPROXIMATELY ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_approximately326);
-            field33=field();
+            pushFollow(FOLLOW_field_in_approximately343);
+            field34=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field33.getTree());
-            // src/reimann/Query.g:49:10: ( WS )*
+            adaptor.addChild(root_0, field34.getTree());
+            // src/reimann/Query.g:52:10: ( WS )*
             loop13:
             do {
                 int alt13=2;
@@ -1036,11 +1051,11 @@ public class QueryParser extends Parser {
 
                 switch (alt13) {
             	case 1 :
-            	    // src/reimann/Query.g:49:10: WS
+            	    // src/reimann/Query.g:52:10: WS
             	    {
-            	    WS34=(Token)match(input,WS,FOLLOW_WS_in_approximately328); 
-            	    WS34_tree = (CommonTree)adaptor.create(WS34);
-            	    adaptor.addChild(root_0, WS34_tree);
+            	    WS35=(Token)match(input,WS,FOLLOW_WS_in_approximately345); 
+            	    WS35_tree = (CommonTree)adaptor.create(WS35);
+            	    adaptor.addChild(root_0, WS35_tree);
 
 
             	    }
@@ -1051,11 +1066,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            APPROXIMATELY35=(Token)match(input,APPROXIMATELY,FOLLOW_APPROXIMATELY_in_approximately331); 
-            APPROXIMATELY35_tree = (CommonTree)adaptor.create(APPROXIMATELY35);
-            root_0 = (CommonTree)adaptor.becomeRoot(APPROXIMATELY35_tree, root_0);
+            APPROXIMATELY36=(Token)match(input,APPROXIMATELY,FOLLOW_APPROXIMATELY_in_approximately348); 
+            APPROXIMATELY36_tree = (CommonTree)adaptor.create(APPROXIMATELY36);
+            root_0 = (CommonTree)adaptor.becomeRoot(APPROXIMATELY36_tree, root_0);
 
-            // src/reimann/Query.g:49:29: ( WS )*
+            // src/reimann/Query.g:52:29: ( WS )*
             loop14:
             do {
                 int alt14=2;
@@ -1068,11 +1083,11 @@ public class QueryParser extends Parser {
 
                 switch (alt14) {
             	case 1 :
-            	    // src/reimann/Query.g:49:29: WS
+            	    // src/reimann/Query.g:52:29: WS
             	    {
-            	    WS36=(Token)match(input,WS,FOLLOW_WS_in_approximately334); 
-            	    WS36_tree = (CommonTree)adaptor.create(WS36);
-            	    adaptor.addChild(root_0, WS36_tree);
+            	    WS37=(Token)match(input,WS,FOLLOW_WS_in_approximately351); 
+            	    WS37_tree = (CommonTree)adaptor.create(WS37);
+            	    adaptor.addChild(root_0, WS37_tree);
 
 
             	    }
@@ -1083,12 +1098,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_approximately337);
-            value37=value();
+            pushFollow(FOLLOW_value_in_approximately354);
+            value38=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value37.getTree());
+            adaptor.addChild(root_0, value38.getTree());
 
             }
 
@@ -1116,38 +1131,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "lesser"
-    // src/reimann/Query.g:50:1: lesser : field ( WS )* LESSER ( WS )* value ;
+    // src/reimann/Query.g:53:1: lesser : field ( WS )* LESSER ( WS )* value ;
     public final QueryParser.lesser_return lesser() throws RecognitionException {
         QueryParser.lesser_return retval = new QueryParser.lesser_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS39=null;
-        Token LESSER40=null;
-        Token WS41=null;
-        QueryParser.field_return field38 = null;
+        Token WS40=null;
+        Token LESSER41=null;
+        Token WS42=null;
+        QueryParser.field_return field39 = null;
 
-        QueryParser.value_return value42 = null;
+        QueryParser.value_return value43 = null;
 
 
-        CommonTree WS39_tree=null;
-        CommonTree LESSER40_tree=null;
-        CommonTree WS41_tree=null;
+        CommonTree WS40_tree=null;
+        CommonTree LESSER41_tree=null;
+        CommonTree WS42_tree=null;
 
         try {
-            // src/reimann/Query.g:50:8: ( field ( WS )* LESSER ( WS )* value )
-            // src/reimann/Query.g:50:10: field ( WS )* LESSER ( WS )* value
+            // src/reimann/Query.g:53:8: ( field ( WS )* LESSER ( WS )* value )
+            // src/reimann/Query.g:53:10: field ( WS )* LESSER ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_lesser344);
-            field38=field();
+            pushFollow(FOLLOW_field_in_lesser361);
+            field39=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field38.getTree());
-            // src/reimann/Query.g:50:16: ( WS )*
+            adaptor.addChild(root_0, field39.getTree());
+            // src/reimann/Query.g:53:16: ( WS )*
             loop15:
             do {
                 int alt15=2;
@@ -1160,11 +1175,11 @@ public class QueryParser extends Parser {
 
                 switch (alt15) {
             	case 1 :
-            	    // src/reimann/Query.g:50:16: WS
+            	    // src/reimann/Query.g:53:16: WS
             	    {
-            	    WS39=(Token)match(input,WS,FOLLOW_WS_in_lesser346); 
-            	    WS39_tree = (CommonTree)adaptor.create(WS39);
-            	    adaptor.addChild(root_0, WS39_tree);
+            	    WS40=(Token)match(input,WS,FOLLOW_WS_in_lesser363); 
+            	    WS40_tree = (CommonTree)adaptor.create(WS40);
+            	    adaptor.addChild(root_0, WS40_tree);
 
 
             	    }
@@ -1175,11 +1190,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            LESSER40=(Token)match(input,LESSER,FOLLOW_LESSER_in_lesser349); 
-            LESSER40_tree = (CommonTree)adaptor.create(LESSER40);
-            root_0 = (CommonTree)adaptor.becomeRoot(LESSER40_tree, root_0);
+            LESSER41=(Token)match(input,LESSER,FOLLOW_LESSER_in_lesser366); 
+            LESSER41_tree = (CommonTree)adaptor.create(LESSER41);
+            root_0 = (CommonTree)adaptor.becomeRoot(LESSER41_tree, root_0);
 
-            // src/reimann/Query.g:50:28: ( WS )*
+            // src/reimann/Query.g:53:28: ( WS )*
             loop16:
             do {
                 int alt16=2;
@@ -1192,11 +1207,11 @@ public class QueryParser extends Parser {
 
                 switch (alt16) {
             	case 1 :
-            	    // src/reimann/Query.g:50:28: WS
+            	    // src/reimann/Query.g:53:28: WS
             	    {
-            	    WS41=(Token)match(input,WS,FOLLOW_WS_in_lesser352); 
-            	    WS41_tree = (CommonTree)adaptor.create(WS41);
-            	    adaptor.addChild(root_0, WS41_tree);
+            	    WS42=(Token)match(input,WS,FOLLOW_WS_in_lesser369); 
+            	    WS42_tree = (CommonTree)adaptor.create(WS42);
+            	    adaptor.addChild(root_0, WS42_tree);
 
 
             	    }
@@ -1207,12 +1222,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_lesser355);
-            value42=value();
+            pushFollow(FOLLOW_value_in_lesser372);
+            value43=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value42.getTree());
+            adaptor.addChild(root_0, value43.getTree());
 
             }
 
@@ -1240,38 +1255,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "lesser_equal"
-    // src/reimann/Query.g:51:1: lesser_equal : field ( WS )* LESSER_EQUAL ( WS )* value ;
+    // src/reimann/Query.g:54:1: lesser_equal : field ( WS )* LESSER_EQUAL ( WS )* value ;
     public final QueryParser.lesser_equal_return lesser_equal() throws RecognitionException {
         QueryParser.lesser_equal_return retval = new QueryParser.lesser_equal_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS44=null;
-        Token LESSER_EQUAL45=null;
-        Token WS46=null;
-        QueryParser.field_return field43 = null;
+        Token WS45=null;
+        Token LESSER_EQUAL46=null;
+        Token WS47=null;
+        QueryParser.field_return field44 = null;
 
-        QueryParser.value_return value47 = null;
+        QueryParser.value_return value48 = null;
 
 
-        CommonTree WS44_tree=null;
-        CommonTree LESSER_EQUAL45_tree=null;
-        CommonTree WS46_tree=null;
+        CommonTree WS45_tree=null;
+        CommonTree LESSER_EQUAL46_tree=null;
+        CommonTree WS47_tree=null;
 
         try {
-            // src/reimann/Query.g:52:2: ( field ( WS )* LESSER_EQUAL ( WS )* value )
-            // src/reimann/Query.g:52:4: field ( WS )* LESSER_EQUAL ( WS )* value
+            // src/reimann/Query.g:55:2: ( field ( WS )* LESSER_EQUAL ( WS )* value )
+            // src/reimann/Query.g:55:4: field ( WS )* LESSER_EQUAL ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_lesser_equal363);
-            field43=field();
+            pushFollow(FOLLOW_field_in_lesser_equal380);
+            field44=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field43.getTree());
-            // src/reimann/Query.g:52:10: ( WS )*
+            adaptor.addChild(root_0, field44.getTree());
+            // src/reimann/Query.g:55:10: ( WS )*
             loop17:
             do {
                 int alt17=2;
@@ -1284,11 +1299,11 @@ public class QueryParser extends Parser {
 
                 switch (alt17) {
             	case 1 :
-            	    // src/reimann/Query.g:52:10: WS
+            	    // src/reimann/Query.g:55:10: WS
             	    {
-            	    WS44=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal365); 
-            	    WS44_tree = (CommonTree)adaptor.create(WS44);
-            	    adaptor.addChild(root_0, WS44_tree);
+            	    WS45=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal382); 
+            	    WS45_tree = (CommonTree)adaptor.create(WS45);
+            	    adaptor.addChild(root_0, WS45_tree);
 
 
             	    }
@@ -1299,11 +1314,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            LESSER_EQUAL45=(Token)match(input,LESSER_EQUAL,FOLLOW_LESSER_EQUAL_in_lesser_equal368); 
-            LESSER_EQUAL45_tree = (CommonTree)adaptor.create(LESSER_EQUAL45);
-            root_0 = (CommonTree)adaptor.becomeRoot(LESSER_EQUAL45_tree, root_0);
+            LESSER_EQUAL46=(Token)match(input,LESSER_EQUAL,FOLLOW_LESSER_EQUAL_in_lesser_equal385); 
+            LESSER_EQUAL46_tree = (CommonTree)adaptor.create(LESSER_EQUAL46);
+            root_0 = (CommonTree)adaptor.becomeRoot(LESSER_EQUAL46_tree, root_0);
 
-            // src/reimann/Query.g:52:28: ( WS )*
+            // src/reimann/Query.g:55:28: ( WS )*
             loop18:
             do {
                 int alt18=2;
@@ -1316,11 +1331,11 @@ public class QueryParser extends Parser {
 
                 switch (alt18) {
             	case 1 :
-            	    // src/reimann/Query.g:52:28: WS
+            	    // src/reimann/Query.g:55:28: WS
             	    {
-            	    WS46=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal371); 
-            	    WS46_tree = (CommonTree)adaptor.create(WS46);
-            	    adaptor.addChild(root_0, WS46_tree);
+            	    WS47=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal388); 
+            	    WS47_tree = (CommonTree)adaptor.create(WS47);
+            	    adaptor.addChild(root_0, WS47_tree);
 
 
             	    }
@@ -1331,12 +1346,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_lesser_equal374);
-            value47=value();
+            pushFollow(FOLLOW_value_in_lesser_equal391);
+            value48=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value47.getTree());
+            adaptor.addChild(root_0, value48.getTree());
 
             }
 
@@ -1364,38 +1379,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "greater"
-    // src/reimann/Query.g:53:1: greater : field ( WS )* GREATER ( WS )* value ;
+    // src/reimann/Query.g:56:1: greater : field ( WS )* GREATER ( WS )* value ;
     public final QueryParser.greater_return greater() throws RecognitionException {
         QueryParser.greater_return retval = new QueryParser.greater_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS49=null;
-        Token GREATER50=null;
-        Token WS51=null;
-        QueryParser.field_return field48 = null;
+        Token WS50=null;
+        Token GREATER51=null;
+        Token WS52=null;
+        QueryParser.field_return field49 = null;
 
-        QueryParser.value_return value52 = null;
+        QueryParser.value_return value53 = null;
 
 
-        CommonTree WS49_tree=null;
-        CommonTree GREATER50_tree=null;
-        CommonTree WS51_tree=null;
+        CommonTree WS50_tree=null;
+        CommonTree GREATER51_tree=null;
+        CommonTree WS52_tree=null;
 
         try {
-            // src/reimann/Query.g:53:9: ( field ( WS )* GREATER ( WS )* value )
-            // src/reimann/Query.g:53:11: field ( WS )* GREATER ( WS )* value
+            // src/reimann/Query.g:56:9: ( field ( WS )* GREATER ( WS )* value )
+            // src/reimann/Query.g:56:11: field ( WS )* GREATER ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_greater381);
-            field48=field();
+            pushFollow(FOLLOW_field_in_greater398);
+            field49=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field48.getTree());
-            // src/reimann/Query.g:53:17: ( WS )*
+            adaptor.addChild(root_0, field49.getTree());
+            // src/reimann/Query.g:56:17: ( WS )*
             loop19:
             do {
                 int alt19=2;
@@ -1408,11 +1423,11 @@ public class QueryParser extends Parser {
 
                 switch (alt19) {
             	case 1 :
-            	    // src/reimann/Query.g:53:17: WS
+            	    // src/reimann/Query.g:56:17: WS
             	    {
-            	    WS49=(Token)match(input,WS,FOLLOW_WS_in_greater383); 
-            	    WS49_tree = (CommonTree)adaptor.create(WS49);
-            	    adaptor.addChild(root_0, WS49_tree);
+            	    WS50=(Token)match(input,WS,FOLLOW_WS_in_greater400); 
+            	    WS50_tree = (CommonTree)adaptor.create(WS50);
+            	    adaptor.addChild(root_0, WS50_tree);
 
 
             	    }
@@ -1423,11 +1438,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            GREATER50=(Token)match(input,GREATER,FOLLOW_GREATER_in_greater386); 
-            GREATER50_tree = (CommonTree)adaptor.create(GREATER50);
-            root_0 = (CommonTree)adaptor.becomeRoot(GREATER50_tree, root_0);
+            GREATER51=(Token)match(input,GREATER,FOLLOW_GREATER_in_greater403); 
+            GREATER51_tree = (CommonTree)adaptor.create(GREATER51);
+            root_0 = (CommonTree)adaptor.becomeRoot(GREATER51_tree, root_0);
 
-            // src/reimann/Query.g:53:30: ( WS )*
+            // src/reimann/Query.g:56:30: ( WS )*
             loop20:
             do {
                 int alt20=2;
@@ -1440,11 +1455,11 @@ public class QueryParser extends Parser {
 
                 switch (alt20) {
             	case 1 :
-            	    // src/reimann/Query.g:53:30: WS
+            	    // src/reimann/Query.g:56:30: WS
             	    {
-            	    WS51=(Token)match(input,WS,FOLLOW_WS_in_greater389); 
-            	    WS51_tree = (CommonTree)adaptor.create(WS51);
-            	    adaptor.addChild(root_0, WS51_tree);
+            	    WS52=(Token)match(input,WS,FOLLOW_WS_in_greater406); 
+            	    WS52_tree = (CommonTree)adaptor.create(WS52);
+            	    adaptor.addChild(root_0, WS52_tree);
 
 
             	    }
@@ -1455,12 +1470,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_greater392);
-            value52=value();
+            pushFollow(FOLLOW_value_in_greater409);
+            value53=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value52.getTree());
+            adaptor.addChild(root_0, value53.getTree());
 
             }
 
@@ -1488,38 +1503,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "greater_equal"
-    // src/reimann/Query.g:54:1: greater_equal : field ( WS )* GREATER_EQUAL ( WS )* value ;
+    // src/reimann/Query.g:57:1: greater_equal : field ( WS )* GREATER_EQUAL ( WS )* value ;
     public final QueryParser.greater_equal_return greater_equal() throws RecognitionException {
         QueryParser.greater_equal_return retval = new QueryParser.greater_equal_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS54=null;
-        Token GREATER_EQUAL55=null;
-        Token WS56=null;
-        QueryParser.field_return field53 = null;
+        Token WS55=null;
+        Token GREATER_EQUAL56=null;
+        Token WS57=null;
+        QueryParser.field_return field54 = null;
 
-        QueryParser.value_return value57 = null;
+        QueryParser.value_return value58 = null;
 
 
-        CommonTree WS54_tree=null;
-        CommonTree GREATER_EQUAL55_tree=null;
-        CommonTree WS56_tree=null;
+        CommonTree WS55_tree=null;
+        CommonTree GREATER_EQUAL56_tree=null;
+        CommonTree WS57_tree=null;
 
         try {
-            // src/reimann/Query.g:55:2: ( field ( WS )* GREATER_EQUAL ( WS )* value )
-            // src/reimann/Query.g:55:4: field ( WS )* GREATER_EQUAL ( WS )* value
+            // src/reimann/Query.g:58:2: ( field ( WS )* GREATER_EQUAL ( WS )* value )
+            // src/reimann/Query.g:58:4: field ( WS )* GREATER_EQUAL ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_greater_equal400);
-            field53=field();
+            pushFollow(FOLLOW_field_in_greater_equal417);
+            field54=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field53.getTree());
-            // src/reimann/Query.g:55:10: ( WS )*
+            adaptor.addChild(root_0, field54.getTree());
+            // src/reimann/Query.g:58:10: ( WS )*
             loop21:
             do {
                 int alt21=2;
@@ -1532,11 +1547,11 @@ public class QueryParser extends Parser {
 
                 switch (alt21) {
             	case 1 :
-            	    // src/reimann/Query.g:55:10: WS
+            	    // src/reimann/Query.g:58:10: WS
             	    {
-            	    WS54=(Token)match(input,WS,FOLLOW_WS_in_greater_equal402); 
-            	    WS54_tree = (CommonTree)adaptor.create(WS54);
-            	    adaptor.addChild(root_0, WS54_tree);
+            	    WS55=(Token)match(input,WS,FOLLOW_WS_in_greater_equal419); 
+            	    WS55_tree = (CommonTree)adaptor.create(WS55);
+            	    adaptor.addChild(root_0, WS55_tree);
 
 
             	    }
@@ -1547,11 +1562,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            GREATER_EQUAL55=(Token)match(input,GREATER_EQUAL,FOLLOW_GREATER_EQUAL_in_greater_equal405); 
-            GREATER_EQUAL55_tree = (CommonTree)adaptor.create(GREATER_EQUAL55);
-            root_0 = (CommonTree)adaptor.becomeRoot(GREATER_EQUAL55_tree, root_0);
+            GREATER_EQUAL56=(Token)match(input,GREATER_EQUAL,FOLLOW_GREATER_EQUAL_in_greater_equal422); 
+            GREATER_EQUAL56_tree = (CommonTree)adaptor.create(GREATER_EQUAL56);
+            root_0 = (CommonTree)adaptor.becomeRoot(GREATER_EQUAL56_tree, root_0);
 
-            // src/reimann/Query.g:55:29: ( WS )*
+            // src/reimann/Query.g:58:29: ( WS )*
             loop22:
             do {
                 int alt22=2;
@@ -1564,11 +1579,11 @@ public class QueryParser extends Parser {
 
                 switch (alt22) {
             	case 1 :
-            	    // src/reimann/Query.g:55:29: WS
+            	    // src/reimann/Query.g:58:29: WS
             	    {
-            	    WS56=(Token)match(input,WS,FOLLOW_WS_in_greater_equal408); 
-            	    WS56_tree = (CommonTree)adaptor.create(WS56);
-            	    adaptor.addChild(root_0, WS56_tree);
+            	    WS57=(Token)match(input,WS,FOLLOW_WS_in_greater_equal425); 
+            	    WS57_tree = (CommonTree)adaptor.create(WS57);
+            	    adaptor.addChild(root_0, WS57_tree);
 
 
             	    }
@@ -1579,12 +1594,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_greater_equal411);
-            value57=value();
+            pushFollow(FOLLOW_value_in_greater_equal428);
+            value58=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value57.getTree());
+            adaptor.addChild(root_0, value58.getTree());
 
             }
 
@@ -1612,38 +1627,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "not_equal"
-    // src/reimann/Query.g:56:1: not_equal : field ( WS )* NOT_EQUAL ( WS )* value ;
+    // src/reimann/Query.g:59:1: not_equal : field ( WS )* NOT_EQUAL ( WS )* value ;
     public final QueryParser.not_equal_return not_equal() throws RecognitionException {
         QueryParser.not_equal_return retval = new QueryParser.not_equal_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS59=null;
-        Token NOT_EQUAL60=null;
-        Token WS61=null;
-        QueryParser.field_return field58 = null;
+        Token WS60=null;
+        Token NOT_EQUAL61=null;
+        Token WS62=null;
+        QueryParser.field_return field59 = null;
 
-        QueryParser.value_return value62 = null;
+        QueryParser.value_return value63 = null;
 
 
-        CommonTree WS59_tree=null;
-        CommonTree NOT_EQUAL60_tree=null;
-        CommonTree WS61_tree=null;
+        CommonTree WS60_tree=null;
+        CommonTree NOT_EQUAL61_tree=null;
+        CommonTree WS62_tree=null;
 
         try {
-            // src/reimann/Query.g:57:2: ( field ( WS )* NOT_EQUAL ( WS )* value )
-            // src/reimann/Query.g:57:4: field ( WS )* NOT_EQUAL ( WS )* value
+            // src/reimann/Query.g:60:2: ( field ( WS )* NOT_EQUAL ( WS )* value )
+            // src/reimann/Query.g:60:4: field ( WS )* NOT_EQUAL ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_not_equal419);
-            field58=field();
+            pushFollow(FOLLOW_field_in_not_equal436);
+            field59=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field58.getTree());
-            // src/reimann/Query.g:57:10: ( WS )*
+            adaptor.addChild(root_0, field59.getTree());
+            // src/reimann/Query.g:60:10: ( WS )*
             loop23:
             do {
                 int alt23=2;
@@ -1656,11 +1671,11 @@ public class QueryParser extends Parser {
 
                 switch (alt23) {
             	case 1 :
-            	    // src/reimann/Query.g:57:10: WS
+            	    // src/reimann/Query.g:60:10: WS
             	    {
-            	    WS59=(Token)match(input,WS,FOLLOW_WS_in_not_equal421); 
-            	    WS59_tree = (CommonTree)adaptor.create(WS59);
-            	    adaptor.addChild(root_0, WS59_tree);
+            	    WS60=(Token)match(input,WS,FOLLOW_WS_in_not_equal438); 
+            	    WS60_tree = (CommonTree)adaptor.create(WS60);
+            	    adaptor.addChild(root_0, WS60_tree);
 
 
             	    }
@@ -1671,11 +1686,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            NOT_EQUAL60=(Token)match(input,NOT_EQUAL,FOLLOW_NOT_EQUAL_in_not_equal424); 
-            NOT_EQUAL60_tree = (CommonTree)adaptor.create(NOT_EQUAL60);
-            root_0 = (CommonTree)adaptor.becomeRoot(NOT_EQUAL60_tree, root_0);
+            NOT_EQUAL61=(Token)match(input,NOT_EQUAL,FOLLOW_NOT_EQUAL_in_not_equal441); 
+            NOT_EQUAL61_tree = (CommonTree)adaptor.create(NOT_EQUAL61);
+            root_0 = (CommonTree)adaptor.becomeRoot(NOT_EQUAL61_tree, root_0);
 
-            // src/reimann/Query.g:57:25: ( WS )*
+            // src/reimann/Query.g:60:25: ( WS )*
             loop24:
             do {
                 int alt24=2;
@@ -1688,11 +1703,11 @@ public class QueryParser extends Parser {
 
                 switch (alt24) {
             	case 1 :
-            	    // src/reimann/Query.g:57:25: WS
+            	    // src/reimann/Query.g:60:25: WS
             	    {
-            	    WS61=(Token)match(input,WS,FOLLOW_WS_in_not_equal427); 
-            	    WS61_tree = (CommonTree)adaptor.create(WS61);
-            	    adaptor.addChild(root_0, WS61_tree);
+            	    WS62=(Token)match(input,WS,FOLLOW_WS_in_not_equal444); 
+            	    WS62_tree = (CommonTree)adaptor.create(WS62);
+            	    adaptor.addChild(root_0, WS62_tree);
 
 
             	    }
@@ -1703,12 +1718,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_not_equal430);
-            value62=value();
+            pushFollow(FOLLOW_value_in_not_equal447);
+            value63=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value62.getTree());
+            adaptor.addChild(root_0, value63.getTree());
 
             }
 
@@ -1736,38 +1751,38 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "equal"
-    // src/reimann/Query.g:58:1: equal : field ( WS )* EQUAL ( WS )* value ;
+    // src/reimann/Query.g:61:1: equal : field ( WS )* EQUAL ( WS )* value ;
     public final QueryParser.equal_return equal() throws RecognitionException {
         QueryParser.equal_return retval = new QueryParser.equal_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token WS64=null;
-        Token EQUAL65=null;
-        Token WS66=null;
-        QueryParser.field_return field63 = null;
+        Token WS65=null;
+        Token EQUAL66=null;
+        Token WS67=null;
+        QueryParser.field_return field64 = null;
 
-        QueryParser.value_return value67 = null;
+        QueryParser.value_return value68 = null;
 
 
-        CommonTree WS64_tree=null;
-        CommonTree EQUAL65_tree=null;
-        CommonTree WS66_tree=null;
+        CommonTree WS65_tree=null;
+        CommonTree EQUAL66_tree=null;
+        CommonTree WS67_tree=null;
 
         try {
-            // src/reimann/Query.g:58:7: ( field ( WS )* EQUAL ( WS )* value )
-            // src/reimann/Query.g:58:9: field ( WS )* EQUAL ( WS )* value
+            // src/reimann/Query.g:61:7: ( field ( WS )* EQUAL ( WS )* value )
+            // src/reimann/Query.g:61:9: field ( WS )* EQUAL ( WS )* value
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            pushFollow(FOLLOW_field_in_equal438);
-            field63=field();
+            pushFollow(FOLLOW_field_in_equal455);
+            field64=field();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, field63.getTree());
-            // src/reimann/Query.g:58:15: ( WS )*
+            adaptor.addChild(root_0, field64.getTree());
+            // src/reimann/Query.g:61:15: ( WS )*
             loop25:
             do {
                 int alt25=2;
@@ -1780,11 +1795,11 @@ public class QueryParser extends Parser {
 
                 switch (alt25) {
             	case 1 :
-            	    // src/reimann/Query.g:58:15: WS
+            	    // src/reimann/Query.g:61:15: WS
             	    {
-            	    WS64=(Token)match(input,WS,FOLLOW_WS_in_equal440); 
-            	    WS64_tree = (CommonTree)adaptor.create(WS64);
-            	    adaptor.addChild(root_0, WS64_tree);
+            	    WS65=(Token)match(input,WS,FOLLOW_WS_in_equal457); 
+            	    WS65_tree = (CommonTree)adaptor.create(WS65);
+            	    adaptor.addChild(root_0, WS65_tree);
 
 
             	    }
@@ -1795,11 +1810,11 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            EQUAL65=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_equal443); 
-            EQUAL65_tree = (CommonTree)adaptor.create(EQUAL65);
-            root_0 = (CommonTree)adaptor.becomeRoot(EQUAL65_tree, root_0);
+            EQUAL66=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_equal460); 
+            EQUAL66_tree = (CommonTree)adaptor.create(EQUAL66);
+            root_0 = (CommonTree)adaptor.becomeRoot(EQUAL66_tree, root_0);
 
-            // src/reimann/Query.g:58:26: ( WS )*
+            // src/reimann/Query.g:61:26: ( WS )*
             loop26:
             do {
                 int alt26=2;
@@ -1812,11 +1827,11 @@ public class QueryParser extends Parser {
 
                 switch (alt26) {
             	case 1 :
-            	    // src/reimann/Query.g:58:26: WS
+            	    // src/reimann/Query.g:61:26: WS
             	    {
-            	    WS66=(Token)match(input,WS,FOLLOW_WS_in_equal446); 
-            	    WS66_tree = (CommonTree)adaptor.create(WS66);
-            	    adaptor.addChild(root_0, WS66_tree);
+            	    WS67=(Token)match(input,WS,FOLLOW_WS_in_equal463); 
+            	    WS67_tree = (CommonTree)adaptor.create(WS67);
+            	    adaptor.addChild(root_0, WS67_tree);
 
 
             	    }
@@ -1827,12 +1842,12 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            pushFollow(FOLLOW_value_in_equal449);
-            value67=value();
+            pushFollow(FOLLOW_value_in_equal466);
+            value68=value();
 
             state._fsp--;
 
-            adaptor.addChild(root_0, value67.getTree());
+            adaptor.addChild(root_0, value68.getTree());
 
             }
 
@@ -1854,143 +1869,227 @@ public class QueryParser extends Parser {
     }
     // $ANTLR end "equal"
 
+    public static class tagged_return extends ParserRuleReturnScope {
+        CommonTree tree;
+        public Object getTree() { return tree; }
+    };
+
+    // $ANTLR start "tagged"
+    // src/reimann/Query.g:63:1: tagged : TAGGED ( WS )* String ;
+    public final QueryParser.tagged_return tagged() throws RecognitionException {
+        QueryParser.tagged_return retval = new QueryParser.tagged_return();
+        retval.start = input.LT(1);
+
+        CommonTree root_0 = null;
+
+        Token TAGGED69=null;
+        Token WS70=null;
+        Token String71=null;
+
+        CommonTree TAGGED69_tree=null;
+        CommonTree WS70_tree=null;
+        CommonTree String71_tree=null;
+
+        try {
+            // src/reimann/Query.g:63:8: ( TAGGED ( WS )* String )
+            // src/reimann/Query.g:63:10: TAGGED ( WS )* String
+            {
+            root_0 = (CommonTree)adaptor.nil();
+
+            TAGGED69=(Token)match(input,TAGGED,FOLLOW_TAGGED_in_tagged474); 
+            TAGGED69_tree = (CommonTree)adaptor.create(TAGGED69);
+            root_0 = (CommonTree)adaptor.becomeRoot(TAGGED69_tree, root_0);
+
+            // src/reimann/Query.g:63:18: ( WS )*
+            loop27:
+            do {
+                int alt27=2;
+                int LA27_0 = input.LA(1);
+
+                if ( (LA27_0==WS) ) {
+                    alt27=1;
+                }
+
+
+                switch (alt27) {
+            	case 1 :
+            	    // src/reimann/Query.g:63:18: WS
+            	    {
+            	    WS70=(Token)match(input,WS,FOLLOW_WS_in_tagged477); 
+            	    WS70_tree = (CommonTree)adaptor.create(WS70);
+            	    adaptor.addChild(root_0, WS70_tree);
+
+
+            	    }
+            	    break;
+
+            	default :
+            	    break loop27;
+                }
+            } while (true);
+
+            String71=(Token)match(input,String,FOLLOW_String_in_tagged480); 
+            String71_tree = (CommonTree)adaptor.create(String71);
+            adaptor.addChild(root_0, String71_tree);
+
+
+            }
+
+            retval.stop = input.LT(-1);
+
+            retval.tree = (CommonTree)adaptor.rulePostProcessing(root_0);
+            adaptor.setTokenBoundaries(retval.tree, retval.start, retval.stop);
+
+        }
+        catch (RecognitionException re) {
+            reportError(re);
+            recover(input,re);
+    	retval.tree = (CommonTree)adaptor.errorNode(input, retval.start, input.LT(-1), re);
+
+        }
+        finally {
+        }
+        return retval;
+    }
+    // $ANTLR end "tagged"
+
     public static class value_return extends ParserRuleReturnScope {
         CommonTree tree;
         public Object getTree() { return tree; }
     };
 
     // $ANTLR start "value"
-    // src/reimann/Query.g:60:1: value : ( String | t | f | nil | INT | FLOAT ) ;
+    // src/reimann/Query.g:65:1: value : ( String | t | f | nil | INT | FLOAT ) ;
     public final QueryParser.value_return value() throws RecognitionException {
         QueryParser.value_return retval = new QueryParser.value_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token String68=null;
-        Token INT72=null;
-        Token FLOAT73=null;
-        QueryParser.t_return t69 = null;
+        Token String72=null;
+        Token INT76=null;
+        Token FLOAT77=null;
+        QueryParser.t_return t73 = null;
 
-        QueryParser.f_return f70 = null;
+        QueryParser.f_return f74 = null;
 
-        QueryParser.nil_return nil71 = null;
+        QueryParser.nil_return nil75 = null;
 
 
-        CommonTree String68_tree=null;
-        CommonTree INT72_tree=null;
-        CommonTree FLOAT73_tree=null;
+        CommonTree String72_tree=null;
+        CommonTree INT76_tree=null;
+        CommonTree FLOAT77_tree=null;
 
         try {
-            // src/reimann/Query.g:60:7: ( ( String | t | f | nil | INT | FLOAT ) )
-            // src/reimann/Query.g:60:10: ( String | t | f | nil | INT | FLOAT )
+            // src/reimann/Query.g:65:7: ( ( String | t | f | nil | INT | FLOAT ) )
+            // src/reimann/Query.g:65:10: ( String | t | f | nil | INT | FLOAT )
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            // src/reimann/Query.g:60:10: ( String | t | f | nil | INT | FLOAT )
-            int alt27=6;
+            // src/reimann/Query.g:65:10: ( String | t | f | nil | INT | FLOAT )
+            int alt28=6;
             switch ( input.LA(1) ) {
             case String:
                 {
-                alt27=1;
-                }
-                break;
-            case 25:
-                {
-                alt27=2;
+                alt28=1;
                 }
                 break;
             case 26:
                 {
-                alt27=3;
+                alt28=2;
                 }
                 break;
             case 27:
-            case 28:
                 {
-                alt27=4;
+                alt28=3;
+                }
+                break;
+            case 28:
+            case 29:
+                {
+                alt28=4;
                 }
                 break;
             case INT:
                 {
-                alt27=5;
+                alt28=5;
                 }
                 break;
             case FLOAT:
                 {
-                alt27=6;
+                alt28=6;
                 }
                 break;
             default:
                 NoViableAltException nvae =
-                    new NoViableAltException("", 27, 0, input);
+                    new NoViableAltException("", 28, 0, input);
 
                 throw nvae;
             }
 
-            switch (alt27) {
+            switch (alt28) {
                 case 1 :
-                    // src/reimann/Query.g:60:11: String
+                    // src/reimann/Query.g:65:11: String
                     {
-                    String68=(Token)match(input,String,FOLLOW_String_in_value459); 
-                    String68_tree = (CommonTree)adaptor.create(String68);
-                    adaptor.addChild(root_0, String68_tree);
+                    String72=(Token)match(input,String,FOLLOW_String_in_value490); 
+                    String72_tree = (CommonTree)adaptor.create(String72);
+                    adaptor.addChild(root_0, String72_tree);
 
 
                     }
                     break;
                 case 2 :
-                    // src/reimann/Query.g:60:20: t
+                    // src/reimann/Query.g:65:20: t
                     {
-                    pushFollow(FOLLOW_t_in_value463);
-                    t69=t();
+                    pushFollow(FOLLOW_t_in_value494);
+                    t73=t();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, t69.getTree());
+                    adaptor.addChild(root_0, t73.getTree());
 
                     }
                     break;
                 case 3 :
-                    // src/reimann/Query.g:60:24: f
+                    // src/reimann/Query.g:65:24: f
                     {
-                    pushFollow(FOLLOW_f_in_value467);
-                    f70=f();
+                    pushFollow(FOLLOW_f_in_value498);
+                    f74=f();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, f70.getTree());
+                    adaptor.addChild(root_0, f74.getTree());
 
                     }
                     break;
                 case 4 :
-                    // src/reimann/Query.g:60:28: nil
+                    // src/reimann/Query.g:65:28: nil
                     {
-                    pushFollow(FOLLOW_nil_in_value471);
-                    nil71=nil();
+                    pushFollow(FOLLOW_nil_in_value502);
+                    nil75=nil();
 
                     state._fsp--;
 
-                    adaptor.addChild(root_0, nil71.getTree());
+                    adaptor.addChild(root_0, nil75.getTree());
 
                     }
                     break;
                 case 5 :
-                    // src/reimann/Query.g:60:34: INT
+                    // src/reimann/Query.g:65:34: INT
                     {
-                    INT72=(Token)match(input,INT,FOLLOW_INT_in_value475); 
-                    INT72_tree = (CommonTree)adaptor.create(INT72);
-                    adaptor.addChild(root_0, INT72_tree);
+                    INT76=(Token)match(input,INT,FOLLOW_INT_in_value506); 
+                    INT76_tree = (CommonTree)adaptor.create(INT76);
+                    adaptor.addChild(root_0, INT76_tree);
 
 
                     }
                     break;
                 case 6 :
-                    // src/reimann/Query.g:60:40: FLOAT
+                    // src/reimann/Query.g:65:40: FLOAT
                     {
-                    FLOAT73=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_value479); 
-                    FLOAT73_tree = (CommonTree)adaptor.create(FLOAT73);
-                    adaptor.addChild(root_0, FLOAT73_tree);
+                    FLOAT77=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_value510); 
+                    FLOAT77_tree = (CommonTree)adaptor.create(FLOAT77);
+                    adaptor.addChild(root_0, FLOAT77_tree);
 
 
                     }
@@ -2025,26 +2124,26 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "t"
-    // src/reimann/Query.g:63:1: t : 'true' ;
+    // src/reimann/Query.g:67:1: t : 'true' ;
     public final QueryParser.t_return t() throws RecognitionException {
         QueryParser.t_return retval = new QueryParser.t_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token string_literal74=null;
+        Token string_literal78=null;
 
-        CommonTree string_literal74_tree=null;
+        CommonTree string_literal78_tree=null;
 
         try {
-            // src/reimann/Query.g:63:3: ( 'true' )
-            // src/reimann/Query.g:63:5: 'true'
+            // src/reimann/Query.g:67:3: ( 'true' )
+            // src/reimann/Query.g:67:5: 'true'
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            string_literal74=(Token)match(input,25,FOLLOW_25_in_t489); 
-            string_literal74_tree = (CommonTree)adaptor.create(string_literal74);
-            adaptor.addChild(root_0, string_literal74_tree);
+            string_literal78=(Token)match(input,26,FOLLOW_26_in_t519); 
+            string_literal78_tree = (CommonTree)adaptor.create(string_literal78);
+            adaptor.addChild(root_0, string_literal78_tree);
 
 
             }
@@ -2073,26 +2172,26 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "f"
-    // src/reimann/Query.g:64:1: f : 'false' ;
+    // src/reimann/Query.g:68:1: f : 'false' ;
     public final QueryParser.f_return f() throws RecognitionException {
         QueryParser.f_return retval = new QueryParser.f_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token string_literal75=null;
+        Token string_literal79=null;
 
-        CommonTree string_literal75_tree=null;
+        CommonTree string_literal79_tree=null;
 
         try {
-            // src/reimann/Query.g:64:3: ( 'false' )
-            // src/reimann/Query.g:64:5: 'false'
+            // src/reimann/Query.g:68:3: ( 'false' )
+            // src/reimann/Query.g:68:5: 'false'
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            string_literal75=(Token)match(input,26,FOLLOW_26_in_f496); 
-            string_literal75_tree = (CommonTree)adaptor.create(string_literal75);
-            adaptor.addChild(root_0, string_literal75_tree);
+            string_literal79=(Token)match(input,27,FOLLOW_27_in_f526); 
+            string_literal79_tree = (CommonTree)adaptor.create(string_literal79);
+            adaptor.addChild(root_0, string_literal79_tree);
 
 
             }
@@ -2121,27 +2220,27 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "nil"
-    // src/reimann/Query.g:65:1: nil : ( 'null' | 'nil' );
+    // src/reimann/Query.g:69:1: nil : ( 'null' | 'nil' );
     public final QueryParser.nil_return nil() throws RecognitionException {
         QueryParser.nil_return retval = new QueryParser.nil_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token set76=null;
+        Token set80=null;
 
-        CommonTree set76_tree=null;
+        CommonTree set80_tree=null;
 
         try {
-            // src/reimann/Query.g:65:5: ( 'null' | 'nil' )
+            // src/reimann/Query.g:69:5: ( 'null' | 'nil' )
             // src/reimann/Query.g:
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            set76=(Token)input.LT(1);
-            if ( (input.LA(1)>=27 && input.LA(1)<=28) ) {
+            set80=(Token)input.LT(1);
+            if ( (input.LA(1)>=28 && input.LA(1)<=29) ) {
                 input.consume();
-                adaptor.addChild(root_0, (CommonTree)adaptor.create(set76));
+                adaptor.addChild(root_0, (CommonTree)adaptor.create(set80));
                 state.errorRecovery=false;
             }
             else {
@@ -2176,27 +2275,27 @@ public class QueryParser extends Parser {
     };
 
     // $ANTLR start "field"
-    // src/reimann/Query.g:67:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) ;
+    // src/reimann/Query.g:71:1: field : ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) ;
     public final QueryParser.field_return field() throws RecognitionException {
         QueryParser.field_return retval = new QueryParser.field_return();
         retval.start = input.LT(1);
 
         CommonTree root_0 = null;
 
-        Token set77=null;
+        Token set81=null;
 
-        CommonTree set77_tree=null;
+        CommonTree set81_tree=null;
 
         try {
-            // src/reimann/Query.g:67:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) )
-            // src/reimann/Query.g:67:9: ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' )
+            // src/reimann/Query.g:71:7: ( ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' ) )
+            // src/reimann/Query.g:71:9: ( 'host' | 'service' | 'state' | 'description' | 'metric_f' | 'time' )
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            set77=(Token)input.LT(1);
-            if ( (input.LA(1)>=29 && input.LA(1)<=34) ) {
+            set81=(Token)input.LT(1);
+            if ( (input.LA(1)>=30 && input.LA(1)<=35) ) {
                 input.consume();
-                adaptor.addChild(root_0, (CommonTree)adaptor.create(set77));
+                adaptor.addChild(root_0, (CommonTree)adaptor.create(set81));
                 state.errorRecovery=false;
             }
             else {
@@ -2237,14 +2336,14 @@ public class QueryParser extends Parser {
     static final String DFA8_minS =
         "\2\4\2\uffff";
     static final String DFA8_maxS =
-        "\1\30\1\16\2\uffff";
+        "\1\31\1\17\2\uffff";
     static final String DFA8_acceptS =
         "\2\uffff\1\2\1\1";
     static final String DFA8_specialS =
         "\4\uffff}>";
     static final String[] DFA8_transitionS = {
-            "\1\3\1\2\10\uffff\1\1\11\uffff\1\2",
-            "\1\3\1\2\10\uffff\1\1",
+            "\1\3\1\2\11\uffff\1\1\11\uffff\1\2",
+            "\1\3\1\2\11\uffff\1\1",
             "",
             ""
     };
@@ -2279,28 +2378,29 @@ public class QueryParser extends Parser {
             this.transition = DFA8_transition;
         }
         public String getDescription() {
-            return "()* loopback of 28:23: ( ( WS )* AND ( WS )* ( not | primary ) )*";
+            return "()* loopback of 29:23: ( ( WS )* AND ( WS )* ( not | primary ) )*";
         }
     }
     static final String DFA12_eotS =
-        "\15\uffff";
+        "\16\uffff";
     static final String DFA12_eofS =
-        "\15\uffff";
+        "\16\uffff";
     static final String DFA12_minS =
-        "\1\31\3\uffff\2\7\7\uffff";
+        "\1\16\4\uffff\2\7\7\uffff";
     static final String DFA12_maxS =
-        "\1\42\3\uffff\2\16\7\uffff";
+        "\1\43\4\uffff\2\17\7\uffff";
     static final String DFA12_acceptS =
-        "\1\uffff\1\1\1\2\1\3\2\uffff\1\10\1\4\1\11\1\6\1\7\1\12\1\5";
+        "\1\uffff\1\1\1\2\1\3\1\4\2\uffff\1\10\1\11\1\6\1\13\1\5\1\7\1\12";
     static final String DFA12_specialS =
-        "\15\uffff}>";
+        "\16\uffff}>";
     static final String[] DFA12_transitionS = {
-            "\1\1\1\2\2\3\6\4",
+            "\1\4\13\uffff\1\1\1\2\2\3\6\5",
             "",
             "",
             "",
-            "\1\7\1\10\1\13\1\14\1\11\1\12\1\6\1\5",
-            "\1\7\1\10\1\13\1\14\1\11\1\12\1\6\1\5",
+            "",
+            "\1\13\1\15\1\12\1\11\1\14\1\7\1\10\1\uffff\1\6",
+            "\1\13\1\15\1\12\1\11\1\14\1\7\1\10\1\uffff\1\6",
             "",
             "",
             "",
@@ -2340,87 +2440,91 @@ public class QueryParser extends Parser {
             this.transition = DFA12_transition;
         }
         public String getDescription() {
-            return "39:10: ( t | f | nil | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )";
+            return "40:10: ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )";
         }
     }
  
 
-    public static final BitSet FOLLOW_or_in_expr129 = new BitSet(new long[]{0x0000000000000000L});
-    public static final BitSet FOLLOW_EOF_in_expr131 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_and_in_or144 = new BitSet(new long[]{0x0000000000004022L});
-    public static final BitSet FOLLOW_WS_in_or147 = new BitSet(new long[]{0x0000000000004020L});
-    public static final BitSet FOLLOW_OR_in_or150 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_WS_in_or153 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_and_in_or156 = new BitSet(new long[]{0x0000000000004022L});
-    public static final BitSet FOLLOW_not_in_and167 = new BitSet(new long[]{0x0000000000004012L});
-    public static final BitSet FOLLOW_primary_in_and171 = new BitSet(new long[]{0x0000000000004012L});
-    public static final BitSet FOLLOW_WS_in_and175 = new BitSet(new long[]{0x0000000000004010L});
-    public static final BitSet FOLLOW_AND_in_and178 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_WS_in_and181 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_not_in_and185 = new BitSet(new long[]{0x0000000000004012L});
-    public static final BitSet FOLLOW_primary_in_and189 = new BitSet(new long[]{0x0000000000004012L});
-    public static final BitSet FOLLOW_NOT_in_not200 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_WS_in_not203 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_not_in_not207 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_primary_in_not211 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_23_in_primary228 = new BitSet(new long[]{0x00000007FE804040L});
-    public static final BitSet FOLLOW_or_in_primary230 = new BitSet(new long[]{0x0000000001000000L});
-    public static final BitSet FOLLOW_24_in_primary232 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_simple_in_primary246 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_t_in_simple266 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_f_in_simple270 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nil_in_simple274 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_approximately_in_simple280 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_lesser_in_simple286 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_lesser_equal_in_simple292 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_greater_in_simple298 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_greater_equal_in_simple304 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_not_equal_in_simple310 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_equal_in_simple316 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_approximately326 = new BitSet(new long[]{0x0000000000004080L});
-    public static final BitSet FOLLOW_WS_in_approximately328 = new BitSet(new long[]{0x0000000000004080L});
-    public static final BitSet FOLLOW_APPROXIMATELY_in_approximately331 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_approximately334 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_approximately337 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_lesser344 = new BitSet(new long[]{0x0000000000004400L});
-    public static final BitSet FOLLOW_WS_in_lesser346 = new BitSet(new long[]{0x0000000000004400L});
-    public static final BitSet FOLLOW_LESSER_in_lesser349 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_lesser352 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_lesser355 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_lesser_equal363 = new BitSet(new long[]{0x0000000000004800L});
-    public static final BitSet FOLLOW_WS_in_lesser_equal365 = new BitSet(new long[]{0x0000000000004800L});
-    public static final BitSet FOLLOW_LESSER_EQUAL_in_lesser_equal368 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_lesser_equal371 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_lesser_equal374 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_greater381 = new BitSet(new long[]{0x0000000000005000L});
-    public static final BitSet FOLLOW_WS_in_greater383 = new BitSet(new long[]{0x0000000000005000L});
-    public static final BitSet FOLLOW_GREATER_in_greater386 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_greater389 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_greater392 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_greater_equal400 = new BitSet(new long[]{0x0000000000006000L});
-    public static final BitSet FOLLOW_WS_in_greater_equal402 = new BitSet(new long[]{0x0000000000006000L});
-    public static final BitSet FOLLOW_GREATER_EQUAL_in_greater_equal405 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_greater_equal408 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_greater_equal411 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_not_equal419 = new BitSet(new long[]{0x0000000000004100L});
-    public static final BitSet FOLLOW_WS_in_not_equal421 = new BitSet(new long[]{0x0000000000004100L});
-    public static final BitSet FOLLOW_NOT_EQUAL_in_not_equal424 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_not_equal427 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_not_equal430 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_field_in_equal438 = new BitSet(new long[]{0x0000000000004200L});
-    public static final BitSet FOLLOW_WS_in_equal440 = new BitSet(new long[]{0x0000000000004200L});
-    public static final BitSet FOLLOW_EQUAL_in_equal443 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_WS_in_equal446 = new BitSet(new long[]{0x000000001E03C000L});
-    public static final BitSet FOLLOW_value_in_equal449 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_String_in_value459 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_t_in_value463 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_f_in_value467 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_nil_in_value471 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_INT_in_value475 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_FLOAT_in_value479 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_25_in_t489 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_26_in_f496 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_or_in_expr137 = new BitSet(new long[]{0x0000000000000000L});
+    public static final BitSet FOLLOW_EOF_in_expr139 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_and_in_or152 = new BitSet(new long[]{0x0000000000008022L});
+    public static final BitSet FOLLOW_WS_in_or155 = new BitSet(new long[]{0x0000000000008020L});
+    public static final BitSet FOLLOW_OR_in_or158 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_or161 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_and_in_or164 = new BitSet(new long[]{0x0000000000008022L});
+    public static final BitSet FOLLOW_not_in_and175 = new BitSet(new long[]{0x0000000000008012L});
+    public static final BitSet FOLLOW_primary_in_and179 = new BitSet(new long[]{0x0000000000008012L});
+    public static final BitSet FOLLOW_WS_in_and183 = new BitSet(new long[]{0x0000000000008010L});
+    public static final BitSet FOLLOW_AND_in_and186 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_and189 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_not_in_and193 = new BitSet(new long[]{0x0000000000008012L});
+    public static final BitSet FOLLOW_primary_in_and197 = new BitSet(new long[]{0x0000000000008012L});
+    public static final BitSet FOLLOW_NOT_in_not208 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_WS_in_not211 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_not_in_not215 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_primary_in_not219 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_24_in_primary236 = new BitSet(new long[]{0x0000000FFD00C040L});
+    public static final BitSet FOLLOW_or_in_primary238 = new BitSet(new long[]{0x0000000002000000L});
+    public static final BitSet FOLLOW_25_in_primary240 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_simple_in_primary254 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_t_in_simple274 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_f_in_simple278 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nil_in_simple282 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_tagged_in_simple288 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_approximately_in_simple294 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_lesser_in_simple300 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_lesser_equal_in_simple306 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_greater_in_simple312 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_greater_equal_in_simple318 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_not_equal_in_simple324 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_equal_in_simple330 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_approximately343 = new BitSet(new long[]{0x0000000000008080L});
+    public static final BitSet FOLLOW_WS_in_approximately345 = new BitSet(new long[]{0x0000000000008080L});
+    public static final BitSet FOLLOW_APPROXIMATELY_in_approximately348 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_approximately351 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_approximately354 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_lesser361 = new BitSet(new long[]{0x0000000000008400L});
+    public static final BitSet FOLLOW_WS_in_lesser363 = new BitSet(new long[]{0x0000000000008400L});
+    public static final BitSet FOLLOW_LESSER_in_lesser366 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_lesser369 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_lesser372 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_lesser_equal380 = new BitSet(new long[]{0x0000000000008800L});
+    public static final BitSet FOLLOW_WS_in_lesser_equal382 = new BitSet(new long[]{0x0000000000008800L});
+    public static final BitSet FOLLOW_LESSER_EQUAL_in_lesser_equal385 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_lesser_equal388 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_lesser_equal391 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_greater398 = new BitSet(new long[]{0x0000000000009000L});
+    public static final BitSet FOLLOW_WS_in_greater400 = new BitSet(new long[]{0x0000000000009000L});
+    public static final BitSet FOLLOW_GREATER_in_greater403 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_greater406 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_greater409 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_greater_equal417 = new BitSet(new long[]{0x000000000000A000L});
+    public static final BitSet FOLLOW_WS_in_greater_equal419 = new BitSet(new long[]{0x000000000000A000L});
+    public static final BitSet FOLLOW_GREATER_EQUAL_in_greater_equal422 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_greater_equal425 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_greater_equal428 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_not_equal436 = new BitSet(new long[]{0x0000000000008100L});
+    public static final BitSet FOLLOW_WS_in_not_equal438 = new BitSet(new long[]{0x0000000000008100L});
+    public static final BitSet FOLLOW_NOT_EQUAL_in_not_equal441 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_not_equal444 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_not_equal447 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_field_in_equal455 = new BitSet(new long[]{0x0000000000008200L});
+    public static final BitSet FOLLOW_WS_in_equal457 = new BitSet(new long[]{0x0000000000008200L});
+    public static final BitSet FOLLOW_EQUAL_in_equal460 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_WS_in_equal463 = new BitSet(new long[]{0x000000003C078000L});
+    public static final BitSet FOLLOW_value_in_equal466 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_TAGGED_in_tagged474 = new BitSet(new long[]{0x0000000000018000L});
+    public static final BitSet FOLLOW_WS_in_tagged477 = new BitSet(new long[]{0x0000000000018000L});
+    public static final BitSet FOLLOW_String_in_tagged480 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_String_in_value490 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_t_in_value494 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_f_in_value498 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_nil_in_value502 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_INT_in_value506 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_FLOAT_in_value510 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_26_in_t519 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_27_in_f526 = new BitSet(new long[]{0x0000000000000002L});
     public static final BitSet FOLLOW_set_in_nil0 = new BitSet(new long[]{0x0000000000000002L});
-    public static final BitSet FOLLOW_set_in_field515 = new BitSet(new long[]{0x0000000000000002L});
+    public static final BitSet FOLLOW_set_in_field545 = new BitSet(new long[]{0x0000000000000002L});
 
 }

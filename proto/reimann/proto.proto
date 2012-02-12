@@ -1,6 +1,8 @@
 option java_package = "reimann";
 option java_outer_classname = "Proto";
 
+import "protobuf/core/extensions.proto";
+
 message State {
   optional int64 time = 1;
   optional string state = 2;
@@ -17,7 +19,7 @@ message Event {
   optional string service = 3;
   optional string host = 4;
   optional string description = 5;
-  repeated string tags = 7;
+  repeated string tags = 7 [(set) = true];
   optional float metric_f = 15;
 }
 

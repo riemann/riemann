@@ -16,6 +16,7 @@ tokens {
 	LESSER_EQUAL = '<=';
 	GREATER = '>';
 	GREATER_EQUAL = '>=';
+	TAGGED = 'tagged';
 }
 
 @header		{package reimann;}
@@ -37,13 +38,15 @@ primary	: 	(
 
 fragment
 simple	:	( t | f | nil
+		| tagged
 		| approximately
 		| lesser
 		| lesser_equal
 		| greater
 		| greater_equal
 		| not_equal
-		| equal);
+		| equal
+		);
 
 approximately
 	:	field WS* APPROXIMATELY^ WS* value;
@@ -57,8 +60,9 @@ not_equal
 	:	field WS* NOT_EQUAL^ WS* value;	
 equal	:	field WS* EQUAL^ WS* value;
 
-value	: 	(String | t | f | nil | INT | FLOAT);
+tagged	:	TAGGED^ WS* String;
 
+value	: 	(String | t | f | nil | INT | FLOAT);
 
 t	:	'true';
 f	:	'false';

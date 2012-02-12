@@ -49,6 +49,9 @@
               ; Regexen aren't comparable
               ; "state =~ \"%foo%\""          '(re-find #".*foo.*" state)
 
+              ; Tags
+              "tagged \"cat\""              '(when tags (tags "cat"))
+
               ; Boolean operators
               "not host = 1"                '(not (= host 1))
               "host = 1 and state = 2"      '(and (= host 1) (= state 2))
@@ -123,6 +126,11 @@
          (f "metric_f <= 1"
             [{:metric_f 1} {:metric_f -20}]
             [{:metric_f 2} {}]))
+
+(deftest tagged
+         (f "tagged \"cat\""
+            [{:tags #{"cat" "dog"}} {:tags #{"cat"}}]
+            [{:tags #{"dog"}} {}]))
 
 (deftest null
          (f "time = null and description != nil"

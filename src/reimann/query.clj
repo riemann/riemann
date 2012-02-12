@@ -40,6 +40,7 @@
       "=~"  (list 'when (first kids) (list 're-find (make-regex (last kids))
                                            (first kids)))
       "!="  (list 'not (apply list '= kids))
+      "tagged"      (list 'when 'tags (list 'tags (first kids)))
       "("           :useless
       ")"           :useless
       "nil"         nil
@@ -69,5 +70,6 @@
                    state       (:state event)
                    description (:description event)
                    metric_f    (:metric_f event)
-                   time        (:time event)]
+                   time        (:time event)
+                   tags        (:tags event)]
         ast))))

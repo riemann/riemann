@@ -30,11 +30,13 @@
 
              ; Send events
              (send-event client {:metric_f 1 :time 1})
-             (send-event client {:metric_f 2 :time 2})
+             (send-event client {:metric_f 2 :time 3})
+             (send-event client {:tags ["whiskers" "paws"] :time 2})
              (send-event client {:service "miao" :host "cat" :time 3})
 
-             (is (= (set (query client "host = nil or service = \"miao\""))
-                    #{(state {:metric_f 2.0 :time 2}) 
+             (is (= (set (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))
+                    #{(state {:metric_f 2.0 :time 2})
+                      (state {:tags #{"whiskers" "paws"} :time 2})
                       (state {:service "miao" :host "cat" :time 3})}))
 
              (finally
