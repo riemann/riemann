@@ -2,6 +2,7 @@
   (:require [reimann.core])
   (:require [reimann.server])
   (:require reimann.index)
+  (:require [reimann.logging :as logging])
   (:use reimann.client)
   (:use reimann.streams)
   (:use reimann.email)

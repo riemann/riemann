@@ -2,10 +2,11 @@
   (:use reimann.common)
   (:require [reimann.folds :as folds])
   (:require [reimann.index :as index])
-  (:require [reimann.client])
+  (:require reimann.client)
+  (:require reimann.logging) 
   (:require [clojure.set])
   (:use [clojure.contrib.math])
-  (:use [clojure.contrib.logging]))
+  (:use [clojure.tools.logging]))
 
 (defmacro call-rescue [event children]
   "Call each child, in order, with event. Rescues and logs any failure."

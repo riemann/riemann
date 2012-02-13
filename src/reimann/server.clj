@@ -3,7 +3,7 @@
   (:use [reimann.common])
   (:require [reimann.query :as query])
   (:require [reimann.index :as index])
-  (:use clojure.contrib.logging)
+  (:use clojure.tools.logging)
   (:use lamina.core)
   (:use aleph.tcp)
   (:use gloss.core)

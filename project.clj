@@ -6,6 +6,12 @@
   }
   :dependencies [
     [clojure "1.2.0"]
+    [org.clojure/tools.logging "0.2.3"]
+    [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
+                                       javax.jms/jms
+                                       com.sun.jdmk/jmxtools
+                                       com.sun.jmx/jmxri]]
+    [log4j/apache-log4j-extras "1.0"]
     [aleph "0.2.0"]
     [protobuf "0.6.0-beta5"]
     [org.antlr/antlr "3.2"]

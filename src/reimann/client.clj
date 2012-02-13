@@ -5,7 +5,7 @@
   (:use [lamina.connections])
   (:use [gloss.core])
   (:use [protobuf.core])
-  (:use [clojure.contrib.logging]))
+  (:use clojure.tools.logging))
 
 ; Alter client with a new connection.
 (defn open-tcp-conn [client]

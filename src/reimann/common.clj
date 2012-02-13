@@ -2,6 +2,8 @@
   (:import [java.util Date])
   (:require gloss.io)
   (:require clojure.set)
+  (:require [clojure.java.io :as io])
+  (:use clojure.tools.logging)
   (:use protobuf.core)
   (:use gloss.core)
   (:use clojure.contrib.math))
@@ -15,6 +17,7 @@
 (def State (protodef reimann.Proto$State))
 (def Event (protodef reimann.Proto$Event))
 
+; Few flow control things
 (defmacro threaded [thread-count & body]
   `(let [futures# (map (fn [_#] (future ~@body))
                       (range 0 ~thread-count))]
@@ -25,6 +28,7 @@
         result (pmap (fn [part] (doall (map f part))) work)]
     (doall (apply concat result))))
 
+; Times
 (defn unix-time []
   (/ (System/currentTimeMillis) 1000))
 
@@ -32,6 +36,7 @@
   "Returns the Date of a unix epoch time."
   (java.util.Date. (long unix-time)))
 
+; Protobuf transformation
 (defn pre-dump-event [e]
   (assoc e :metric_f (:metric e)))
 
@@ -85,6 +90,7 @@
     (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
       (< (- 1 tol) f (+ 1 tol))))))
 
+; Vector set operations
 (defn member? [r s]
   "Is e present in s?"
   (some (fn [e] (= r e)) s))
