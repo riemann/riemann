@@ -43,7 +43,7 @@
     (try
       (open)
       (catch Exception e
-        (log :warn (str "Couldn't send to graphite " opts) e)))
+        (warn e (str "Couldn't send to graphite " opts))))
 
     (fn [event]
       (let [string (str (join " " [(name event) 
@@ -57,7 +57,7 @@
                 (.flush (deref out))
 
               (catch Exception e
-                (log :warn (str "Couldn't send to graphite " opts) e)
+                (warn e (str "Couldn't send to graphite " opts))
                 (close)
 
                 (future

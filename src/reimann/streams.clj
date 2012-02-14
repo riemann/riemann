@@ -15,7 +15,7 @@
        (try
          (child# ~event)
          (catch Exception e#
-           (log :warn (str child# " threw") e#))))
+           (warn e# (str child# " threw")))))
      true))
 
 (defn combine [f & children]

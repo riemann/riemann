@@ -9,7 +9,7 @@
 
 ; Alter client with a new connection.
 (defn open-tcp-conn [client]
-  (log :debug (str "opening TCP connection to " client))
+  (debug (str "opening TCP connection to " client))
   (dosync
     ; Close this client
     (when-let [cur (deref (:conn client))]
@@ -36,12 +36,12 @@
        (try 
          (decode (send-message-raw client raw))
          (catch Exception e
-           (log :warn "first send failed, retrying" e)
+           (warn e "first send failed, retrying")
            (try 
              (open-tcp-conn client)
              (decode (send-message-raw client raw))
              (catch Exception e
-               (log :warn "second send failed" e)
+               (warn e "second send failed")
                false)))))))
 
 (defn query [client string]
