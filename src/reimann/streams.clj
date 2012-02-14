@@ -114,7 +114,8 @@
               :state (ref {})})
       (fn [r event] (dosync
                       (ref-set (:state r) event)
-                      (alter (:count r) + (:metric event))))
+                      (when-let [m (:metric event)]
+                        (alter (:count r) + m))))
       (fn [r start end]
         (let [event (dosync
                 (let [count (deref (r :count))
