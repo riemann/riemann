@@ -19,6 +19,7 @@
                   (ref-set sock nil)
                   (ref-set out nil)))
         open (fn []
+               (info (str "Opening connection to " opts))
                (close)
                
                 ; Open conn
