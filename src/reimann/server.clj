@@ -50,12 +50,12 @@
             (close channel))))))))
 
 (defn tcp-server
-  ([core]
-    (tcp-server core {}))
+  ([core] (tcp-server core {}))
   ([core opts]
-  (let [handler (handler core)]
-    (start-tcp-server handler 
-      (merge {
-        :port 5555
-        :frame (finite-block :int32)
-      } opts)))))
+    (let [opts (merge {:port 5555
+                       :frame (finite-block :int32)}
+                      opts)
+        handler (handler core)
+        server (start-tcp-server handler opts)] 
+      (info (str "TCP server " (select-keys [:host :port] opts) " online"))
+      server)))
