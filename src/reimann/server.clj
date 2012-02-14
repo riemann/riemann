@@ -46,7 +46,7 @@
             (log :warn (str "invalid message, closing " client-info))
             (close channel))
           (catch Exception e
-            (log :warn (str "Exception " e))
+            (log :warn "Exception " e)
             (close channel))))))))
 
 (defn tcp-server
