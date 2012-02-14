@@ -3,6 +3,7 @@
   (:require [reimann.server])
   (:require reimann.index)
   (:require [reimann.logging :as logging])
+  (:require [reimann.folds :as folds])
   (:use clojure.tools.logging)
   (:use reimann.client)
   (:use reimann.streams)
