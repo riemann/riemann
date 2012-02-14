@@ -21,6 +21,8 @@ sudo $EDITOR /etc/reimann/reimann.config
 reimann
 ```
 
+Be aware that the .deb will nuke /etc/reimann/reimann.conf. I haven't figured out how to get lein-deb to play nice with conffiles yet.
+
 Events
 ======
 
