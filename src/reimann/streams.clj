@@ -156,7 +156,9 @@
   stream is called, but with summed metric."
   (let [sum (ref 0)]
     (fn [event]
-      (let [s (dosync (commute sum + (:metric event)))
+      (let [s (dosync
+                (when-let [m (:metric event)]
+                  (commute sum + (:metric event))))
             event (assoc event :metric s)]
         (call-rescue event children)))))
 
@@ -166,7 +168,7 @@
   (let [sum (ref nil)
         total (ref 0)]
     (fn [event]
-      (let [m (dosync 
+      (let [m (dosync
                 (let [t (commute total inc)
                       s (commute sum + (:metric event))]
                   (/ s t)))
@@ -412,26 +414,30 @@
   "Passes on events only when their metric falls within the given inclusive
   range. (within [0 1] (fn [event] do-something))"
   (fn [event]
-    (when (<= (first r) (:metric event) (last r))
-      (call-rescue event children))))
+    (when-let [m (:metric event)]
+      (when (<= (first r) m (last r))
+        (call-rescue event children)))))
 
 (defn without [r & children]
   "Passes on events only when their metric falls outside the given (inclusive) range."
   (fn [event]
-    (when (not (<= (first r) (:metric event) (last r)))
-      (call-rescue event children))))
+    (when-let [m (:metric event)]
+      (when (not (<= (first r) m (last r)))
+        (call-rescue event children)))))
 
 (defn over [x & children]
   "Passes on events only when their metric is greater than x"
   (fn [event]
-    (when (< x (:metric event))
-      (call-rescue event children))))
+    (when-let [m (:metric event)]
+      (when (< x m)
+        (call-rescue event children)))))
 
 (defn under [x & children]
   "Passes on events only when their metric is smaller than x"
   (fn [event]
-    (when (> x (:metric event))
-      (call-rescue event children))))
+    (when-let [m (:metric event)]
+      (when (> x m)
+        (call-rescue event children)))))
 
 (defn where-test [k v]
   (if (= (class v) java.util.regex.Pattern)
