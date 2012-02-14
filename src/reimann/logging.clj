@@ -17,7 +17,7 @@
 (defn set-level [logger level]
   (. (Logger/getLogger logger) (setLevel level)))
 
-(def reimann-layout (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n"))
+(def reimann-layout (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
 
 (defn init 
   ([] (init {}))
