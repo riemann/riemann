@@ -1,5 +1,6 @@
 (ns reimann.core
   (:use reimann.common)
+  (:use clojure.tools.logging)
   (:require reimann.streams)
   (:require [reimann.index :as index]))
 
@@ -31,11 +32,13 @@
               (recur)))))
 
 (defn start [core]
+  (info "Hyperspace core online")
   (dosync
     (when-not (deref (:reaper core))
       (ref-set (:reaper core) (periodically-expire core)))))
 
 (defn stop [core]
+  (info "Core stopping")
   ; Stop expiry
   (when-let [r (deref (:reaper core))]
     (future-cancel r))
