@@ -1,3 +1,12 @@
+(defn dirname [path]
+    (.getParent (java.io.File. path)))
+
+(defn expand-path [path]
+    (.getCanonicalPath (java.io.File. path)))
+
+(defn relative-path [path]
+    (expand-path (str (dirname *file*) "/" path)))
+
 (defproject reimann "0.0.2-SNAPSHOT"
   :description "reimann: folds events into states"
   :url "http://github.com/aphyr/ustate"
@@ -34,12 +43,13 @@
   :deb {:maintainer {:name "Kyle Kingsbury"
                      :email "aphyr@aphyr.com"}
         ; I wish I could use relative paths here, but lein-deb complains
-        ; "No directory specified for tarfileset". Hmm.
-        :filesets [{:file     "/home/aphyr/ustate/reimann/reimann-0.0.1-SNAPSHOT-standalone.jar"
+        ; "No directory specified for tarfileset", and lein macros need them
+        ; to be strings. Arrrgh.
+        :filesets [{:file     "/home/aphyr/reimann/reimann-0.0.2-SNAPSHOT-standalone.jar"
                     :fullpath "/usr/lib/reimann/reimann.jar"}
-                   {:file     "/home/aphyr/ustate/reimann/reimann.config"
+                   {:file     "/home/aphyr/reimann/reimann.config"
                     :fullpath "/etc/reimann/reimann.config"}
-                   {:file     "/home/aphyr/ustate/reimann/bin/reimann"
+                   {:file     "/home/aphyr/reimann/bin/reimann"
                     :fullpath "/usr/bin/reimann"
                     :filemode "0755"}]
         :depends ""}
