@@ -38,7 +38,8 @@
 
 ; Protobuf transformation
 (defn pre-dump-event [e]
-  (assoc e :metric_f (:metric e)))
+  (let [e (if (:metric e) (assoc e :metric_f (float (:metric e))) e)]
+    e))
 
 (defn post-load-event [e]
   "Loads a protobuf event to an internal event."
