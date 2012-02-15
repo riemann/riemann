@@ -441,7 +441,8 @@
 
 (defn where-test [k v]
   (case k
-    'tagged (list 'member? v (list :tags 'event))
+    'tagged (list 'when (list :tags 'event)
+                  (list 'reimann.common/member? v (list :tags 'event)))
     ; Otherwise, match literal value.
     (if (= (class v) java.util.regex.Pattern)
       (list 're-find v (list (keyword k) 'event))
