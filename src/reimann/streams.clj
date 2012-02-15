@@ -440,16 +440,21 @@
         (call-rescue event children)))))
 
 (defn where-test [k v]
-  (if (= (class v) java.util.regex.Pattern)
-    (list 're-find v (list (keyword k) 'event))
-    (list '= v (list (keyword k) 'event))))
+  (case k
+    'tagged (list 'member? v (list :tags 'event))
+    ; Otherwise, match literal value.
+    (if (= (class v) java.util.regex.Pattern)
+      (list 're-find v (list (keyword k) 'event))
+      (list '= v (list (keyword k) 'event)))))
 
 ; Hack hack hack hack
 (defn where-rewrite [expr]
   "Rewrites lists recursively. Replaces (metric x y z) with a test matching
   (:metric event) to any of x, y, or z, either by = or re-find. Replaces any
   other instance of metric with (:metric event). Does the same for host,
-  service, event, state, time, ttl, tags, metric_f, and description."
+  service, event, state, time, ttl, tags (which performs an exact match of the
+  tag vector), tagged (which checks to see if the given tag is present at all),
+  metric_f, and description."
   (let [syms #{'host 
                'service 
                'state 
@@ -458,7 +463,8 @@
                'time
                'ttl
                'description 
-               'tags}]
+               'tags
+               'tagged}]
     (if (list? expr)
       ; This is a list.
       (if (syms (first expr))

@@ -121,6 +121,18 @@
            (doseq [e events] (s e))
            (is (= expect (deref r)))))
 
+(deftest where-tagged
+         (let [r (ref [])
+               s (where (tagged "foo") (append r))
+               events [{}
+                       {:tags []}
+                       {:tags ["blah"]}
+                       {:tags ["foo"]}
+                       {:tags ["foo" "bar"]}]]
+           (doseq [e events] (s e))
+           (is (= (deref r)
+                  [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+
 (deftest default-kv
          (let [r (ref nil)
                s (default :service "foo" (register r))]
