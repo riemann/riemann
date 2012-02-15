@@ -47,21 +47,22 @@
         (warn e (str "Couldn't send to graphite " opts))))
 
     (fn [event]
-      (let [string (str (join " " [(name event) 
-                                   (:metric event) 
-                                   (int (:time event))])
-                        "\n")]
-        (locking sock
-          (when (deref sock)
-            (try
-                (.write (deref out) string)
-                (.flush (deref out))
+      (when (:metric event)
+        (let [string (str (join " " [(name event) 
+                                     (float (:metric event))
+                                     (int (:time event))])
+                          "\n")]
+          (locking sock
+            (when (deref sock)
+              (try
+                  (.write (deref out) string)
+                  (.flush (deref out))
 
-              (catch Exception e
-                (warn e (str "Couldn't send to graphite " opts))
-                (close)
+                (catch Exception e
+                  (warn e (str "Couldn't send to graphite " opts))
+                  (close)
 
-                (future
-                  ; Reconnect in 5 seconds
-                  (Thread/sleep 5000)
-                  (locking sock (open)))))))))))
+                  (future
+                    ; Reconnect in 5 seconds
+                    (Thread/sleep 5000)
+                    (locking sock (open))))))))))))
