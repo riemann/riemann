@@ -446,7 +446,8 @@
          (call-rescue event fork)))))
 
 (defn changed
-  "Passes on events only when (f event) differs from that of the previous event.. Options:
+  "Passes on events only when (f event) differs from that of the previous
+  event. Options:
   
   :init   The initial value to assume for (pred event).
   
