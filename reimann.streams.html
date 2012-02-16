@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html><head><link href="css/default.css" rel="stylesheet" type="text/css"><script src="js/jquery.min.js" type="text/javascript"></script><script src="js/page_effects.js" type="text/javascript"></script><title>reimann.streams documentation</title></head><body><div id="header"><h1><a href="index.html">Reimann 0.0.2-SNAPSHOT API documentation</a></h1></div><div class="sidebar" id="namespaces"><h3>Namespaces</h3><ul><li><a href="reimann.bin.html">reimann.bin</a></li><li><a href="reimann.client.html">reimann.client</a></li><li><a href="reimann.common.html">reimann.common</a></li><li><a href="reimann.config.html">reimann.config</a></li><li><a href="reimann.core.html">reimann.core</a></li><li><a href="reimann.email.html">reimann.email</a></li><li><a href="reimann.folds.html">reimann.folds</a></li><li><a href="reimann.graphite.html">reimann.graphite</a></li><li><a href="reimann.index.html">reimann.index</a></li><li><a href="reimann.logging.html">reimann.logging</a></li><li><a href="reimann.query.html">reimann.query</a></li><li><a href="reimann.server.html">reimann.server</a></li><li class="current"><a href="reimann.streams.html">reimann.streams</a></li></ul></div><div class="sidebar" id="vars"><h3>Public Vars</h3><ul><li><a href="reimann.streams.html#var-adjust">adjust</a></li><li><a href="reimann.streams.html#var-append">append</a></li><li><a href="reimann.streams.html#var-by">by</a></li><li><a href="reimann.streams.html#var-call-rescue">call-rescue</a></li><li><a href="reimann.streams.html#var-changed">changed</a></li><li><a href="reimann.streams.html#var-coalesce">coalesce</a></li><li><a href="reimann.streams.html#var-combine">combine</a></li><li><a href="reimann.streams.html#var-counter">counter</a></li><li><a href="reimann.streams.html#var-default">default</a></li><li><a href="reimann.streams.html#var-delete-from">delete-from</a></li><li><a href="reimann.streams.html#var-expired">expired</a></li><li><a href="reimann.streams.html#var-expired%3F">expired?</a></li><li><a href="reimann.streams.html#var-fwd">fwd</a></li><li><a href="reimann.streams.html#var-match">match</a></li><li><a href="reimann.streams.html#var-mean-over-time">mean-over-time</a></li><li><a href="reimann.streams.html#var-over">over</a></li><li><a href="reimann.streams.html#var-part-time-fast">part-time-fast</a></li><li><a href="reimann.streams.html#var-percentiles">percentiles</a></li><li><a href="reimann.streams.html#var-rate">rate</a></li><li><a href="reimann.streams.html#var-register">register</a></li><li><a href="reimann.streams.html#var-rollup">rollup</a></li><li><a href="reimann.streams.html#var-stdout">stdout</a></li><li><a href="reimann.streams.html#var-sum-over-time">sum-over-time</a></li><li><a href="reimann.streams.html#var-tagged-all">tagged-all</a></li><li><a href="reimann.streams.html#var-tagged-any">tagged-any</a></li><li><a href="reimann.streams.html#var-throttle">throttle</a></li><li><a href="reimann.streams.html#var-under">under</a></li><li><a href="reimann.streams.html#var-update">update</a></li><li><a href="reimann.streams.html#var-where">where</a></li><li><a href="reimann.streams.html#var-where-rewrite">where-rewrite</a></li><li><a href="reimann.streams.html#var-with">with</a></li><li><a href="reimann.streams.html#var-within">within</a></li><li><a href="reimann.streams.html#var-without">without</a></li></ul></div><div class="namespace-docs" id="content"><h2>reimann.streams documentation</h2><pre class="doc">Streams are functions which accept events (or, in some cases, lists of
+events). They can filter those events, transform them, apply them to other
+streams, combine them over time, update state, forward to other services, and
+more. Most streams accept, after their initial arguments, any number of
+streams as children. When invoking children, they typically catch all
+exceptions and log them, then proceed to the next child.
+
+Any function accepting an event map (e.g. {:service &quot;foo&quot; :metric 3.5} can
+be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
+streams namespace aims to provide a comprehensive set of widely applicable,
+combinable tools for building up more complicated streams.</pre><div class="public" id="var-adjust"><h3>adjust</h3><div class="usage"><code>(adjust [field f &amp; args] &amp; children)</code></div><pre class="doc">Passes on a changed version of each event by applying f to (field event) &amp;
+args.
+
+(adjust [:service str &quot; rate&quot;] ...)
+
+takes {:service &quot;foo&quot;} and emits {:service &quot;foo rate&quot;}</pre></div><div class="public" id="var-append"><h3>append</h3><div class="usage"><code>(append reference)</code></div><pre class="doc">Conj events onto the given reference
+</pre></div><div class="public" id="var-by"><h3>by</h3><div class="usage"><code>(by field &amp; children)</code></div><pre class="doc">Splits stream by field.
+Every time an event arrives with a new value of field, this macro invokes
+its child forms to return a *new*, distinct set of streams for that
+particular value.
+
+(rate 5 prn) prints a single rate for all events, once every five seconds.
+
+(by :host (rate 5) tracks a separate rate for *each host*, and prints each 
+one every five seconds.
+
+Be aware that (by) over unbounded values can result in
+*many* substreams being created, so you wouldn't want to write
+(by metric prn): you'd get a separate prn for *every* unique metric that 
+came in.
+
+Note that field can be a keyword like :host or :state, but you can *also* use
+any unary function for more complex sharding.</pre></div><div class="public" id="var-call-rescue"><h3>call-rescue</h3><div class="usage"><code>(call-rescue event children)</code></div><pre class="doc">Call each child, in order, with event. Rescues and logs any failure.
+</pre></div><div class="public" id="var-changed"><h3>changed</h3><div class="usage"><code>(changed pred &amp; children)</code></div><pre class="doc">Passes on events only when (f event) differs from that of the previous event.. Options:
+
+:init   The initial value to assume for (pred event).
+
+; Print all state changes
+(changed :state prn)
+
+; Assume states *were* ok the first time we see them.
+(changed :state {:init &quot;ok&quot;} prn)
+
+Note that f can be an arbitrary function:
+
+(changed (fn [e] (&gt; (:metric e) 2)) ...)</pre></div><div class="public" id="var-coalesce"><h3>coalesce</h3><div class="usage"><code>(coalesce &amp; children)</code></div><pre class="doc">Combines events over time. Coalesce remembers the most recent event for each
+service that passes through it (limited by :ttl). Every time it receives an
+event, it passes on *all* events it remembers.
+
+Use coalesce to combine states that arrive at different times--for instance,
+to average the CPU use over several hosts.</pre></div><div class="public" id="var-combine"><h3>combine</h3><div class="usage"><code>(combine f &amp; children)</code></div><pre class="doc">Returns a function which takes a seq of events. Combines events with f, then
+forwards the result to children.</pre></div><div class="public" id="var-counter"><h3>counter</h3><div class="usage"><code>(counter &amp; children)</code></div><pre class="doc">Counts things. All metrics are summed together; passes on each event with
+the summed metric. When an event has tag &quot;reset&quot;, resets the counter to
+zero and continues summing.</pre></div><div class="public" id="var-default"><h3>default</h3><div class="usage"></div><pre class="doc">Transforms an event by associng a set of new key:value pairs, wherever the
+event has a nil value for that key. Passes the result on to children. Use:
+
+(default :service &quot;foo&quot; prn)
+(default :service &quot;jrecursive&quot; :state &quot;chicken&quot;} prn)</pre></div><div class="public" id="var-delete-from"><h3>delete-from</h3><div class="usage"><code>(delete-from index)</code></div><pre class="doc">Deletes any events that pass through from the index
+</pre></div><div class="public" id="var-expired"><h3>expired</h3><div class="usage"><code>(expired &amp; children)</code></div><pre class="doc">Passes on events with :state &quot;expired&quot;.
+</pre></div><div class="public" id="var-expired%3F"><h3>expired?</h3><div class="usage"><code>(expired? event)</code></div><pre class="doc">Returns true if an event's :ttl and :time indicates it has expired.
+</pre></div><div class="public" id="var-fwd"><h3>fwd</h3><div class="usage"><code>(fwd client)</code></div><pre class="doc">Sends a map to a client, coerced to state
+</pre></div><div class="public" id="var-match"><h3>match</h3><div class="usage"><code>(match f value &amp; children)</code></div><pre class="doc">Passes events on to children only when (f event) is equal to value. If f is
+a regex, uses re-find to match.</pre></div><div class="public" id="var-mean-over-time"><h3>mean-over-time</h3><div class="usage"><code>(mean-over-time children)</code></div><pre class="doc">Emits the most recent event each time this stream is called, but with the
+average of all received metrics.</pre></div><div class="public" id="var-over"><h3>over</h3><div class="usage"><code>(over x &amp; children)</code></div><pre class="doc">Passes on events only when their metric is greater than x
+</pre></div><div class="public" id="var-part-time-fast"><h3>part-time-fast</h3><div class="usage"><code>(part-time-fast interval create add finish)</code></div><pre class="doc">Partitions events by time (fast variant). Each &lt;interval&gt; seconds, creates a
+new bin by calling (create). Applies each received event to the current bin
+with (add bin event). When the time interval is over, calls (finish bin
+start-time end-time).</pre></div><div class="public" id="var-percentiles"><h3>percentiles</h3><div class="usage"><code>(percentiles interval points &amp; children)</code></div><pre class="doc">Over each period of interval seconds, aggregates events and selects one
+event from that period for each point. If point is 0, takes the lowest metric
+event.  If point is 1, takes the highest metric event. 0.5 is the median
+event, and so forth. Forwards each of these events to children. The service
+name has the point appended to it; e.g. 'response time' becomes 'response
+time .95'.</pre></div><div class="public" id="var-rate"><h3>rate</h3><div class="usage"><code>(rate interval &amp; children)</code></div><pre class="doc">Take the sum of every event over interval seconds and divide by the interval
+size.</pre></div><div class="public" id="var-register"><h3>register</h3><div class="usage"><code>(register reference)</code></div><pre class="doc">Set reference to the most recent event that passes through.
+</pre></div><div class="public" id="var-rollup"><h3>rollup</h3><div class="usage"><code>(rollup n m &amp; children)</code></div><pre class="doc">Invokes children with events at most n times per m second interval. Passes 
+*vectors* of events to children, not a single event at a time. For instance, 
+(rollup 3 1 f) receives five events and forwards three times per second:
+
+1 -&gt; (f [1])
+2 -&gt; (f [2])
+3 -&gt; (f [3])
+4 -&gt;
+5 -&gt; 
+
+... and events 4 and 5 are rolled over into the next period:
+
+  -&gt; (f [4 5])</pre></div><div class="public" id="var-stdout"><h3>stdout</h3><div class="usage"><code>(stdout event)</code></div><pre class="doc">Prints an event to stdout
+</pre></div><div class="public" id="var-sum-over-time"><h3>sum-over-time</h3><div class="usage"><code>(sum-over-time &amp; children)</code></div><pre class="doc">Sums all metrics together. Emits the most recent event each time this
+stream is called, but with summed metric.</pre></div><div class="public" id="var-tagged-all"><h3>tagged-all</h3><div class="usage"><code>(tagged-all tags &amp; children)</code></div><pre class="doc">Passes on events where all tags are present.
+
+(tagged-all &quot;foo&quot; prn)
+(tagged-all [&quot;foo&quot; &quot;bar&quot;] prn)</pre></div><div class="public" id="var-tagged-any"><h3>tagged-any</h3><div class="usage"><code>(tagged-any tags &amp; children)</code></div><pre class="doc">Passes on events where any of tags are present.
+
+(tagged-any &quot;foo&quot; prn)
+(tagged-all [&quot;foo&quot; &quot;bar&quot;] prn)</pre></div><div class="public" id="var-throttle"><h3>throttle</h3><div class="usage"><code>(throttle n m &amp; children)</code></div><pre class="doc">Passes on n events every m seconds. Drops events when necessary.
+</pre></div><div class="public" id="var-under"><h3>under</h3><div class="usage"><code>(under x &amp; children)</code></div><pre class="doc">Passes on events only when their metric is smaller than x
+</pre></div><div class="public" id="var-update"><h3>update</h3><div class="usage"><code>(update index)</code></div><pre class="doc">Updates the given index with all states received.
+</pre></div><div class="public" id="var-where"><h3>where</h3><div class="usage"><code>(where expr &amp; children)</code></div><pre class="doc">Passes on events where expr is true. Expr is rewritten using where-rewrite.
+'event is bound to the event under consideration. Examples:
+
+; Match any state where metric is either 1, 2, 3, or 4.
+(where (metric 1 2 3 4) ...)
+
+; Match a state where the metric is negative AND the state is ok.
+(where (and (&gt; 0 metric)
+            (state &quot;ok&quot;)) ...)
+
+; Match a state which has expired.
+(where (expired? event) ...)
+
+; Match a state where the host begins with web
+(where (host #&quot;^web&quot;) ...)</pre></div><div class="public" id="var-where-rewrite"><h3>where-rewrite</h3><div class="usage"><code>(where-rewrite expr)</code></div><pre class="doc">Rewrites lists recursively. Replaces (metric x y z) with a test matching
+(:metric event) to any of x, y, or z, either by = or re-find. Replaces any
+other instance of metric with (:metric event). Does the same for host,
+service, event, state, time, ttl, tags (which performs an exact match of the
+tag vector), tagged (which checks to see if the given tag is present at all),
+metric_f, and description.</pre></div><div class="public" id="var-with"><h3>with</h3><div class="usage"></div><pre class="doc">Transforms an event by associng a set of new k:v pairs, and passes the
+result to children. Use:
+
+(with :service &quot;foo&quot; prn)
+(with {:service &quot;foo&quot; :state &quot;broken&quot;} prn)</pre></div><div class="public" id="var-within"><h3>within</h3><div class="usage"><code>(within r &amp; children)</code></div><pre class="doc">Passes on events only when their metric falls within the given inclusive
+range.
+
+(within [0 1] (fn [event] do-something))</pre></div><div class="public" id="var-without"><h3>without</h3><div class="usage"><code>(without r &amp; children)</code></div><pre class="doc">Passes on events only when their metric falls outside the given (inclusive)
+range.</pre></div></div></body></html>
