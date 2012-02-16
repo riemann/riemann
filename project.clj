@@ -8,7 +8,12 @@
     (expand-path (str (dirname *file*) "/" path)))
 
 (defproject reimann "0.0.2-SNAPSHOT"
-  :description "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
+  :description 
+"A network event stream processor. Intended for analytics, metrics, and
+alerting; and to glue various monitoring systems together.
+
+Code:     http://github.com/aphyr/reimann/
+API docs: http://aphyr.github.com/reimann/"
   :url "http://github.com/aphyr/ustate"
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"

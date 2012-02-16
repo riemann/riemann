@@ -11,7 +11,7 @@ email responsible parties every time an exception is thrown, and plot the 50th,
 95th, and 99th percentile latencies for your HTTP service. It is a tool to make
 writing comprehensive, site-specific analytics easy.
 
-Comprehensive API docs: http://aphyr.github.com/reimann/
+API docs: http://aphyr.github.com/reimann/
 
 Installation
 ============
