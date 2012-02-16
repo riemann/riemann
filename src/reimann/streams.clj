@@ -1,4 +1,15 @@
 (ns reimann.streams
+  "Streams are functions which accept events (or, in some cases, lists of
+  events). They can filter those events, transform them, apply them to other
+  streams, combine them over time, update state, forward to other services, and
+  more. Most streams accept, after their initial arguments, any number of
+  streams as children. When invoking children, they typically catch all
+  exceptions and log them, then proceed to the next child.
+  
+  Any function accepting an event map (e.g. {:service \"foo\" :metric 3.5} can
+  be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
+  streams namespace aims to provide a comprehensive set of widely applicable,
+  combinable tools for building up more complicated streams."
   (:use reimann.common)
   (:require [reimann.folds :as folds])
   (:require [reimann.index :as index])
@@ -8,8 +19,9 @@
   (:use [clojure.contrib.math])
   (:use [clojure.tools.logging]))
 
-(defmacro call-rescue [event children]
+(defmacro call-rescue
   "Call each child, in order, with event. Rescues and logs any failure."
+  [event children]
   `(do
      (doseq [child# ~children]
        (try
@@ -18,8 +30,10 @@
            (warn e# (str child# " threw")))))
      true))
 
-(defn combine [f & children]
-  "Returns a function which takes a seq of events. Combines events with f, then forwards the result to children."
+(defn combine
+  "Returns a function which takes a seq of events. Combines events with f, then
+  forwards the result to children."
+  [f & children]
   (fn [events]
     (call-rescue (f events) children)))
 
@@ -38,7 +52,7 @@
 ; agents or involves fewer STM ops. Assuming all events have local time might
 ; actually be more useful than correctly binning/expiring multiple times.
 ; Also: broken?
-(defn part-time-fn [interval create add finish]
+(defn- part-time-fn [interval create add finish]
   ; All intervals are [start, end)
   (let [; The oldest time we are allowed to flush rates for.
         watermark (ref 0)
@@ -81,10 +95,12 @@
         (bin event t)))))
 
 ; This leaks a thread. Need to think about dynamic scheduling/expiry.
-(defn part-time-fast [interval create add finish]
- "Partitions events by time (fast variant). Over interval seconds, adds events
-  to a bin, created with (create). When the interval is complete, calls (finish
-  bin start-time end-time)"
+(defn part-time-fast
+  "Partitions events by time (fast variant). Each <interval> seconds, creates a
+  new bin by calling (create). Applies each received event to the current bin
+  with (add bin event). When the time interval is over, calls (finish bin
+  start-time end-time)." 
+  [interval create add finish]
   (let [current (ref (create))
         start (ref (unix-time))
         switcher (.start (new Thread (bound-fn []
@@ -106,9 +122,10 @@
       (dosync
         (add (deref current) event)))))
 
-(defn rate [interval & children]
+(defn rate
   "Take the sum of every event over interval seconds and divide by the interval
   size."
+  [interval & children]
   (part-time-fast interval
       (fn [] {:count (ref 0)
               :state (ref {})})
@@ -124,13 +141,14 @@
                          {:metric rate :time (round end)})))]
           (call-rescue event children)))))
 
-(defn percentiles [interval points & children]
+(defn percentiles
   "Over each period of interval seconds, aggregates events and selects one
   event from that period for each point. If point is 0, takes the lowest metric
   event.  If point is 1, takes the highest metric event. 0.5 is the median
   event, and so forth. Forwards each of these events to children. The service
   name has the point appended to it; e.g. 'response time' becomes 'response
   time .95'."
+  [interval points & children]
   (part-time-fast interval
                 (fn [] (ref []))
                 (fn [r event] (dosync (alter r conj event)))
@@ -139,10 +157,11 @@
                                   (folds/sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
 
-(defn counter [& children]
+(defn counter
   "Counts things. All metrics are summed together; passes on each event with
   the summed metric. When an event has tag \"reset\", resets the counter to
   zero and continues summing."
+  [& children]
   (let [counter (ref 0)]
     (fn [event]
       (when (member? "reset" (:tags event))
@@ -151,9 +170,10 @@
         (let [c (dosync (alter counter + m))]
           (call-rescue (assoc event :metric c) children))))))
 
-(defn sum-over-time [& children]
+(defn sum-over-time 
   "Sums all metrics together. Emits the most recent event each time this
   stream is called, but with summed metric."
+  [& children]
   (let [sum (ref 0)]
     (fn [event]
       (let [s (dosync
@@ -162,9 +182,10 @@
             event (assoc event :metric s)]
         (call-rescue event children)))))
 
-(defn mean-over-time [children]
+(defn mean-over-time
   "Emits the most recent event each time this stream is called, but with the
   average of all received metrics."
+  [children]
   (let [sum (ref nil)
         total (ref 0)]
     (fn [event]
@@ -175,8 +196,9 @@
             event (assoc event :metric m)]
         (call-rescue event children)))))
 
-(defn throttle [n m & children]
+(defn throttle
   "Passes on n events every m seconds. Drops events when necessary."
+  [n m & children]
   (part-time-fast m
     (fn [] (ref 0))
     (fn [sent event]
@@ -184,7 +206,7 @@
         (call-rescue event children)))
     (fn [sent start end])))
 
-(defn rollup [n m & children]
+(defn rollup
   "Invokes children with events at most n times per m second interval. Passes 
   *vectors* of events to children, not a single event at a time. For instance, 
   (rollup 3 1 f) receives five events and forwards three times per second:
@@ -198,6 +220,7 @@
   ... and events 4 and 5 are rolled over into the next period:
 
     -> (f [4 5])"
+  [n m & children]
 
   (let [carry (ref [])]
     ; This implementation relies on stable, one-after-the-other creation of
@@ -228,16 +251,21 @@
           (when-not (empty? events)
             (call-rescue events children)))))))
 
-(defn expired? [event]
-  "Tests whether an event has expired."
+(defn expired?
+  "Returns true if an event's :ttl and :time indicates it has expired."
+  [event]
       (let [ttl (or (:ttl event) index/default-ttl)
             age (- (unix-time) (:time event))]
         (> age ttl)))
 
-(defn coalesce [& children]
-  "Combines events over time. Coalesce remembers the most recent event for each service that passes through it (limited by :ttl). Every time it receives an event, it passes on *all* events it remembers.
+(defn coalesce
+  "Combines events over time. Coalesce remembers the most recent event for each
+  service that passes through it (limited by :ttl). Every time it receives an
+  event, it passes on *all* events it remembers.
   
-  Use coalesce to combine states that arrive at different times--for instance, to average the CPU use over several hosts."
+  Use coalesce to combine states that arrive at different times--for instance,
+  to average the CPU use over several hosts."
+  [& children]
   (let [past (ref {})]
     (fn [event]
       ; Expire old events
@@ -257,36 +285,42 @@
         ; Pass on
         (call-rescue events children)))))
 
-(defn append [reference]
+(defn append
   "Conj events onto the given reference"
+  [reference]
   (fn [event]
     (dosync
       (alter reference conj event))))
 
-(defn register [reference]
+(defn register
   "Set reference to the most recent event that passes through."
+  [reference]
   (fn [event]
     (dosync (ref-set reference event))))
 
-(defn stdout [event]
+(defn stdout
   "Prints an event to stdout"
+  [event]
   (fn [event]
     (prn event)))
 
-(defn fwd [client]
+(defn fwd
   "Sends a map to a client, coerced to state"
+  [client]
   (fn [statelike]
     (reimann.client/send-state client statelike)))
 
-(defn match [f value & children]
-  "Passes events on to children only when (f event) is equal to value. If f is a regex, uses re-find to match."
-    (fn [event]
-      (let [x (f event)]
-        (when (if (= (class value) java.util.regex.Pattern)
-                (re-find value x)
-                (= value x))
-          (call-rescue event children)
-          true))))
+(defn match
+  "Passes events on to children only when (f event) is equal to value. If f is
+  a regex, uses re-find to match."
+  [f value & children]
+  (fn [event]
+    (let [x (f event)]
+      (when (if (= (class value) java.util.regex.Pattern)
+              (re-find value x)
+              (= value x))
+        (call-rescue event children)
+        true))))
 
 ; Shortcuts for match
 ;(defn description [value & children] (apply match :description value children))
@@ -296,33 +330,41 @@
 ;(defn state [value & children] (apply match :state value children))
 ;(defn time [value & children] (apply match :time value children))
 
-(defn tagged-all [tags & children]
+(defn tagged-all 
   "Passes on events where all tags are present.
 
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
+  [tags & children]
   (fn [event]
     (when (subset? tags (:tags event))
       (call-rescue event children))))
 (def tagged tagged-all)
 
-(defn tagged-any [tags & children]
+(defn tagged-any
   "Passes on events where any of tags are present.
 
   (tagged-any \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
+  [tags & children]
   (let [required (set tags)]
     (fn [event]
       (when (some required (:tags event))
         (call-rescue event children)))))
 
-(defn expired [& children]
-  "Passes on events with state expired"
+(defn expired
+  "Passes on events with :state \"expired\"."
+  [& children]
   (apply match :state "expired" children))
 
-(defmulti with (fn [& args] (map? (first args))))
+(defmulti with
+  "Transforms an event by associng a set of new k:v pairs, and passes the
+  result to children. Use:
+  
+  (with :service \"foo\" prn)
+  (with {:service \"foo\" :state \"broken\"} prn)"
+  (fn [& args] (map? (first args))))
 (defmethod with true [m & children]
-  "Transforms an event by associng a set of new k:v pairs"
   (fn [event]
 ;    Merge on protobufs is broken; nil values aren't applied.
 ;    (let [e (merge event m)]
@@ -336,10 +378,14 @@
     (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
-(defmulti default (fn [& args] (map? (first args))))
-(defmethod default true [defaults & children]
+(defmulti default 
   "Transforms an event by associng a set of new key:value pairs, wherever the
-  event has a nil value for that key."
+  event has a nil value for that key. Passes the result on to children. Use:
+  
+  (default :service \"foo\" prn)
+  (default :service \"jrecursive\" :state \"chicken\"} prn)"
+  (fn [& args] (map? (first args))))
+(defmethod default true [defaults & children]
   (fn [event]
 ;    Merge on protobufs is broken; nil values aren't applied.
     (let [e (reduce (fn [m, [k, v]]
@@ -351,22 +397,38 @@
     (let [e (if (nil? (event k)) (assoc event k v) event)]
       (call-rescue e children))))
 
-(defn adjust [[field f & args] & children]
-  "Passes on a changed version of each event by applying f to (field event) & args.
+(defn adjust 
+  "Passes on a changed version of each event by applying f to (field event) &
+  args.
 
   (adjust [:service str \" rate\"] ...)
  
   takes {:service \"foo\"} and emits {:service \"foo rate\"}"
+  [[field f & args] & children]
   (fn [event]
     (let [value (apply f (field event) args)
           event (assoc event field value)]
       (call-rescue event children))))
 
-(defmacro by [field & children]
+(defmacro by 
   "Splits stream by field.
   Every time an event arrives with a new value of field, this macro invokes
-  its enclosed form to return a *new*, distinct stream for that particular
-  value."
+  its child forms to return a *new*, distinct set of streams for that
+  particular value.
+  
+  (rate 5 prn) prints a single rate for all events, once every five seconds.
+
+  (by :host (rate 5) tracks a separate rate for *each host*, and prints each 
+  one every five seconds.
+
+  Be aware that (by) over unbounded values can result in
+  *many* substreams being created, so you wouldn't want to write
+  (by metric prn): you'd get a separate prn for *every* unique metric that 
+  came in.
+
+  Note that field can be a keyword like :host or :state, but you can *also* use
+  any unary function for more complex sharding."
+  [field & children]
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
@@ -383,8 +445,8 @@
                            fork-name)))]
          (call-rescue event fork)))))
 
-(defn changed [pred & children]
-  "Passes on events only when (f event) differs from that of the previous event.. May take options:
+(defn changed
+  "Passes on events only when (f event) differs from that of the previous event.. Options:
   
   :init   The initial value to assume for (pred event).
   
@@ -392,7 +454,12 @@
   (changed :state prn)
 
   ; Assume states *were* ok the first time we see them.
-  (changed :state {:init \"ok\"} prn)"
+  (changed :state {:init \"ok\"} prn)
+  
+  Note that f can be an arbitrary function:
+  
+  (changed (fn [e] (> (:metric e) 2)) ...)"
+  [pred & children]
   (let [options (first children)
         previous (ref
                    (when (map? options)
@@ -410,36 +477,43 @@
               true)))
         (call-rescue event children)))))
 
-(defn within [r & children]
+(defn within
   "Passes on events only when their metric falls within the given inclusive
-  range. (within [0 1] (fn [event] do-something))"
+  range.
+  
+  (within [0 1] (fn [event] do-something))"
+  [r & children]
   (fn [event]
     (when-let [m (:metric event)]
       (when (<= (first r) m (last r))
         (call-rescue event children)))))
 
-(defn without [r & children]
-  "Passes on events only when their metric falls outside the given (inclusive) range."
+(defn without
+  "Passes on events only when their metric falls outside the given (inclusive)
+  range."
+  [r & children]
   (fn [event]
     (when-let [m (:metric event)]
       (when (not (<= (first r) m (last r)))
         (call-rescue event children)))))
 
-(defn over [x & children]
+(defn over
   "Passes on events only when their metric is greater than x"
+  [x & children]
   (fn [event]
     (when-let [m (:metric event)]
       (when (< x m)
         (call-rescue event children)))))
 
-(defn under [x & children]
+(defn under
   "Passes on events only when their metric is smaller than x"
+  [x & children]
   (fn [event]
     (when-let [m (:metric event)]
       (when (> x m)
         (call-rescue event children)))))
 
-(defn where-test [k v]
+(defn- where-test [k v]
   (case k
     'tagged (list 'when (list :tags 'event)
                   (list 'reimann.common/member? v (list :tags 'event)))
@@ -449,13 +523,14 @@
       (list '= v (list (keyword k) 'event)))))
 
 ; Hack hack hack hack
-(defn where-rewrite [expr]
+(defn where-rewrite
   "Rewrites lists recursively. Replaces (metric x y z) with a test matching
   (:metric event) to any of x, y, or z, either by = or re-find. Replaces any
   other instance of metric with (:metric event). Does the same for host,
   service, event, state, time, ttl, tags (which performs an exact match of the
   tag vector), tagged (which checks to see if the given tag is present at all),
   metric_f, and description."
+  [expr]
   (let [syms #{'host 
                'service 
                'state 
@@ -487,7 +562,7 @@
         (list (keyword expr) 'event)
         expr))))
 
-(defmacro where [expr & children]
+(defmacro where
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
   'event is bound to the event under consideration. Examples:
 
@@ -498,23 +573,26 @@
   (where (and (> 0 metric)
               (state \"ok\")) ...)
 
-  ; Match a state where an arbitrary function f applied to the event is truthy.
-  (where (f event) ...)
+  ; Match a state which has expired.
+  (where (expired? event) ...)
 
   ; Match a state where the host begins with web
   (where (host #\"^web\") ...)"
+  [expr & children]
   (let [p (where-rewrite expr)]
     `(let [kids# [~@children]]
       (fn [event#]
        (when (let [~'event event#] ~p)
          (call-rescue event# kids#))))))
 
-(defn update [index]
+(defn update
   "Updates the given index with all states received."
+  [index]
   (fn [state]
     (index/update index state)))
 
-(defn delete-from [index]
+(defn delete-from
   "Deletes any events that pass through from the index"
+  [index]
   (fn [state]
     (index/delete index state)))

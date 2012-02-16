@@ -1,4 +1,5 @@
 (ns reimann.logging
+  "Configures log4j to log to a file. It's a trap!"
   ; With thanks to arohner
   (:import (org.apache.log4j 
              Logger
@@ -14,12 +15,18 @@
   (:import org.apache.commons.logging.LogFactory)
   (:use [clojure.contrib.string :only (as-str)]))
 
-(defn set-level [logger level]
+(defn set-level 
+  "Set the level for the given logger, by string name. Use:
+  (set-level \"reimann.client\", Level/DEBUG)"
+  [logger level]
   (. (Logger/getLogger logger) (setLevel level)))
 
 (def reimann-layout (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
 
-(defn init 
+(defn init
+  "Initialize log4j. You will probably call this from the config file. Options:
+
+  :file   The file to log to."
   ([] (init {}))
   ([opts]
     (let [filename (or (:file opts) "reimann.log")
@@ -44,7 +51,7 @@
     (set-level "reimann.graphite" Level/DEBUG)))
 
 ; Not sure where he intended this to go....
-(defn add-file-appender [loggername filename]
+(defn- add-file-appender [loggername filename]
   (.addAppender (Logger/getLogger loggername)
                 (doto (FileAppender.)
                   (.setLayout reimann-layout))))

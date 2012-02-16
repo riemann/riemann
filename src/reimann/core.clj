@@ -1,22 +1,23 @@
 (ns reimann.core
+  "Binds together an index, servers, and streams."
   (:use reimann.common)
   (:use clojure.tools.logging)
   (:require reimann.streams)
   (:require [reimann.index :as index]))
 
-; This will probably come into play more when I work on hot reloading.
-
-; Create a new core
-(defn core []
+(defn core
+  "Create a new core."
+  []
   {:servers (ref [])
    :streams (ref [])
    :index   (ref nil)
    :reaper  (ref nil)})
 
-(defn periodically-expire [core interval]
+(defn periodically-expire
   "Every interval (default 10) seconds, expire states from this core's index
   and stream them to streams. The streamed states have only the host and service
   copied, current time, and state expired."
+  [core interval]
   (let [interval (* 1000 (or interval 10))]
     (future (loop []
               (Thread/sleep interval)
@@ -31,13 +32,17 @@
                              :time (unix-time)}))))
               (recur)))))
 
-(defn start [core]
+(defn start
+  "Start the given core. Starts reapers."
+  [core]
   (info "Hyperspace core online")
   (dosync
     (when-not (deref (:reaper core))
       (ref-set (:reaper core) (periodically-expire core)))))
 
-(defn stop [core]
+(defn stop
+  "Stops the given core. Cancels reapers, stops servers."
+  [core]
   (info "Core stopping")
   ; Stop expiry
   (when-let [r (deref (:reaper core))]

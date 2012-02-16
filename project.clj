@@ -8,7 +8,7 @@
     (expand-path (str (dirname *file*) "/" path)))
 
 (defproject reimann "0.0.2-SNAPSHOT"
-  :description "reimann: folds events into states"
+  :description "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/ustate"
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
@@ -32,6 +32,7 @@
     [lein-deb "1.0.0-SNAPSHOT"]
     [protobuf "0.6.0-beta5"]
     [lein-autodoc "0.9.0"]
+    [codox "0.4.0"]
   ]
   :test-selectors {:default (complement :integration)
                    :integration :integration

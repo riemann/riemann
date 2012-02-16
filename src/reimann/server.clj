@@ -1,4 +1,6 @@
 (ns reimann.server
+  "Accepts messages from external sources. Associated with a core. Sends
+  incoming events to the core's streams, queries the core's index for states."
   (:use [reimann.core])
   (:use [reimann.common])
   (:require [reimann.query :as query])
@@ -14,8 +16,9 @@
 ;(defn udp-server []
 ;  (let [channel (wait-for-result (udp-socket {:port 5555}))]   
 
-; Handles a buffer with the given core.
-(defn handle [core buffer]
+(defn handle
+  "Handles a buffer with the given core."
+  [core buffer]
   (let [msg (decode buffer)]
     ; Send each event/state to each stream
     (doseq [event (concat (:events msg) (:states msg))
@@ -32,8 +35,9 @@
       ; Generic acknowledge 
       {:ok true})))
 
-; Returns a handler that applies messages to the given streams (by reference)
-(defn handler [core]
+(defn handler
+  "Returns a handler that applies messages to the given core."
+  [core]
   (fn [channel client-info]
     (receive-all channel (fn [buffer]
       (when buffer
@@ -50,6 +54,9 @@
             (close channel))))))))
 
 (defn tcp-server
+  "Create a new TCP server for a core. Starts immediately. Options:
+  :port   The port to listen on.
+  :host   The host to listen on."
   ([core] (tcp-server core {}))
   ([core opts]
     (let [opts (merge {:port 5555

@@ -1,4 +1,5 @@
 (ns reimann.graphite
+  "Forwards events to Graphite."
   (:import [java.net Socket])
   (:import [java.io Writer])
   (:import [java.io OutputStreamWriter])
@@ -6,8 +7,15 @@
   (:use clojure.tools.logging)
   (:use reimann.common))
 
-(defn graphite [opts]
-  "Returns a function which accepts an event and sends it to Graphite. Silently eats events when graphite is down."
+(defn graphite 
+  "Returns a function which accepts an event and sends it to Graphite.
+  Constructs service names by taking the host (reversed, e.g. \"web.pdx\" ->
+  \"lax.web\"), and service (with spaces converted to dots). Silently eats
+  events when graphite is down. Attempts to reconnect automatically every five
+  seconds. Use:
+  
+  (graphite {:host \"graphite.local\" :port 2003})"
+  [opts]
   (let [opts (merge {:host "localhost" :port 2003} opts)
         sock (ref nil)
         out  (ref nil)

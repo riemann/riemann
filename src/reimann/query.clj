@@ -1,4 +1,6 @@
 (ns reimann.query
+  "The query parser. Parses strings into ASTs, and converts ASTs to functions
+  which match events."
   (:use reimann.common)
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
@@ -7,15 +9,17 @@
 ; With many thanks to Brian Carper
 ; http://briancarper.net/blog/554/antlr-via-clojure
 
-(defn parse-string [s]
-  "Parse nodes for a string containing an expression"
+(defn parse-string 
+  "Parse string into ANTLR tree nodes"
+  [s]
     (let [lexer (QueryLexer. (ANTLRStringStream. s))
                   tokens (CommonTokenStream. lexer)
                   parser (QueryParser. tokens)]
           (.getTree (.expr parser))))
 
-(defn- make-regex [string]
+(defn- make-regex
   "Convert a string like \"foo%\" into /^foo.*$/"
+  [string]
   (let [tokens (re-seq #"%|[^%]+" string)
         pairs (map (fn [token]
                      (case token
@@ -58,14 +62,20 @@
       "ttl"         'ttl
       (when n (read-string n)))))
 
-(defn ast [string]
+(defn ast
   "The expression AST for a given string"
+  [string]
   (let [node (parse-string string)]
     (node-ast node)))
 
-(defn fun [ast]
+(defn fun
   "Transforms an AST into a fn [event] which returns true if the query matches
-  that event."
+  that event. Example:
+  
+  (def q (fun (ast \"metric > 2\")))
+  (q {:metric 1}) => false
+  (q {:metric 3}) => true"
+  [ast]
   (eval
     (list 'fn ['event]
       (list 'let '[host        (:host event)

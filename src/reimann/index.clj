@@ -1,4 +1,9 @@
 (ns reimann.index
+  "Maintains a stateful index of events by [host, service] key. Can be queried
+  to return the most recent indexed events matching some expression. Can expire
+  events which have exceeded their TTL. Presently the only implementation of
+  the index protocol is backed by a nonblockinghashmap, but I plan to add an
+  HSQLDB backend as well."
   (:require [reimann.query :as query])
   (:use reimann.common)
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
@@ -53,10 +58,12 @@
           (when-not (= "expired" (:state event))
             (.put this [(:host event) (:service event)] event))))
 
-(defn nbhm-index []
+(defn nbhm-index
   "Create a new nonblockinghashmap backed index"
+  []
   (NonBlockingHashMap.))
 
-(defn index []
-  "Create a new index"
+(defn index
+  "Create a new index (currently: an nhbm index)"
+  []
   (nbhm-index))

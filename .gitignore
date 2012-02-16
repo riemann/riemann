@@ -13,4 +13,4 @@ build
 .lein-failures
 protosrc/
 reimann-*.zip
-autodoc/**
+doc/**

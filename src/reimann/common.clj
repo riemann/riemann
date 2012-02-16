@@ -1,4 +1,7 @@
 (ns reimann.common
+  "Utility functions. Time/date, some flow control constructs, protocol buffer
+  definitions and codecs, some vector set ops, etc."
+
   (:import [java.util Date])
   (:require gloss.io)
   (:require clojure.set)
@@ -29,27 +32,35 @@
     (doall (apply concat result))))
 
 ; Times
-(defn unix-time []
+(defn unix-time
+  "The current unix epoch time in seconds, taken from System/currentTimeMillis."
+  []
   (/ (System/currentTimeMillis) 1000))
 
-(defn time-at [unix-time]
+(defn time-at 
   "Returns the Date of a unix epoch time."
+  [unix-time]
   (java.util.Date. (long unix-time)))
 
-; Protobuf transformation
-(defn pre-dump-event [e]
+(defn pre-dump-event
+  "Transforms an event (map) into a form suitable for protocol buffer encoding."
+  [e]
   (let [e (if (:metric e) (assoc e :metric_f (float (:metric e))) e)]
     e))
 
-(defn post-load-event [e]
-  "Loads a protobuf event to an internal event."
+(defn post-load-event 
+  "Loads a protobuf event to an internal event. Converts the on-the-wire
+  metric_f to metric, creates a time if none exists, etc."
+  [e]
   (let [e (apply hash-map (apply concat e))
         e (if (:metric_f e) (assoc e :metric (:metric_f e)) e)
         e (if (:time e) e (assoc e :time (unix-time)))]
     e))
 
-(defn decode [s]
-  "Decode a gloss buffer to a Msg"
+(defn decode
+  "Decode a gloss buffer to a message. Decodes the protocol buffer
+  representation of Msg and applies post-load-event to all events."
+  [s]
   (let [buffer (gloss.io/contiguous s)
         bytes (byte-array (.remaining buffer))
         _ (.get buffer bytes 0 (alength bytes))
@@ -62,28 +73,35 @@
           :query (:query msg)
           :events (map post-load-event (:events msg))}))
 
-(defn encode [msg]
-  "Builds and dumps a protobuf message from msg"
+(defn encode
+  "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
+  events."
+  [msg]
   (let [msg (merge msg
                    {:events (map pre-dump-event (:events msg))
                     :states (map pre-dump-event (:states msg))})
         pb (apply protobuf Msg (apply concat msg))]
     (protobuf-dump pb)))
 
-; Create a new event
-(defn event [opts]
+(defn event
+  "Create a new event."
+  [opts]
   (let [t (round (or (opts :time)
                      (unix-time)))]
     (apply protobuf Event
       (apply concat (merge opts {:time t})))))
 
-(defn state [opts]
+(defn state
+  "Create a new state."
+  [opts]
   (let [t (round (or (opts :time)
                      (unix-time)))]
     (apply protobuf State
       (apply concat (merge opts {:time t})))))
 
-(defn approx-equal 
+(defn approx-equal
+  "Returns true if x and y are roughly equal, such that x/y is within tol of
+  unity."
 ([x,y]
   (approx-equal x y 0.01))
 ([x, y, tol]
@@ -92,21 +110,25 @@
       (< (- 1 tol) f (+ 1 tol))))))
 
 ; Vector set operations
-(defn member? [r s]
-  "Is e present in s?"
+(defn member?
+  "Is e present in seqable s?"
+  [r s]
   (some (fn [e] (= r e)) s))
 
-(defn subset? [required s]
-  "Are all required present in s?"
+(defn subset?
+  "Are all elements of required present in seqable s?"
+  [required s]
   (clojure.set/subset? (set required) (set s)))
 
-(defn overlap? [a b]
-  "Do a and b have any elements in common?"
+(defn overlap?
+  "Do a and b (any seqables) have any elements in common?"
+  [a b]
   (some (fn [e]
           (some (fn [r] (= e r)) a)) b))
 
-(defn disjoint? [a b]
-  "Do a and b have no elements in common?"
+(defn disjoint?
+  "Do a and b (any seqables) have no elements in common?"
+  [a b]
   (not-any? (fn [e] 
              (some (fn [r] (= e r)) a))
            b))

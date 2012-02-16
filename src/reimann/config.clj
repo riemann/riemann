@@ -1,4 +1,8 @@
 (ns reimann.config
+  "Reimann config files are eval'd in the context of this namespace. Includes
+  streams, client, email, logging, and graphite; the common functions used in
+  config. Provides a default core and functions (tcp-server, streams, index)
+  which modify that core."
   (:require [reimann.core])
   (:require [reimann.server])
   (:require reimann.index)
@@ -11,22 +15,24 @@
   (:use reimann.graphite)
   (:gen-class))
 
-; A stateful DSL for expressing reimann configuration.
-(def core (reimann.core/core))
+(def ^{:doc "A default core."} core (reimann.core/core))
 
-; Add a TCP server
-(defn tcp-server [& opts]
+(defn tcp-server 
+  "Add a new TCP server with opts to the default core."
+  [& opts]
   (dosync
     (alter (core :servers) conj
       (reimann.server/tcp-server core (apply hash-map opts)))))
 
-; Add streams
-(defn streams [& things]
+(defn streams
+  "Add any number of streams to the default core." 
+  [& things]
   (dosync
     (alter (core :streams) concat things)))
 
-; Create an index
-(defn index [& opts]
+(defn index 
+  "Set the index used by this core."
+  [& opts]
   (dosync
     (ref-set (core :index) (apply reimann.index/index opts))))
 
@@ -34,8 +40,11 @@
 (defn start []
   (reimann.core/start core))
 
-; Eval the config file in this context
-(defn include [file]
+(defn include 
+  "Include another config file.
+
+  (include \"foo.clj\")"
+  [file]
   (let [file (or file (first *command-line-args*) "reimann.config")]
     (binding [*ns* (find-ns 'reimann.config)]
       (load-string (slurp file)))))
