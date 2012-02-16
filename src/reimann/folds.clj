@@ -3,7 +3,9 @@
   (:use [reimann.common]))
 
 (defn sorted-sample-extract
-  "Returns the events in seqable s, sorted and taken at each point p of points, where p ranges from 0 (smallest metric) to 1 (largest metric). 0.5 is the median event, 0.95 is the 95th' percentile event, and so forth."
+  "Returns the events in seqable s, sorted and taken at each point p of points,
+  where p ranges from 0 (smallest metric) to 1 (largest metric). 0.5 is the
+  median event, 0.95 is the 95th' percentile event, and so forth."
   [s points]
   (if (empty? s) 
     '()
