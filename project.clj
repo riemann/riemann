@@ -31,6 +31,7 @@
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
     [protobuf "0.6.0-beta5"]
+    [lein-autodoc "0.9.0"]
   ]
   :test-selectors {:default (complement :integration)
                    :integration :integration
