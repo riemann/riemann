@@ -1,15 +1,27 @@
 ; vim: filetype=clojure
 
 ; Hi! This is a Reimann config file. It's a Clojure program that describes how
-; to process events. We're going to build up a complex monitoring system
-; throughout this guide. It should give you all the tools you need to write
-; your own monitoring system.
+; to process events. I'm going to take you on a representative tour of
+; reimann monitoring. When you're done, you can write your own config--as
+; simple or complicated as necessary.
 ;
-; First off, let's set up a log file.
+; If you aren't familiar with Reimann or its events, see
+;
+; https://github.com/aphyr/reimann
+;
+; You may also want to refer to the API docs, especially for streams. This
+; guide should give you a taste for Reimann's abilities, but I won't be
+; exhaustive.
+;
+; http://aphyr.github.com/reimann/reimann.streams.html
+;
+; All right! First, let's set up a log file. If you need to debug your
+; configuration, you can always call (debug <anything>). clojure.tools.logging
+; is included.
 
 (logging/init :file "reimann.log")
 
-; Servers accept events from the network. Start a TCP server:
+; Servers accept events from the network. We'll start a TCP server:
 
 (tcp-server)
 
@@ -38,6 +50,7 @@
 
     ; A stream is just a function that accepts a map. (prn x) prints x to the
     ; console. Let's print every event that passes in:
+
     prn
 
     ; Imagine you wanted to know the time it takes for API requests to
@@ -47,20 +60,26 @@
     ;  :metric: 0.240} ; 240 milliseconds
     ;
     ; First, select only events with that service:
+    
     (where (service "api req")
+
            ; Now, we'll calculate the 50th, 95th, and 99th percentile for all
            ; requests in each 5-second interval.
+
            (percentiles 5 [0.5 0.95 0.99]
+
                         ; Percentiles will emit events like 
                         ; {:service "api req 0.5" :metric 0.12}
                         ; We'll add them to the index, so they can show up
                         ; on our dashboard.
+
                         index)
 
            ; What else can we do with API requests? Let's figure out the total
            ; request rate. (rate interval & children) sums up metrics and 
            ; divides by time. We can't use the original metrics though--they
            ; represent *times*, not counts. So we *change* each metric to be 1.
+
            (with :metric 1
                  (rate 5 index))
 
@@ -68,8 +87,10 @@
            ; copy--one where :metric is always 1. Then (rate) adds up all those
            ; 1's over five seconds, and sends that metric to the index.
            
-           ; with has a counterpart, by the way: (default). It works exactly
-           ; the same, but it only alters the event when the value is nil.
+           ; (with) has a counterpart, by the way: (default). It works exactly
+           ; the same, but it only alters the event when the value is nil. Both
+           ; with and default accept maps as well:
+
            (default {:state "ok" :ttl 60} index)
 )))
 
@@ -110,7 +131,8 @@
 
 (def email (mailer {:from "reimann@trioptimum.com"}))
 
-; Any Postler options are supported.
+; You can use any options for https://github.com/drewr/postal
+;
 ; (mailer {:from "reimann@trioptimum.com"
 ;          :host "mx1.trioptimum.com"
 ;          :user "foo"
@@ -129,7 +151,7 @@
   ; The mailer can accept lists of events, too. To avoid getting slammed with
   ; too many emails we can use the rollup function--it will combine multiple
   ; events into a single message. To send at most 5 emails every hour:
-  ;
+
   (def tell-ops (rollup 5 3600 (email "ops@vonbraun.mil")))
   (where (state "critical") tell-ops)
 )
