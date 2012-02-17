@@ -14,19 +14,20 @@ writing comprehensive, site-specific analytics easy.
 <table>
 <tr>
   <th>Guide</th>
-  <td>https://github.com/aphyr/reimann/blob/master/reimann.config.guide</td>
+  <td><a href="https://github.com/aphyr/reimann/blob/master/reimann.config.guide">reimann.config.guide</a></td>
 </tr>
 <tr>
   <th>API docs</th>
-  <td>http://aphyr.github.com/reimann/</td>
+  <td><a href="http://aphyr.github.com/reimann/">http://aphyr.github.com/reimann/</a></td>
 </tr>
 <tr>
   <th>Clojars</th>
-  <td>http://clojars.org/reimann</td>
+  <td><a href="http://clojars.org/reimann">http://clojars.org/reimann</a></td>
 </tr>
 <tr>
   <th>Clients</th>
   <td><a href="https://github.com/aphyr/reimann-ruby-client">Ruby</a></td>
+  <td><a href="http://clojars.org/reimann">Clojure</a></td>
 </tr>
 <tr>
   <th>Dashboard</th>
@@ -162,8 +163,10 @@ Protocol
 ========
 
 A connection to Reimann is a stream of messages. Each message is a 4 byte
-network-endian integer *length*, followed by a Procol Buffer Message of
-*length* bytes. See proto/message.proto for the protobuf particulars.
+network-endian integer *length*, followed by a Protoocol Buffer Message of
+*length* bytes. See
+[proto/reimann/proto.proto](https://github.com/aphyr/reimann/blob/master/proto/reimann/proto.proto)
+for the protobuf particulars.
 
 The server will accept a repeated list of Events, and respond with a
 confirmation message with either an acknowledgement or an error. Check the `ok`
