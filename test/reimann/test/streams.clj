@@ -346,7 +346,7 @@
 
 (deftest uupdate-test
          (let [i (index/index)
-               s (update i)
+               s (update-index i)
                states [{:host 1 :state "ok"} 
                        {:host 2 :state "ok"} 
                        {:host 1 :state "bad"}]]
@@ -355,16 +355,16 @@
                   #{{:host 1 :state "bad"}
                     {:host 2 :state "ok"}}))))
 
-(deftest delete-from-test
+(deftest delete-from-index-test
          (let [i (index/index)
-               s (update i)
+               s (update-index i)
+               d (delete-from-index i)
                states [{:host 1 :state "ok"} 
                        {:host 2 :state "ok"} 
                        {:host 1 :state "bad"}]]
            (doseq [state states] (s state))
-           (is (= (set (.values i))
-                  #{{:host 1 :state "bad"}
-                    {:host 2 :state "ok"}}))))
+           (doseq [state states] (d state))
+           (is (= (vec (.values i)) []))))
 
 (deftest throttle-test
          (let [out (ref [])

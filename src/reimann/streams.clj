@@ -580,13 +580,13 @@
        (when (let [~'event event#] ~p)
          (call-rescue event# kids#))))))
 
-(defn update
+(defn update-index
   "Updates the given index with all states received."
   [index]
   (fn [state]
     (index/update index state)))
 
-(defn delete-from
+(defn delete-from-index
   "Deletes any events that pass through from the index"
   [index]
   (fn [state]
