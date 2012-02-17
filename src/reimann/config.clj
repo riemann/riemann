@@ -36,6 +36,11 @@
   (dosync
     (ref-set (core :index) (apply reimann.index/index opts))))
 
+(defn periodically-expire
+  "Sets up a reaper for this core. See core API docs."
+  [interval]
+  (periodically-expire core interval))
+
 ; Start the core
 (defn start []
   (reimann.core/start core))
