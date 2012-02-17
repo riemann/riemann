@@ -298,12 +298,6 @@
   (fn [event]
     (dosync (ref-set reference event))))
 
-(defn stdout
-  "Prints an event to stdout"
-  [event]
-  (fn [event]
-    (prn event)))
-
 (defn fwd
   "Sends a map to a client, coerced to state"
   [client]
