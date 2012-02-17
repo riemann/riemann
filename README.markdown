@@ -14,9 +14,8 @@ writing comprehensive, site-specific analytics easy.
 [Configuration Guide](https://github.com/aphyr/reimann/blob/master/reimann.config.guide)<br />
 [API docs](http://aphyr.github.com/reimann/)<br />
 [Clojars](http://clojars.org/reimann)<br />
-Clients: [Ruby](https://github.com/aphyr/reimann-ruby-client)
+Clients: [Ruby](https://github.com/aphyr/reimann-ruby-client),
          [Clojure](http://clojars.org/reimann)<br />
-
 Dashboard: Coming soon
 
 Installation
