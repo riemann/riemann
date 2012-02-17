@@ -1,10 +1,10 @@
 Reimann
 =======
 
-Reimann (after the mathematician) is a network event stream processor. It is
-designed for monitoring, analytics, and alerts for events from multiple
-services. Reimann listens on port 5555 for protocol buffer messages containing
-events and processes them through various streams.
+Reimann is a network event stream processor. It is designed for monitoring,
+analytics, and alerts for events from multiple services. Reimann listens on
+port 5555 for protocol buffer messages containing events and processes them
+through various streams.
 
 You can use Reimann to graph the average rate of requests in your application,
 email responsible parties every time an exception is thrown, and plot the 50th,
