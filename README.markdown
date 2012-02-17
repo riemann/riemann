@@ -11,29 +11,13 @@ email responsible parties every time an exception is thrown, and plot the 50th,
 95th, and 99th percentile latencies for your HTTP service. It is a tool to make
 writing comprehensive, site-specific analytics easy.
 
-<table>
-<tr>
-  <th>Guide</th>
-  <td><a href="https://github.com/aphyr/reimann/blob/master/reimann.config.guide">reimann.config.guide</a></td>
-</tr>
-<tr>
-  <th>API docs</th>
-  <td><a href="http://aphyr.github.com/reimann/">http://aphyr.github.com/reimann/</a></td>
-</tr>
-<tr>
-  <th>Clojars</th>
-  <td><a href="http://clojars.org/reimann">http://clojars.org/reimann</a></td>
-</tr>
-<tr>
-  <th>Clients</th>
-  <td><a href="https://github.com/aphyr/reimann-ruby-client">Ruby</a></td>
-  <td><a href="http://clojars.org/reimann">Clojure</a></td>
-</tr>
-<tr>
-  <th>Dashboard</th>
-  <td>Coming soon</td>
-</tr>
-</table>
+[Configuration Guide](https://github.com/aphyr/reimann/blob/master/reimann.config.guide)<br />
+[API docs](http://aphyr.github.com/reimann/)<br />
+[Clojars](http://clojars.org/reimann)<br />
+Clients: [Ruby](https://github.com/aphyr/reimann-ruby-client)
+         [Clojure](http://clojars.org/reimann)<br />
+
+Dashboard: Coming soon
 
 Installation
 ============
