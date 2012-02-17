@@ -298,11 +298,11 @@
   (fn [event]
     (dosync (ref-set reference event))))
 
-(defn fwd
-  "Sends a map to a client, coerced to state"
+(defn forward
+  "Sends an event through a client"
   [client]
-  (fn [statelike]
-    (reimann.client/send-state client statelike)))
+  (fn [event]
+    (reimann.client/send-event client event)))
 
 (defn match
   "Passes events on to children only when (f event) is equal to value. If f is
