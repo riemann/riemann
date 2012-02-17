@@ -59,12 +59,8 @@
          (decode (send-message-raw client raw))
          (catch Exception e
            (warn e "first send failed, retrying")
-           (try 
-             (open-tcp-conn client)
-             (decode (send-message-raw client raw))
-             (catch Exception e
-               (warn e "second send failed")
-               false)))))))
+           (open-tcp-conn client)
+           (decode (send-message-raw client raw)))))))
 
 (defn query 
   "Query the server for events in the index. Returns a list of events."

@@ -14,8 +14,7 @@
 
       ; Kill server; should fail.
       (server)
-      (is false? (send-event client {:service "test"}))
-
+      (is (thrown? java.net.SocketException (send-event client {:service "test"})))
       
       (let [server (tcp-server (core))]
         (try
