@@ -11,8 +11,28 @@ email responsible parties every time an exception is thrown, and plot the 50th,
 95th, and 99th percentile latencies for your HTTP service. It is a tool to make
 writing comprehensive, site-specific analytics easy.
 
-Guide:    https://github.com/aphyr/reimann/blob/master/reimann.config.guide
-API docs: http://aphyr.github.com/reimann/
+<table>
+<tr>
+  <th>Guide</th>
+  <td>https://github.com/aphyr/reimann/blob/master/reimann.config.guide</td>
+</tr>
+<tr>
+  <th>API docs</th>
+  <td>http://aphyr.github.com/reimann/</td>
+</tr>
+<tr>
+  <th>Clojars</th>
+  <td>http://clojars.org/reimann</td>
+</tr>
+<tr>
+  <th>Clients</th>
+  <td><a href="https://github.com/aphyr/reimann-ruby-client">Ruby</a></td>
+</tr>
+<tr>
+  <th>Dashboard</th>
+  <td>Coming soon</td>
+</tr>
+</table>
 
 Installation
 ============
@@ -134,7 +154,9 @@ When run, reimann loads a configuration file: either the first command line
 argument or a file in the current directory called reimann.config. This file is
 a Clojure program evaluated in the context of reimann.config.
 
-TODO: more here.
+The configuration guide is here:
+
+https://github.com/aphyr/reimann/blob/master/reimann.config.guide
 
 Protocol
 ========
