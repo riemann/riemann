@@ -2,7 +2,7 @@
   (:use [reimann.core])
   (:use [reimann.common])
   (:use [reimann.server])
-  (:use [reimann.client :only [tcp-client close-client send-event-protobuf]])
+  (:use [reimann.client :only [tcp-client close-client send-event]])
   (:use [reimann.streams])
   (:use [clojure.test]))
 
@@ -15,7 +15,7 @@
                n 100
                threads 10
                events (take n (repeatedly (fn [] 
-                        (event {:metric 1}))))]
+                        {:metric 1})))]
 
            (dosync
              (alter (core :servers) conj server)
@@ -28,7 +28,7 @@
                              (let [client (tcp-client)]
                                 (doseq [e events]
                                   ; Send all events to server
-                                  (send-event-protobuf client e))
+                                  (send-event client e))
                                (close-client client))))
              
             (is (= (* threads n) (:metric (deref final)))) 

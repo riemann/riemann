@@ -69,25 +69,10 @@
                            {:query (protobuf Query :string string)})]
     (:states resp)))
 
-(defn send-event-protobuf
-  "Send an event Protobuf."
-  [client event]
-  (send-message client {:events [event]}))
-
 (defn send-event
   "Send an event over client."
-  [client eventmap]
-  (send-message client {:events [eventmap]}))
-
-(defn send-state-protobuf 
-  "Send a state Protobuf."
   [client event]
-  (send-message client {:states [event]}))
-
-(defn send-state 
-  "Send a state."
-  [client statemap]
-  (send-message client {:states [statemap]}))
+  (send-message client {:events [event]}))
 
 (defstruct tcp-client-struct :host :port :conn)
 
