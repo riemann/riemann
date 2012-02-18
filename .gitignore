@@ -1,6 +1,8 @@
 .cake
 pom.xml
 *.jar
+*.tar
+*.tar.bz2
 *.war
 *.deb
 *~
