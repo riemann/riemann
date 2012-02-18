@@ -49,7 +49,7 @@ alerting; and to glue various monitoring systems together."
         ; I wish I could use relative paths here, but lein-deb complains
         ; "No directory specified for tarfileset", and lein macros need them
         ; to be strings. Arrrgh.
-        :filesets [{:file     "/home/aphyr/reimann/reimann-0.0.2-SNAPSHOT-standalone.jar"
+        :filesets [{:file     "/home/aphyr/reimann/reimann-0.0.3-SNAPSHOT-standalone.jar"
                     :fullpath "/usr/lib/reimann/reimann.jar"}
                    {:file     "/home/aphyr/reimann/reimann.config"
                     :fullpath "/etc/reimann/reimann.config"}
