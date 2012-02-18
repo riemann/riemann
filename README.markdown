@@ -192,6 +192,4 @@ aleph.tcp.
 - Use Korma/HSQL to implement a faster index for query-heavy installations.
 - Think more carefully about time-partitioning functions.
 - Reservoir sampling
-- Moving averages
-- Resettable counters
 - Event pubsub
