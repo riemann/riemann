@@ -10,11 +10,8 @@
 (defproject reimann "0.0.3-SNAPSHOT"
   :description 
 "A network event stream processor. Intended for analytics, metrics, and
-alerting; and to glue various monitoring systems together.
-
-Code:     http://github.com/aphyr/reimann/
-API docs: http://aphyr.github.com/reimann/"
-  :url "http://github.com/aphyr/ustate"
+alerting; and to glue various monitoring systems together."
+  :url "http://github.com/aphyr/reimann"
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
