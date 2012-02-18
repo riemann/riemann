@@ -49,7 +49,7 @@
          (let [core (core)
                index (index)
                server (reimann.server/tcp-server core)
-               stream (reimann.streams/update index)
+               stream (reimann.streams/update-index index)
                client (reimann.client/tcp-client)]
 
            (try
@@ -81,7 +81,7 @@
                res (ref nil)
                expired-stream (reimann.streams/expired 
                                 (fn [e] (dosync (ref-set res e))))
-               stream (reimann.streams/update index)
+               stream (reimann.streams/update-index index)
                reaper (periodically-expire core 0.001)]
 
                (dosync
