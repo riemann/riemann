@@ -431,24 +431,34 @@
   (by :host (rate 5) tracks a separate rate for *each host*, and prints each 
   one every five seconds.
 
+  You can pass multiple fields too
+  
+  (by [:host :service])
+  
+  Note that field can be a keyword like :host or :state, but you can *also* use
+  any unary function for more complex sharding.
+
   Be aware that (by) over unbounded values can result in
   *many* substreams being created, so you wouldn't want to write
   (by metric prn): you'd get a separate prn for *every* unique metric that 
-  came in.
-
-  Note that field can be a keyword like :host or :state, but you can *also* use
-  any unary function for more complex sharding."
-  [field & children]
+  came in."
+  [fields & children]
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
   `(let [new-fork# (fn [] [~@children])]
-     (by-fn ~field new-fork#)))
+     (by-fn ~fields new-fork#)))
 
-(defn by-fn [field new-fork]
-  (let [table (ref {})]
+(defn by-fn [fields new-fork]
+  (let [fields (flatten [fields])
+        f (if (= 1 (count fields))
+            ; Just use the first function given applied to the event
+            (first fields)
+            ; Return a vec of *each* function given, applied to the event
+            (apply juxt fields))
+        table (ref {})]
      (fn [event]
-       (let [fork-name (field event)
+       (let [fork-name (f event)
              fork (dosync
                     (or ((deref table) fork-name)
                         ((alter table assoc fork-name (new-fork)) 

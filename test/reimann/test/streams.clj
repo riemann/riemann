@@ -206,7 +206,7 @@
            (is (= "foo" (:service (deref r))))
            (is (= nil (:state (deref r))))))
 
-(deftest by-test
+(deftest by-single
          ; Each test stream keeps track of the first host it sees, and confirms
          ; that each subsequent event matches that host.
          (let [i (ref 0)
@@ -219,6 +219,39 @@
                              (ref-set host (event :host)))
                            (is (= (deref host) (event :host)))))))
                events (map (fn [h] {:host h}) [:a :a :b :a :c :b])]
+           (doseq [event events]
+             (s event))
+           (is (= (count events) (deref i)))))
+
+(deftest by-multiple
+         ; Each test stream keeps track of the first host/service it sees, and
+         ; confirms that each subsequent event matches that host.
+         (let [i (ref 0)
+               s (by [:host :service]
+                     (let [host (ref nil)
+                           service (ref nil)]
+                       (fn [event]
+                         (dosync
+                           (alter i inc)
+
+                           (when (nil? (deref host))
+                             (ref-set host (event :host)))
+                           (when (nil? (deref service))
+                             (ref-set service (event :service)))
+
+                           (is (= (deref host) (event :host)))
+                           (is (= (deref service) (event :service)))))))
+
+               events (map (fn [h] {:host (first h)
+                                    :service (last h)})
+                           [[1 :a]
+                            [1 :b]
+                            [1 :a]
+                            [2 :a]
+                            [2 :a]
+                            [1 :a]
+                            [2 :a]
+                            [1 :b]])]
            (doseq [event events]
              (s event))
            (is (= (count events) (deref i)))))
