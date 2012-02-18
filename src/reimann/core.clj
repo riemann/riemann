@@ -35,10 +35,10 @@
 (defn start
   "Start the given core. Starts reapers."
   [core]
-  (info "Hyperspace core online")
   (dosync
     (when-not (deref (:reaper core))
-      (ref-set (:reaper core) (periodically-expire core)))))
+      (ref-set (:reaper core) (periodically-expire core 60))))
+  (info "Hyperspace core online"))
 
 (defn stop
   "Stops the given core. Cancels reapers, stops servers."

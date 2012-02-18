@@ -9,5 +9,6 @@
   [& argv]
     (try
       (reimann.config/include (first argv))
+      (reimann.config/start)
       (catch Exception e
         (error e "Aborting"))))
