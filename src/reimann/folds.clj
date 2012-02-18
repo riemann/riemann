@@ -25,7 +25,7 @@
   [s points]
   (map (fn [point, event]
          (assoc event :service
-                (str (event :service) " " point)))
+                (str (:service event) " " point)))
        points
        (sorted-sample-extract s points)))
 

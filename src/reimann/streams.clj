@@ -91,7 +91,7 @@
 
     (fn [event]
       (let [; What time did this event happen at?
-            t (or (event :time) (unix-time))]
+            t (or (:time event) (unix-time))]
         (bin event t)))))
 
 ; This leaks a thread. Need to think about dynamic scheduling/expiry.
@@ -404,7 +404,7 @@
       (call-rescue e children))))
 (defmethod default false [k v & children]
   (fn [event]
-    (let [e (if (nil? (event k)) (assoc event k v) event)]
+    (let [e (if (nil? (k event)) (assoc event k v) event)]
       (call-rescue e children))))
 
 (defn adjust 
@@ -587,17 +587,17 @@
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
   'event is bound to the event under consideration. Examples:
 
-  ; Match any state where metric is either 1, 2, 3, or 4.
+  ; Match any event where metric is either 1, 2, 3, or 4.
   (where (metric 1 2 3 4) ...)
   
-  ; Match a state where the metric is negative AND the state is ok.
+  ; Match a event where the metric is negative AND the state is ok.
   (where (and (> 0 metric)
               (state \"ok\")) ...)
 
-  ; Match a state which has expired.
+  ; Match a event which has expired.
   (where (expired? event) ...)
 
-  ; Match a state where the host begins with web
+  ; Match a event where the host begins with web
   (where (host #\"^web\") ...)"
   [expr & children]
   (let [p (where-rewrite expr)]
@@ -607,13 +607,13 @@
          (call-rescue event# kids#))))))
 
 (defn update-index
-  "Updates the given index with all states received."
+  "Updates the given index with all events received."
   [index]
-  (fn [state]
-    (index/update index state)))
+  (fn [event]
+    (index/update index event)))
 
 (defn delete-from-index
   "Deletes any events that pass through from the index"
   [index]
-  (fn [state]
-    (index/delete index state)))
+  (fn [event]
+    (index/delete index event)))

@@ -91,14 +91,6 @@
     (apply protobuf Event
       (apply concat (merge opts {:time t})))))
 
-(defn state
-  "Create a new state."
-  [opts]
-  (let [t (round (or (opts :time)
-                     (unix-time)))]
-    (apply protobuf State
-      (apply concat (merge opts {:time t})))))
-
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of
   unity."
