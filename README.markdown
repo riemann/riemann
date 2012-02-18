@@ -21,14 +21,26 @@ Dashboard: Coming soon
 Installation
 ============
 
+### Tarball
+
 ``` bash
-wget http://aphyr.com/media/reimann.deb
-sudo dpkg -i reimann.deb
+wget http://aphyr.com/reimann/reimann-0.0.3.tar.bz2
+tar xvfj reimann-0.0.3.tar.bz2
+cd reimann-0.0.3
+sudo $EDITOR etc/reimann.config
+bin/reimann
+```
+
+### Debian Package
+
+``` bash
+wget http://aphyr.com/media/reimann_0.0.3.deb
+sudo dpkg -i reimann_0.0.3.deb
 sudo $EDITOR /etc/reimann/reimann.config
 reimann
 ```
 
-Be aware that the .deb will nuke /etc/reimann/reimann.conf. I haven't figured out how to get lein-deb to play nice with conffiles yet.
+Warning: the .deb will overwrite /etc/reimann/reimann.conf. I haven't figured out how to get lein-deb to play nice with conffiles yet.
 
 Events
 ======
