@@ -51,9 +51,9 @@
 (defn minimum
   "Returns the minimum event, by metric."
   [events]
-  (first (sorted-sample-extract events [0])))
+  (apply min-key :metric events))
 
 (defn maximum
   "Returns the maximum event, by metric."
   [events]
-  (first (sorted-sample-extract events [1])))
+  (apply max-key :metric events))
