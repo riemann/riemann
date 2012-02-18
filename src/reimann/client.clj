@@ -67,7 +67,7 @@
   [client string]
   (let [resp (send-message client 
                            {:query (protobuf Query :string string)})]
-    (:states resp)))
+    (:events resp)))
 
 (defn send-event
   "Send an event over client."

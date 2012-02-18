@@ -29,7 +29,7 @@
       ; Handle query
       (let [ast (query/ast (:string (:query msg)))]
         (if-let [i (deref (:index core))]
-          {:ok true :states (index/search i ast)}
+          {:ok true :events (index/search i ast)}
           {:ok false :error "no index"}))
 
       ; Generic acknowledge 
