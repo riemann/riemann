@@ -6,4 +6,4 @@ else
   config=$1
 fi
 
-java -jar /usr/lib/reimann/reimann.jar "$config"
+java -XX:+UseConcMarkSweepGC -jar /usr/lib/reimann/reimann.jar "$config"
