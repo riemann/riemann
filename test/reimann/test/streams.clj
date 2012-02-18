@@ -5,6 +5,24 @@
   (:require [reimann.index :as index])
   (:use [clojure.test]))
 
+(defmacro run-stream
+  "Applies inputs to stream, and returns outputs."
+  [stream inputs]
+  `(let [out# (ref [])
+         stream# (~@stream (append out#))]
+     (doseq [e# ~inputs] (stream# e#))
+     (deref out#)))
+
+(defmacro test-stream
+  "Verifies that the given stream, taking inputs, forwards outputs to children."
+  [stream inputs outputs]
+  `(is (= (run-stream ~stream ~inputs) ~outputs)))
+
+(defn em
+  "Generate events with given metrics"
+  [& metrics]
+  (vec (map (fn [m] {:metric m}) metrics)))
+
 (deftest combine-test
          (let [r (ref nil)
                sum (combine folds/sum (register r))
@@ -365,6 +383,17 @@
            (doseq [state states] (s state))
            (doseq [state states] (d state))
            (is (= (vec (.values i)) []))))
+
+(deftest ewma-timeless-test
+         (test-stream (ewma-timeless 0)
+                      (em 1 10 20 -100 4)
+                      (em 0 0  0   0   0))
+         (test-stream (ewma-timeless 1)
+                      (em 5 13 1 -10 3)
+                      (em 5 13 1 -10 3))
+         (test-stream (ewma-timeless 1/2)
+                      (em 1   1   1   1     1    )
+                      (em 1/2 3/4 7/8 15/16 31/32)))
 
 (deftest throttle-test
          (let [out (ref [])

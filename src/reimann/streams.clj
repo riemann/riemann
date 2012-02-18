@@ -196,6 +196,22 @@
             event (assoc event :metric m)]
         (call-rescue event children)))))
 
+(defn ewma-timeless
+  "Exponential weighted moving average. Constant space and time overhead.
+  Passes on each event received, but with metric adjusted to the moving
+  average. Does not take the time between events into account."
+  [r & children]
+  (let [m (ref 0)
+        c-existing (- 1 r)
+        c-new r]
+    (fn [event]
+      ; Compute new ewma
+      (let [m (when-let [metric-new (:metric event)]
+                (dosync
+                  (ref-set m (+ (* c-existing (deref m))
+                                (* c-new metric-new)))))]
+        (call-rescue (assoc event :metric m) children)))))
+
 (defn throttle
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
