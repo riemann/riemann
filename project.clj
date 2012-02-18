@@ -7,7 +7,7 @@
 (defn relative-path [path]
     (expand-path (str (dirname *file*) "/" path)))
 
-(defproject reimann "0.0.2-SNAPSHOT"
+(defproject reimann "0.0.3-SNAPSHOT"
   :description 
 "A network event stream processor. Intended for analytics, metrics, and
 alerting; and to glue various monitoring systems together.
