@@ -498,6 +498,12 @@
               true)))
         (call-rescue event children)))))
 
+(defmacro changed-state
+  "Passes on changes in state for each distinct host and service."
+  [& children]
+  `(by [:host :service]
+       (changed :state ~@children)))
+
 (defn within
   "Passes on events only when their metric falls within the given inclusive
   range.

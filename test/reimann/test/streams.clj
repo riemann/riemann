@@ -355,6 +355,42 @@
            (is (= [:bad :ok :evil :bad]
                   (vec (map (fn [s] (:state s)) (deref output)))))))
            
+(deftest changed-state-test
+         ; Each test stream keeps track of the first host/service it sees, and
+         ; confirms that each subsequent event matches that host, and that
+         ; each event is different from the previous state.
+         (let [i (ref 0)
+               s (changed-state
+                   (let [host (ref nil)
+                         service (ref nil)
+                         state (ref nil)]
+                     (fn [event]
+                       (dosync
+                         (prn "recv " event)
+                         (alter i inc)
+
+                         (is (not= (deref state) (:state event)))
+                         (ref-set state (:state event))
+
+                         (when (nil? (deref host))
+                           (ref-set host (event :host)))
+                         (when (nil? (deref service))
+                           (ref-set service (event :service)))
+
+                         (is (= (deref host) (event :host)))
+                         (is (= (deref service) (event :service)))))))
+
+               events [{:host 1 :service 1 :state 1}
+                       {:host 2 :service 1 :state 1}
+                       {:host 1 :service 1 :state 1}
+                       {:host 1 :service 1 :state 2}
+                       {:host 2 :service 1 :state 2}
+                       {:host 2 :service 2 :state 1}
+                       {:host 2 :service 1 :state 1}]]
+
+           (doseq [event events]
+             (s event))
+           (is (= 6 (deref i)))))
 (deftest within-test
          (let [output (ref [])
                r (within [1 2]
