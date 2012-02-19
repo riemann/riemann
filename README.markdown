@@ -16,6 +16,7 @@ writing comprehensive, site-specific analytics easy.
 [Clojars](http://clojars.org/reimann)<br />
 Clients: [Ruby](https://github.com/aphyr/reimann-ruby-client),
          [Clojure](https://github.com/aphyr/reimann-bench)<br />
+[Tools](https://github.com/aphyr/reimann-tools)<br />
 [Dashboard](https://github.com/aphyr/reimann-dash)
 
 Installation
