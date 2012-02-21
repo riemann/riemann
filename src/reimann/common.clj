@@ -9,7 +9,7 @@
   (:use clojure.tools.logging)
   (:use protobuf.core)
   (:use gloss.core)
-  (:use clojure.contrib.math))
+  (:use clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
 (. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
