@@ -1,8 +1,8 @@
 (ns reimann.config
   "Reimann config files are eval'd in the context of this namespace. Includes
   streams, client, email, logging, and graphite; the common functions used in
-  config. Provides a default core and functions (tcp-server, streams, index)
-  which modify that core."
+  config. Provides a default core and functions ((tcp|udp)-server, streams,
+  index) which modify that core."
   (:require [reimann.core])
   (:require [reimann.server])
   (:require reimann.index)
@@ -23,6 +23,13 @@
   (dosync
     (alter (core :servers) conj
       (reimann.server/tcp-server core (apply hash-map opts)))))
+
+(defn udp-server 
+  "Add a new UDP server with opts to the default core."
+  [& opts]
+  (dosync
+    (alter (core :servers) conj
+      (reimann.server/udp-server core (apply hash-map opts)))))
 
 (defn streams
   "Add any number of streams to the default core." 

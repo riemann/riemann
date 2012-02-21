@@ -25,9 +25,10 @@
 ; :file is a keyword, like Erlang atoms or Ruby symbols. "reimann.log" is a
 ; regular double-quoted string.
 
-; Servers accept events from the network. We'll start a TCP server:
+; Servers accept events from the network. We'll start a TCP and UDP server:
 
 (tcp-server)
+(udp-server)
 
 ; By default Reimann listens on port 5555 and every interface. You can change
 ; these:

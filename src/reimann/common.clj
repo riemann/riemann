@@ -74,6 +74,19 @@
           :query (:query msg)
           :events (map post-load-event (:events msg))}))
 
+(defn decode-inputstream
+  "Decode an InputStream to a message. Decodes the protobuf representation of
+  Msg and applies post-load-event to all events."
+  [s]
+  (let [msg (protobuf-load-stream Msg s)]
+    ; Can't use a protobuf Msg here--it would coerce events and drop our
+    ; metric keys.
+    {:ok (:ok msg)
+          :error (:error msg)
+          :states (map post-load-event (:states msg))
+          :query (:query msg)
+          :events (map post-load-event (:events msg))}))
+
 (defn encode
   "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
   events."
