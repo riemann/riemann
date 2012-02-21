@@ -16,16 +16,17 @@ alerting; and to glue various monitoring systems together."
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :dependencies [
-    [clojure "1.2.0"]
+    [clojure "1.3.0"]
     [org.clojure/tools.logging "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [log4j/apache-log4j-extras "1.0"]
-    [org.jboss.netty/netty "3.2.5.Final"]
-    [aleph "0.2.0"]
-    [protobuf "0.6.0-beta5"]
+    ;[org.jboss.netty/netty "3.2.5.Final"]
+    ;[aleph "0.2.0"]
+    [aleph "0.2.1-alpha2-SNAPSHOT"]
+                                        ;[protobuf "0.6.0-beta5"]
     [org.antlr/antlr "3.2"]
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
