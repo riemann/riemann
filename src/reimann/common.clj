@@ -100,10 +100,10 @@
 (defn event
   "Create a new event."
   [opts]
-  (let [t (round (or (opts :time)
-                     (unix-time)))]
+  (let [t (long (round (or (opts :time)
+                           (unix-time))))]
     (apply protobuf Event
-      (apply concat (merge opts {:time t})))))
+           (apply concat (merge opts {:time t})))))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of

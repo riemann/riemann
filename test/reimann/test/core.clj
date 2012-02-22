@@ -29,7 +29,7 @@
                        {:tags ["oh" "sam"]}
                        {:metric -1000}
                        {:time 1234}
-                       {:ttl 12}]]
+                       {:ttl 12.0}]]
            
            (try
              (dosync
