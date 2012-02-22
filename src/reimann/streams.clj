@@ -16,7 +16,7 @@
   (:require reimann.client)
   (:require reimann.logging) 
   (:require [clojure.set])
-  (:use [clojure.contrib.math])
+  (:use [clojure.math.numeric-tower])
   (:use [clojure.tools.logging]))
 
 (defmacro call-rescue

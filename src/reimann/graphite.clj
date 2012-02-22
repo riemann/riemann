@@ -3,7 +3,7 @@
   (:import [java.net Socket])
   (:import [java.io Writer])
   (:import [java.io OutputStreamWriter])
-  (:use [clojure.contrib.string :only [split join]])
+  (:use [clojure.string :only [split join]])
   (:use clojure.tools.logging)
   (:use reimann.common))
 
