@@ -12,6 +12,7 @@ email responsible parties every time an exception is thrown, and plot the 50th,
 writing comprehensive, site-specific analytics easy.
 
 [Configuration Guide](https://github.com/aphyr/reimann/blob/master/reimann.config.guide)<br />
+[Contributing](http://github.com/aphyr/reimann/blob/master/CONTRIBUTING)
 [API docs](http://aphyr.github.com/reimann/)<br />
 [Clojars](http://clojars.org/reimann)<br />
 Clients: [Ruby](https://github.com/aphyr/reimann-ruby-client),
