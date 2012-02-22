@@ -2,7 +2,8 @@
 amalloy, helped with protobufs parsing, leiningen, and general clojure
 questions.
 
-Showyou, my employer, gave me the problems I needed Reimann for, and the time to solve them.
+Showyou, my employer, gave me the problems I needed Reimann for, and the time
+to solve them.
 
 John Mullerleile (jrecursive) was deeply involved in talking through the
 concept and structure of Reimann, as well as offering advice around the JVM.
@@ -14,3 +15,5 @@ and ideas.
 arohner on #clojure offered a logging snippet.
 
 Ryan Grove and Sean Cribbs gave feedback on documentation and design.
+
+Sam Newman (snewman) brought Reimann up to speed with Clojure 1.3.
