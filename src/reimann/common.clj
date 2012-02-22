@@ -9,7 +9,7 @@
   (:use clojure.tools.logging)
   (:use protobuf.core)
   (:use gloss.core)
-  (:use clojure.contrib.math))
+  (:use clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
 (. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
@@ -100,10 +100,10 @@
 (defn event
   "Create a new event."
   [opts]
-  (let [t (round (or (opts :time)
-                     (unix-time)))]
+  (let [t (long (round (or (opts :time)
+                           (unix-time))))]
     (apply protobuf Event
-      (apply concat (merge opts {:time t})))))
+           (apply concat (merge opts {:time t})))))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of

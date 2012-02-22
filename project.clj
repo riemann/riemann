@@ -16,16 +16,18 @@ alerting; and to glue various monitoring systems together."
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :dependencies [
-    [clojure "1.2.0"]
+                 [clojure "1.3.0"]
+                 [org.clojure/math.numeric-tower "0.0.1"]
+                 [org.clojure/algo.generic "0.1.0"]
     [org.clojure/tools.logging "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [log4j/apache-log4j-extras "1.0"]
-    [org.jboss.netty/netty "3.2.5.Final"]
-    [aleph "0.2.0"]
-    [protobuf "0.6.0-beta5"]
+    [aleph "0.2.1-alpha2-SNAPSHOT"]
+    [io.netty/netty "3.3.0.Final"]
+    [protobuf "0.6.0-beta7"]
     [org.antlr/antlr "3.2"]
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
@@ -33,7 +35,7 @@ alerting; and to glue various monitoring systems together."
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
-    [protobuf "0.6.0-beta5"]
+    [protobuf "0.6.0-beta7"]
     [lein-autodoc "0.9.0"]
     [codox "0.4.0"]
   ]

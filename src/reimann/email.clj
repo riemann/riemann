@@ -4,7 +4,7 @@
   simply call email-event directly."
   (:use reimann.common)
   (:use postal.core)
-  (:use [clojure.contrib.string :only [join]]))
+  (:use [clojure.string :only [join]]))
 
 (defn- human-uniq
   "Returns a human-readable string describing things, e.g.
