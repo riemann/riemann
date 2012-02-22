@@ -43,8 +43,8 @@
         name (fn [event]
                (let [service (:service event)
                      host (:host event)
-                     split-service (if service (split #" " service) [])
-                     split-host (if host (split #"\." host) [])]
+                     split-service (if service (split service #" ") [])
+                     split-host (if host (split host #"\.") [])]
                   (join "." (concat (reverse split-host) split-service))))
         ]
 
