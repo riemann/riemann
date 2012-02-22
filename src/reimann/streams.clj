@@ -128,17 +128,19 @@
   [interval & children]
   (part-time-fast interval
       (fn [] {:count (ref 0)
-              :state (ref {})})
+              :state (ref nil)})
       (fn [r event] (dosync
                       (ref-set (:state r) event)
                       (when-let [m (:metric event)]
                         (alter (:count r) + m))))
       (fn [r start end]
-        (let [event (dosync
-                (let [count (deref (r :count))
-                      rate (/ count (- end start))]
-                  (merge (deref (:state r)) 
-                         {:metric rate :time (round end)})))]
+        (when-let [event 
+              (dosync
+                (when-let [state (deref (:state r))]
+                  (let [count (deref (r :count))
+                        rate (/ count (- end start))]
+                    (merge state 
+                           {:metric rate :time (round end)}))))]
           (call-rescue event children)))))
 
 (defn percentiles

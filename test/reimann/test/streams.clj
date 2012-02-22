@@ -327,6 +327,7 @@
                  o (dosync (deref output))]
            
              ; All events recorded
+             (prn o)
              (is (approx-equal total (reduce + (map :metric o))))
 
              )))
