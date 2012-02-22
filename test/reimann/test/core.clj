@@ -164,10 +164,10 @@
              (let [events (deref out)
                    states (fmap first (group-by :service events))]
 
-               (is (= ((states "per 0.5") :metric) 50))
-               (is (= ((states "per 0.95") :metric) 95))
-               (is (= ((states "per 0.99") :metric) 99))
-               (is (= ((states "per 1") :metric) 100)))
+               (is (= ((states "per 0.5") :metric) 50.0))
+               (is (= ((states "per 0.95") :metric) 95.0))
+               (is (= ((states "per 0.99") :metric) 99.0))
+               (is (= ((states "per 1") :metric) 100.0)))
 
              (finally
                (close-client client)
