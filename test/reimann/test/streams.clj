@@ -327,7 +327,6 @@
                  o (dosync (deref output))]
            
              ; All events recorded
-             (prn o)
              (is (approx-equal total (reduce + (map :metric o))))
 
              )))
@@ -367,7 +366,6 @@
                          state (ref nil)]
                      (fn [event]
                        (dosync
-                         (prn "recv " event)
                          (alter i inc)
 
                          (is (not= (deref state) (:state event)))
