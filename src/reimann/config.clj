@@ -45,8 +45,10 @@
 
 (defn periodically-expire
   "Sets up a reaper for this core. See core API docs."
-  [interval]
-  (reimann.core/periodically-expire core interval))
+  ([interval]
+    (reimann.core/periodically-expire core interval))
+  ([]
+   (periodically-expire 10)))
 
 ; Start the core
 (defn start []
