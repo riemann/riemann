@@ -115,6 +115,12 @@
     (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
       (< (- 1 tol) f (+ 1 tol))))))
 
+(defn re-matches?
+  "Does the given regex match string? Nil if string is nil."
+  [re string]
+  (when string
+    (re-find re string)))
+
 ; Vector set operations
 (defn member?
   "Is e present in seqable s?"

@@ -322,12 +322,12 @@
 
 (defn match
   "Passes events on to children only when (f event) is equal to value. If f is
-  a regex, uses re-find to match."
+  a regex, uses re-matches?"
   [f value & children]
   (fn [event]
     (let [x (f event)]
       (when (if (= (class value) java.util.regex.Pattern)
-              (re-find value x)
+              (re-matches? value x)
               (= value x))
         (call-rescue event children)
         true))))
@@ -546,7 +546,7 @@
                   (list 'reimann.common/member? v (list :tags 'event)))
     ; Otherwise, match literal value.
     (if (= (class v) java.util.regex.Pattern)
-      (list 're-find v (list (keyword k) 'event))
+      (list 'reimann.common/re-matches? v (list (keyword k) 'event))
       (list '= v (list (keyword k) 'event)))))
 
 ; Hack hack hack hack
