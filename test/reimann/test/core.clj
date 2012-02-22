@@ -27,7 +27,7 @@
                        {:state "middling"}
                        {:description "well and truly fucked"}
                        {:tags ["oh" "sam"]}
-                       {:metric -1000}
+                       {:metric -1000.0}
                        {:time 1234}
                        {:ttl 12.0}]]
            
