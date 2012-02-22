@@ -6,7 +6,6 @@
   (:use [reimann.core])
   (:use reimann.index)
   (:use [clojure.algo.generic.functor :only (fmap)])
-  ;(:use [clojure.contrib.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
 (defmacro tim
