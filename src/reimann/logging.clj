@@ -12,8 +12,7 @@
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
                                      RollingFileAppender))
-  (:import org.apache.commons.logging.LogFactory)
-  (:use [clojure.contrib.string :only (as-str)]))
+  (:import org.apache.commons.logging.LogFactory))
 
 (defn set-level 
   "Set the level for the given logger, by string name. Use:

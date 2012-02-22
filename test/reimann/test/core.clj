@@ -5,7 +5,7 @@
   (:use [reimann.common])
   (:use [reimann.core])
   (:use reimann.index)
-  (:use [clojure.contrib.generic.functor :only (fmap)])
+  (:use [clojure.algo.generic.functor :only (fmap)])
   (:use [clojure.test]))
 
 (defmacro tim
@@ -26,9 +26,9 @@
                        {:state "middling"}
                        {:description "well and truly fucked"}
                        {:tags ["oh" "sam"]}
-                       {:metric -1000}
+                       {:metric -1000.0}
                        {:time 1234}
-                       {:ttl 12}]]
+                       {:ttl 12.0}]]
            
            (try
              (dosync
@@ -163,10 +163,10 @@
              (let [events (deref out)
                    states (fmap first (group-by :service events))]
 
-               (is (= ((states "per 0.5") :metric) 50))
-               (is (= ((states "per 0.95") :metric) 95))
-               (is (= ((states "per 0.99") :metric) 99))
-               (is (= ((states "per 1") :metric) 100)))
+               (is (= ((states "per 0.5") :metric) 50.0))
+               (is (= ((states "per 0.95") :metric) 95.0))
+               (is (= ((states "per 0.99") :metric) 99.0))
+               (is (= ((states "per 1") :metric) 100.0)))
 
              (finally
                (close-client client)
