@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reimann - Client libraries</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div id="header">
+      <nav id="site-nav">
+        <a href="index.html">Reimann</a>
+        <a href="quickstart.html">Quickstart</a>
+        <a href="concepts.html">Concepts</a>
+        <a href="configuring.html">Configuring</a>
+        <a href="api/">API</a>
+        <a href="clients.html">Clients</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="contributing.html">Contributing</a>
+      </nav>
+    </div>
+
+    <div id="content">
+      <h1><span class="focus">Clients</span> send events to Reimann.</h1>
+      
+      <p>Reimann clients speak <a href="contributing.html#protocol">Protocol
+        Buffers</a> over TCP and UDP. They can submit events to Reimann and
+      query the index.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h2><a href="https://github.com/aphyr/reimann-ruby-client">Ruby</a></h2>
+          <p>The <a
+            href="https://github.com/aphyr/reimann-ruby-client"</a>Reimann Ruby
+          client</a> is my threadsafe, auto-retrying reference implementation,
+        supporting both TCP and UDP. It also provides utility classes to help
+        manage service state.</p>
+        </div>
+
+        <div class="card">
+          <h2><a href="api/reimann.client.html">Clojure</a></h2>
+          <p>Reimann comes with a built-in <a href="api/reimann.client.html">Clojure client</a>. It's thread-safe, stateful, and synchronized. Does not support UDP yet. You can require it as a dependency from <a href="http://clojars.org/reimann">Clojars</a>. See <a href="https://github.com/aphyr/reimann-bench">reimann-bench</a> for an example application using the client.</p>
+        </div>
+
+        <div class="card">
+          <h2>Your Name Here</h2>
+          <p>Write a client in your favorite language? Need help with the protocol? See <a href="contributing.html#protocol">the protocol docs</a>, or <a href="mailto:aphyr@aphyr.com">drop me a line</a>.
+      </div>
+    </div>
+  </body>
+</html>  

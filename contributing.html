@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reimann - Contributing</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div id="header">
+      <nav id="site-nav">
+        <a href="index.html">Reimann</a>
+        <a href="quickstart.html">Quickstart</a>
+        <a href="concepts.html">Concepts</a>
+        <a href="configuring.html">Configuring</a>
+        <a href="api/">API</a>
+        <a href="clients.html">Clients</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="contributing.html">Contributing</a>
+      </nav>
+    </div>
+
+    <div id="content">
+      <h1>(apply within <span class="focus">hackers</span>)</h1>
+      
+      <p>I built Reimann to solve my problems, but I want it to work for you,
+      too. If you use Reimann, <a href="mailto:aphyr@aphyr.com">send me an
+        email</a> about how it's working for you, or what needs to change</a>. Frustrated with the API? Find a bug? <a href="https://github.com/aphyr/reimann/issues">Open an issue</a>.</p>
+    
+    <p class="callout">The best way to say "thank you" is to contribute code. <a href="https://github.com/aphyr/reimann">It's all on Github</a>.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h2>Building</h2>
+          <code><pre>git clone git://github.com/aphyr/reimann.git</pre></code>
+
+          <p>Reimann uses <a href="https://github.com/technomancy/leiningen">Leiningen</a>, the Clojure build tool. First, fetch dependencies:</p>
+
+          <code><pre>lein deps</pre></code>
+
+          <p>Build the java query parser:</p>
+          <code><pre>lein javac</pre></code>
+
+          <p>Build the protocol buffer classes:</p>
+          <code><pre>lein protobuf compile</pre></code>
+
+          <p>And run the test suite:</p>
+          <code><pre>lein test</pre></code>
+
+          <p>Or, for a specific namespace:</p>
+          <code><pre>lein test reimann.test.streams</pre></code>
+
+          <p>I'm really sorry about this, but there are some poorly-written
+          tests for time-dependent streams like rates and percentiles. These
+          can be finicky; I'm working on rewriting them as soon as possible.
+          Some tests also rely on a local graphite install or sendmail; you can
+          ignore them if you aren't changing those components.</p>
+
+          <p>You can run the server with</p>
+
+          <code><pre>lein run reimann.config</pre></code>
+
+          <p>and when you're ready to package, just <code>lein uberjar</code>
+          to build an all-in-one .jar, <code>lein ubertar</code> to build a
+          tarball, or <code>lein uberjar &amp;&amp; lein deb</code> to build a
+          debian package.</p>
+        </div>
+
+        <div class="card">
+          <h2>Pull Requests</h2>
+          
+          <p>When you've made your changes (for anything non-trivial, on a
+          topic branch, please), send me a pull request on Github. Please run
+          the test suite before submitting, and keep your commits focused.</p>
+        </div>
+
+        <div class="card">
+          <h2>Thanks</h2>
+          <p>#flatland, #clojure and #leiningen, including jodaro, ninjudd,
+          raynes, and amalloy, helped with protobufs parsing, leiningen, and
+          general Clojure questions.</p>
+
+          <p><a href="http://showyou.com">Showyou</a>, my employer, gave me the
+          infrastructure I needed Reimann for, and the chance to share it with
+          the world.</p>
+
+          <p>John Mullerleile (jrecursive) was deeply involved in talking
+          through the concept and structure of Reimann, as well as advice
+          around the JVM and profiling.</p>
+
+          <p>C Scott Andreas (cscotta) and the <a
+            href="http://boundary.com">Boundary</a> crew gave many helpful
+          suggestions around the JVM, Maven, high_scale_lib, and profiling. Our
+          conversations yielded many references, algorithms and ideas.</p>
+
+          <p>Allen Rohner (arohner) on #clojure offered a logging configuration
+          snippet.</p>
+
+          <p>Ryan Grove and Sean Cribbs gave feedback on documentation and
+          design.</p>
+
+          <p>Reid Draper contributed a syntactic patch.</p>
+
+          <p>Sam Newman (snewman) brought Reimann up to speed with Clojure
+          1.3.</p>
+
+          <p>Tyler Schuett offered graphic design advice.</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>  

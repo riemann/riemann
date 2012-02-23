@@ -7,16 +7,18 @@
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
-    <nav id="site-nav">
-      <a href="index.html">Reimann</a>
-      <a href="quickstart.html">Quickstart</a>
-      <a href="concepts.html">Concepts</a>
-      <a href="configuring.html">Configuring</a>
-      <a href="api/">API</a>
-      <a href="clients.html">Clients</a>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="contributing.html">Contributing</a>
-    </nav>
+    <div id="header">
+      <nav id="site-nav">
+        <a href="index.html">Reimann</a>
+        <a href="quickstart.html">Quickstart</a>
+        <a href="concepts.html">Concepts</a>
+        <a href="configuring.html">Configuring</a>
+        <a href="api/">API</a>
+        <a href="clients.html">Clients</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="contributing.html">Contributing</a>
+      </nav>
+    </div>
 
     <div id="content">
       <h1><span class="focus">Reimann</span> monitors distributed systems.</h1>
@@ -69,7 +71,7 @@
           <h2>Graph everything</h2>
           <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
           <img src="images/api-latency.png" alt="An API latency graph" />
-          <p>Like Statsd, Reimann can forward any event stream to Graphite.</p>
+          <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Reimann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
         </div>
 
         <div class="card">

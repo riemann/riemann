@@ -1,13 +1,10 @@
 body {
   font-size: 15px;
+  color: #342B2B;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
-#site-nav {
-  padding-left: 20px;
-  font-size: 13px;
-  font-weight: bold;
-  
+#header {
   /* Black gradient */
   background-image: linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
   background-image: -o-linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
@@ -22,6 +19,13 @@ body {
     color-stop(0, rgb(0,0,0)),
     color-stop(0.82, rgb(36,36,36))
   );
+}
+
+#site-nav {
+  width: 920px;
+  margin: 0 auto;
+  font-size: 13px;
+  font-weight: bold;
 
   /* Red gradient /
   background-image: linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
@@ -55,6 +59,7 @@ body {
 }
 
 #content {
+  margin: 0 auto;
   width: 920px;
   padding: 20px;
   text-align: justify;
@@ -68,13 +73,13 @@ body {
 .focus {
   color: #FF0F0F
 }
+.clear {
+  clear: both;
+}
 a {
   color: #FF0F0F;
 }
 
-h1, h2, h3, h4, h5, h6 {
-  margin-top: 0.2em;
-}
 h1:first-child,
 h2:first-child, 
 h3:first-child, 
@@ -82,16 +87,28 @@ h4:first-child,
 h5:first-child,
 h6:first-child {
   margin-top: 0;
-  margin-bottom: 0.2em;
+}
+h1,h2,h3,h4,h5,h6 {
   font-weight: bold;
 }
-
-h1 { font-size: 42px; }
-h2 { font-size: 28px; }
+h4, h5, h6 {
+  margin-top: 0.2em;
+}
+h1 {
+  font-size: 42px;
+  margin: 20px 0;
+}
+h2 { 
+  font-size: 28px;
+  margin: 20px 0;
+}
 
 p {
   line-height: 134%;
   margin-top: 0.8em;
+}
+p:first-child {
+  margin-top: 0;
 }
 
 table {
@@ -108,6 +125,7 @@ td,th {
 
 code {
   font: monospace;
+  color: #001843;
 }
 
 code pre {
@@ -133,10 +151,19 @@ code pre {
 .card h2 {
   margin-bottom: 0;
 }
-.card img {
+.card img, .float-right-small img {
   margin-top: 10px;
   border: 1px solid #ccc;
   width: 100%;
 }
 
 .card p { line-height: 120%; }
+
+.float-left-large {
+  width: 587px;
+  float: left;
+}
+.float-right-small {
+  width: 293px;
+  float: right;
+}
