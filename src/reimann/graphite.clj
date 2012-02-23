@@ -3,7 +3,7 @@
   (:import [java.net Socket])
   (:import [java.io Writer])
   (:import [java.io OutputStreamWriter])
-  (:use [clojure.contrib.string :only [split join]])
+  (:use [clojure.string :only [split join]])
   (:use clojure.tools.logging)
   (:use reimann.common))
 
@@ -43,8 +43,8 @@
         name (fn [event]
                (let [service (:service event)
                      host (:host event)
-                     split-service (if service (split #" " service) [])
-                     split-host (if host (split #"\." host) [])]
+                     split-service (if service (split service #" ") [])
+                     split-host (if host (split host #"\.") [])]
                   (join "." (concat (reverse split-host) split-service))))
         ]
 

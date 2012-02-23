@@ -16,7 +16,7 @@
   (:require reimann.client)
   (:require reimann.logging) 
   (:require [clojure.set])
-  (:use [clojure.contrib.math])
+  (:use [clojure.math.numeric-tower])
   (:use [clojure.tools.logging]))
 
 (defmacro call-rescue
@@ -128,17 +128,19 @@
   [interval & children]
   (part-time-fast interval
       (fn [] {:count (ref 0)
-              :state (ref {})})
+              :state (ref nil)})
       (fn [r event] (dosync
                       (ref-set (:state r) event)
                       (when-let [m (:metric event)]
                         (alter (:count r) + m))))
       (fn [r start end]
-        (let [event (dosync
-                (let [count (deref (r :count))
-                      rate (/ count (- end start))]
-                  (merge (deref (:state r)) 
-                         {:metric rate :time (round end)})))]
+        (when-let [event 
+              (dosync
+                (when-let [state (deref (:state r))]
+                  (let [count (deref (r :count))
+                        rate (/ count (- end start))]
+                    (merge state 
+                           {:metric rate :time (round end)}))))]
           (call-rescue event children)))))
 
 (defn percentiles
@@ -322,12 +324,12 @@
 
 (defn match
   "Passes events on to children only when (f event) is equal to value. If f is
-  a regex, uses re-find to match."
+  a regex, uses re-matches?"
   [f value & children]
   (fn [event]
     (let [x (f event)]
       (when (if (= (class value) java.util.regex.Pattern)
-              (re-find value x)
+              (re-matches? value x)
               (= value x))
         (call-rescue event children)
         true))))
@@ -546,7 +548,7 @@
                   (list 'reimann.common/member? v (list :tags 'event)))
     ; Otherwise, match literal value.
     (if (= (class v) java.util.regex.Pattern)
-      (list 're-find v (list (keyword k) 'event))
+      (list 'reimann.common/re-matches? v (list (keyword k) 'event))
       (list '= v (list (keyword k) 'event)))))
 
 ; Hack hack hack hack

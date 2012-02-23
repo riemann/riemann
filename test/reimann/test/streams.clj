@@ -366,7 +366,6 @@
                          state (ref nil)]
                      (fn [event]
                        (dosync
-                         (prn "recv " event)
                          (alter i inc)
 
                          (is (not= (deref state) (:state event)))
