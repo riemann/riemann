@@ -61,6 +61,10 @@ body {
   text-justify: distribute;
 }
 
+.callout {
+  font-size: 120%;
+  color: #333;
+}
 .focus {
   color: #FF0F0F
 }
@@ -95,25 +99,28 @@ code {
 }
 
 code pre {
+  margin-top: 10px;
   background-color: #eee;
   padding: 0.6em;
   font-size: 80%;
 }
 
 .cards {
-  margin: 10px -8px;
+  margin: 10px 0;
   -moz-column-count: 2;
   -webkit-column-count: 2;
-  -moz-column-gap: 4px;
-  -webkit-column-gap: 4px;
+  -moz-column-gap: 40px;
+  -webkit-column-gap: 40px;
 }
 
 .card {
   display: inline-block;
-  margin: 10px 8px;
-  width: 450px;
+  margin: 10px 0;
+  width: 434px;
 }
-
+.card h2 {
+  margin-bottom: 0;
+}
 .card img {
   margin-top: 10px;
   border: 1px solid #ccc;
