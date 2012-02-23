@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reimann - Core concepts</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <nav id="site-nav">
+      <a href="index.html">Reimann</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="concepts.html">Concepts</a>
+      <a href="configuring.html">Configuring</a>
+      <a href="api/">API</a>
+      <a href="clients.html">Clients</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="contributing.html">Contributing</a>
+    </nav>
+
+    <div id="content">
+      <h1>Reimann is an <span class="focus">event stream</span> processor.</h1> 
+
+      <p>Every time something important happens in your system, submit an event
+      to Reimann. Just handled an HTTP request? Send an event with the time it
+      took. Caught an exception? Send an event with the stacktrace. Small
+      daemons can watch your servers and send events about disk capacity, CPU
+      use, and memory consumption. Every five seconds. It's like top for
+      hundreds of machines at once.</p>
+      
+      <p class="callout">Reimann filters, combines, and acts on thousands of events per second to give you useful information.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h2>Events</h2>
+
+          <p>Events are just structs. They're sent over Protocol Buffers, and
+          in Reimann are treated as immutable maps. Each event has these
+          (optional) fields:</p>
+
+          <table>
+            <tr>
+              <th>host</th>
+              <td>A hostname, e.g. "api1", "foo.com"</td>
+            </tr>
+            <tr>
+              <th>service</th>
+              <td>e.g. "API port 8000 reqs/sec"</td>
+            </tr>
+            <tr>
+              <th>state</th>
+              <td>Any string less than 255 bytes, e.g. "ok", "warning", "critical"</td>
+            </tr>
+            <tr>
+              <th>time</th>
+              <td>The time that the service entered this state, in unix time</td>
+            </tr>
+            <tr>
+              <th>description</th>
+              <td>Freeform text</td>
+            </tr>
+            <tr>
+              <th>tags</th>
+              <td>Freeform list of strings, e.g. ["rate", "fooproduct", "transient"]</td>
+            </tr>
+            <tr>
+              <th>metric</th>
+              <td>A number associated with this event, e.g. the number of reqs/sec.</td>
+            </tr>
+            <tr>
+              <th>ttl</th>
+              <td>A floating-point time, in seconds, that this event is considered valid for. Expired states may be removed from the index.</td>
+            </tr>
+          </table>
+        </div>
+
+        <div class="card">
+          <h2>Servers</h2>
+          <p>The Reimann process listens on port 5555 for TCP connections and
+          UDP datagrams. It accepts a stream of protocol buffer <i>messages</i>
+          containing <i>events</i> (or queries, control messages, etc). Those
+          events are then applied to a tree of <i>streams</i>.</p>
+        </div>
+
+        <div class="card">
+          <h2>Streams</h2>
+          <p>A stream is a function that accepts a single event. Many streams
+          accept children, to which they can forward events. Together, the
+          streams form a directed graph along which events flow.</p>
+
+          <p>A stream can filter the events it receives, passing on those that
+          match some predicate. They can pass on a changed event to their
+          children, or fork into several distinct substreams. They can compute
+          percentiles, rates, or moving averages. Streams can send email about
+          the events they receive, forward events to other Reimann servers, or
+          send them to Graphite. Any clojure function accepting an event map
+          can be a stream.</p>
+
+          <p>See the <a href="api/reimann.streams.html">Streams API</a> for details.</p>
+        </div>
+
+        <div class="card">
+          <h2>The Index</h2>
+          <p>A special type of stream updates the index: a table of the current
+          state of all services tracked by Reimann. Indexed states can be queried by a Reimann client to see what the system looks like now. The <a href="dashboard.html">Dashboard</a> is just an HTML view of the index.</p>
+          
+          <p>Events entered into the index have a :ttl field; states that sit
+          in the index for too long are removed from the index and reinserted
+          into the event streams with state "expired". This means that services
+          which fail to check in regularly enough can trigger alerts.</p>
+        </div>
+
+        
+        <div class="card">
+          <h2>Queries</h2>
+          <p>Clients can query the index for particular events.</p>
+
+          <code><pre># Simple equality
+state = "ok"
+
+# Wildcards
+(service =~ "disk%") or 
+(state != "critical" and host =~ "%.trioptimum.com")
+
+# Standard operator precedence applies
+metric_f &gt; 2.0 and not host = nil
+
+# Anything with a tag "product"
+tagged "product"
+
+# All states
+true
+
+# No states
+false</pre></code>
+
+          <p>Query messages return a list of matching events. The full grammar is <a href="https://github.com/aphyr/reimann/blob/master/src/reimann/Query.g">here</a>.</p>
+        </div>
+    </div>
+  </body>
+</html>  

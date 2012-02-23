@@ -94,6 +94,18 @@ p {
   margin-top: 0.8em;
 }
 
+table {
+  margin-top: 10px;
+  collapse-border: collapse;
+}
+th {
+  font-weight: bolder;
+}
+td,th {
+  padding: 6px;
+  border: 1px solid #ccc;
+}
+
 code {
   font: monospace;
 }
