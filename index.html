@@ -1,8 +1,62 @@
 <!DOCTYPE html>
-<html><head><link href="css/default.css" rel="stylesheet" type="text/css"><script src="js/jquery.min.js" type="text/javascript"></script><script src="js/page_effects.js" type="text/javascript"></script><title>Reimann 0.0.3-SNAPSHOT API documentation</title></head><body><div id="header"><h1><a href="index.html">Reimann 0.0.3-SNAPSHOT API documentation</a></h1></div><div class="sidebar" id="namespaces"><h3>Namespaces</h3><ul><li><a href="reimann.bin.html">reimann.bin</a></li><li><a href="reimann.client.html">reimann.client</a></li><li><a href="reimann.common.html">reimann.common</a></li><li><a href="reimann.config.html">reimann.config</a></li><li><a href="reimann.core.html">reimann.core</a></li><li><a href="reimann.email.html">reimann.email</a></li><li><a href="reimann.folds.html">reimann.folds</a></li><li><a href="reimann.graphite.html">reimann.graphite</a></li><li><a href="reimann.index.html">reimann.index</a></li><li><a href="reimann.logging.html">reimann.logging</a></li><li><a href="reimann.query.html">reimann.query</a></li><li><a href="reimann.server.html">reimann.server</a></li><li><a href="reimann.streams.html">reimann.streams</a></li></ul></div><div class="namespace-index" id="content"><h2>Reimann 0.0.3-SNAPSHOT API documentation</h2><div class="doc">A network event stream processor. Intended for analytics, metrics, and
-alerting; and to glue various monitoring systems together.</div><div class="namespace"><h3><a href="reimann.bin.html">reimann.bin</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.bin.html#var--main">-main</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.client.html">reimann.client</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.client.html#var-close-client">close-client</a></li><li><a href="reimann.client.html#var-open-tcp-conn">open-tcp-conn</a></li><li><a href="reimann.client.html#var-query">query</a></li><li><a href="reimann.client.html#var-send-event">send-event</a></li><li><a href="reimann.client.html#var-send-message">send-message</a></li><li><a href="reimann.client.html#var-send-message-raw">send-message-raw</a></li><li><a href="reimann.client.html#var-tcp-client">tcp-client</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.common.html">reimann.common</a></h3><pre class="doc">Utility functions. Time/date, some flow control constructs, protocol buffer
-definitions and codecs, some vector set ops, etc.</pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.common.html#var-approx-equal">approx-equal</a></li><li><a href="reimann.common.html#var-decode">decode</a></li><li><a href="reimann.common.html#var-decode-inputstream">decode-inputstream</a></li><li><a href="reimann.common.html#var-disjoint%3F">disjoint?</a></li><li><a href="reimann.common.html#var-encode">encode</a></li><li><a href="reimann.common.html#var-event">event</a></li><li><a href="reimann.common.html#var-member%3F">member?</a></li><li><a href="reimann.common.html#var-overlap%3F">overlap?</a></li><li><a href="reimann.common.html#var-post-load-event">post-load-event</a></li><li><a href="reimann.common.html#var-pre-dump-event">pre-dump-event</a></li><li><a href="reimann.common.html#var-subset%3F">subset?</a></li><li><a href="reimann.common.html#var-time-at">time-at</a></li><li><a href="reimann.common.html#var-unix-time">unix-time</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.config.html">reimann.config</a></h3><pre class="doc">Reimann config files are eval'd in the context of this namespace. Includes
-streams, client, email, logging, and graphite; the common functions used in
-config. Provides a default core and functions ((tcp|udp)-server, streams,
-index) which modify that core.</pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.config.html#var-core">core</a></li><li><a href="reimann.config.html#var-include">include</a></li><li><a href="reimann.config.html#var-index">index</a></li><li><a href="reimann.config.html#var-periodically-expire">periodically-expire</a></li><li><a href="reimann.config.html#var-streams">streams</a></li><li><a href="reimann.config.html#var-tcp-server">tcp-server</a></li><li><a href="reimann.config.html#var-udp-server">udp-server</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.core.html">reimann.core</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.core.html#var-core">core</a></li><li><a href="reimann.core.html#var-periodically-expire">periodically-expire</a></li><li><a href="reimann.core.html#var-start">start</a></li><li><a href="reimann.core.html#var-stop">stop</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.email.html">reimann.email</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.email.html#var-email-event">email-event</a></li><li><a href="reimann.email.html#var-mailer">mailer</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.folds.html">reimann.folds</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.folds.html#var-maximum">maximum</a></li><li><a href="reimann.folds.html#var-mean">mean</a></li><li><a href="reimann.folds.html#var-median">median</a></li><li><a href="reimann.folds.html#var-minimum">minimum</a></li><li><a href="reimann.folds.html#var-sorted-sample">sorted-sample</a></li><li><a href="reimann.folds.html#var-sorted-sample-extract">sorted-sample-extract</a></li><li><a href="reimann.folds.html#var-sum">sum</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.graphite.html">reimann.graphite</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.graphite.html#var-graphite">graphite</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.index.html">reimann.index</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.index.html#var-clear">clear</a></li><li><a href="reimann.index.html#var-delete">delete</a></li><li><a href="reimann.index.html#var-delete-exactly">delete-exactly</a></li><li><a href="reimann.index.html#var-expire">expire</a></li><li><a href="reimann.index.html#var-index">index</a></li><li><a href="reimann.index.html#var-nbhm-index">nbhm-index</a></li><li><a href="reimann.index.html#var-search">search</a></li><li><a href="reimann.index.html#var-update">update</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.logging.html">reimann.logging</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.logging.html#var-init">init</a></li><li><a href="reimann.logging.html#var-set-level">set-level</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.query.html">reimann.query</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.query.html#var-ast">ast</a></li><li><a href="reimann.query.html#var-fun">fun</a></li><li><a href="reimann.query.html#var-parse-string">parse-string</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.server.html">reimann.server</a></h3><pre class="doc">Accepts messages from external sources. Associated with a core. Sends
-incoming events to the core's streams, queries the core's index for states.</pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.server.html#var-handle">handle</a></li><li><a href="reimann.server.html#var-tcp-handler">tcp-handler</a></li><li><a href="reimann.server.html#var-tcp-server">tcp-server</a></li><li><a href="reimann.server.html#var-udp-cpf">udp-cpf</a></li><li><a href="reimann.server.html#var-udp-handler">udp-handler</a></li><li><a href="reimann.server.html#var-udp-server">udp-server</a></li></ul></div></div><div class="namespace"><h3><a href="reimann.streams.html">reimann.streams</a></h3><pre class="doc"></pre><div class="index"><p>Public variables and functions:</p><ul><li><a href="reimann.streams.html#var-adjust">adjust</a></li><li><a href="reimann.streams.html#var-append">append</a></li><li><a href="reimann.streams.html#var-by">by</a></li><li><a href="reimann.streams.html#var-call-rescue">call-rescue</a></li><li><a href="reimann.streams.html#var-changed">changed</a></li><li><a href="reimann.streams.html#var-changed-state">changed-state</a></li><li><a href="reimann.streams.html#var-coalesce">coalesce</a></li><li><a href="reimann.streams.html#var-combine">combine</a></li><li><a href="reimann.streams.html#var-counter">counter</a></li><li><a href="reimann.streams.html#var-default">default</a></li><li><a href="reimann.streams.html#var-delete-from-index">delete-from-index</a></li><li><a href="reimann.streams.html#var-ewma-timeless">ewma-timeless</a></li><li><a href="reimann.streams.html#var-expired">expired</a></li><li><a href="reimann.streams.html#var-expired%3F">expired?</a></li><li><a href="reimann.streams.html#var-forward">forward</a></li><li><a href="reimann.streams.html#var-match">match</a></li><li><a href="reimann.streams.html#var-mean-over-time">mean-over-time</a></li><li><a href="reimann.streams.html#var-over">over</a></li><li><a href="reimann.streams.html#var-part-time-fast">part-time-fast</a></li><li><a href="reimann.streams.html#var-percentiles">percentiles</a></li><li><a href="reimann.streams.html#var-rate">rate</a></li><li><a href="reimann.streams.html#var-register">register</a></li><li><a href="reimann.streams.html#var-rollup">rollup</a></li><li><a href="reimann.streams.html#var-sum-over-time">sum-over-time</a></li><li><a href="reimann.streams.html#var-tagged-all">tagged-all</a></li><li><a href="reimann.streams.html#var-tagged-any">tagged-any</a></li><li><a href="reimann.streams.html#var-throttle">throttle</a></li><li><a href="reimann.streams.html#var-under">under</a></li><li><a href="reimann.streams.html#var-update-index">update-index</a></li><li><a href="reimann.streams.html#var-where">where</a></li><li><a href="reimann.streams.html#var-where-rewrite">where-rewrite</a></li><li><a href="reimann.streams.html#var-with">with</a></li><li><a href="reimann.streams.html#var-within">within</a></li><li><a href="reimann.streams.html#var-without">without</a></li></ul></div></div></div></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reimann - a network monitoring system</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <nav id="site-nav">
+      <a href="index.html">Reimann</a>
+      <a href="quickstart.html">Quickstart</a>
+      <a href="configuring.html">Configuring</a>
+      <a href="api/">API</a>
+      <a href="clients.html">Clients</a>
+      <a href="dash.html">Dashboard</a>
+      <a href="contributing.html">Contributing</a>
+    </nav>
+
+    <div id="content">
+      <h1><span class="focus">Reimann</span> monitors distributed systems.</h1>
+      
+      <p>Reimann aggregates events from your servers and applications with a
+      powerful stream processing language. Send an email for every exception
+      raised by your code. Track the latency distribution of your web app. See
+      the top processes on any host, by memory and CPU. Combine statistics from
+      every node in a riak cluster and forward to Graphite. Send alerts when a
+      key process fails to check in. Know how many users signed up right this
+      second. Reimann provides <i>low-latency, transient shared state</i> for
+      heteogenous systems.</div>
+
+    <div class="cards">
+      <div class="card">
+        <h2>Powerful stream primitives</h2>
+
+        <code><pre>(where (and (service "api") 
+              (not (tagged "transient")))
+    graph
+    index
+    (changed-state 
+      (email "5551231234@vtext.com")))</pre></code>
+      </div>
+
+      <div class="card">
+        <h2>Query language</h2>
+
+        <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
+
+        <p>Search the Reimann index with a small query language. Clients can monitor each other, generate reports, or produce dashboards.</p>
+      </div>
+
+      <div class="card">
+        <h2>Dashboard</h2>
+        
+      </div>
+
+      <div class="card">
+        <h2>Simple clients</h2>
+      </div>
+    </div>
+  </body>
+</html>  

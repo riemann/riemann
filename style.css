@@ -1,0 +1,110 @@
+body {
+  font-size: 15px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+#site-nav {
+  padding-left: 20px;
+  font-size: 13px;
+  font-weight: bold;
+  
+  /* Black gradient */
+  background-image: linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
+  background-image: -o-linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
+  background-image: -moz-linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
+  background-image: -webkit-linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
+  background-image: -ms-linear-gradient(bottom, rgb(0,0,0) 0%, rgb(36,36,36) 82%);
+
+  background-image: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0, rgb(0,0,0)),
+    color-stop(0.82, rgb(36,36,36))
+  );
+
+  /* Red gradient /
+  background-image: linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
+  background-image: -o-linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
+  background-image: -moz-linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
+  background-image: -webkit-linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
+  background-image: -ms-linear-gradient(bottom, rgb(163,6,19) 0%, rgb(235,0,0) 82%);
+
+  background-image: -webkit-gradient(
+    linear,
+    left bottom,
+    left top,
+    color-stop(0, rgb(163,6,19)),
+    color-stop(0.82, rgb(235,0,0))
+  );*/
+}
+
+#site-nav a:first-child {
+  padding-left: 0;
+}
+#site-nav a {
+  text-decoration: none;
+  color: #fff;
+  display: inline-block;
+  padding: 16px;
+}
+
+#site-nav a:hover {
+  text-decoration: underline;
+  color: #FF0F0F;
+}
+
+#content {
+  width: 920px;
+  padding: 20px;
+  text-align: justify;
+  text-justify: distribute;
+}
+
+.focus {
+  color: #FF0F0F
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin-top: 0.2em;
+}
+h1:first-child,
+h2:first-child, 
+h3:first-child, 
+h4:first-child, 
+h5:first-child,
+h6:first-child {
+  margin-top: 0;
+  margin-bottom: 0.2em;
+  font-weight: bold;
+}
+
+h1 { font-size: 42px; }
+h2 { font-size: 28px; }
+
+p {
+  line-height: 134%;
+  margin-top: 1em;
+}
+
+code {
+  font: monospace;
+}
+
+code pre {
+  background-color: #eee;
+  padding: 0.6em;
+}
+
+.cards {
+  -moz-column-count: 2;
+  -webkit-column-count: 2;
+  -moz-column-gap: 20px;
+  -webkit-column-gap: 20px;
+}
+
+.card {
+  display: inline-block;
+  margin: 20px 0;
+  width: 450px;
+}
