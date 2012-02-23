@@ -10,10 +10,11 @@
     <nav id="site-nav">
       <a href="index.html">Reimann</a>
       <a href="quickstart.html">Quickstart</a>
+      <a href="overview">Concepts</a>
       <a href="configuring.html">Configuring</a>
       <a href="api/">API</a>
       <a href="clients.html">Clients</a>
-      <a href="dash.html">Dashboard</a>
+      <a href="dashboard.html">Dashboard</a>
       <a href="contributing.html">Contributing</a>
     </nav>
 
@@ -27,35 +28,76 @@
       every node in a riak cluster and forward to Graphite. Send alerts when a
       key process fails to check in. Know how many users signed up right this
       second. Reimann provides <i>low-latency, transient shared state</i> for
-      heteogenous systems.</div>
+      heteogenous systems.</p>
 
-    <div class="cards">
-      <div class="card">
-        <h2>Powerful stream primitives</h2>
+      <div class="cards">
+        <div class="card">
+          <h2>Instant overview</h2>
+          <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
+          <p>A small, extendable <a href="dashboard.html">Sinatra app</a> shows
+          your system at a glance. Instantly identify hotspots, down services,
+          and unbalanced loads.</p>
+        </div>
 
-        <code><pre>(where (and (service "api") 
-              (not (tagged "transient")))
-    graph
-    index
-    (changed-state 
-      (email "5551231234@vtext.com")))</pre></code>
-      </div>
+        <div class="card">
+          <h2>Email alerts</h2>
+          <code><pre>(rollup 5 3600
+            (email "dev@startup.com", "ops@startup.com"))</pre></code>
+          <img src="images/email.png" alt="An email describing a failure in a
+          thumbnailer service." />
+          <p>Reimann can tell you as much or as little as you want. Throttle or
+          roll up multiple events into a single messages. Get emails about
+          exceptions in your code, provider downtime, or latency spikes.</p>
+        </div>
 
-      <div class="card">
-        <h2>Query language</h2>
-
-        <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
-
-        <p>Search the Reimann index with a small query language. Clients can monitor each other, generate reports, or produce dashboards.</p>
-      </div>
-
-      <div class="card">
-        <h2>Dashboard</h2>
+        <div class="card">
+          <h2>Powerful stream primitives</h2>
+          <code><pre>(where (and (service "api") 
+                (not (tagged "transient")))
+      graph
+      index
+      (changed-state 
+        (email "5551231234@vtext.com")))</pre></code>
+          <p>Reimann streams are just Clojure functions. You can use dozens of
+          built-in streams for combining, filtering, altering, and forwarding
+          events, or write your own.</p>
+        </div>
         
-      </div>
+        <div class="card">
+          <h2>Graph everything</h2>
+          <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
+          <img src="images/api-latency.png" alt="An API latency graph" />
+          <p>Like Statsd, Reimann can forward any event stream to Graphite.</p>
+        </div>
 
-      <div class="card">
-        <h2>Simple clients</h2>
+        <div class="card">
+          <h2>Query states</h2>
+          <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
+          <p>Search the Reimann index with a small query language. Clients can
+          monitor each other, generate reports, or produce dashboards.</p>
+        </div>
+
+        <div class="card">
+          <h2>Plays well with others</h2>
+          <code><pre>(where (tagged "important") 
+  (forward overview-server))</pre></code>
+          <p>Forward events transparently to other Reimann servers or
+          monitoring tools. Any Java or Clojure client will do.</p>
+        </div>
+
+        <div class="card">
+          <h2>Simple clients</h2>
+          <code><pre>r = Reimann::Client.new
+r &lt;&lt; {service: "www", state: "down", metric: 10000}
+r['state = "down"'] 
+# =&gt; [#&lt;Reimann::Event @service="www" ... &gt;]
+</pre></code>
+          <p>Reimann speaks <a
+            href="http://code.google.com/p/protobuf/">Protocol Buffers</a> over
+          TCP and UDP for a compact, portable, and fast wire protocol. See the
+          <a
+            href="https://github.com/aphyr/reimann-ruby-client/tree/master/lib/reimann">Ruby client</a> as a guide.</a>
+        </div>
       </div>
     </div>
   </body>
