@@ -46,6 +46,7 @@
   "Transforms an event (map) into a form suitable for protocol buffer encoding."
   [e]
   (let [e (if (:metric e) (assoc e :metric_f (float (:metric e))) e)
+        e (if (:ttl e)    (assoc e :ttl      (float (:ttl e)))    e)
         e (if (:time   e) (assoc e :time     (int   (:time e)))   e)]
     e))
 
