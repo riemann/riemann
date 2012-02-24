@@ -59,7 +59,7 @@ average. Does not take the time between events into account.</pre></div><div cla
 </pre></div><div class="public" id="var-expired%3F"><h3>expired?</h3><div class="usage"><code>(expired? event)</code></div><pre class="doc">Returns true if an event's :ttl and :time indicates it has expired.
 </pre></div><div class="public" id="var-forward"><h3>forward</h3><div class="usage"><code>(forward client)</code></div><pre class="doc">Sends an event through a client
 </pre></div><div class="public" id="var-match"><h3>match</h3><div class="usage"><code>(match f value &amp; children)</code></div><pre class="doc">Passes events on to children only when (f event) is equal to value. If f is
-a regex, uses re-find to match.</pre></div><div class="public" id="var-mean-over-time"><h3>mean-over-time</h3><div class="usage"><code>(mean-over-time children)</code></div><pre class="doc">Emits the most recent event each time this stream is called, but with the
+a regex, uses re-matches?</pre></div><div class="public" id="var-mean-over-time"><h3>mean-over-time</h3><div class="usage"><code>(mean-over-time children)</code></div><pre class="doc">Emits the most recent event each time this stream is called, but with the
 average of all received metrics.</pre></div><div class="public" id="var-over"><h3>over</h3><div class="usage"><code>(over x &amp; children)</code></div><pre class="doc">Passes on events only when their metric is greater than x
 </pre></div><div class="public" id="var-part-time-fast"><h3>part-time-fast</h3><div class="usage"><code>(part-time-fast interval create add finish)</code></div><pre class="doc">Partitions events by time (fast variant). Each &lt;interval&gt; seconds, creates a
 new bin by calling (create). Applies each received event to the current bin
