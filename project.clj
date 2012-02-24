@@ -61,4 +61,5 @@ alerting; and to glue various monitoring systems together."
                     :filemode "0755"}]
         :depends ""}
   :deb-skip-jar true
+  :codox {:output-dir "site/api"}
 )
