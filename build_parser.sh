@@ -1,2 +1,2 @@
-java -cp 'lib/*' org.antlr.Tool src/reimann/Query.g
+java -cp 'lib/*' org.antlr.Tool src/riemann/Query.g
 lein javac
