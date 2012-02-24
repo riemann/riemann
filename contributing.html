@@ -75,6 +75,43 @@
         </div>
 
         <div class="card">
+          <h2><a name="protocol" style="color: inherit">Protocol</a></h2>
+          
+          <p>A connection to Reimann is a stream of messages. Each message is a
+          4 byte network-endian integer *length*, followed by a Protocol Buffer
+          Message of *length* bytes. See <a
+            href="https://github.com/aphyr/reimann/blob/master/proto/reimann/proto.proto">proto/reimann/proto.proto</a>
+          for the protobuf particulars.</p>
+
+          <p>Over UDP, the length header is omitted; just send the protobuf
+          directly. UDP datagrams have a default maximum size of 16384 bytes by
+          Reimann's default; larger messages should go over TCP. This limit is
+          configurable in both the client and server.</p>
+
+          <p>The server will accept a repeated list of Events, and respond with
+          a confirmation message with either an acknowledgement or an error.
+          Check the `ok` boolean in the message; if false, message.error will
+          be a descriptive string.</p>
+
+          <p>Because protocol buffers is strongly typed, the metric field is
+          represented on the wire as metric_f. At some point I'll add an int64
+          as well.</p>
+
+          <p>Events are uniquely identified by host and service. Both allow
+          null.  Event.time is the time in unix epoch seconds and is optional.
+          The server will generate a time for each event when received if you
+          do not provide one. I don't need time resolution finer than 1 second
+          presently, but if you do, my plan is to add a nanosecond field as
+          well.</p>
+
+          <p>You can also query events from the index using a basic query
+          language. Just submit a Message with your query in
+          message.query.string. Search queries will return a message with
+          repeated Events matching that expression. A
+null expression will return no states.</p>
+        </div>
+
+        <div class="card">
           <h2>Thanks</h2>
           <p>#flatland, #clojure and #leiningen, including jodaro, ninjudd,
           raynes, and amalloy, helped with protobufs parsing, leiningen, and
