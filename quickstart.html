@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reimann - Quickstart</title>
+    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
+    <link rel="stylesheet" type="text/css" href="style.css" />
+  </head>
+  <body>
+    <div id="header">
+      <nav id="site-nav">
+        <a href="index.html">Reimann</a>
+        <a href="quickstart.html">Quickstart</a>
+        <a href="concepts.html">Concepts</a>
+        <a href="configuring.html">Configuring</a>
+        <a href="api/">API</a>
+        <a href="clients.html">Clients</a>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="contributing.html">Contributing</a>
+      </nav>
+    </div>
+
+    <div id="content">
+      <h1>Ready? <span class="focus">Let's go!</span></h1>
+
+      <p class="callout">For this tutorial, you'll need a *nix system, Java,
+      and Ruby.</p>
+
+      <h2>Install Reimann</h2>
+
+      <code><pre>wget <a href="http://aphyr.com/reimann/reimann-0.0.3.tar.bz2">http://aphyr.com/reimann/reimann-0.0.3-SNAPSHOT.tar.bz2</a>
+tar xvfj reimann-0.0.3-SNAPSHOT.tar.bz2
+cd reimann-0.0.3-SNAPSHOT</pre></code>
+
+      <p>Start the server</p>
+
+      <code><pre>bin/reiman etc/reimann.config</pre></code>
+
+      <p>Reimann is now listening for events. Install the Ruby client, tools,
+      and dashboard:</p>
+
+      <code><pre>gem install reimann-client reimann-tools reimann-dash</pre></code>
+
+      <p>Start the dashboard. If reimann-dash isn't in your path, check your
+      rubygems bin directory.</p>
+
+      <code><pre>reimann-dash</pre></code>
+
+      <p>Point your web browser to <a href="http://localhost:4567">http://localhost:4567/</a>. You should see a few empty boxes; that's because there are no events in the index yet. Let's send some:</p>
+
+      <code><pre>reimann-health</pre></code>
+
+      <p>The reimann-health daemon is a little Ruby program that submits events
+      about the state of your CPU, memory, load, and disks to a Reimann server.
+      If you switch back to the dashboard, you'll see your local host's state
+      appear under Health. The Problems list shows any states that aren't "ok",
+      so if you're running low on disk or ram they'll appear there. You can
+      hover over a state, like CPU, to see its description.</p>
+
+      <h2>The Ruby client</h2>
+
+      <p>Let's send some of our own states.</p>
+
+      <code><pre><span class="unfocus">$</span> irb -r reimann/client
+<span class="unfocus">ruby-1.9.3 :001 &gt;</span> r = Reimann::Client.new
+<span class="unfocus"> =&gt; #&lt;Reimann::Client ... &gt;</span></pre></code>
+
+      <p>We can send events with <code>&lt;&lt;</code>. For example, let's log an HTTP request.</p>
+
+      <code><pre><span class="unfocus">ruby-1.9.3 :002 &gt;</span> r &lt;&lt; { 
+  host: "www1", 
+  service: "http req", 
+  metric: 2.53, 
+  state: "critical", 
+  description: "Request took 2.53 seconds.", 
+  tags: ["http"]
+}</pre></code>
+
+      <p>On the dashboard, critical events (like the one we just submitted)
+      show up in red. All of these fields are optional, by the way. The ruby
+      client will assume your events come from the local hostname unless you
+      pass <code>host: nil</code>.</p>
+
+      <p>Now let's ask for all events that have a service beginning with
+      "http".</p>
+
+      <code><pre><span class="unfocus">ruby-1.9.3 :003 &gt;</span> r['service = "http%"']
+<span class="unfocus">[&lt;Reimann::Event time: 1330041937, state: "critical", service: "http req", host: "www1", 
+description: "Request took 2.53 seconds.", tags: ["http"], ttl: 300.0, metric_f: 2.5299999713897705&gt;]</span></pre></code>
+
+      <p>There's the event we submitted. You could send these events from Rack
+      middleware to log every request to your app, or track exceptions. Reimann
+      can be configured to calculate rates, averages, min/max, distributions,
+      and more. To get started, read the <a
+        href="configuring.html">configuration guide</a>.</p>
+      </div>
+  </body>
+</html>  

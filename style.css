@@ -73,6 +73,9 @@ body {
 .focus {
   color: #FF0F0F
 }
+.unfocus {
+  color: #778;
+}
 .clear {
   clear: both;
 }
@@ -158,6 +161,13 @@ code pre {
 }
 
 .card p { line-height: 120%; }
+
+.cta {
+  border-top: 10px solid #FF0F0F;
+}
+.cta h2 {
+  margin: 10px 0;
+}
 
 .float-left-large {
   width: 587px;
