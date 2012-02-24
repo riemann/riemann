@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Reimann - a network monitoring system</title>
+    <title>Riemann - a network monitoring system</title>
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <div id="header">
       <nav id="site-nav">
-        <a href="index.html">Reimann</a>
+        <a href="index.html">Riemann</a>
         <a href="quickstart.html">Quickstart</a>
         <a href="concepts.html">Concepts</a>
         <a href="configuring.html">Configuring</a>
@@ -21,10 +21,10 @@
     </div>
 
     <div id="content">
-      <h1><span class="focus">Reimann</span> monitors distributed systems.</h1>
+      <h1><span class="focus">Riemann</span> monitors distributed systems.</h1>
 
       <div class="float-left-large">
-        <p>Reimann aggregates events from your servers and applications with a
+        <p>Riemann aggregates events from your servers and applications with a
         powerful stream processing language. Send an email for every exception
         raised by your code. Track the latency distribution of your web app.
         See the top processes on any host, by memory and CPU. Combine
@@ -32,15 +32,15 @@
         Graphite. Send alerts when a key process fails to check in. Know how
         many users signed up right this second.</p>
      
-        <p class="callout">Reimann provides <i class="focus">low-latency,
+        <p class="callout">Riemann provides <i class="focus">low-latency,
           transient shared state</i> for systems with many moving parts.</p>
       </div>
 
       <div class="float-right-small">
         <div class="cta">
           <h2>Latest Packages</h2>
-            <a href="http://aphyr.com/reimann/reimann-0.0.3-SNAPSHOT.tar.bz2">reimann-0.0.3-SNAPSHOT.tar.bz2</a>
-            <a href="http://aphyr.com/reimann/reimann_0.0.3-SNAPSHOT.deb">reimann_0.0.3-SNAPSHOT.deb</a>
+            <a href="http://aphyr.com/riemann/riemann-0.0.3-SNAPSHOT.tar.bz2">riemann-0.0.3-SNAPSHOT.tar.bz2</a>
+            <a href="http://aphyr.com/riemann/riemann_0.0.3-SNAPSHOT.deb">riemann_0.0.3-SNAPSHOT.deb</a>
           </div>
       </div>
 
@@ -61,7 +61,7 @@
             (email "dev@startup.com", "ops@startup.com"))</pre></code>
           <img src="images/email.png" alt="An email describing a failure in a
           thumbnailer service." />
-          <p>Reimann can tell you as much or as little as you want. Throttle or
+          <p>Riemann can tell you as much or as little as you want. Throttle or
           roll up multiple events into a single messages. Get emails about
           exceptions in your code, provider downtime, or latency spikes.</p>
         </div>
@@ -74,7 +74,7 @@
       index
       (changed-state 
         (email "5551231234@vtext.com")))</pre></code>
-          <p>Reimann streams are just Clojure functions. You can use dozens of
+          <p>Riemann streams are just Clojure functions. You can use dozens of
           built-in streams for combining, filtering, altering, and forwarding
           events, or write your own.</p>
         </div>
@@ -83,34 +83,34 @@
           <h2>Graph everything</h2>
           <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
           <img src="images/api-latency.png" alt="An API latency graph" />
-          <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Reimann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
+          <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
         </div>
 
         <div class="card">
           <h2>Query states</h2>
           <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
-          <p>Search the Reimann index with a small query language. Clients can
+          <p>Search the Riemann index with a small query language. Clients can
           monitor each other, generate reports, or produce dashboards.</p>
         </div>
 
         <div class="card">
           <h2>Simple clients</h2>
-          <code><pre>r = Reimann::Client.new
+          <code><pre>r = Riemann::Client.new
 r &lt;&lt; {service: "www", state: "down", metric: 10000}
 r['state = "down"'] 
-# =&gt; [#&lt;Reimann::Event @service="www" ... &gt;]
+# =&gt; [#&lt;Riemann::Event @service="www" ... &gt;]
 </pre></code>
-          <p>Reimann speaks <a
+          <p>Riemann speaks <a
             href="http://code.google.com/p/protobuf/">Protocol Buffers</a> over
           TCP and UDP for a compact, portable, and fast wire protocol. See the
           <a
-            href="https://github.com/aphyr/reimann-ruby-client/tree/master/lib/reimann">Ruby
+            href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
             client</a> as a guide.</a>
         </div>
 
         <div class="card">
           <h2>Excuse me, but how is this better than Hadoop?</h2>
-          <p>I built Reimann because <a href="http://showyou.com">Showyou</a>
+          <p>I built Riemann because <a href="http://showyou.com">Showyou</a>
           has hundreds of moving parts spread over dozens of systems, and I
           needed host- and app-level monitoring that didn't suck.  I've had a
           long history with monitoring, and have some objections to existing

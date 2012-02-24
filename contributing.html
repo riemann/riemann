@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Reimann - Contributing</title>
+    <title>Riemann - Contributing</title>
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <div id="header">
       <nav id="site-nav">
-        <a href="index.html">Reimann</a>
+        <a href="index.html">Riemann</a>
         <a href="quickstart.html">Quickstart</a>
         <a href="concepts.html">Concepts</a>
         <a href="configuring.html">Configuring</a>
@@ -23,18 +23,18 @@
     <div id="content">
       <h1>(apply within <span class="focus">hackers</span>)</h1>
       
-      <p>I built Reimann to solve my problems, but I want it to work for you,
-      too. If you use Reimann, <a href="mailto:aphyr@aphyr.com">send me an
-        email</a> about how it's working for you, or what needs to change</a>. Frustrated with the API? Find a bug? <a href="https://github.com/aphyr/reimann/issues">Open an issue</a>.</p>
+      <p>I built Riemann to solve my problems, but I want it to work for you,
+      too. If you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an
+        email</a> about how it's working for you, or what needs to change</a>. Frustrated with the API? Find a bug? <a href="https://github.com/aphyr/riemann/issues">Open an issue</a>.</p>
     
-    <p class="callout">The best way to say "thank you" is to contribute code. <a href="https://github.com/aphyr/reimann">It's all on Github</a>.</p>
+    <p class="callout">The best way to say "thank you" is to contribute code. <a href="https://github.com/aphyr/riemann">It's all on Github</a>.</p>
 
       <div class="cards">
         <div class="card">
           <h2>Building</h2>
-          <code><pre>git clone git://github.com/aphyr/reimann.git</pre></code>
+          <code><pre>git clone git://github.com/aphyr/riemann.git</pre></code>
 
-          <p>Reimann uses <a href="https://github.com/technomancy/leiningen">Leiningen</a>, the Clojure build tool. First, fetch dependencies:</p>
+          <p>Riemann uses <a href="https://github.com/technomancy/leiningen">Leiningen</a>, the Clojure build tool. First, fetch dependencies:</p>
 
           <code><pre>lein deps</pre></code>
 
@@ -48,7 +48,7 @@
           <code><pre>lein test</pre></code>
 
           <p>Or, for a specific namespace:</p>
-          <code><pre>lein test reimann.test.streams</pre></code>
+          <code><pre>lein test riemann.test.streams</pre></code>
 
           <p>I'm really sorry about this, but there are some poorly-written
           tests for time-dependent streams like rates and percentiles. These
@@ -58,7 +58,7 @@
 
           <p>You can run the server with</p>
 
-          <code><pre>lein run reimann.config</pre></code>
+          <code><pre>lein run riemann.config</pre></code>
 
           <p>and when you're ready to package, just <code>lein uberjar</code>
           to build an all-in-one .jar, <code>lein ubertar</code> to build a
@@ -77,15 +77,15 @@
         <div class="card">
           <h2><a name="protocol" style="color: inherit">Protocol</a></h2>
           
-          <p>A connection to Reimann is a stream of messages. Each message is a
+          <p>A connection to Riemann is a stream of messages. Each message is a
           4 byte network-endian integer *length*, followed by a Protocol Buffer
           Message of *length* bytes. See <a
-            href="https://github.com/aphyr/reimann/blob/master/proto/reimann/proto.proto">proto/reimann/proto.proto</a>
+            href="https://github.com/aphyr/riemann/blob/master/proto/riemann/proto.proto">proto/riemann/proto.proto</a>
           for the protobuf particulars.</p>
 
           <p>Over UDP, the length header is omitted; just send the protobuf
           directly. UDP datagrams have a default maximum size of 16384 bytes by
-          Reimann's default; larger messages should go over TCP. This limit is
+          Riemann's default; larger messages should go over TCP. This limit is
           configurable in both the client and server.</p>
 
           <p>The server will accept a repeated list of Events, and respond with
@@ -118,11 +118,11 @@ null expression will return no states.</p>
           general Clojure questions.</p>
 
           <p><a href="http://showyou.com">Showyou</a>, my employer, gave me the
-          infrastructure I needed Reimann for, and the chance to share it with
+          infrastructure I needed Riemann for, and the chance to share it with
           the world.</p>
 
           <p>John Mullerleile (jrecursive) was deeply involved in talking
-          through the concept and structure of Reimann, as well as advice
+          through the concept and structure of Riemann, as well as advice
           around the JVM and profiling.</p>
 
           <p>C Scott Andreas (cscotta) and the <a
@@ -138,7 +138,7 @@ null expression will return no states.</p>
 
           <p>Reid Draper contributed a syntactic patch.</p>
 
-          <p>Sam Newman (snewman) brought Reimann up to speed with Clojure
+          <p>Sam Newman (snewman) brought Riemann up to speed with Clojure
           1.3.</p>
 
           <p>Tyler Schuett offered graphic design advice.</p>

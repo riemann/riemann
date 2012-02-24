@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Reimann - Core concepts</title>
+    <title>Riemann - Core concepts</title>
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <div id="header">
       <nav id="site-nav">
-        <a href="index.html">Reimann</a>
+        <a href="index.html">Riemann</a>
         <a href="quickstart.html">Quickstart</a>
         <a href="concepts.html">Concepts</a>
         <a href="configuring.html">Configuring</a>
@@ -21,23 +21,23 @@
     </div>
 
     <div id="content">
-      <h1>Reimann is an <span class="focus">event stream</span> processor.</h1> 
+      <h1>Riemann is an <span class="focus">event stream</span> processor.</h1> 
 
       <p>Every time something important happens in your system, submit an event
-      to Reimann. Just handled an HTTP request? Send an event with the time it
+      to Riemann. Just handled an HTTP request? Send an event with the time it
       took. Caught an exception? Send an event with the stacktrace. Small
       daemons can watch your servers and send events about disk capacity, CPU
       use, and memory consumption. Every five seconds. It's like top for
       hundreds of machines at once.</p>
       
-      <p class="callout">Reimann filters, combines, and acts on flows of events to yield useful information.</p>
+      <p class="callout">Riemann filters, combines, and acts on flows of events to yield useful information.</p>
 
       <div class="cards">
         <div class="card">
           <h2>Events</h2>
 
           <p>Events are just structs. They're sent over Protocol Buffers, and
-          in Reimann are treated as immutable maps. Each event has these
+          in Riemann are treated as immutable maps. Each event has these
           (optional) fields:</p>
 
           <table>
@@ -78,7 +78,7 @@
 
         <div class="card">
           <h2>Servers</h2>
-          <p>The Reimann process listens on port 5555 for TCP connections and
+          <p>The Riemann process listens on port 5555 for TCP connections and
           UDP datagrams. It accepts a stream of protocol buffer <i>messages</i>
           containing <i>events</i> (or queries, control messages, etc). Those
           events are then applied to a tree of <i>streams</i>.</p>
@@ -94,17 +94,17 @@
           match some predicate. They can pass on a changed event to their
           children, or fork into several distinct substreams. They can compute
           percentiles, rates, or moving averages. Streams can send email about
-          the events they receive, forward events to other Reimann servers, or
+          the events they receive, forward events to other Riemann servers, or
           send them to Graphite. Any clojure function accepting an event map
           can be a stream.</p>
 
-          <p>See the <a href="api/reimann.streams.html">Streams API</a> for details.</p>
+          <p>See the <a href="api/riemann.streams.html">Streams API</a> for details.</p>
         </div>
 
         <div class="card">
           <h2>The Index</h2>
           <p>A special type of stream updates the index: a table of the current
-          state of all services tracked by Reimann. Indexed states can be queried by a Reimann client to see what the system looks like now. The <a href="dashboard.html">Dashboard</a> is just an HTML view of the index.</p>
+          state of all services tracked by Riemann. Indexed states can be queried by a Riemann client to see what the system looks like now. The <a href="dashboard.html">Dashboard</a> is just an HTML view of the index.</p>
           
           <p>Events entered into the index have a :ttl field; states that sit
           in the index for too long are removed from the index and reinserted
@@ -136,7 +136,7 @@ true
 # No states
 false</pre></code>
 
-          <p>Query messages return a list of matching events. The full grammar is <a href="https://github.com/aphyr/reimann/blob/master/src/reimann/Query.g">here</a>.</p>
+          <p>Query messages return a list of matching events. The full grammar is <a href="https://github.com/aphyr/riemann/blob/master/src/riemann/Query.g">here</a>.</p>
         </div>
     </div>
   </body>

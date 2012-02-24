@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Reimann - Configuration</title>
+    <title>Riemann - Configuration</title>
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
     <link rel="stylesheet" type="text/css" href="style.css" />
   </head>
   <body>
     <div id="header">
       <nav id="site-nav">
-        <a href="index.html">Reimann</a>
+        <a href="index.html">Riemann</a>
         <a href="quickstart.html">Quickstart</a>
         <a href="concepts.html">Concepts</a>
         <a href="configuring.html">Configuring</a>
@@ -21,32 +21,32 @@
     </div>
 
     <div id="content">
-      <h1><span class="focus">Configuring</span> Reimann.</h1> 
+      <h1><span class="focus">Configuring</span> Riemann.</h1> 
 
-      <p>When you start Reimann, it reads a file: by default
-      <code>/etc/reimann/reimann.config</code>, but you can pass a different
+      <p>When you start Riemann, it reads a file: by default
+      <code>/etc/riemann/riemann.config</code>, but you can pass a different
       filename as a command-line argument too. This file is a Clojure program
-      that defines the ports Reimann listens on, how to interface with other
+      that defines the ports Riemann listens on, how to interface with other
       systems, the index, and the event streams. It's executed in the context
-      of <a href="api/reimann.config.html">reimann.config</a>, if
+      of <a href="api/riemann.config.html">riemann.config</a>, if
       you're curious.</p>
 
-      <p>I'm going to take you on a representative tour of Reimann
+      <p>I'm going to take you on a representative tour of Riemann
       configuration. When you're done, you can write your own config--as simple
       or sophisticated as necessary. You may find it handy to refer to the <a
-       href="api/reimann.streams.html">API docs</a>, especially for streams,
+       href="api/riemann.streams.html">API docs</a>, especially for streams,
       while reading.</p>
 
-      <h2>reimann.config</h2>
+      <h2>riemann.config</h2>
 
       <code><pre>; All right! First, let's set up a log file. If you need to debug your
 ; configuration, you can always call (debug &lt;anything&gt;), or prn. 
 ; clojure.tools.logging is included.
 
-(logging/init :file "reimann.log")
+(logging/init :file "riemann.log")
 
 ; If you haven't seen Clojure before, (fun arg1 arg2 ...) is a function call.
-; :file is a keyword, like Erlang atoms or Ruby symbols. "reimann.log" is a
+; :file is a keyword, like Erlang atoms or Ruby symbols. "riemann.log" is a
 ; regular double-quoted string.
 
 ; Servers accept events from the network. We'll start a TCP and UDP server:
@@ -54,7 +54,7 @@
 (tcp-server)
 (udp-server)
 
-; By default Reimann listens on port 5555 and every interface. You can change
+; By default Riemann listens on port 5555 and every interface. You can change
 ; these:
 
 ; (tcp-server :host "12.34.56.78" :port 5555)
@@ -73,7 +73,7 @@
 
       index (update-index my-index)]
 
-  ; Now we need to *do* something with the events that flow in. Reimann applies
+  ; Now we need to *do* something with the events that flow in. Riemann applies
   ; each event to a series of streams.
   (streams
 
@@ -98,7 +98,7 @@
            (fn [event] (info event))
 
            ; We just created a new function with fn, taking one argument: event.
-           ; That function just logs the event to the Reimann logfile.
+           ; That function just logs the event to the Riemann logfile.
     ) 
 
     ; Where is powerful stuff. You can match using equality:
@@ -182,11 +182,11 @@
 ; Let's send an email to the right team whenever an exception like this is
 ; thrown. This example uses local sendmail:
 
-(def email (mailer {:from "reimann@trioptimum.com"}))
+(def email (mailer {:from "riemann@trioptimum.com"}))
 
 ; You can use any options for <a href="https://github.com/drewr/postal">Postal</a>
 ;
-; (mailer {:from "reimann@trioptimum.com"
+; (mailer {:from "riemann@trioptimum.com"
 ;          :host "mx1.trioptimum.com"
 ;          :user "foo"
 ;          :pass "bar"})
@@ -259,10 +259,10 @@
                   index)))
 
 ; You'll also find folds/minimum, mean, median, and sum. See
-; <a href="api/reimann.folds.html">reimann.folds</a>.
+; <a href="api/riemann.folds.html">riemann.folds</a>.
 
-; When you have *many* events, you can use multiple Reimann servers to scale
-; out. You might, for instance, run one Reimann server per datacenter, and
+; When you have *many* events, you can use multiple Riemann servers to scale
+; out. You might, for instance, run one Riemann server per datacenter, and
 ; forward only state changes in each service to a master server for a birds-eye
 ; view.
 
@@ -272,7 +272,7 @@
                (forward client))))
 
 ; When services disappear or fail, their states in the index will get stale.
-; Periodically, Reimann can scan the index and delete states that have exceeded
+; Periodically, Riemann can scan the index and delete states that have exceeded
 ; their TTL. You'll receive events with the deleted statee's original :host,
 ; :service, and :state "expired".
 ;
@@ -286,7 +286,7 @@
   (where (state "expired") prn)
   (expired prn))
 
-; This way, Reimann can issue an alert for a service that failed to check in
+; This way, Riemann can issue an alert for a service that failed to check in
 ; regularly. The default TTL is 60 seconds, but you can submit ttls with each
 ; event or assign them using (with) or (default).
 
@@ -302,10 +302,10 @@
 </pre></code>
       
       <p>Now you're ready to write your own streams. Check out the <a
-        href="api/reimann.streams.html">streams API reference</a> for more
+        href="api/riemann.streams.html">streams API reference</a> for more
       detailed help. Feel free to email me as well: <a
         href="mailto:aphyr@aphyr.com">aphyr@aphyr.com</a>. Issues and pull
-      requests are <a href="https://github.com/aphyr/reimann">welcome on
+      requests are <a href="https://github.com/aphyr/riemann">welcome on
         github</a>.</p>    
     </div>
     </body>
