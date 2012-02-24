@@ -1,0 +1,275 @@
+; vim: filetype=clojure
+
+; Hi! This is a Riemann config file. It's a Clojure program that describes how
+; to process events. I'm going to take you on a representative tour of
+; riemann monitoring. When you're done, you can write your own config--as
+; simple or complicated as necessary.
+;
+; If you aren't familiar with Riemann or its events, see
+;
+; https://github.com/aphyr/riemann
+;
+; You may also want to refer to the API docs, especially for streams. This
+; guide should give you a taste for Riemann's abilities, but I won't be
+; exhaustive.
+;
+; http://aphyr.github.com/riemann/riemann.streams.html
+;
+; All right! First, let's set up a log file. If you need to debug your
+; configuration, you can always call (debug <anything>). clojure.tools.logging
+; is included.
+
+(logging/init :file "riemann.log")
+
+; If you haven't seen Clojure before, (fun arg1 arg2 ...) is a function call.
+; :file is a keyword, like Erlang atoms or Ruby symbols. "riemann.log" is a
+; regular double-quoted string.
+
+; Servers accept events from the network. We'll start a TCP and UDP server:
+
+(tcp-server)
+(udp-server)
+
+; By default Riemann listens on port 5555 and every interface. You can change
+; these:
+
+; (tcp-server :host "12.34.56.78" :port 5555)
+
+; The index stores the most recent state for any [host, service] pair. Clients
+; can search the index for various states with a basic query language. The
+; default implementation is a NonBlockingHashMap.
+;
+; (let [name value name2 value2 ...] body) means "inside body, let these names
+; refer to these values."
+
+(let [my-index (index)
+
+      ; Let's also define a stream that feeds states into this index. We'll
+      ; call it index for short.
+
+      index (update-index my-index)]
+
+  ; Now we need to *do* something with the events that flow in. Riemann applies
+  ; each event to a series of streams.
+  (streams
+
+    ; A stream is just a function that accepts a map. (prn x) prints x to the
+    ; console. Let's print every event that passes in:
+
+    prn
+
+    ; Let's pay attention to one kind of message in particular.
+
+    (where (state "error")
+
+           ; The where stream ignores any event that doesn't match. Events that
+           ; do match get passed on to its children. Let's log those error
+           ; events:
+
+           (fn [event] (info event))
+
+           ; We just created a new function with fn, taking one argument: event.
+           ; That function just logs the event to the Riemann logfile.
+    ) 
+
+    ; Where is powerful stuff. You can match using equality:
+    (where (host "von braun"))
+
+    ; Regular expressions
+    (where (description #"an+elids"))
+
+    ; The presence of a given tag
+    (where (tagged "mutant"))
+
+    ; Arbitrary functions on values
+    (where (> (* metric 1000) 2.5))
+
+    ; Which makes range queries easy
+    (where (< 5 metric 10))
+
+    ; Boolean operators
+    (where (not (or (tagged "www")
+                    (and (state "ok") (nil? metric)))))
+
+    ; And arbitrary functions
+    (defn global? [event] (nil? (:host event)))
+    (where (global? event))
+            
+    ; Imagine you wanted to know the time it takes for your app's API requests
+    ; to complete. The API emits events like:
+    ;
+    ; {:service "api req"
+    ;  :metric: 0.240} ; 240 milliseconds
+    ;
+    ; So first, we select only the API requests
+    
+    (where (service "api req")
+
+           ; Now, we'll calculate the 50th, 95th, and 99th percentile for all
+           ; requests in each 5-second interval.
+
+           (percentiles 5 [0.5 0.95 0.99]
+
+                        ; Percentiles will emit events like 
+                        ; {:service "api req 0.5" :metric 0.12}
+                        ; We'll add them to the index, so they can show up
+                        ; on our dashboard.
+
+                        index)
+
+           ; What else can we do with API requests? Let's figure out the total
+           ; request rate. (rate interval & children) sums up metrics and 
+           ; divides by time. 
+           
+           (rate 5)
+
+           ; But this isn't quite right--these event metrics are *times*, so
+           ; we're actually calculating the number of seconds spent by the API,
+           ; each second. So we *set* the metric of every event to 1, *then*
+           ; take the rate:
+
+           (with :metric 1 (rate 5 index))
+
+           ; (with) takes each event and calls (rate) with a *changed*
+           ; copy--one where :metric is always 1. Then (rate) adds up all those
+           ; 1's over five seconds, and sends that metric to the index.
+           
+           ; (with) has a counterpart, by the way: (default). It works exactly
+           ; the same, but it only alters the event when the value is nil. Both
+           ; with and default accept maps as well:
+
+           (default {:state "ok" :ttl 60} index)
+    )))
+
+; Imagine your web server sends an event every time it hits an exception. Your
+; app is pretty sizeable and maintained by several people, so you attach tags
+; for various parts--the model, view, controller, etc.
+;
+; {:service "web server"
+;  :state "exception"
+;  :description "my stacktrace"
+;  :tags ["view"]}
+;
+; Let's send an email to the right team whenever an exception like this is
+; thrown. This example uses local sendmail:
+
+(def email (mailer {:from "riemann@trioptimum.com"}))
+
+; You can use any options for https://github.com/drewr/postal
+;
+; (mailer {:from "riemann@trioptimum.com"
+;          :host "mx1.trioptimum.com"
+;          :user "foo"
+;          :pass "bar"})
+
+(streams
+  (where (and (service "web server")
+              (state "exception"))
+         (tagged "controller"
+                 (email "5551234567@txt.att.net"))
+         (tagged "view"
+                 (email "delacroix@trioptimum.com" "bronson@trioptimum.com"))
+         (tagged "model"
+                 (email "staff@vonbraun.mil"))))
+
+; The mailer can accept lists of events, too. To avoid getting slammed with
+; too many emails we can use the rollup function--it will combine multiple
+; events into a single message. To send at most 5 emails every hour:
+
+(def tell-ops (rollup 5 3600 (email "ops@vonbraun.mil")))
+(streams
+  (where (state "critical") tell-ops))
+
+; See that? We used def to define a new stream--plugging together primitives to
+; solve a specific problem. You can reuse tell-ops all over your config. If you
+; come up with a stream that lots of people could use, send me a pull request
+; and we'll make it a part of the standard release.
+
+; Rollup preserves all events, but sometimes you just want to drop excess
+; events on the floor. Let's send an email for at most 5 state changes every
+; day.
+(by [:host :service]
+    (changed :state
+             (throttle 5 (* 3600 24)
+                       (email "grumpy@devs.com"))))
+
+; You can forward to other monitoring systems too. Let's connect to graphite:
+
+(def graph (graphite {:host "be2.tx"}))
+
+; And graph the rate of web requests on each server. To do that, we'll
+; need to split up the stream into several rates, one per host.
+
+(streams
+  (where (service "web req")
+         (by :host 
+             (rate 1 graph))))
+
+; The (by) stream creates a new rate every time it sees a new host. It forwards
+; all events from web1 to one rate, all events from web2 to another, and so on.
+
+; By also comes in handy when you want to use a single where expression to
+; track many distinct things.
+
+(where (service #"^riak (gets|puts)")
+       (by [:host :service] index graph))
+
+; Sometimes you'll want to combine the state of several services. For instance,
+; imagine that every server reports its current CPU use. You want to show only
+; the *maximum* cpu state on your dashboard.
+
+(where (service "cpu")
+       ; Coalesce tracks the most recent event received for any given host and
+       ; service (as long as it hasn't exceeded its TTL). Every time it
+       ; receives an event, it forwards a list of all those events. 
+       (coalesce
+         ; Then we bring those states together using the combine stream, and
+         ; any function that takes a list of events.
+         (combine folds/maximum
+                  index)))
+
+; You'll also find folds/minimum, mean, median, and sum. See
+; http://aphyr.github.com/riemann/riemann.folds.html
+
+; When you have *many* events, you can use multiple Riemann servers to scale
+; out. You might, for instance, run one Riemann server per datacenter, and
+; forward only state changes in each service to a master server for a birds-eye
+; view.
+
+(let [client (tcp-client :host "aggregator")]
+  (by [:host :service]
+      (changed :state 
+               (forward client))))
+
+; When services disappear or fail, their states in the index will get stale.
+; Periodically, Riemann can scan the index and delete states that have exceeded
+; their TTL. You'll receive events with the deleted statee's original :host,
+; :service, and :state "expired".
+;
+; To expire old states every ten seconds:
+
+(periodically-expire 10)
+
+; You can select expired events with where, or the expired stream:
+
+(streams
+  (where (state "expired") prn)
+  (expired prn))
+
+; This way, Riemann can issue an alert for a service that failed to check in
+; regularly. The default TTL is 60 seconds, but you can submit ttls with each
+; event or assign them using (with) or (default).
+
+(streams
+  (default :ttl 10 index)
+  
+  (by [:host :service]
+    (changed :state email "shodan@tau.ceti.five")))
+
+; Any service that fails to check in within every 10 seconds will be removed
+; and an alert sent.
+
+; Now you're ready to write your own streams. Check out the streams API:
+; http://aphyr.github.com/riemann/riemann.streams.html. Feel free to email me
+; as well: aphyr@aphyr.com. Issues and pull requests welcome on github:
+; https://github.com/aphyr/riemann
