@@ -15,4 +15,4 @@ build
 .lein-failures
 protosrc/
 reimann-*.zip
-doc/**
+site/**
