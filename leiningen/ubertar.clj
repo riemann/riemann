@@ -1,6 +1,7 @@
 (ns leiningen.ubertar
   (:use [leiningen.uberjar :only [uberjar]]
-        [clojure.java.io :only [copy file]])
+        [clojure.java.io :only [copy file]]
+        [clojure.contrib.shell-out])
   (:import [org.apache.tools.tar TarOutputStream TarEntry]
            [java.io File FileOutputStream ByteArrayOutputStream]))
 
@@ -55,7 +56,8 @@
   (add-build-info project)
   (let [release-name (str (:name project) "-" (:version project))
         jar-file (uberjar project)
-        tar-file (file (:root project) (format "%s.tar" release-name))]
+        tar-file (file (:root project) (format "%s.tar" release-name))
+        bz2-file (file (:root project) (format "%s.tar.bz2" release-name))]
     (.delete tar-file)
     (with-open [tar (TarOutputStream. (FileOutputStream. tar-file))]
       (doseq [p (file-seq (file (:root project) "pkg"))]
@@ -66,4 +68,8 @@
 ;      (add-file (str release-name File/separator "lib") tar (file jar-file)))
       (add-file (str release-name File/separator 
                      "lib") tar (file jar-file)))
-    (println "Wrote" (.getName tar-file))))
+    
+    (.delete bz2-file)
+    (sh "bzip2" (str tar-file))
+    (println "Wrote" (.getName bz2-file))
+    ))
