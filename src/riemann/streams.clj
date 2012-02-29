@@ -19,6 +19,15 @@
   (:use [clojure.math.numeric-tower])
   (:use [clojure.tools.logging]))
 
+(defn expired?
+  "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
+  [event]
+    (or (= (:state event) "expired")
+        (when-let [time (:time event)]
+          (let [ttl (or (:ttl event) index/default-ttl)
+                age (- (unix-time) time)]
+            (> age ttl)))))
+
 (defmacro call-rescue
   "Call each child, in order, with event. Rescues and logs any failure."
   [event children]
@@ -94,6 +103,48 @@
             t (or (:time event) (unix-time))]
         (bin event t)))))
 
+; Todo: improve accuracy by tracking a time modulus.
+(defn periodically-until-expired 
+  "When an event arrives, begins calling f every interval seconds. Starts
+  immediately. Stops calling f when an expired? event arrives."
+  ([f] (periodically-until-expired 1 f))
+  ([interval f]
+   (let [running (ref false)
+         thread (ref nil)
+         new-thread (fn []
+                      (Thread.
+                        (bound-fn []
+                          (loop []
+                            (Thread/sleep (* interval 1000))
+                            (if (deref running)
+                              (do (f) (recur))
+                              ; Exit
+                              (dosync (ref-set thread nil)))))))]
+
+     (fn [event]
+       (if (expired? event)
+         ; Stop
+         (dosync (ref-set running false))
+
+         ; Start if necessary
+         (when (nil? (deref thread))
+           ; Note that we lock the thread atom to prevent the STM from retrying
+           ; our thread-creating transaction more than once. Double nil? check
+           ; allows us to avoid synchronizing *every* event at the cost of a
+           ; race condition over extremely short timescales. As those
+           ; timescales are likely to have undefined ordering *anyway*, I
+           ; don't really care about getting this particular part right.
+           (locking thread
+             (dosync
+               (ref-set running true)
+               (when-not (deref thread)
+                 ; Call first time synchronously--makes testing easier
+                 (f)
+                 ; Create thread
+                 (let [t (new-thread)]
+                   (.start t)
+                   (ref-set thread t)))))))))))
+
 ; This leaks a thread. Need to think about dynamic scheduling/expiry.
 (defn part-time-fast
   "Partitions events by time (fast variant). Each <interval> seconds, creates a
@@ -121,6 +172,34 @@
     (fn [event]
       (dosync
         (add (deref current) event)))))
+
+(defn interpolate-constant
+  "Emits a constant stream of events every interval seconds, starting when an
+  event is received, and ending when an expired event is received. Times are
+  set to Riemann's time. The first and last events are forwarded immediately.
+  
+  Note: ignores event times currently--will change later."
+  [interval & children]
+    (let [state (ref nil)
+          last-time (ref (unix-time))
+          emit-dup (fn []
+                     (call-rescue 
+                       (assoc (deref state) :time (unix-time))
+                       children))
+          peri (periodically-until-expired interval emit-dup)]
+      (fn [event]
+        (dosync 
+          (ref-set last-time (unix-time))
+          (ref-set state event))
+
+        (peri event)
+        (when (expired? event)
+          (call-rescue event children)
+          ; Clean up
+          (dosync
+            (ref-set last-time nil)
+            (ref-set state nil))
+          ))))
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
@@ -268,13 +347,6 @@
                          x))]
           (when-not (empty? events)
             (call-rescue events children)))))))
-
-(defn expired?
-  "Returns true if an event's :ttl and :time indicates it has expired."
-  [event]
-      (let [ttl (or (:ttl event) index/default-ttl)
-            age (- (unix-time) (:time event))]
-        (> age ttl)))
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each

@@ -13,10 +13,32 @@
      (doseq [e# ~inputs] (stream# e#))
      (deref out#)))
 
+(defmacro run-stream-intervals
+  "Applies a seq of alternating events and intervals (in seconds) between them to stream, returning outputs."
+  [stream inputs-and-intervals]
+  `(let [out# (ref [])
+         stream# (~@stream (append out#))
+         start-time# (ref (unix-time))
+         next-time# (ref (deref start-time#))]
+     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
+       (stream# e#)
+       (when interval#
+         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
+         (Thread/sleep (* 1000 (max 0 (- (deref next-time#) (unix-time)))))))
+     (let [result# (deref out#)]
+       ; close stream
+       (stream# {:state "expired"})
+       result#)))
+
 (defmacro test-stream
   "Verifies that the given stream, taking inputs, forwards outputs to children."
   [stream inputs outputs]
   `(is (= (run-stream ~stream ~inputs) ~outputs)))
+
+(defmacro test-stream-intervals
+  "Verifies that run-stream-intervals, taking inputs/intervals, forwards outputs to chldren."
+  [stream inputs-and-intervals outputs]
+  `(is (= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
 (defn em
   "Generate events with given metrics"
@@ -255,6 +277,52 @@
            (doseq [event events]
              (s event))
            (is (= (count events) (deref i)))))
+
+(deftest interpolate-constant-test
+         (test-stream-intervals 
+           (interpolate-constant 0.01)
+           []
+           [])
+
+         ; Should forward a single state
+         (is (= (map :metric (run-stream-intervals
+                               (interpolate-constant 0.01)
+                               (em 1)))
+                [1]))
+
+         ; Should forward first state and ignore immediate successors
+         (is (= (map :metric (run-stream-intervals
+                               (interpolate-constant 0.01)
+                               (interpose nil (em 1 2 3))))
+                [1]))
+
+         ; Should fill in missing states regularly
+         (is (= (map :metric (run-stream-intervals 
+                               (interpolate-constant 0.1)
+                               (interpose 0.22 (em 1 2 3 4))))
+                [1 1 1 2 2 3 3]))
+         
+         ; Should forward final "expired" state.
+         (is (= (map :metric (run-stream-intervals
+                               (interpolate-constant 0.1)
+                               (interpose 0.22
+                                          [{:metric 1}
+                                           {:metric 2}
+                                           {:metric 3}
+                                           {:metric 4 :state "expired"}])))
+                [1 1 1 2 2 3 3 4]))
+
+         ; Should not fill during expired times.
+         (is (= (map :metric (run-stream-intervals
+                               (interpolate-constant 0.05)
+                               [{:metric 1 :state "expired"}
+                                0.12
+                                {:metric 2}
+                                0.12
+                                {:metric 3 :state "expired"}
+                                0.12]))
+                [1 2 2 2 3]))
+         )
 
 (deftest rate-slow-even
          (let [output (ref [])
