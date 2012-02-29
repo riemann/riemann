@@ -278,6 +278,30 @@
              (s event))
            (is (= (count events) (deref i)))))
 
+(deftest fill-in-test
+         (test-stream-intervals
+           (fill-in 0.01 {:metric 0})
+           []
+           [])
+
+         ; Quick succession
+         (is (= (map :metric (run-stream-intervals
+                               (fill-in 0.01 {:metric 0})
+                               (interpose nil (em 1 2 3))))
+                [1 2 3]))
+
+         ; With a gap and expiry
+         (is (= (map :metric (run-stream-intervals
+                               (fill-in 0.05 {:metric 0})
+                               [{:metric 1} 0.06
+                                {:metric 2} nil
+                                {:metric 3} 0.08
+                                {:metric 4 :state "expired"} 0.06
+                                {:metric 5}]))
+                [1 0 2 3 0 4 5]))
+         )
+                
+
 (deftest interpolate-constant-test
          (test-stream-intervals 
            (interpolate-constant 0.01)
@@ -286,14 +310,16 @@
 
          ; Should forward a single state
          (is (= (map :metric (run-stream-intervals
-                               (interpolate-constant 0.01)
-                               (em 1)))
+                               (interpolate-constant 0.1)
+                               [{:metric 1} 0.05]))
                 [1]))
 
          ; Should forward first state and ignore immediate successors
          (is (= (map :metric (run-stream-intervals
-                               (interpolate-constant 0.01)
-                               (interpose nil (em 1 2 3))))
+                               (interpolate-constant 0.1)
+                               [{:metric 1} 0.05 
+                                {:metric 2} nil
+                                {:metric 3}]))
                 [1]))
 
          ; Should fill in missing states regularly
