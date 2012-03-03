@@ -45,6 +45,40 @@
   [& metrics]
   (vec (map (fn [m] {:metric m}) metrics)))
 
+(deftest pipe-test
+         ; Single-child pipe
+         (let [r (ref [])
+               p (pipe (append r))]
+           (p 1)
+           (p 2)
+           (is (= [1 2] (deref r))))
+
+         ; Multiple-child pipe
+         (let [r1 (ref [])
+               r2 (ref [])
+               p (pipe [(append r1)
+                        (append r2)])]
+           (p 1)
+           (is (= [1] (deref r1)))
+           (is (= [1] (deref r2))))
+
+         (prn (apply where (service "true")))
+
+         ; Multiple-stage scatter-gather pipe
+         (let [r (ref [])
+               p (pipe
+                   (where (host "mario"))
+                   [(with :service "b1")
+                    (with :service "b2")]
+                   (append r))]
+           (p {:host "peach"})
+           (p {:host "mario"})
+           (is (= #{{:host "mario" :service "b1"}
+                    {:host "mario" :service "b2"}}
+                  (set (deref r)))))
+
+         )
+
 (deftest combine-test
          (let [r (ref nil)
                sum (combine folds/sum (register r))

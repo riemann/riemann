@@ -40,6 +40,61 @@
            (warn e# (str child# " threw")))))
      true))
 
+(defmacro pipe
+  "Pipes events from one set of streams to the next, and so on. Returns a
+  stream which applies a received event to each stream in the first stage. Each
+  stream in the first stage will have every stream in the second stage as its
+  children, and so on. For instance:
+
+  (pipe [a1 a2 a3])
+
+            --- a1
+           /
+  event ------- a2
+           \\
+            --- a3
+
+  returns a stream which applies every incoming event to a1, then a2, then a3.
+
+  (pipe [a1 a2] [b1 b2] [c1])
+
+           /-- a1 --\\   /-- b1 --\\
+  event ---          ---          --- c1
+           \\-- a2 --/   \\-- b2 --/
+
+  returns a stream which applies incoming events to a1 and a2. a1 and a2 both
+  have b1 and b2 as children. b1 and b2 have c1 as their child.
+
+  Stages can also be single streams instead of vectors of streams:
+
+  (pipe a1 [b1 b2 b3] c)"
+  [& stages]
+
+  ; Normalize stages into vector form
+  (let [stages (map (fn [stage] (if (vector? stage) stage [stage])) stages)
+      
+        chain (reduce
+                (fn [[total-bindings outputs] inputs]
+                  (prn "chain total" total-bindings "in" inputs "out" outputs)
+                  (if (empty? outputs)
+                    [total-bindings inputs]
+
+                    (let [output-syms (map (fn [x] (gensym "output__")) outputs)
+                          output-bindings (mapcat list output-syms outputs)]
+                      (prn "output bindings are" output-bindings) 
+                      [(concat total-bindings output-bindings)
+                       (map (fn [input]
+                              (concat input output-syms))
+                            inputs)])))
+                [[] []]
+                (reverse stages))
+        [bindings initial-streams] chain]
+   
+    `(let ~(vec bindings)
+       (let [initial-streams# ~(vec initial-streams)]
+       (fn [event#]
+         (call-rescue event# initial-streams#))))))
+
 (defn combine
   "Returns a function which takes a seq of events. Combines events with f, then
   forwards the result to children."
