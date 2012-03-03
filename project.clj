@@ -38,6 +38,7 @@ alerting; and to glue various monitoring systems together."
     [protobuf "0.6.0-beta7"]
     [lein-autodoc "0.9.0"]
     [codox "0.4.0"]
+    [clj-glob "1.0.0"]
   ]
   :test-selectors {:default (complement :integration)
                    :integration :integration
