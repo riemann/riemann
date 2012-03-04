@@ -6,6 +6,21 @@
 
 (logging/init)
 
+(deftest percentiles
+         (is (= (graphite-path-percentiles
+                  {:service "foo bar"})
+                "foo.bar"))
+         (is (= (graphite-path-percentiles
+                  {:service "foo bar 1"})
+                "foo.bar.1"))
+         (is (= (graphite-path-percentiles
+                  {:service "foo bar 99"})
+                "foo.bar.99"))
+         (is (= (graphite-path-percentiles
+                  {:service "foo bar 0.99"})
+                "foo.bar.99"))
+         )
+
 (deftest ^:integration graphite-test
          (let [g (graphite {})]
            (g {:host "riemann.local"

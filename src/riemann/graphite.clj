@@ -25,7 +25,7 @@
     (if-let [service (:service event)]
       (assoc event :service
              (replace service
-                      #"([\d\.]+)$"
+                      #"(\d+\.\d+)$"
                       (fn [[_ x]] (str (int (* 100 (read-string x)))))))
       event)))
 
