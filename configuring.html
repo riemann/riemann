@@ -20,8 +20,9 @@ while reading.</p>
 
 <h2>riemann.config</h2>
 
-<code><pre>; All right! First, let's set up a log file. If you need to debug your
-; configuration, you can always call (debug &lt;anything&gt;), or prn. 
+{% highlight clj %}
+; All right! First, let's set up a log file. If you need to debug your
+; configuration, you can always call (debug <anything>), or prn. 
 ; clojure.tools.logging is included.
 
 (logging/init :file "riemann.log")
@@ -92,10 +93,10 @@ while reading.</p>
     (where (tagged "mutant"))
 
     ; Arbitrary functions on values
-    (where (&gt; (* metric 1000) 2.5))
+    (where (>= (* metric 1000) 2.5))
 
     ; Which makes range queries easy
-    (where (&lt; 5 metric 10))
+    (where (< 5 metric 10))
 
     ; Boolean operators
     (where (not (or (tagged "www")
@@ -165,7 +166,7 @@ while reading.</p>
 
 (def email (mailer {:from "riemann@trioptimum.com"}))
 
-; You can use any options for <a href="https://github.com/drewr/postal">Postal</a>
+; You can use any options for https://github.com/drewr/postal.
 ;
 ; (mailer {:from "riemann@trioptimum.com"
 ;          :host "mx1.trioptimum.com"
@@ -279,8 +280,8 @@ while reading.</p>
 
 ; Any service that fails to check in within every 10 seconds will be removed
 ; and an alert sent.
+{% endhighlight %}
 
-</pre></code>
       
 <p>Now you're ready to write your own streams. Check out the <a
   href="api/riemann.streams.html">streams API reference</a> for more detailed

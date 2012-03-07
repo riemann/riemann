@@ -98,7 +98,8 @@ hundreds of machines at once.</p>
     <h2>Queries</h2>
     <p>Clients can query the index for particular events.</p>
 
-    <code><pre># Simple equality
+    {% highlight clj %}
+# Simple equality
 state = "ok"
 
 # Wildcards
@@ -115,7 +116,8 @@ tagged "product"
 true
 
 # No states
-false</pre></code>
+false
+{% endhighlight %}
 
     <p>Query messages return a list of matching events. The full grammar is <a
       href="https://github.com/aphyr/riemann/blob/master/src/riemann/Query.g">here</a>.</p>

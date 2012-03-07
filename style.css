@@ -154,11 +154,11 @@ code {
   color: #001843;
 }
 
-code pre {
+div.highlight, code pre {
   margin-top: 10px;
   background-color: #eee;
-  padding: 0.6em;
-  font-size: 80%;
+  padding: 6px;
+  font-size: 85%;
 }
 
 .cards {

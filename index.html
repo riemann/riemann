@@ -38,8 +38,11 @@ title: Riemann - A network monitoring system
 
   <div class="card">
     <h2>Email alerts</h2>
-    <code><pre>(rollup 5 3600
-      (email "dev@startup.com", "ops@startup.com"))</pre></code>
+{% highlight clj %}
+(rollup 5 3600
+  (email "dev@startup.com", "ops@startup.com"))
+{% endhighlight %}
+
     <img src="images/email.png" alt="An email describing a failure in a
     thumbnailer service." />
     <p>Riemann can tell you as much or as little as you want. Throttle or
@@ -49,12 +52,16 @@ title: Riemann - A network monitoring system
 
   <div class="card">
     <h2>Powerful stream primitives</h2>
-    <code><pre>(where (and (service "api") 
-          (not (tagged "transient")))
-graph
-index
-(changed-state 
-  (email "5551231234@vtext.com")))</pre></code>
+
+{% highlight clj %}
+(where (and (service "api") 
+            (not (tagged "transient")))
+  graph
+  index
+  (changed-state 
+    (email "5551231234@vtext.com")))
+{% endhighlight %}
+
     <p>Riemann streams are just Clojure functions. You can use dozens of
     built-in streams for combining, filtering, altering, and forwarding
     events, or write your own.</p>
@@ -62,29 +69,36 @@ index
   
   <div class="card">
     <h2>Graph everything</h2>
-    <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
+{% highlight clj %}
+(graphite {:host "graphs.pdx"})
+{% endhighlight %}
+
     <img src="images/api-latency.png" alt="An API latency graph" />
     <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
   </div>
 
   <div class="card">
     <h2>Query states</h2>
-    <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
+{% highlight clj %}
+state = "error rate" and (not host =~ "www.%")
+{% endhighlight %}
     <p>Search the Riemann index with a small query language. Clients can
     monitor each other, generate reports, or produce dashboards.</p>
   </div>
 
   <div class="card">
     <h2>Simple clients</h2>
-    <code><pre>r = Riemann::Client.new
-r &lt;&lt; {service: "www", state: "down", metric: 10000}
+
+{% highlight ruby %}
+r = Riemann::Client.new
+r << {service: "www", state: "down", metric: 10000}
 r['state = "down"'] 
-# =&gt; [#&lt;Riemann::Event @service="www" ... &gt;]
-</pre></code>
-    <p>Riemann speaks <a
-      href="http://code.google.com/p/protobuf/">Protocol Buffers</a> over
-    TCP and UDP for a compact, portable, and fast wire protocol. See the
-    <a
+# => [#<Riemann::Event @service="www" ... >]
+{% endhighlight %}
+
+    <p>Riemann speaks <a href="http://code.google.com/p/protobuf/">Protocol
+      Buffers</a> over TCP and UDP for a compact, portable, and fast wire
+    protocol. See the <a
       href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
       client</a> as a guide.</a>
   </div>
