@@ -1,72 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Riemann - Client libraries</title>
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
-    <link rel="stylesheet" type="text/css" href="style.css" />
-  </head>
-  <body>
-    <div id="header">
-      <nav id="site-nav">
-        <a href="index.html">Riemann</a>
-        <a href="quickstart.html">Quickstart</a>
-        <a href="concepts.html">Concepts</a>
-        <a href="configuring.html">Configuring</a>
-        <a href="api/">API</a>
-        <a href="clients.html">Clients</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="contributing.html">Contributing</a>
-      </nav>
-    </div>
+---
+layout: default
+title: Riemann - Clients
+---
+<h1><span class="focus">Clients</span> send events to Riemann.</h1>
 
-    <div id="content">
-      <h1><span class="focus">Clients</span> send events to Riemann.</h1>
-      
-      <p>Riemann clients speak <a href="contributing.html#protocol">Protocol
-        Buffers</a> over TCP and UDP. They can submit events to Riemann and
-      query the index.</p>
+<p>Riemann clients speak <a href="contributing.html#protocol">Protocol
+  Buffers</a> over TCP and UDP. They can submit events to Riemann and
+query the index.</p>
 
-      <div class="cards">
-        <div class="card">
-          <h2><a href="https://github.com/aphyr/riemann-tools">Tools</a></h2>
-          <p>A Ruby gem with little daemons to monitor key systems.</p>
-        </div>
+<div class="cards">
+  <div class="card">
+    <h2><a href="https://github.com/aphyr/riemann-tools">Tools</a></h2>
+    <p>A Ruby gem with little daemons to monitor key systems.</p>
+  </div>
 
-        <div class="card">
-          <h2><a href="https://github.com/aphyr/riemann-ruby-client">Ruby</a></h2>
-          <p>The <a
-            href="https://github.com/aphyr/riemann-ruby-client"</a>Riemann Ruby
-          client</a> is my threadsafe, auto-retrying reference implementation,
-        supporting both TCP and UDP. It also provides utility classes to help
-        manage service state.</p>
-        </div>
-  
-        <div class="card">
-          <h2><a href="https://github.com/gleicon/pyriemann">Python</a></h2>
+  <div class="card">
+    <h2><a href="https://github.com/aphyr/riemann-ruby-client">Ruby</a></h2>
+    <p>The <a
+      href="https://github.com/aphyr/riemann-ruby-client"</a>Riemann Ruby
+    client</a> is my threadsafe, auto-retrying reference implementation,
+  supporting both TCP and UDP. It also provides utility classes to help
+  manage service state.</p>
+  </div>
 
-          <p><a href="https://github.com/gleicon">Gleicon</a> has been hard at
-          work on a <a href="https://github.com/gleicon/pyriemann">Python
-            client</a> which supports submitting events over TCP and UDP, and
-          querying the index.</p>
-        </div>
+  <div class="card">
+    <h2><a href="https://github.com/gleicon/pyriemann">Python</a></h2>
 
-        <div class="card">
-          <h2><a href="api/riemann.client.html">Clojure</a></h2> <p>Riemann
-          comes with a built-in <a href="api/riemann.client.html">Clojure
-            client</a>. It's thread-safe, stateful, and synchronized. Does not
-          support UDP yet. You can require it as a dependency from <a
-            href="http://clojars.org/riemann">Clojars</a>. See <a
-            href="https://github.com/aphyr/riemann-bench">riemann-bench</a> for
-          an example application using the client.</p>
-        </div>
+    <p><a href="https://github.com/gleicon">Gleicon</a> has been hard at
+    work on a <a href="https://github.com/gleicon/pyriemann">Python
+      client</a> which supports submitting events over TCP and UDP, and
+    querying the index.</p>
+  </div>
 
-        <div class="card">
-          <h2>Your Name Here</h2>
-          <p>Write a client in your favorite language? Need help with the
-          protocol? See <a href="contributing.html#protocol">the protocol
-            docs</a>, or <a href="mailto:aphyr@aphyr.com">drop me a line</a>.
-      </div>
-    </div>
-  </body>
-</html>  
+  <div class="card">
+    <h2><a href="api/riemann.client.html">Clojure</a></h2> <p>Riemann
+    comes with a built-in <a href="api/riemann.client.html">Clojure
+      client</a>. It's thread-safe, stateful, and synchronized. Does not
+    support UDP yet. You can require it as a dependency from <a
+      href="http://clojars.org/riemann">Clojars</a>. See <a
+      href="https://github.com/aphyr/riemann-bench">riemann-bench</a> for
+    an example application using the client.</p>
+  </div>
+
+  <div class="card">
+    <h2>Your Name Here</h2>
+    <p>Write a client in your favorite language? Need help with the
+    protocol? See <a href="contributing.html#protocol">the protocol
+      docs</a>, or <a href="mailto:aphyr@aphyr.com">drop me a line</a>.
+  </div>
+</div>

@@ -1,45 +1,26 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Riemann - Configuration</title>
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
-    <link rel="stylesheet" type="text/css" href="style.css" />
-  </head>
-  <body>
-    <div id="header">
-      <nav id="site-nav">
-        <a href="index.html">Riemann</a>
-        <a href="quickstart.html">Quickstart</a>
-        <a href="concepts.html">Concepts</a>
-        <a href="configuring.html">Configuring</a>
-        <a href="api/">API</a>
-        <a href="clients.html">Clients</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="contributing.html">Contributing</a>
-      </nav>
-    </div>
+---
+title: Riemann - Configuration
+layout: default
+---
+<h1><span class="focus">Configuring</span> Riemann.</h1> 
 
-    <div id="content">
-      <h1><span class="focus">Configuring</span> Riemann.</h1> 
+<p>When you start Riemann, it reads a file: by default
+<code>/etc/riemann/riemann.config</code>, but you can pass a different
+filename as a command-line argument too. This file is a Clojure program
+that defines the ports Riemann listens on, how to interface with other
+systems, the index, and the event streams. It's executed in the context
+of <a href="api/riemann.config.html">riemann.config</a>, if
+you're curious.</p>
 
-      <p>When you start Riemann, it reads a file: by default
-      <code>/etc/riemann/riemann.config</code>, but you can pass a different
-      filename as a command-line argument too. This file is a Clojure program
-      that defines the ports Riemann listens on, how to interface with other
-      systems, the index, and the event streams. It's executed in the context
-      of <a href="api/riemann.config.html">riemann.config</a>, if
-      you're curious.</p>
+<p>I'm going to take you on a representative tour of Riemann
+configuration. When you're done, you can write your own config--as simple
+or sophisticated as necessary. You may find it handy to refer to the <a
+ href="api/riemann.streams.html">API docs</a>, especially for streams,
+while reading.</p>
 
-      <p>I'm going to take you on a representative tour of Riemann
-      configuration. When you're done, you can write your own config--as simple
-      or sophisticated as necessary. You may find it handy to refer to the <a
-       href="api/riemann.streams.html">API docs</a>, especially for streams,
-      while reading.</p>
+<h2>riemann.config</h2>
 
-      <h2>riemann.config</h2>
-
-      <code><pre>; All right! First, let's set up a log file. If you need to debug your
+<code><pre>; All right! First, let's set up a log file. If you need to debug your
 ; configuration, you can always call (debug &lt;anything&gt;), or prn. 
 ; clojure.tools.logging is included.
 
@@ -301,12 +282,8 @@
 
 </pre></code>
       
-      <p>Now you're ready to write your own streams. Check out the <a
-        href="api/riemann.streams.html">streams API reference</a> for more
-      detailed help. Feel free to email me as well: <a
-        href="mailto:aphyr@aphyr.com">aphyr@aphyr.com</a>. Issues and pull
-      requests are <a href="https://github.com/aphyr/riemann">welcome on
-        github</a>.</p>    
-    </div>
-    </body>
-</html>  
+<p>Now you're ready to write your own streams. Check out the <a
+  href="api/riemann.streams.html">streams API reference</a> for more detailed
+help. Feel free to email me as well: <a
+  href="mailto:aphyr@aphyr.com">aphyr@aphyr.com</a>. Issues and pull requests
+are <a href="https://github.com/aphyr/riemann">welcome on github</a>.</p>    

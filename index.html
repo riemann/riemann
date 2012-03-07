@@ -1,142 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Riemann - a network monitoring system</title>
-    <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
-    <link rel="stylesheet" type="text/css" href="style.css" />
-  </head>
-  <body>
-    <div id="header">
-      <nav id="site-nav">
-        <a href="index.html">Riemann</a>
-        <a href="quickstart.html">Quickstart</a>
-        <a href="concepts.html">Concepts</a>
-        <a href="configuring.html">Configuring</a>
-        <a href="api/">API</a>
-        <a href="clients.html">Clients</a>
-        <a href="dashboard.html">Dashboard</a>
-        <a href="contributing.html">Contributing</a>
-      </nav>
+---
+layout: default
+title: Riemann - A network monitoring system
+---
+<h1><span class="focus">Riemann</span> monitors distributed systems.</h1>
+
+<div class="float-left-large">
+  <p>Riemann aggregates events from your servers and applications with a
+  powerful stream processing language. Send an email for every exception
+  raised by your code. Track the latency distribution of your web app.
+  See the top processes on any host, by memory and CPU. Combine
+  statistics from every Riak node in your cluster and forward to
+  Graphite. Send alerts when a key process fails to check in. Know how
+  many users signed up right this second.</p>
+
+  <p class="callout">Riemann provides <i class="focus">low-latency,
+    transient shared state</i> for systems with many moving parts.</p>
+</div>
+
+<div class="float-right-small">
+  <div class="cta">
+    <h2>Latest Packages</h2>
+      <a href="http://aphyr.com/riemann/riemann-0.0.3-SNAPSHOT.tar.bz2">riemann-0.0.3-SNAPSHOT.tar.bz2</a>
+      <a href="http://aphyr.com/riemann/riemann_0.0.3-SNAPSHOT.deb">riemann_0.0.3-SNAPSHOT.deb</a>
     </div>
+</div>
 
-    <div id="content">
-      <h1><span class="focus">Riemann</span> monitors distributed systems.</h1>
+<div class="clear"></div>
 
-      <div class="float-left-large">
-        <p>Riemann aggregates events from your servers and applications with a
-        powerful stream processing language. Send an email for every exception
-        raised by your code. Track the latency distribution of your web app.
-        See the top processes on any host, by memory and CPU. Combine
-        statistics from every Riak node in your cluster and forward to
-        Graphite. Send alerts when a key process fails to check in. Know how
-        many users signed up right this second.</p>
-     
-        <p class="callout">Riemann provides <i class="focus">low-latency,
-          transient shared state</i> for systems with many moving parts.</p>
-      </div>
+<div class="cards">
+  <div class="card">
+    <h2>Instant overview</h2>
+    <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
+    <p>A small, extendable <a href="dashboard.html">Sinatra app</a> shows
+    your system at a glance. Instantly identify hotspots, down services,
+    and unbalanced loads.</p>
+  </div>
 
-      <div class="float-right-small">
-        <div class="cta">
-          <h2>Latest Packages</h2>
-            <a href="http://aphyr.com/riemann/riemann-0.0.3-SNAPSHOT.tar.bz2">riemann-0.0.3-SNAPSHOT.tar.bz2</a>
-            <a href="http://aphyr.com/riemann/riemann_0.0.3-SNAPSHOT.deb">riemann_0.0.3-SNAPSHOT.deb</a>
-          </div>
-      </div>
+  <div class="card">
+    <h2>Email alerts</h2>
+    <code><pre>(rollup 5 3600
+      (email "dev@startup.com", "ops@startup.com"))</pre></code>
+    <img src="images/email.png" alt="An email describing a failure in a
+    thumbnailer service." />
+    <p>Riemann can tell you as much or as little as you want. Throttle or
+    roll up multiple events into a single messages. Get emails about
+    exceptions in your code, provider downtime, or latency spikes.</p>
+  </div>
 
-      <div class="clear"></div>
+  <div class="card">
+    <h2>Powerful stream primitives</h2>
+    <code><pre>(where (and (service "api") 
+          (not (tagged "transient")))
+graph
+index
+(changed-state 
+  (email "5551231234@vtext.com")))</pre></code>
+    <p>Riemann streams are just Clojure functions. You can use dozens of
+    built-in streams for combining, filtering, altering, and forwarding
+    events, or write your own.</p>
+  </div>
+  
+  <div class="card">
+    <h2>Graph everything</h2>
+    <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
+    <img src="images/api-latency.png" alt="An API latency graph" />
+    <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
+  </div>
 
-      <div class="cards">
-        <div class="card">
-          <h2>Instant overview</h2>
-          <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
-          <p>A small, extendable <a href="dashboard.html">Sinatra app</a> shows
-          your system at a glance. Instantly identify hotspots, down services,
-          and unbalanced loads.</p>
-        </div>
+  <div class="card">
+    <h2>Query states</h2>
+    <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
+    <p>Search the Riemann index with a small query language. Clients can
+    monitor each other, generate reports, or produce dashboards.</p>
+  </div>
 
-        <div class="card">
-          <h2>Email alerts</h2>
-          <code><pre>(rollup 5 3600
-            (email "dev@startup.com", "ops@startup.com"))</pre></code>
-          <img src="images/email.png" alt="An email describing a failure in a
-          thumbnailer service." />
-          <p>Riemann can tell you as much or as little as you want. Throttle or
-          roll up multiple events into a single messages. Get emails about
-          exceptions in your code, provider downtime, or latency spikes.</p>
-        </div>
-
-        <div class="card">
-          <h2>Powerful stream primitives</h2>
-          <code><pre>(where (and (service "api") 
-                (not (tagged "transient")))
-      graph
-      index
-      (changed-state 
-        (email "5551231234@vtext.com")))</pre></code>
-          <p>Riemann streams are just Clojure functions. You can use dozens of
-          built-in streams for combining, filtering, altering, and forwarding
-          events, or write your own.</p>
-        </div>
-        
-        <div class="card">
-          <h2>Graph everything</h2>
-          <code><pre>(graphite {:host "graphs.pdx"})</pre></code>
-          <img src="images/api-latency.png" alt="An API latency graph" />
-          <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
-        </div>
-
-        <div class="card">
-          <h2>Query states</h2>
-          <code><pre>state = "error rate" and (not host =~ "www.%")</pre></code>
-          <p>Search the Riemann index with a small query language. Clients can
-          monitor each other, generate reports, or produce dashboards.</p>
-        </div>
-
-        <div class="card">
-          <h2>Simple clients</h2>
-          <code><pre>r = Riemann::Client.new
+  <div class="card">
+    <h2>Simple clients</h2>
+    <code><pre>r = Riemann::Client.new
 r &lt;&lt; {service: "www", state: "down", metric: 10000}
 r['state = "down"'] 
 # =&gt; [#&lt;Riemann::Event @service="www" ... &gt;]
 </pre></code>
-          <p>Riemann speaks <a
-            href="http://code.google.com/p/protobuf/">Protocol Buffers</a> over
-          TCP and UDP for a compact, portable, and fast wire protocol. See the
-          <a
-            href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
-            client</a> as a guide.</a>
-        </div>
+    <p>Riemann speaks <a
+      href="http://code.google.com/p/protobuf/">Protocol Buffers</a> over
+    TCP and UDP for a compact, portable, and fast wire protocol. See the
+    <a
+      href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
+      client</a> as a guide.</a>
+  </div>
 
-        <div class="card">
-          <h2>Excuse me, but how is this better than Hadoop?</h2>
-          <p>I built Riemann because <a href="http://showyou.com">Showyou</a>
-          has hundreds of moving parts spread over dozens of systems, and I
-          needed host- and app-level monitoring that didn't suck.  I've had a
-          long history with monitoring, and have some objections to existing
-          tools like Nagios, Cacti, and the like. Specifically:</p>
+  <div class="card">
+    <h2>Excuse me, but how is this better than Hadoop?</h2>
+    <p>I built Riemann because <a href="http://showyou.com">Showyou</a>
+    has hundreds of moving parts spread over dozens of systems, and I
+    needed host- and app-level monitoring that didn't suck.  I've had a
+    long history with monitoring, and have some objections to existing
+    tools like Nagios, Cacti, and the like. Specifically:</p>
 
-            <p>Configuration as code.</p>
+      <p>Configuration as code.</p>
 
-            <p>Make the client experience so friendly, people actually <i>want</i> to
-            instrument their code.</p>
+      <p>Make the client experience so friendly, people actually <i>want</i> to
+      instrument their code.</p>
 
-            <p>Push instead of polling. Lower latency, simpler code, less
-            firewall complexity.</p>
+      <p>Push instead of polling. Lower latency, simpler code, less
+      firewall complexity.</p>
 
-            <p>Integrate with other systems. Re-use existing libraries and
-            monitoring tools.</p>
+      <p>Integrate with other systems. Re-use existing libraries and
+      monitoring tools.</p>
 
-            <p>Flexibility. Ops is all about adapting someone else's code to
-            your own complex system. Create many small, composable pieces.</p>
+      <p>Flexibility. Ops is all about adapting someone else's code to
+      your own complex system. Create many small, composable pieces.</p>
 
-            <p>Faster. This all depends on what kind of streams you use, but
-            our (pretty complex) installation at Showyou will handle 11,000
-            <i>synchronous</i> events/sec, and I haven't even started
-            optimizing. My goal is somewhere around 100K/s. This is nothing in
-            Real Programmer terms, but it should be sufficient.</p>
-        </div>
-      </div>
-    </div>
-  </body>
-</html>  
+      <p>Faster. This all depends on what kind of streams you use, but
+      our (pretty complex) installation at Showyou will handle 11,000
+      <i>synchronous</i> events/sec, and I haven't even started
+      optimizing. My goal is somewhere around 100K/s. This is nothing in
+      Real Programmer terms, but it should be sufficient.</p>
+  </div>
+</div>
