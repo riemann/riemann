@@ -7,7 +7,7 @@
 (defn relative-path [path]
     (expand-path (str (dirname *file*) "/" path)))
 
-(defproject riemann "0.0.3-SNAPSHOT"
+(defproject riemann "0.1.0"
   :description 
 "A network event stream processor. Intended for analytics, metrics, and
 alerting; and to glue various monitoring systems together."
@@ -53,7 +53,7 @@ alerting; and to glue various monitoring systems together."
         ; I wish I could use relative paths here, but lein-deb complains
         ; "No directory specified for tarfileset", and lein macros need them
         ; to be strings. Arrrgh.
-        :filesets [{:file     "/home/aphyr/riemann/riemann-0.0.3-SNAPSHOT-standalone.jar"
+        :filesets [{:file     "/home/aphyr/riemann/riemann-0.1.0-standalone.jar"
                     :fullpath "/usr/lib/riemann/riemann.jar"}
                    {:file     "/home/aphyr/riemann/riemann.config"
                     :fullpath "/etc/riemann/riemann.config"}
