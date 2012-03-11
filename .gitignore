@@ -16,3 +16,4 @@ build
 protosrc/
 reimann-*.zip
 site/**
+bench/**
