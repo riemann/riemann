@@ -6,17 +6,18 @@
   (:require [riemann.streams])
   (:use [clojure.test])
   (:use [clojure.java.shell])
+  (:use [clojure.string :only [trim-newline]])
   (:use [incanter core stats charts]))
 
 (defn git-version
   "Returns a human-readable version name for this commit."
   []
-  (if (re-matches #"^\r+$" (:out (sh "git" "status" "-s")))
+  (if (re-matches #"^\n*$" (:out (sh "git" "status" "-s")))
     ; Unchanged commit.
     (str
-      (:out (sh "git" "show" "-s" "--format=\"%ci\"" "HEAD"))
+      (trim-newline (:out (sh "git" "show" "-s" "--format=%ci" "HEAD")))
       " "
-      (:out (sh "git" "rev-parse" "HEAD" :out "UTF-8")))
+      (trim-newline (:out (sh "git" "rev-parse" "HEAD" :out "UTF-8"))))
 
     ; Changed commit.
     "HEAD"))
@@ -34,7 +35,7 @@
          ret# ~expr]
      (/ (- (. System (nanoTime)) start#) 1000000.0)))
 
-(defn latencies
+(defn record
   "Returns [times, latencies] of calling f"
   ([f opts]
    (let [n    (or (:n opts) 100)
@@ -48,21 +49,59 @@
                 (conj times (- (now) t0))
                 (conj latencies (time* (f)))))))))
 
+(defn throughput
+  "Returns [times, throughputs] of tape"
+  ([tape opts]
+   (let [[times latencies] tape
+         samples (min (dec (count times)) (max 1 (or (:samples opts) 1000)))
+         sample-size (/ (dec (count times)) samples)
+         selected-times (take-nth sample-size times)
+         throughputs (map (fn [[t1 t2]]
+                            (/ sample-size (- t2 t1)))
+                          (partition 2 1 selected-times))]
+     [(drop-last selected-times) throughputs])))
+
+(defn latencies
+  [tape opts]
+  tape)
+
+(defn save-graph [graph opts]
+  (let [file (str "bench/" (git-version-memo) "/" (:title opts) ".png")]
+    (sh "mkdir" "-p" (str "bench/" (git-version-memo)))
+    (save graph file :width 1024)
+    (println "Wrote" file)))
+
 (defn latency-graph
-  "Graphs throughput of repeated invocations of f, with options."
-  ([f] (latency-graph f {}))
-  ([f opts]
-   (let [title (or (:title opts) "latency over time")
-         file (str "bench/" (git-version-memo) "/" title ".png")
-         [times latencies] (latencies f opts)]
-     (sh "mkdir" "-p" (str "bench/" (git-version-memo)))
-     (doto (scatter-plot times latencies
+  "Graphs latencies, with options."
+  ([tape] (latency-graph tape {}))
+  ([tape opts]
+   (let [title (str (:title opts) " latency")
+         [times latencies] (latencies tape opts)]
+     (doto (scatter-plot (map #(/ % 1000) times)
+                         latencies
                          :title title
-                         :x-label "Time (ms)"
+                         :x-label "Time (s)"
                          :y-label "Latency (ms)")
-       (set-stroke :width 1 ) ; huh
-       (save file :width 1024))
-     (println "Wrote " file))))
+       (set-stroke :width 1) ; huh
+       (save-graph {:title title})))))
+
+(defn throughput-graph
+  "Graphs throughput of tape, with options."
+  ([tape] (throughput-graph tape {}))
+  ([tape opts]
+   (let [title (str (:title opts) " throughput")
+         [times throughput] (throughput tape opts)]
+     (doto (scatter-plot (map #(/ % 1000) times) 
+                         (map (partial * 1000) throughput)
+                         :title title
+                         :x-label "Time (s)"
+                         :y-label "Reqs/s")
+       (save-graph {:title title})))))
+
+(defn multigraph [f opts]
+  (let [tape (record f opts)]
+    (latency-graph tape opts)
+    (throughput-graph tape opts)))
 
 (defn core-package 
   ([] (core-package [{}]))
@@ -77,15 +116,14 @@
       :servers servers
       :streams streams})))
 
-  (deftest drop-latency
+(deftest drop-tcp
          (let [{:keys [core]} (core-package)
                client (tcp-client)]
            (try
-             (latency-graph (partial send-event client 
-                                                 {:service "test"
-                                                  :metric 0.1})
-                                     {:title "drop events"
-                                      :n 10000})
+             (multigraph
+               #(send-event client {:service "test" :metric 0.1})
+               {:title "drop tcp events"
+                :n 100000})
              (finally
                (stop core)))))
 
