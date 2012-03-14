@@ -7,7 +7,7 @@
   (:use [clojure.test])
   (:use [clojure.java.shell])
   (:use [clojure.string :only [trim-newline]])
-  (:use [incanter core stats charts]))
+  (:use [incanter core charts]))
 
 (defn git-version
   "Returns a human-readable version name for this commit."
@@ -116,7 +116,7 @@
       :servers servers
       :streams streams})))
 
-(deftest drop-tcp
+(deftest drop-tcp-events
          (let [{:keys [core]} (core-package)
                client (tcp-client)]
            (try
