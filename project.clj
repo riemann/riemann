@@ -40,7 +40,6 @@ alerting; and to glue various monitoring systems together."
     [codox "0.4.0"]
     [clj-glob "1.0.0"]
     [incanter "1.3.0"]
-    [c
   ]
   :test-selectors {:default (complement :integration)
                    :integration :integration
