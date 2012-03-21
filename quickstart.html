@@ -65,7 +65,7 @@ pass <code>host: nil</code>.</p>
 <p>Now let's ask for all events that have a service beginning with
 "http".</p>
 
-<code><pre><span class="unfocus">ruby-1.9.3 :003 &gt;</span> r['service = "http%"']
+<code><pre><span class="unfocus">ruby-1.9.3 :003 &gt;</span> r['service =~ "http%"']
 <span class="unfocus">[&lt;Riemann::Event time: 1330041937, state: "critical", service: "http req", host: "www1", 
 description: "Request took 2.53 seconds.", tags: ["http"], ttl: 300.0, metric_f: 2.5299999713897705&gt;]</span></pre></code>
 
