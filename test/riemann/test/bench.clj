@@ -116,7 +116,7 @@
       :servers servers
       :streams streams})))
 
-(deftest drop-tcp-events
+(deftest ^:bench drop-tcp-events
          (let [{:keys [core]} (core-package)
                client (tcp-client)]
            (try

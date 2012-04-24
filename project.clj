@@ -41,8 +41,9 @@ alerting; and to glue various monitoring systems together."
     [clj-glob "1.0.0"]
     [incanter "1.3.0"]
   ]
-  :test-selectors {:default (complement :integration)
+  :test-selectors {:default (complement :integration :bench)
                    :integration :integration
+                   :bench :bench
                    :all (fn [_] true)}
   :java-source-path "src/riemann/"
   :aot [riemann.bin]
