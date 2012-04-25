@@ -25,7 +25,7 @@ alerting; and to glue various monitoring systems together."
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [log4j/apache-log4j-extras "1.0"]
-    [aleph "0.2.1-beta1"]
+    [aleph "0.2.1-beta2"]
     [io.netty/netty "3.3.0.Final"]
     [protobuf "0.6.0-beta7"]
     [org.antlr/antlr "3.2"]
