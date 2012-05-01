@@ -72,6 +72,7 @@ public class RiemannTcpClient extends RiemannClient {
     synchronized(this) {
       socket = new Socket();
       socket.connect(super.server, 5);
+      socket.setTcpNoDelay(true);
       this.out = new DataOutputStream(this.socket.getOutputStream());
       this.in = new DataInputStream(this.socket.getInputStream());
     }
