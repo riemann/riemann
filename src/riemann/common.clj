@@ -59,6 +59,38 @@
         e (if (:time e) e (assoc e :time (unix-time)))]
     e))
 
+; These decode-pb functions duplicate the work clojure-protobuf does; suspect
+; they're slightly faster. They're needed to translate the raw protobuf classes
+; that riemann.client uses back into clojure structures. Should unify these
+; paths later.
+
+(defn decode-pb-query
+  "Transforms a java protobuf Query to a map."
+   [^riemann.Proto$Query q]
+   {:string (.getString q)})
+
+(defn decode-pb-event
+  "Transforms a java protobuf Event to a map."
+  [^riemann.Proto$Event e]
+  (let [rough
+        {:host (when (.hasHost e) (.getHost e))
+         :service (when (.hasService e) (.getService e))
+         :state (when (.hasState e) (.getState e))
+         :description (when (.hasDescription e) (.getDescription e))
+         :metric (when (.hasMetricF e) (.getMetricF e))
+         :tags (when (< 0 (.getTagsCount e)) (vec (.getTagsList e)))
+         :time (if (.hasTime e) (.getTime e) (unix-time))
+         :ttl (when (.hasTtl e) (.getTtl e))}]
+    (select-keys rough (for [[k v] rough :when (not= nil v)] k))))
+
+(defn decode-pb-msg
+  "Transforms a java protobuf Msg to a map."
+  [^riemann.Proto$Msg m]
+  {:ok (.getOk m)
+   :error (.getError m)
+   :events (map decode-pb-event (.getEventsList m))
+   :query (decode-pb-query (.getQuery m))})
+
 (defn decode
   "Decode a gloss buffer to a message. Decodes the protocol buffer
   representation of Msg and applies post-load-event to all events."

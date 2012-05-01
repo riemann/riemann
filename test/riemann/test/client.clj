@@ -16,6 +16,7 @@
       (server)
       (is (thrown? java.net.SocketException (send-event client {:service "test"})))
       
+      ; Restart server; should work
       (let [server (tcp-server (core))]
         (try
           (send-event client {:service "test"})

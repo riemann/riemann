@@ -66,7 +66,7 @@
              (send-event client {:service "miao" :host "cat" :time 3})
 
              (let [r (vec (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))]
-               (is (some (fn [e] (= e {:metric_f 2.0, :metric 2.0, :time 3})) r))
+               (is (some (fn [e] (= e {:metric 2.0, :time 3})) r))
                (is (some (fn [e] (= e {:host "kitten" :tags ["whiskers" "paws"] :time 2})) r))
                (is (some (fn [e] (= e {:host "cat", :service "miao", :time 3})) r))
                (is (= 3 (count r))))

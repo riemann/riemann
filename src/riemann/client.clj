@@ -19,6 +19,10 @@
   I'm open to suggestions here."
 
   (:require [aleph.tcp])
+  (:import [riemann.client RiemannClient
+                           RiemannTcpClient]
+           [java.net InetSocketAddress]
+           [java.io IOException])
   (:use [riemann.common])
   (:use [lamina.core])
   (:use [lamina.connections])
@@ -26,55 +30,44 @@
   (:use [protobuf.core])
   (:use clojure.tools.logging))
 
-(defn open-tcp-conn 
-  "Opens a TCP connection on client. Modifies client's connection ref."
-  [client]
-  (debug (str "opening TCP connection to " client))
-  (dosync
-    ; Close this client
-    (when-let [cur (deref (:conn client))]
-      (close (deref (:conn client))))
-
-    ; Open new client
-    (ref-set (:conn client)
-               (wait-for-result
-                 (aleph.tcp/tcp-client {:host (:host client)
-                                        :port (:port client)
-                                        :frame (finite-block :int32)})))))
-
-(defn send-message-raw
-  "Send bytes over the given client and await reply, no error handling."
-  [client raw]
-  (let [c (deref (:conn client))]
-    (enqueue c raw)
-    (wait-for-message c 5000)))
-
-(defn send-message
-  "Send a message over the given client, and await reply.
-  Will retry connections once, then fail returning false."
-  [client message]
+(defn reconnect-client
+  "Reconnect client."
+  [^RiemannClient client]
   (locking client
-    (let [raw (encode message)]
-       (try 
-         (decode (send-message-raw client raw))
-         (catch Exception e
-           (warn e "first send failed, retrying")
-           (open-tcp-conn client)
-           (decode (send-message-raw client raw)))))))
+    (.disconnect client)
+    (.connect client)))
 
-(defn query 
+(defmacro with-io-retry
+  "Calls body, retries one IOException by reconnecting client, raises if that
+  fails too."
+  [^RiemannClient client & body]
+  `(try
+    (do ~@body)
+    (catch IOException e#
+      (warn "Client recovering from IO exception")
+      (reconnect-client ~client)
+      (do ~@body))))
+
+(defn query
   "Query the server for events in the index. Returns a list of events."
-  [client string]
-  (let [resp (send-message client 
-                           {:query (protobuf Query :string string)})]
-    (:events resp)))
+  [^RiemannClient client string]
+  (map decode-pb-event (with-io-retry client (.query client string))))
 
 (defn send-event
   "Send an event over client."
-  [client event]
-  (send-message client {:events [event]}))
+  [^RiemannClient client event]
+  (with-io-retry client 
+    (let [e (.event client)]
+      (when-let [h (:host event)] (.host e h))
+      (when-let [s (:service event)] (.service e s))
+      (when-let [s (:state event)] (.state e s))
+      (when-let [d (:description event)] (.description e d))
+      (when-let [m (:metric event)] (.metric e (float m)))
+      (when-let [t (:tags event)] (.tags e t))
+      (when-let [t (:time event)] (.time e (int t)))
+      (when-let [t (:ttl event)] (.ttl e (float t)))
 
-(defstruct tcp-client-struct :host :port :conn)
+      (.send e))))
 
 (defn tcp-client 
   "Create a new TCP client. Example:
@@ -85,12 +78,10 @@
        :or {port 5555
             host "localhost"}
        :as opts}]
-  (let [c (struct tcp-client-struct host port (ref nil))]
-    (open-tcp-conn c)
-    c))
+  (doto (RiemannTcpClient. (InetSocketAddress. host port))
+    (.connect)))
 
 (defn close-client
   "Close a client."
   [client]
-  (dosync
-    (lamina.core/close (deref (:conn client)))))
+  (.disconnect client))
