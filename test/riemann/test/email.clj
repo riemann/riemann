@@ -32,7 +32,7 @@
                 "foo and bar error and ok"
                 )))
 
-(deftest email-test
+(deftest ^:integration email-test
          (let [email (mailer {})
                stream (email "aphyr@aphyr.com")]
            (stream {:host "localhost"
