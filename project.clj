@@ -16,9 +16,9 @@ alerting; and to glue various monitoring systems together."
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :dependencies [
-                 [clojure "1.3.0"]
-                 [org.clojure/math.numeric-tower "0.0.1"]
-                 [org.clojure/algo.generic "0.1.0"]
+    [clojure "1.3.0"]
+    [org.clojure/math.numeric-tower "0.0.1"]
+    [org.clojure/algo.generic "0.1.0"]
     [org.clojure/tools.logging "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
@@ -32,10 +32,10 @@ alerting; and to glue various monitoring systems together."
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
     [com.draines/postal "1.7-SNAPSHOT"]
+    [riemann/riemann-java-client "0.0.1-SNAPSHOT"]
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
-    [protobuf "0.6.0-beta7"]
     [lein-autodoc "0.9.0"]
     [codox "0.4.0"]
     [clj-glob "1.0.0"]
@@ -50,7 +50,7 @@ alerting; and to glue various monitoring systems together."
   :aot [riemann.bin]
   :main riemann.bin
   ; Work around a bug where protobufs get nuked.
-  :disable-implicit-clean true
+;  :disable-implicit-clean true
   :deb {:maintainer {:name "Kyle Kingsbury"
                      :email "aphyr@aphyr.com"}
         ; I wish I could use relative paths here, but lein-deb complains
