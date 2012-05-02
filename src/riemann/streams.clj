@@ -607,7 +607,7 @@
   [r & children]
   (fn [event]
     (when-let [m (:metric event)]
-      (when (not (<= (first r) m (last r)))
+      (when-not (<= (first r) m (last r))
         (call-rescue event children)))))
 
 (defn over

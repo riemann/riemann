@@ -1,5 +1,6 @@
 (ns riemann.graphite
   "Forwards events to Graphite."
+  (:refer-clojure :exclude [replace])
   (:import [java.net Socket])
   (:import [java.io Writer])
   (:import [java.io OutputStreamWriter])
