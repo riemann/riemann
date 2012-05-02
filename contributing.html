@@ -13,15 +13,6 @@ too. If you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an
 <div class="cards">
   <div class="card">
     <h2>Building</h2>
-    <p>The protocol classes and client are required by riemann itself. You'll
-    need <a
-      href="http://code.google.com/p/protobuf/downloads/detail?name=protobuf-2.3.0.tar.bz2&can=2&q=">protoc 2.3.0</a>.</p>
-
-    <code><pre>git clone git://github.com/aphyr/riemann-java-client.git
-cd riemann-java-client
-mvn package
-mvn install</pre></code>
-
     <code><pre>git clone git://github.com/aphyr/riemann.git</pre></code>
 
     <p>Riemann uses <a
@@ -52,6 +43,17 @@ mvn install</pre></code>
     <p>and when you're ready to package, just <code>lein package</code>
     to build both regular and standalone jars, a debian package, tarball,
     and pom.xml.</p>
+
+    <p>The protocol buffers code and client are a part of riemann-java-client.
+    You'll need <a
+      href="http://code.google.com/p/protobuf/downloads/detail?name=protobuf-2.3.0.tar.bz2&can=2&q=">protoc
+      2.3.0</a> to build riemann-java-client. When you're hacking locally:</p>
+
+    <code><pre>git clone git://github.com/aphyr/riemann-java-client.git
+cd riemann-java-client
+mvn package
+mvn install</pre></code>
+
   </div>
 
   <div class="card">
