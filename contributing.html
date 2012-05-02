@@ -30,6 +30,12 @@ too. If you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an
     <p>Or, for a specific namespace:</p>
     <code><pre>lein test riemann.test.streams</pre></code>
 
+    <p>Tests for graphite and email integration:</p>
+    <code><pre>lein test :integration</pre></code>
+
+    <p>Benchmarking tests will generate graphs in bench/.</p>
+    <code><pre>lein test :bench</pre></code>
+
     <p>I'm really sorry about this, but there are some poorly-written
     tests for time-dependent streams like rates and percentiles. These
     can be finicky; I'm working on rewriting them as soon as possible.
