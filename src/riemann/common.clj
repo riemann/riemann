@@ -146,7 +146,7 @@
 ([x, y, tol]
   (if (= x y) true
     (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
-      (< (- 1 tol) f (+ 1 tol))))))
+      (< (- 1 tol) f (inc tol))))))
 
 (defn re-matches?
   "Does the given regex match string? Nil if string is nil."
