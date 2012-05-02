@@ -34,7 +34,7 @@
                       (when-let [target-time (deref waterline)]
                         (let [now (unix-time)
                               delay (- target-time now)]
-                          (if (< 0 delay)
+                          (if (pos? delay)
                             ; Sleep
                             (Thread/sleep (* 1000 delay))
                             ; Run
