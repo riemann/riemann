@@ -13,17 +13,24 @@ too. If you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an
 <div class="cards">
   <div class="card">
     <h2>Building</h2>
+    <p>The protocol classes and client are required by riemann itself. You'll
+    need protoc 2.3.0.</p>
+
+    <code><pre>git clone git://github.com/aphyr/riemann-java-client.git
+cd riemann-java-client
+mvn package
+mvn install</pre></code>
+
     <code><pre>git clone git://github.com/aphyr/riemann.git</pre></code>
 
-    <p>Riemann uses <a href="https://github.com/technomancy/leiningen">Leiningen</a>, the Clojure build tool. First, fetch dependencies:</p>
+    <p>Riemann uses <a
+      href="https://github.com/technomancy/leiningen">Leiningen</a>, the
+    Clojure build tool. First, fetch dependencies:</p>
 
     <code><pre>lein deps</pre></code>
 
     <p>Build the java query parser:</p>
     <code><pre>lein javac</pre></code>
-
-    <p>Build the protocol buffer classes:</p>
-    <code><pre>lein protobuf compile</pre></code>
 
     <p>And run the test suite:</p>
     <code><pre>lein test</pre></code>
