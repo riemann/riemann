@@ -33,6 +33,24 @@ query the index.</p>
   </div>
 
   <div class="card">
+    <h2><a href="https://github.com/aphyr/riemann-java-client">Java</a></h2>
+
+    <p>The Java client provides a thread-safe TCP client. It's used by Riemann internally. I'm still working on getting this packaged up properly in clojars/maven central.</p>
+
+{% highlight xml %}
+<repository>
+  <id>boundary-site</id>
+  <url>http://maven.boundary.com/artifactory/repo</url>
+</repository>
+<dependency>
+  <groupId>com.aphyr</groupId>
+  <artifactId>riemann-java-client</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+</dependency>
+{% endhighlight %}
+  </div>
+
+  <div class="card">
     <h2><a href="api/riemann.client.html">Clojure</a></h2> <p>Riemann
     comes with a built-in <a href="api/riemann.client.html">Clojure
       client</a>. It's thread-safe, stateful, and synchronized. Does not
