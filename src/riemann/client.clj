@@ -19,8 +19,8 @@
   I'm open to suggestions here."
 
   (:require [aleph.tcp])
-  (:import [riemann.client RiemannClient
-                           RiemannTcpClient]
+  (:import [com.aphyr.riemann.client RiemannClient
+                                     RiemannTcpClient]
            [java.net InetSocketAddress]
            [java.io IOException])
   (:use [riemann.common])

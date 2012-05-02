@@ -15,10 +15,10 @@
 (. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
 
 ; Protobufs
-(def Msg (protodef riemann.Proto$Msg))
-(def Query (protodef riemann.Proto$Query))
-(def State (protodef riemann.Proto$State))
-(def Event (protodef riemann.Proto$Event))
+(def Msg (protodef com.aphyr.riemann.Proto$Msg))
+(def Query (protodef com.aphyr.riemann.Proto$Query))
+(def State (protodef com.aphyr.riemann.Proto$State))
+(def Event (protodef com.aphyr.riemann.Proto$Event))
 
 ; Few flow control things
 (defmacro threaded [thread-count & body]
@@ -66,12 +66,12 @@
 
 (defn decode-pb-query
   "Transforms a java protobuf Query to a map."
-   [^riemann.Proto$Query q]
+   [^com.aphyr.riemann.Proto$Query q]
    {:string (.getString q)})
 
 (defn decode-pb-event
   "Transforms a java protobuf Event to a map."
-  [^riemann.Proto$Event e]
+  [^com.aphyr.riemann.Proto$Event e]
   (let [rough
         {:host (when (.hasHost e) (.getHost e))
          :service (when (.hasService e) (.getService e))
@@ -85,7 +85,7 @@
 
 (defn decode-pb-msg
   "Transforms a java protobuf Msg to a map."
-  [^riemann.Proto$Msg m]
+  [^com.aphyr.riemann.Proto$Msg m]
   {:ok (.getOk m)
    :error (.getError m)
    :events (map decode-pb-event (.getEventsList m))
