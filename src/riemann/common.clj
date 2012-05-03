@@ -12,7 +12,7 @@
   (:use clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
-(. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
+(.setUseUnderscores protobuf.core.PersistentProtocolBufferMap true)
 
 ; Protobufs
 (def Msg (protodef com.aphyr.riemann.Proto$Msg))
