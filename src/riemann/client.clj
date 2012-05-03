@@ -58,13 +58,13 @@
   [^RiemannClient client event]
   (with-io-retry client 
     (let [e (.event client)]
-      (when-let [h (:host event)] (.host e h))
+      (.host e (:host event))
       (when-let [s (:service event)] (.service e s))
       (when-let [s (:state event)] (.state e s))
       (when-let [d (:description event)] (.description e d))
       (when-let [m (:metric event)] (.metric e (float m)))
       (when-let [t (:tags event)] (.tags e t))
-      (when-let [t (:time event)] (.time e (int t)))
+      (when-let [t (:time event)] (.time e (long t)))
       (when-let [t (:ttl event)] (.ttl e (float t)))
 
       (.sendWithAck e))))
