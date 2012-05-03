@@ -33,6 +33,7 @@ alerting; and to glue various monitoring systems together."
     [clj-time "0.3.4"]
     [com.draines/postal "1.7-SNAPSHOT"]
     [com.aphyr/riemann-java-client "0.0.1-SNAPSHOT"]
+    [slingshot "0.10.2"]
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]

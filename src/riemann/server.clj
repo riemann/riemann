@@ -26,25 +26,35 @@
   (:use aleph.tcp)
   (:use gloss.core)
   (:use [protobuf.core])
+  (:use [slingshot.slingshot :only [try+]])
+  (:use clojure.stacktrace)
   (:require gloss.io))
 
 (defn handle
   "Handles a msg with the given core."
   [core msg]
-  ; Send each event/state to each stream
-  (doseq [event (concat (:events msg) (:states msg))
-          stream (deref (:streams core))]
-    (stream event))
- 
-  (if (:query msg)
-    ; Handle query
-    (let [ast (query/ast (:string (:query msg)))]
-      (if-let [i (deref (:index core))]
-        {:ok true :events (index/search i ast)}
-        {:ok false :error "no index"}))
+  (try+
+    ; Send each event/state to each stream
+    (doseq [event (concat (:events msg) (:states msg))
+            stream (deref (:streams core))]
+      (stream event))
+   
+    (if (:query msg)
+      ; Handle query
+      (let [ast (query/ast (:string (:query msg)))]
+          (if-let [i (deref (:index core))]
+            {:ok true :events (index/search i ast)}
+            {:ok false :error "no index"}))
 
-    ; Generic acknowledge 
-    {:ok true}))
+      ; Generic acknowledge 
+      {:ok true})
+
+    ; Some kind of error happened
+    (catch [:type :riemann.query/parse-error] {:keys [message]}
+      {:ok false :error (str "parse error: " message)})
+    (catch Exception e
+      (prn "Finally caught" e)
+      {:ok false :error (.getMessage e)})))
 
 (defn tcp-handler
   "Returns a handler that applies messages to the given core."

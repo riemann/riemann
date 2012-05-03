@@ -2,6 +2,7 @@
   "The query parser. Parses strings into ASTs, and converts ASTs to functions
   which match events."
   (:use riemann.common)
+  (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
            (riemann QueryLexer QueryParser)))
@@ -12,10 +13,14 @@
 (defn parse-string 
   "Parse string into ANTLR tree nodes"
   [s]
+  (try
     (let [lexer (QueryLexer. (ANTLRStringStream. s))
                   tokens (CommonTokenStream. lexer)
                   parser (QueryParser. tokens)]
-          (.getTree (.expr parser))))
+      (.getTree (.expr parser)))
+    (catch Throwable e
+      (throw+ {:type ::parse-error 
+               :message (.getMessage (.getCause e))}))))
 
 (defn- make-regex
   "Convert a string like \"foo%\" into /^foo.*$/"
@@ -60,13 +65,17 @@
       "metric"      'metric
       "time"        'time
       "ttl"         'ttl
-      (when n (read-string n)))))
+      (when n (let [term (read-string n)]
+                (if (or (number? term)
+                        (string? term))
+                  term
+                  (throw+ {:type ::parse-error
+                           :message (str "invalid term \"" n "\"")})))))))
 
 (defn ast
   "The expression AST for a given string"
   [string]
-  (let [node (parse-string string)]
-    (node-ast node)))
+  (node-ast (parse-string string)))
 
 (defn fun
   "Transforms an AST into a fn [event] which returns true if the query matches
