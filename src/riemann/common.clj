@@ -56,6 +56,7 @@
   [e]
   (let [e (apply hash-map (apply concat e))
         e (if (:metric_f e) (assoc e :metric (:metric_f e)) e)
+        e (dissoc e :metric_f)
         e (if (:time e) e (assoc e :time (unix-time)))]
     e))
 
