@@ -12,7 +12,7 @@
     (let [sorted (sort-by :metric s)
           n (count sorted)
           extract (fn [point]
-                    (let [idx (min (- n 1) (int (Math/floor (* n point))))]
+                    (let [idx (min (dec n) (int (Math/floor (* n point))))]
                       (nth sorted idx)))]
       (map extract points))))
 

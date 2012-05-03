@@ -151,4 +151,4 @@
      ; fn to close server
      (fn []
        (-> all-channels .close .awaitUninterruptibly)
-       (. bootstrap releaseExternalResources)))))
+       (.releaseExternalResources bootstrap)))))

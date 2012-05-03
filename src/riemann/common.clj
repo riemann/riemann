@@ -12,7 +12,7 @@
   (:use clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
-(. protobuf.core.PersistentProtocolBufferMap setUseUnderscores true)
+(protobuf.core.PersistentProtocolBufferMap/setUseUnderscores true)
 
 ; Protobufs
 (def Msg (protodef com.aphyr.riemann.Proto$Msg))
@@ -56,6 +56,7 @@
   [e]
   (let [e (apply hash-map (apply concat e))
         e (if (:metric_f e) (assoc e :metric (:metric_f e)) e)
+        e (dissoc e :metric_f)
         e (if (:time e) e (assoc e :time (unix-time)))]
     e))
 
@@ -146,7 +147,7 @@
 ([x, y, tol]
   (if (= x y) true
     (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
-      (< (- 1 tol) f (+ 1 tol))))))
+      (< (- 1 tol) f (inc tol))))))
 
 (defn re-matches?
   "Does the given regex match string? Nil if string is nil."
