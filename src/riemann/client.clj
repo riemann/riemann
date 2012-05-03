@@ -67,7 +67,7 @@
       (when-let [t (:time event)] (.time e (int t)))
       (when-let [t (:ttl event)] (.ttl e (float t)))
 
-      (.send e))))
+      (.sendWithAck e))))
 
 (defn tcp-client 
   "Create a new TCP client. Example:
