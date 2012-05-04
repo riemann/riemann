@@ -176,9 +176,9 @@
           ; We have an active deferrable
           (if (expired? event)
             (do
-              ((:stop d))
+              (d :stop)
               (dosync (ref-set deferrable nil)))
-            ((:defer d) interval))
+            (d :defer interval))
           ; Create a deferrable
           (when-not (expired? event)
             (locking deferrable
@@ -187,6 +187,38 @@
 
       ; And forward
       (call-rescue event children)))))
+
+(defn fill-in-last
+  "Passes on all events. Fills in gaps in event stream with copies of the last
+  event merged with the given data, wherever interval seconds pass without an
+  event arriving. Inserted events have current time. Stops inserting when
+  expired. Uses local times."
+  ([interval update & children]
+   (let [last-event (ref nil)
+         fill (fn []
+                (call-rescue (merge @last-event update {:time (unix-time)}) children))
+         new-deferrable (fn [] (periodic/deferrable-every interval interval fill))
+         deferrable (ref nil)]
+     (fn [event]
+       ; Record last event
+       (dosync (ref-set last-event event))
+
+       (let [d (deref deferrable)]
+         (if d
+           ; We have an active deferrable
+           (if (expired? event)
+             (do
+               (d :stop)
+               (dosync (ref-set deferrable nil)))
+             (d :defer interval))
+           ; Create a deferrable
+           (when-not (expired? event)
+             (locking deferrable
+               (when-not (deref deferrable)
+                 (dosync (ref-set deferrable (new-deferrable))))))))
+
+       ; And forward
+       (call-rescue event children)))))
 
 (defn interpolate-constant
   "Emits a constant stream of events every interval seconds, starting when an
@@ -755,3 +787,4 @@
   [index]
   (fn [event]
     (index/delete index event)))
+

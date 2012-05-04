@@ -40,6 +40,12 @@
   [stream inputs-and-intervals outputs]
   `(is (= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
+(defn evs
+  "Generate events based on the given event, with given metrics"
+  [base-event & metrics]
+  (vec (map #(assoc base-event :metric %)
+            metrics)))
+
 (defn em
   "Generate events with given metrics"
   [& metrics]
@@ -300,7 +306,37 @@
                                 {:metric 5}]))
                 [1 0 2 3 0 4 5]))
          )
-                
+
+(deftest fill-in-last-test
+  (test-stream-intervals
+    (fill-in-last 0.01 {:metric 0})
+    []
+    [])
+
+  ; Quick succession
+  (let [output (run-stream-intervals
+                 (fill-in-last 0.01 {:metric 0})
+                 (interpose nil (evs {:host "foo" :service "bar"}
+                                     1 2 3)))]
+    (is (= (map :metric output)
+           [1 2 3]))
+    (is (= (map :host output)
+           ["foo" "foo" "foo"]))
+    (is (= (map :service output)
+           ["bar" "bar" "bar"])))
+
+  ; With a gap and expiry
+  (let [output (run-stream-intervals
+                 (fill-in-last 0.05 {:metric 0})
+                 [{:host "a" :metric 1} 0.06
+                  {:host "b" :metric 2} nil
+                  {:host "c" :metric 3} 0.08
+                  {:host "d" :metric 4 :state "expired"} 0.06
+                  {:host "e" :metric 5}])]
+    (is (= (map :metric output)
+           [1 0 2 3 0 4 5]))
+    (is (= (map :host output)
+           ["a" "a" "b" "c" "c" "d" "e"]))))
 
 (deftest interpolate-constant-test
          (test-stream-intervals 
