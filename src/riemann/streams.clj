@@ -176,9 +176,9 @@
           ; We have an active deferrable
           (if (expired? event)
             (do
-              ((:stop d))
+              (d :stop)
               (dosync (ref-set deferrable nil)))
-            ((:defer d) interval))
+            (d :defer interval))
           ; Create a deferrable
           (when-not (expired? event)
             (locking deferrable
@@ -208,9 +208,9 @@
            ; We have an active deferrable
            (if (expired? event)
              (do
-               ((:stop d))
+               (d :stop)
                (dosync (ref-set deferrable nil)))
-             ((:defer d) interval))
+             (d :defer interval))
            ; Create a deferrable
            (when-not (expired? event)
              (locking deferrable
