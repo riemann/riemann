@@ -213,6 +213,52 @@
             (ref-set state nil))
           ))))
 
+(defn ddt
+  "Differentiate metrics with respect to time. With no args, emits an event for
+  each one received, but with metric equal to the difference between the
+  current event and the previous one, divided by the difference in their times.
+  If the first argument is a number n, emits a rate-of-change event every n
+  seconds instead, until expired. Skips events without metrics."
+  [& args]
+  (if (number? (first args))
+    ; Emit a differential every n seconds
+    (do
+      (let [[n & children] args
+            prev (ref nil)
+            most-recent (ref nil)
+            swap (fn []
+                   (let [[a b] (dosync 
+                                 (let [prev-event (deref prev)
+                                       last-event (deref most-recent)]
+                                   (ref-set prev last-event)
+                                   [prev-event last-event]))]
+                     (when (and a b)
+                       (let [dt (- (:time b) (:time a))]
+                         (when-not (zero? dt)
+                           (let [diff (/ (- (:metric b) (:metric a))
+                                         dt)]
+                             (call-rescue (assoc b :metric diff) children)))))))
+            poller (periodically-until-expired n swap)]
+        (fn [event]
+          (when (:metric event)
+            (dosync (ref-set most-recent event)))
+          (poller event))))
+    
+    ; Emit a differential for every event
+    (do
+      (let [prev (ref nil)]
+        (fn [event]
+          (when-let [m (:metric event)]
+            (let [prev-event (dosync
+                         (let [prev-event (deref prev)]
+                           (ref-set prev event)
+                           prev-event))]
+              (when prev-event
+                (let [dt (- (:time event) (:time prev-event))]
+                  (when-not (zero? dt)
+                    (let [diff (/ (- m (:metric prev-event)) dt)]
+                  (call-rescue (assoc event :metric diff) args))))))))))))
+
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
   size."
