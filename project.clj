@@ -32,7 +32,7 @@ alerting; and to glue various monitoring systems together."
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
     [com.draines/postal "1.7.1"]
-    [com.aphyr/riemann-java-client "0.0.1-SNAPSHOT"]
+    [com.aphyr/riemann-java-client "0.0.2-SNAPSHOT"]
     [slingshot "0.10.2"]
   ]
   :dev-dependencies [
