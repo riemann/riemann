@@ -30,18 +30,17 @@
    (let [waterline (ref (+ delay (unix-time)))
          thread (Thread. 
                   (bound-fn []
-                    (loop []
-                      (when-let [target-time (deref waterline)]
-                        (let [now (unix-time)
-                              delay (- target-time now)]
-                          (if (pos? delay)
-                            ; Sleep
-                            (Thread/sleep (* 1000 delay))
-                            ; Run
-                            (do
-                              (dosync (ref-set waterline (+ interval now)))
-                              (f)))
-                          (recur))))))]
+                    (when-let [target-time (deref waterline)]
+                      (let [now (unix-time)
+                            delay (- target-time now)]
+                        (if (pos? delay)
+                          ; Sleep
+                          (Thread/sleep (* 1000 delay))
+                          ; Run
+                          (do
+                            (dosync (ref-set waterline (+ interval now)))
+                            (f)))
+                        (recur)))))]
      (.start thread)
      (fn [action & args]
        (case action
