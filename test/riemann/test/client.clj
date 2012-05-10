@@ -15,6 +15,7 @@
 
       ; Kill server; should fail.
       (server)
+      (.setMinimumReconnectInterval client 0)
       (is (thrown? java.net.SocketException (send-event client {:service "test"})))
       
       ; Restart server; should work
