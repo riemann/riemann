@@ -18,7 +18,7 @@
   RiemannRetryingTcpClient."
 
   (:require [aleph.tcp])
-  (:import [com.aphyr.riemann.client RiemannRetryingTcpClient]
+  (:import [com.aphyr.riemann.client RiemannRetryingTcpClient RiemannUDPClient AbstractRiemannClient]
            [java.net InetSocketAddress]
            [java.io IOException])
   (:use [riemann.common])
@@ -30,23 +30,27 @@
 
 (defn query
   "Query the server for events in the index. Returns a list of events."
-  [^RiemannRetryingTcpClient client string]
+  [^AbstractRiemannClient client string]
   (map decode-pb-event (.query client string)))
 
 (defn send-event
   "Send an event over client."
-  [^RiemannRetryingTcpClient client event]
-  (let [e (.event client)]
-    (.host e (:host event))
-    (when-let [s (:service event)] (.service e s))
-    (when-let [s (:state event)] (.state e s))
-    (when-let [d (:description event)] (.description e d))
-    (when-let [m (:metric event)] (.metric e (float m)))
-    (when-let [t (:tags event)] (.tags e t))
-    (when-let [t (:time event)] (.time e (long t)))
-    (when-let [t (:ttl event)] (.ttl e (float t)))
+  ([^AbstractRiemannClient client event]
+   (send-event client event true))
+  ([^AbstractRiemannClient client event ack]
+   (let [e (.event client)]
+     (.host e (:host event))
+     (when-let [s (:service event)] (.service e s))
+     (when-let [s (:state event)] (.state e s))
+     (when-let [d (:description event)] (.description e d))
+     (when-let [m (:metric event)] (.metric e (float m)))
+     (when-let [t (:tags event)] (.tags e t))
+     (when-let [t (:time event)] (.time e (long t)))
+     (when-let [t (:ttl event)] (.ttl e (float t)))
 
-    (.sendWithAck e)))
+     (if ack
+       (.sendWithAck e)
+       (.send e)))))
 
 (defn tcp-client 
   "Create a new TCP client. Example:
@@ -58,6 +62,18 @@
             host "localhost"}
        :as opts}]
   (doto (RiemannRetryingTcpClient. (InetSocketAddress. host port))
+    (.connect)))
+
+(defn udp-client
+  "Create a new UDP client. Example:
+
+  (udp-client)
+  (udp-client :host \"foo\" :port 5555)"
+  [& {:keys [host port]
+      :or {port 5555
+            host "localhost"}
+      :as opts}]
+  (doto (RiemannUDPClient. (InetSocketAddress. host port))
     (.connect)))
 
 (defn close-client

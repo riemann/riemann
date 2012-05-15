@@ -2,7 +2,7 @@
   (:use [riemann.core])
   (:use [riemann.common])
   (:use [riemann.server])
-  (:use [riemann.client :only [tcp-client close-client send-event]])
+  (:use [riemann.client :only [tcp-client udp-client close-client send-event]])
   (:require [riemann.streams])
   (:use [clojure.test])
   (:use [clojure.java.shell])
@@ -107,7 +107,7 @@
   ([] (core-package [{}]))
   ([opts]
    (let [core (core)
-         servers [(tcp-server core)]
+         servers [(tcp-server core) (udp-server core)]
          streams (or (:streams opts) [])]
      (dosync
         (alter (core :servers) concat servers)
@@ -123,6 +123,17 @@
              (multigraph
                #(send-event client {:service "test" :metric 0.1})
                {:title "drop tcp events"
+                :n 100000})
+             (finally
+               (stop core)))))
+
+(deftest ^:bench drop-udp-events
+         (let [{:keys [core]} (core-package)
+               client (udp-client)]
+           (try
+             (multigraph
+               #(send-event client {:service "test" :metric 0.1} false)
+               {:title "drop udp events"
                 :n 100000})
              (finally
                (stop core)))))
