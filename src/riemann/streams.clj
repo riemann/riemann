@@ -571,18 +571,39 @@
     (let [e (if (nil? (k event)) (assoc event k v) event)]
       (call-rescue e children))))
 
-(defn adjust 
-  "Passes on a changed version of each event by applying f to (field event) &
-  args.
+
+(defmulti adjust
+  "Passes on a changed version of each event by applying a function to a
+  particular field or to the event as a whole.
+
+  Passing a vector of [field function & args] to adjust will modify the given
+  field in incoming events by applying the function to it along with the given
+  arguments.  For example:
 
   (adjust [:service str \" rate\"] ...)
- 
-  takes {:service \"foo\"} and emits {:service \"foo rate\"}"
-  [[field f & args] & children]
+
+  takes {:service \"foo\"} and emits {:service \"foo rate\"}.
+
+  If a function is passed to adjust instead of a sequence, the entire event will
+  be given to the function and the result will be passed along to the children.
+  For example:
+
+  (adjust #(assoc % :metric (count (:tags %))) ...)
+
+  takes {:tags [\"foo\" \"bar\"]} and emits {:tags [\"foo\" \"bar\"] :metric 2}.
+  "
+  (fn [& args] (vector? (first args))))
+
+(defmethod adjust true [[field f & args] & children]
   (fn [event]
     (let [value (apply f (field event) args)
           event (assoc event field value)]
       (call-rescue event children))))
+
+(defmethod adjust false [f & children]
+  (fn [event]
+    (call-rescue (f event) children)))
+
 
 (defmacro by 
   "Splits stream by field.
