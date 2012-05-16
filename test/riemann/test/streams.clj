@@ -710,11 +710,21 @@
            (is (= (set (deref out)) #{b e}))))
 
 (deftest adjust-test
-         (let [out (ref nil)
-               s (adjust [:state str " 2"] (register out))]
-           
-           (s {})
-           (is (= (deref out) {:state " 2"}))
-           
-           (s {:state "hey" :service "bar"})
-           (is (= (deref out) {:state "hey 2" :service "bar"}))))
+  (let [out (ref nil)
+        s (adjust [:state str " 2"] (register out))]
+
+    (s {})
+    (is (= (deref out) {:state " 2"}))
+
+    (s {:state "hey" :service "bar"})
+    (is (= (deref out) {:state "hey 2" :service "bar"})))
+
+  (let [out (ref nil)
+        s (adjust #(assoc % :metric (count (:tags %)))
+                  (register out))]
+
+    (s {:service "a" :tags []})
+    (is (= (deref out) {:service "a" :tags [] :metric 0}))
+
+    (s {:service "a" :tags ["foo" "bar"]})
+    (is (= (deref out) {:service "a" :tags ["foo" "bar"] :metric 2}))))
