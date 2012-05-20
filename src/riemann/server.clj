@@ -212,7 +212,7 @@
                                  (InetSocketAddress. (:host opts)
                                                      (:port opts)))]
        (.add all-channels server-channel))
-     (info "UDP server " opts " online")
+     (info "UDP server" opts "online")
 
      ; fn to close server
      (fn []
