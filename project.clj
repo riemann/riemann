@@ -32,8 +32,9 @@ alerting; and to glue various monitoring systems together."
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
     [com.draines/postal "1.7.1"]
-    [com.aphyr/riemann-java-client "0.0.2-SNAPSHOT"]
+    [com.aphyr/riemann-java-client "0.0.3-SNAPSHOT"]
     [slingshot "0.10.2"]
+    [org.slf4j/slf4j-log4j12 "1.6.4"]
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
