@@ -88,6 +88,17 @@
       (info (str "TCP server " (select-keys [:host :port] opts) " online"))
       server)))
 
+(defn int-frame-decoder 
+  []
+  (LengthFieldBasedFrameDecoder. Integer.MAX_VALUE, 0, 4, 0, 4))
+
+(defn tcp-handler
+  "Returns a TCP handler for the given core"
+  [core channel-group]
+  (proxy [SimpleChannelHandler] []
+    (channelOpen [context 
+
+
 (defn udp-handler
   "Returns a UDP handler for the given core."
   [core channel-group]
