@@ -121,7 +121,7 @@
           :query (:query msg)
           :events (map post-load-event (:events msg))}))
 
-(defn encode
+(defn ^"[B" encode
   "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
   events."
   [msg]

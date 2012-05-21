@@ -11,13 +11,15 @@
                                     ChannelHandlerContext
                                     ChannelPipeline
                                     ChannelPipelineFactory
+                                    ChannelStateEvent
                                     Channels
                                     ExceptionEvent
                                     FixedReceiveBufferSizePredictorFactory
                                     MessageEvent
                                     SimpleChannelHandler
                                     SimpleChannelUpstreamHandler)
-           (org.jboss.netty.channel.group DefaultChannelGroup)
+           (org.jboss.netty.channel.group ChannelGroup
+                                          DefaultChannelGroup)
            (org.jboss.netty.channel.socket DatagramChannelFactory)
            (org.jboss.netty.channel.socket.nio NioDatagramChannelFactory
                                                NioServerSocketChannelFactory)
@@ -58,7 +60,7 @@
     ; Some kind of error happened
     (catch [:type :riemann.query/parse-error] {:keys [message]}
       {:ok false :error (str "parse error: " message)})
-    (catch Exception e
+    (catch Exception ^Exception e
       {:ok false :error (.getMessage e)})))
 
 (defn int32-frame-decoder 
@@ -72,12 +74,13 @@
 
 (defn tcp-handler
   "Returns a TCP handler for the given core"
-  [core channel-group]
+  [core ^ChannelGroup channel-group]
   (proxy [SimpleChannelHandler] []
-    (channelOpen [context state-event]
+    (channelOpen [context ^ChannelStateEvent state-event]
                  (.add channel-group (.getChannel state-event)))
     
-    (messageReceived [context message-event]
+    (messageReceived [^ChannelHandlerContext context 
+                      ^MessageEvent message-event]
       (let [channel (.getChannel message-event)
             instream (ChannelBufferInputStream.
                        (.getMessage message-event))]
@@ -92,25 +95,25 @@
            (warn "invalid message, closing")
            (.close channel)))))
     
-    (exceptionCaught [context exception-event]
+    (exceptionCaught [context ^ExceptionEvent exception-event]
                      (warn (.getCause exception-event) "TCP handler caught")
                      (.close (.getChannel exception-event)))))
 
 
 (defn udp-handler
   "Returns a UDP handler for the given core."
-  [core channel-group]
+  [core ^ChannelGroup channel-group]
   (proxy [SimpleChannelUpstreamHandler] []
-    (channelOpen [context state-event]
+    (channelOpen [context ^ChannelStateEvent state-event]
                  (.add channel-group (.getChannel state-event)))
 
-    (messageReceived [context message-event]
+    (messageReceived [context ^MessageEvent message-event]
                      (let [instream (ChannelBufferInputStream.
                                       (.getMessage message-event))
                            msg (decode-inputstream instream)]
                        (handle core msg)))
     
-    (exceptionCaught [context exception-event]
+    (exceptionCaught [context ^ExceptionEvent exception-event]
                      (warn (.getCause exception-event) "UDP handler caught"))))
 
 (defn tcp-cpf
@@ -166,8 +169,8 @@
 
      ; Start bootstrap
      (let [server-channel (.bind bootstrap
-                                 (InetSocketAddress. (:host opts) 
-                                                     (:port opts)))]
+                                 (InetSocketAddress. ^String (:host opts) 
+                                                     ^Integer (:port opts)))]
        (.add all-channels server-channel))
      (info "TCP server" opts " online")
 
@@ -209,8 +212,8 @@
 
      ; Start bootstrap
      (let [server-channel (.bind bootstrap
-                                 (InetSocketAddress. (:host opts)
-                                                     (:port opts)))]
+                                 (InetSocketAddress. ^String (:host opts)
+                                                     ^Integer (:port opts)))]
        (.add all-channels server-channel))
      (info "UDP server" opts "online")
 
