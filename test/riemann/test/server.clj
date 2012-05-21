@@ -11,7 +11,7 @@
   (:import (org.jboss.netty.buffer ChannelBuffers))
   )
 
-;(riemann.logging/init)
+(riemann.logging/init)
 
 (deftest udp
          (let [server (udp-server (core))

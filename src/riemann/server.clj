@@ -3,8 +3,10 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import (java.net InetSocketAddress)
            (java.util.concurrent Executors)
-           (org.jboss.netty.bootstrap ConnectionlessBootstrap)
-           (org.jboss.netty.buffer ChannelBufferInputStream)
+           (org.jboss.netty.bootstrap ConnectionlessBootstrap
+                                      ServerBootstrap)
+           (org.jboss.netty.buffer ChannelBufferInputStream
+                                   ChannelBuffers)
            (org.jboss.netty.channel ChannelHandler
                                     ChannelHandlerContext
                                     ChannelPipeline
@@ -13,18 +15,22 @@
                                     ExceptionEvent
                                     FixedReceiveBufferSizePredictorFactory
                                     MessageEvent
+                                    SimpleChannelHandler
                                     SimpleChannelUpstreamHandler)
            (org.jboss.netty.channel.group DefaultChannelGroup)
            (org.jboss.netty.channel.socket DatagramChannelFactory)
-           (org.jboss.netty.channel.socket.nio NioDatagramChannelFactory))
+           (org.jboss.netty.channel.socket.nio NioDatagramChannelFactory
+                                               NioServerSocketChannelFactory)
+           (org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
+                                                LengthFieldPrepender)
+           (org.jboss.netty.handler.execution
+             ExecutionHandler
+             OrderedMemoryAwareThreadPoolExecutor))
   (:require [riemann.query :as query])
   (:require [riemann.index :as index])
   (:use [riemann.core])
   (:use [riemann.common])
   (:use clojure.tools.logging)
-  (:use lamina.core)
-  (:use aleph.tcp)
-  (:use gloss.core)
   (:use [protobuf.core])
   (:use [slingshot.slingshot :only [try+]])
   (:use clojure.stacktrace)
@@ -53,40 +59,43 @@
     (catch [:type :riemann.query/parse-error] {:keys [message]}
       {:ok false :error (str "parse error: " message)})
     (catch Exception e
-      (prn "Finally caught" e)
       {:ok false :error (.getMessage e)})))
 
-(defn tcp-handler
-  "Returns a handler that applies messages to the given core."
-  [core]
-  (fn [channel client-info]
-    (receive-all channel (fn [buffer]
-      (when buffer
-        ; channel isn't closed; this is our message
-        (try
-          (enqueue channel (encode (handle core (decode buffer))))
-          (catch java.nio.channels.ClosedChannelException e
-            (warn (str "channel closed")))
-          (catch com.google.protobuf.InvalidProtocolBufferException e
-            (warn (str "invalid message, closing " client-info))
-            (close channel))
-          (catch Exception e
-            (warn e "Handler error")
-            (close channel))))))))
+(defn int32-frame-decoder 
+  []
+  ; Offset 0, 4 byte header, skip those 4 bytes.
+  (LengthFieldBasedFrameDecoder. Integer/MAX_VALUE, 0, 4, 0, 4))
 
-(defn tcp-server
-  "Create a new TCP server for a core. Starts immediately. Options:
-  :port   The port to listen on.
-  :host   The host to listen on."
-  ([core] (tcp-server core {}))
-  ([core opts]
-    (let [opts (merge {:port 5555
-                       :frame (finite-block :int32)}
-                      opts)
-        handler (tcp-handler core)
-        server (start-tcp-server handler opts)] 
-      (info (str "TCP server " (select-keys [:host :port] opts) " online"))
-      server)))
+(defn int32-frame-encoder
+  []
+  (LengthFieldPrepender. 4))
+
+(defn tcp-handler
+  "Returns a TCP handler for the given core"
+  [core channel-group]
+  (proxy [SimpleChannelHandler] []
+    (channelOpen [context state-event]
+                 (.add channel-group (.getChannel state-event)))
+    
+    (messageReceived [context message-event]
+      (let [channel (.getChannel message-event)
+            instream (ChannelBufferInputStream.
+                       (.getMessage message-event))]
+        (try
+          (let [msg (decode-inputstream instream)
+                response (handle core msg)
+                encoded (encode response)]
+            (.write channel (ChannelBuffers/wrappedBuffer encoded)))
+         (catch java.nio.channels.ClosedChannelException e
+           (warn "channel closed"))
+         (catch com.google.protobuf.InvalidProtocolBufferException e
+           (warn "invalid message, closing")
+           (.close channel)))))
+    
+    (exceptionCaught [context exception-event]
+                     (warn (.getCause exception-event) "TCP handler caught")
+                     (.close (.getChannel exception-event)))))
+
 
 (defn udp-handler
   "Returns a UDP handler for the given core."
@@ -104,6 +113,23 @@
     (exceptionCaught [context exception-event]
                      (warn (.getCause exception-event) "UDP handler caught"))))
 
+(defn tcp-cpf
+  "TCP Channel Pipeline Factory"
+  [core channel-group]
+  (proxy [ChannelPipelineFactory] []
+    (getPipeline []
+                 (let [decoder  (int32-frame-decoder)
+                       encoder  (int32-frame-encoder)
+                       executor (ExecutionHandler.
+                                  (OrderedMemoryAwareThreadPoolExecutor.
+                                    16 1048576 1048576)) ; Maaagic values!
+                       handler  (tcp-handler core channel-group)]
+                   (doto (Channels/pipeline)
+                     (.addLast "int32-frame-decoder" decoder)
+                     (.addLast "int32-frame-encoder" encoder)
+                     (.addLast "executor" executor)
+                     (.addLast "handler" handler))))))
+
 (defn udp-cpf
   "Channel Pipeline Factory"
   [core channel-group]
@@ -114,6 +140,42 @@
                    (.addLast p "riemann-udp-handler" h) 
                    p))))
 
+
+(defn tcp-server
+  "Create a new TCP server for a core. Starts immediately. Options:
+  :host   The host to listen on.
+  :port   The port to listen on."
+  ([core] (tcp-server core {}))
+  ([core opts]
+   (let [opts (merge {:host "localhost"
+                      :port 5555}
+                     opts)
+         bootstrap (ServerBootstrap.
+                     (NioServerSocketChannelFactory.
+                       (Executors/newCachedThreadPool)
+                       (Executors/newCachedThreadPool)))
+         all-channels (DefaultChannelGroup. (str "tcp-server " opts))
+         cpf (tcp-cpf core all-channels)]
+
+     ; Configure bootstrap
+     (doto bootstrap
+       (.setPipelineFactory cpf)
+       (.setOption "child.tcpNoDelay" true)
+       (.setOption "child.keepAlive" true)
+       (.setOption "reuseAddress" true))
+
+     ; Start bootstrap
+     (let [server-channel (.bind bootstrap
+                                 (InetSocketAddress. (:host opts) 
+                                                     (:port opts)))]
+       (.add all-channels server-channel))
+     (info "TCP server" opts " online")
+
+     ; fn to close server
+     (fn []
+       (-> all-channels .close .awaitUninterruptibly)
+       (.releaseExternalResources bootstrap)))))
+
 (defn udp-server
   "Starts a new UDP server for a core. Starts immediately. 
 
@@ -123,17 +185,19 @@
   dropped with protobuf parse errors in the log.
   
   Options:
+  :host   The address to listen on.
   :port   The port to listen on.
   :max-size   The maximum datagram size (default 16384 bytes)."
   ([core] (udp-server core {}))
   ([core opts]
-   (let [opts (merge {:port 5555
+   (let [opts (merge {:host "localhost"
+                      :port 5555
                       :max-size 16384}
                      opts)
          bootstrap (ConnectionlessBootstrap.
                      (NioDatagramChannelFactory.
                        (Executors/newCachedThreadPool)))
-         all-channels (DefaultChannelGroup.)
+         all-channels (DefaultChannelGroup. (str "udp-server " opts))
          cpf (udp-cpf core all-channels)] 
     
      ; Configure bootstrap
@@ -144,9 +208,11 @@
                    (FixedReceiveBufferSizePredictorFactory. (:max-size opts))))
 
      ; Start bootstrap
-     (let [server-channel (.bind bootstrap (InetSocketAddress. (:port opts)))]
+     (let [server-channel (.bind bootstrap
+                                 (InetSocketAddress. (:host opts)
+                                                     (:port opts)))]
        (.add all-channels server-channel))
-     (info "UDP server " opts " online")
+     (info "UDP server" opts "online")
 
      ; fn to close server
      (fn []
