@@ -35,7 +35,7 @@
 
 (defn send-event
   "Send an event over client."
-  ([^AbstractRiemannClient client event]
+  ([client event]
    (send-event client event true))
   ([^AbstractRiemannClient client event ack]
    (let [e (.event client)]
@@ -44,7 +44,7 @@
      (when-let [s (:state event)] (.state e s))
      (when-let [d (:description event)] (.description e d))
      (when-let [m (:metric event)] (.metric e (float m)))
-     (when-let [t (:tags event)] (.tags e t))
+     (when-let [^java.util.List t (:tags event)] (.tags e t))
      (when-let [t (:time event)] (.time e (long t)))
      (when-let [t (:ttl event)] (.ttl e (float t)))
 
@@ -57,7 +57,7 @@
 
   (tcp-client)
   (tcp-client :host \"foo\" :port 5555)"
-  [& { :keys [host port]
+  [& { :keys [^String host ^Integer port]
        :or {port 5555
             host "localhost"}
        :as opts}]
@@ -69,7 +69,7 @@
 
   (udp-client)
   (udp-client :host \"foo\" :port 5555)"
-  [& {:keys [host port]
+  [& {:keys [^String host ^Integer port]
       :or {port 5555
             host "localhost"}
       :as opts}]
@@ -78,7 +78,7 @@
 
 (defn close-client
   "Close a client."
-  [client]
+  [^AbstractRiemannClient client]
   (.disconnect client))
 
 (defn reconnect-client
