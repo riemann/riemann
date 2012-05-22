@@ -35,6 +35,8 @@ alerting; and to glue various monitoring systems together."
     [com.aphyr/riemann-java-client "0.0.3-SNAPSHOT"]
     [slingshot "0.10.2"]
     [org.slf4j/slf4j-log4j12 "1.6.4"]
+    [clj-http "0.4.1"]
+    [clj-json "0.5.0"]
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
