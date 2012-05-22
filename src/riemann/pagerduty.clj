@@ -33,7 +33,8 @@
 (defn pagerduty
   "Creates a pagerduty adapter. Takes your PD service key, and returns a map of
   functions which trigger, acknowledge, and resolve events. Event service will
-  be used as the incident key. The PD description will be the service, state, and metric. The full event will be attached as the details.
+  be used as the incident key. The PD description will be the service, state,
+  and metric. The full event will be attached as the details.
 
   (let [pd (pagerduty \"my-service-key\")]
     (changed-state 
