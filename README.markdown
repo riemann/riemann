@@ -20,9 +20,6 @@ I built Riemann with the goal of getting it out the door as quickly as
 possible. There are many slow or kludgy parts, but they should all be readily
 replaceable as I find the time. Top on my list:
 
-- Add a raw Netty UDP listener for accepting events. We lose a lot of time to
-aleph.tcp.
 - Use Korma/HSQL to implement a faster index for query-heavy installations.
-- Think more carefully about time-partitioning functions.
 - Reservoir sampling
 - Event pubsub
