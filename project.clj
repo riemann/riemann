@@ -13,6 +13,7 @@
 alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
+;  :jvm-opts ["-server" "-Xms2048m" "-Xmx2048m" "-XX:+UseParallelGC" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods"]
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
@@ -54,8 +55,6 @@ alerting; and to glue various monitoring systems together."
   :java-source-path "src/riemann/"
   :aot [riemann.bin]
   :main riemann.bin
-  ; Work around a bug where protobufs get nuked.
-;  :disable-implicit-clean true
   :deb {:maintainer {:name "Kyle Kingsbury"
                      :email "aphyr@aphyr.com"}
         ; I wish I could use relative paths here, but lein-deb complains
