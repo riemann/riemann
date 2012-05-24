@@ -163,9 +163,12 @@
      ; Configure bootstrap
      (doto bootstrap
        (.setPipelineFactory cpf)
+       (.setOption "readWriteFair" true)
+       (.setOption "tcpNoDelay" true)
+       (.setOption "reuseAddress" true)
        (.setOption "child.tcpNoDelay" true)
-       (.setOption "child.keepAlive" true)
-       (.setOption "reuseAddress" true))
+       (.setOption "child.reuseAddress" true)
+       (.setOption "child.keepAlive" true))
 
      ; Start bootstrap
      (let [server-channel (.bind bootstrap
