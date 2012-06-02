@@ -5,7 +5,6 @@
   sent to the subscriber."
 
   (:use riemann.common)
-  (:use riemann.query)
   (:use [clojure.core.incubator :only [dissoc-in]]))
 
 ; Registry:
