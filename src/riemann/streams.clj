@@ -808,4 +808,3 @@
   [index]
   (fn [event]
     (index/delete index event)))
-

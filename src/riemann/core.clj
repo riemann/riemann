@@ -3,7 +3,8 @@
   (:use riemann.common)
   (:use clojure.tools.logging)
   (:require riemann.streams)
-  (:require [riemann.index :as index]))
+  (:require [riemann.index :as index])
+  (:require [riemann.pubsub :as ps]))
 
 (defn core
   "Create a new core."
@@ -11,7 +12,8 @@
   {:servers (ref [])
    :streams (ref [])
    :index   (ref nil)
-   :reaper  (ref nil)})
+   :reaper  (ref nil)
+   :pubsub  (ps/pubsub-registry)})
 
 (defn periodically-expire
   "Every interval (default 10) seconds, expire states from this core's index

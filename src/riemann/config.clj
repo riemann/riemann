@@ -10,6 +10,7 @@
   (:require [riemann.folds :as folds])
   (:use clojure.tools.logging)
   (:use riemann.client)
+  (:require [riemann.pubsub :as pubsub])
   (:use riemann.streams)
   (:use riemann.email)
   (:use riemann.graphite)
@@ -50,6 +51,24 @@
   ([]
    (periodically-expire 10)))
 
+(defn pubsub
+  "Returns this core's pubsub registry."
+  []
+  (:pubsub core))
+
+(defn publish
+  "Returns a stream which publishes events to this the given channel. Uses this
+  core's pubsub registry."
+  [channel]
+  (fn [event]
+    (pubsub/publish (:pubsub core) channel event)))
+
+(defn subscribe
+  "Subscribes to the given channel with f, which will receive events. Uses this
+  core's pubsub registry."
+  [channel f]
+  (pubsub/subscribe (:pubsub core) channel f))
+    
 ; Start the core
 (defn start []
   (riemann.core/start core))
