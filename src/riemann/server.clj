@@ -146,8 +146,8 @@
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
-  :host   The host to listen on.
-  :port   The port to listen on."
+  :host   The host to listen on (default localhost).
+  :port   The port to listen on. (default 5555)"
   ([core] (tcp-server core {}))
   ([core opts]
    (let [opts (merge {:host "localhost"
@@ -191,8 +191,8 @@
   dropped with protobuf parse errors in the log.
   
   Options:
-  :host   The address to listen on.
-  :port   The port to listen on.
+  :host   The address to listen on (default localhost).
+  :port   The port to listen on (default 5555).
   :max-size   The maximum datagram size (default 16384 bytes)."
   ([core] (udp-server core {}))
   ([core opts]
