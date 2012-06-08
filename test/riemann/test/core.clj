@@ -49,21 +49,19 @@
          (let [core (core)
                index (index)
                server (riemann.server/tcp-server core)
-               stream (riemann.streams/update-index index)
                client (riemann.client/tcp-client)]
 
            (try
              (dosync
                (alter (core :servers) conj server)
-               (alter (core :streams) conj stream)
                (ref-set (core :index) index))
 
              ; Send events
-             (send-event client {:metric 1 :time 1})
-             (send-event client {:metric 2 :time 3})
-             (send-event client {:host "kitten" 
+             (update-index core {:metric 1 :time 1})
+             (update-index core {:metric 2 :time 3})
+             (update-index core {:host "kitten" 
                                  :tags ["whiskers" "paws"] :time 2})
-             (send-event client {:service "miao" :host "cat" :time 3})
+             (update-index core {:service "miao" :host "cat" :time 3})
 
              (let [r (vec (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))]
                (is (some (fn [e] (= e {:metric 2.0, :time 3})) r))
@@ -81,17 +79,15 @@
                res (ref nil)
                expired-stream (riemann.streams/expired 
                                 (fn [e] (dosync (ref-set res e))))
-               stream (riemann.streams/update-index index)
                reaper (periodically-expire core 0.001)]
 
                (dosync
                  (ref-set (:index core) index)
-                 (alter (:streams core) conj stream)
                  (alter (:streams core) conj expired-stream))
 
            ; Insert events
-           (stream {:service 1 :ttl 0.00 :time (unix-time)})
-           (stream {:service 2 :ttl 1 :time (unix-time)})
+           (update-index core {:service 1 :ttl 0.00 :time (unix-time)})
+           (update-index core {:service 2 :ttl 1 :time (unix-time)})
 
            ; Wait for reaper to eat them
            (Thread/sleep 10)

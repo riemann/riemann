@@ -604,28 +604,6 @@
            (doseq [m metrics] (r {:metric m}))
            (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
-(deftest uupdate-test
-         (let [i (index/index)
-               s (update-index i)
-               states [{:host 1 :state "ok"} 
-                       {:host 2 :state "ok"} 
-                       {:host 1 :state "bad"}]]
-           (doseq [state states] (s state))
-           (is (= (set (.values i))
-                  #{{:host 1 :state "bad"}
-                    {:host 2 :state "ok"}}))))
-
-(deftest delete-from-index-test
-         (let [i (index/index)
-               s (update-index i)
-               d (delete-from-index i)
-               states [{:host 1 :state "ok"} 
-                       {:host 2 :state "ok"} 
-                       {:host 1 :state "bad"}]]
-           (doseq [state states] (s state))
-           (doseq [state states] (d state))
-           (is (= (vec (.values i)) []))))
-
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)
                       (em 1 10 20 -100 4)

@@ -55,7 +55,8 @@
 
   (update [this event]
           (when-not (= "expired" (:state event))
-            (.put this [(:host event) (:service event)] event))))
+            (.put this [(:host event) (:service event)] event)
+              event)))
 
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"

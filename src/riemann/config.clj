@@ -3,7 +3,7 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
-  (:require [riemann.core])
+  (:require [riemann.core :as core])
   (:require [riemann.server])
   (:require riemann.index)
   (:require [riemann.logging :as logging])
@@ -11,12 +11,12 @@
   (:use clojure.tools.logging)
   (:use riemann.client)
   (:require [riemann.pubsub :as pubsub])
-  (:use riemann.streams)
+  (:use [riemann.streams :exclude [update-index delete-from-index]])
   (:use riemann.email)
   (:use riemann.graphite)
   (:gen-class))
 
-(def ^{:doc "A default core."} core (riemann.core/core))
+(def ^{:doc "A default core."} core (core/core))
 
 (defn tcp-server 
   "Add a new TCP server with opts to the default core."
@@ -44,10 +44,20 @@
   (dosync
     (ref-set (core :index) (apply riemann.index/index opts))))
 
+(defn update-index
+  "Updates the given index with all events received. Also publishes to the index pubsub channel."
+  [index]
+  (fn [event] (core/update-index core event)))
+
+(defn delete-from-index
+  "Deletes any events that pass through from the index"
+  [index]
+  (fn [event] (core/delete-from-index core event)))
+
 (defn periodically-expire
   "Sets up a reaper for this core. See core API docs."
   ([interval]
-    (riemann.core/periodically-expire core interval))
+    (core/periodically-expire core interval))
   ([]
    (periodically-expire 10)))
 
@@ -71,7 +81,7 @@
     
 ; Start the core
 (defn start []
-  (riemann.core/start core))
+  (core/start core))
 
 (defn include 
   "Include another config file.
