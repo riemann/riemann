@@ -32,6 +32,13 @@
     (alter (core :servers) conj
       (riemann.server/udp-server core (apply hash-map opts)))))
 
+(defn ws-server
+  "Add a new websockets server with opts to the default core."
+  [& opts]
+  (dosync
+    (alter (core :servers) conj
+           (riemann.server/ws-server core (apply hash-map opts)))))
+
 (defn streams
   "Add any number of streams to the default core." 
   [& things]

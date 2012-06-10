@@ -30,12 +30,17 @@
              OrderedMemoryAwareThreadPoolExecutor))
   (:require [riemann.query :as query])
   (:require [riemann.index :as index])
-  (:use [riemann.core])
-  (:use [riemann.common])
+  (:use riemann.core)
+  (:use riemann.common)
+  (:use riemann.pubsub)
   (:use clojure.tools.logging)
   (:use [protobuf.core])
   (:use [slingshot.slingshot :only [try+]])
   (:use clojure.stacktrace)
+  (:use lamina.core)
+  (:use aleph.http)
+  (:use [clj-http.util :only [url-decode]])
+  (:use [clojure.string :only [split]])
   (:require gloss.io))
 
 (defn handle
@@ -224,3 +229,58 @@
      (fn []
        (-> all-channels .close .awaitUninterruptibly)
        (.releaseExternalResources bootstrap)))))
+
+(defn http-query-map
+  "Converts a URL query string into a map."
+  [string]
+  (apply hash-map
+         (map url-decode
+           (mapcat (fn [kv] (split kv #"=" 2)) 
+                     (split string #"&")))))
+
+;;; Websockets
+(defn ws-pubsub-handler [core ch hs]
+  (let [topic (url-decode (last (split (:uri hs) #"/" 3)))
+        params (http-query-map (:query-string hs))
+        query (params "query")
+        pred (query/fun (query/ast query))
+        sub (subscribe (:pubsub core) topic
+               (fn [event]
+                 (when (pred event)
+                   (enqueue ch (event-to-json event)))))]
+    (info "New websocket subscription to" topic ":" query)
+    (receive-all ch (fn [msg]
+                      (when-not msg
+                        ; Shut down channel
+                        (info "Closing websocket " 
+                              (:remote-addr hs) topic query)
+                        (close ch)
+                        (unsubscribe (:pubsub core) sub))))))
+
+(defn ws-handler [core]
+  (fn [ch handshake]
+    (info "Websocket connection from" (:remote-addr handshake) 
+          (:uri handshake) 
+          (:query-string handshake))
+    (condp re-matches (:uri handshake)
+      #"^/pubsub/[^/]+$" (ws-pubsub-handler core ch handshake)
+      :else (do 
+              (info "Unknown URI " (:uri handshake) ", closing")
+              (close ch)))))
+
+(defn ws-server
+  "Starts a new websocket server for a core. Starts immediately.
+
+  Options:
+  :host   The address to listen on (default localhost)
+  :post   The port to listen on (default 5556)"
+  ([core] (udp-server core {}))
+  ([core opts]
+   (let [opts (merge {:host "localhost"
+                      :port 5556}
+                     opts)
+         s (start-http-server (ws-handler core) {:host (:host opts)
+                                                 :port (:port opts)
+                                                 :websocket true})]
+     (info "Websockets server" opts "online")
+     s)))

@@ -5,6 +5,7 @@
   (:import [java.util Date])
   (:require gloss.io)
   (:require clojure.set)
+  (:require [clj-json.core :as json])
   (:require [clojure.java.io :as io])
   (:use clojure.tools.logging)
   (:use protobuf.core)
@@ -107,6 +108,11 @@
           :states (map post-load-event (:states msg))
           :query (:query msg)
           :events (map post-load-event (:events msg))}))
+
+(defn event-to-json
+  "Convert an event to a JSON string."
+  [event]
+  (json/generate-string event))
 
 (defn decode-inputstream
   "Decode an InputStream to a message. Decodes the protobuf representation of
