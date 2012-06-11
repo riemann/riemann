@@ -112,7 +112,7 @@
 (defn event-to-json
   "Convert an event to a JSON string."
   [event]
-  (json/generate-string event))
+  (json/generate-string (pre-dump-event event))) 
 
 (defn decode-inputstream
   "Decode an InputStream to a message. Decodes the protobuf representation of
