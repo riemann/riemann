@@ -18,7 +18,7 @@ alerting; and to glue various monitoring systems together."
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :dependencies [
-    [clojure "1.3.0"]
+    [clojure "1.4.0"]
     [org.clojure/math.numeric-tower "0.0.1"]
     [org.clojure/algo.generic "0.1.0"]
     [org.clojure/tools.logging "0.2.3"]
@@ -33,7 +33,7 @@ alerting; and to glue various monitoring systems together."
     [org.antlr/antlr "3.2"]
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]
-    [com.draines/postal "1.7.1"]
+    [com.draines/postal "1.8.0"]
     [com.aphyr/riemann-java-client "0.0.3"]
     [slingshot "0.10.2"]
     [org.slf4j/slf4j-log4j12 "1.6.4"]
