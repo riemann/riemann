@@ -18,7 +18,7 @@ alerting; and to glue various monitoring systems together."
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :dependencies [
-    [clojure "1.4.0"]
+    [org.clojure/clojure "1.4.0"]
     [org.clojure/math.numeric-tower "0.0.1"]
     [org.clojure/algo.generic "0.1.0"]
     [org.clojure/tools.logging "0.2.3"]
@@ -39,20 +39,20 @@ alerting; and to glue various monitoring systems together."
     [org.slf4j/slf4j-log4j12 "1.6.4"]
     [clj-http "0.4.1"]
     [clj-json "0.5.0"]
+    [incanter/incanter-charts "1.3.0"]
   ]
   :dev-dependencies [
     [lein-deb "1.0.0-SNAPSHOT"]
     [lein-autodoc "0.9.0"]
     [codox "0.4.0"]
     [clj-glob "1.0.0"]
-    [incanter "1.3.0"]
   ]
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:bench x))))
                    :integration :integration
                    :bench :bench
                    :all (fn [_] true)}
-  :java-source-path "src/riemann/"
+  :java-source-paths ["src/riemann/"]
   :aot [riemann.bin]
   :main riemann.bin
   :deb {:maintainer {:name "Kyle Kingsbury"
