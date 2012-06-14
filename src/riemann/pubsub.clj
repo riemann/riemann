@@ -4,8 +4,7 @@
   with an optional predicate function. Events which match the predicate are
   sent to the subscriber."
 
-  (:use riemann.common)
-  (:use [clojure.core.incubator :only [dissoc-in]]))
+  (:use riemann.common))
 
 ; Registry:
 ;   channel1:
@@ -38,6 +37,20 @@
       (let [sub-id (alter (:last-sub-id registry) inc)]
         (alter channels assoc-in [channel sub-id] f)
         sub-id))))
+
+(defn dissoc-in
+  "Dissociates an entry from a nested associative structure returning a new
+  nested structure. keys is a sequence of keys. Any empty maps that result
+  will not be present in the new structure."
+  [m [k & ks :as keys]]
+  (if ks
+    (if-let [nextmap (get m k)]
+      (let [newmap (dissoc-in nextmap ks)]
+        (if (seq newmap)
+          (assoc m k newmap)
+          (dissoc m k)))
+      m)
+    (dissoc m k)))
 
 (defn unsubscribe
   "Unsubscribe from the given registry by id. If you provide a channel to

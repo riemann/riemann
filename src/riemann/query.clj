@@ -10,7 +10,7 @@
 ; With many thanks to Brian Carper
 ; http://briancarper.net/blog/554/antlr-via-clojure
 
-(defn parse-string 
+(defn parse-string
   "Parse string into ANTLR tree nodes"
   [s]
   (try
@@ -19,7 +19,7 @@
                   parser (QueryParser. tokens)]
       (.getTree (.expr parser)))
     (catch Throwable e
-      (throw+ {:type ::parse-error 
+      (throw+ {:type ::parse-error
                :message (.getMessage (.getCause e))}))))
 
 (defn- make-regex
@@ -36,7 +36,7 @@
 (defn node-ast [node]
   "The AST for a given parse node"
   (let [n    (.getText node)
-        kids (remove (fn [x] (= x :useless)) 
+        kids (remove (fn [x] (= x :useless))
                      (map node-ast (.getChildren node)))]
     (case n
       "or"  (apply list 'or kids)
@@ -80,7 +80,7 @@
 (defn fun
   "Transforms an AST into a fn [event] which returns true if the query matches
   that event. Example:
-  
+
   (def q (fun (ast \"metric > 2\")))
   (q {:metric 1}) => false
   (q {:metric 3}) => true"
