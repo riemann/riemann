@@ -257,13 +257,29 @@
                         (close ch)
                         (unsubscribe (:pubsub core) sub))))))
 
+(defn ws-index-handler
+  "Queries the index for events and streams them to the client. If subscribe is
+  true, also initiates a pubsub subscription to the index topic with that
+  query."
+  [core ch hs]
+  (let [params (http-query-map (:query-string hs))
+        query (params "query")
+        ast (query/ast query)]
+    (when-let [i (deref (:index core))]
+      (doseq [event (index/search i ast)]
+        (enqueue ch (event-to-json event))))
+    (if (= (params "subscribe") "true")
+      (ws-pubsub-handler core ch (assoc hs :uri "/pubsub/index"))
+      (close ch))))
+
 (defn ws-handler [core]
   (fn [ch handshake]
     (info "Websocket connection from" (:remote-addr handshake) 
           (:uri handshake) 
           (:query-string handshake))
     (condp re-matches (:uri handshake)
-      #"^/pubsub/[^/]+$" (ws-pubsub-handler core ch handshake)
+      #"^/index/?$" (ws-index-handler core ch handshake)
+      #"^/pubsub/[^/]+/?$" (ws-pubsub-handler core ch handshake)
       :else (do 
               (info "Unknown URI " (:uri handshake) ", closing")
               (close ch)))))

@@ -10,6 +10,9 @@
   (:use clojure.tools.logging)
   (:use protobuf.core)
   (:use gloss.core)
+  (:require clj-time.core)
+  (:require clj-time.format)
+  (:require clj-time.coerce)
   (:use clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
@@ -42,6 +45,12 @@
   "Returns the Date of a unix epoch time."
   [unix-time]
   (java.util.Date. (long unix-time)))
+
+(defn unix-to-iso8601
+  "Transforms unix time to iso8601 string"
+  [unix]
+  (clj-time.format/unparse (clj-time.format/formatters :date-time)
+                           (clj-time.coerce/from-long (long (* 1000 unix)))))
 
 (defn pre-dump-event
   "Transforms an event (map) into a form suitable for protocol buffer encoding."
@@ -112,7 +121,9 @@
 (defn event-to-json
   "Convert an event to a JSON string."
   [event]
-  (json/generate-string (pre-dump-event event))) 
+  (json/generate-string 
+    (assoc (pre-dump-event event)
+           :time (unix-to-iso8601 (:time event)))))
 
 (defn decode-inputstream
   "Decode an InputStream to a message. Decodes the protobuf representation of
