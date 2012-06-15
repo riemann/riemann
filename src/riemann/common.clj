@@ -174,7 +174,7 @@
 
 ; Vector set operations
 (defn member?
-  "Is e present in seqable s?"
+  "Is r present in seqable s?"
   [r s]
   (some (fn [e] (= r e)) s))
 
