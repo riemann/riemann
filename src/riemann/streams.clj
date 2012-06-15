@@ -131,33 +131,41 @@
                (when-not (deref periodic)
                  (ref-set periodic (periodic/every interval delay f)))))))))))
 
-; This leaks a thread. Need to think about dynamic scheduling/expiry.
 (defn part-time-fast
   "Partitions events by time (fast variant). Each <interval> seconds, creates a
   new bin by calling (create). Applies each received event to the current bin
   with (add bin event). When the time interval is over, calls (finish bin
-  start-time end-time)." 
+  start-time elapsed-time)."
   [interval create add finish]
-  (let [current (ref (create))
-        start (ref (unix-time))
-        switcher (.start (new Thread (bound-fn []
-          ; Switch between bins
-          (loop [] 
-            ; Wait for interval
-            (Thread/sleep (* interval 1000))
-            ; Switch out old bin, create new one, call finish on old bin.
-            (apply finish
-                   (dosync
-                     (let [bin (deref current)
-                           old-start (deref start)
-                           boundary (unix-time)]
-                       (ref-set start boundary)
-                       (ref-set current (create))
-                       [bin old-start boundary])))
-            (recur)))))]
+  (let [current (ref nil)
+        start (ref nil)
+        setup (fn []
+                (dosync 
+                  (ref-set start (unix-time))
+                  (ref-set current (create))))
+
+        switch (fn []
+                 (apply finish
+                        (dosync
+                          (when (deref start))
+                            (let [bin (deref current)
+                                old-start (deref start)
+                                boundary (unix-time)]
+                              (ref-set start boundary)
+                              (ref-set current (create))
+                              [bin old-start boundary]))))
+        p (periodically-until-expired interval interval switch)]
     (fn [event]
-      (dosync
-        (add (deref current) event)))))
+      (p event)
+      (if (expired? event)
+        ; Kill our state
+        (dosync 
+          (ref-set start nil)
+          (ref-set current nil))
+        ; Append event to this bin
+        (if-let [bin (dosync (deref current))]
+          (add bin event)
+          (add (setup) event))))))
 
 (defn fill-in
   "Passes on all events. Fills in gaps in event stream with copies of the given
