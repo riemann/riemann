@@ -315,7 +315,7 @@
               (dosync
                 (when-let [state (deref (:state r))]
                   (let [count (deref (r :count))
-                        rate (/ count (- end start))]
+                        rate (/ count interval)]
                     (merge state 
                            {:metric rate :time (round end)}))))]
           (call-rescue event children)))))
