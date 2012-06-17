@@ -42,12 +42,10 @@ alerting; and to glue various monitoring systems together."
     [clj-time "0.4.3"]
     [incanter/incanter-charts "1.3.0"]
   ]
-  :dev-dependencies [
-    [lein-deb "1.0.0-SNAPSHOT"]
-    [lein-autodoc "0.9.0"]
-    [codox "0.4.0"]
-    [clj-glob "1.0.0"]
-  ]
+  :profiles {:dev {:dependencies [[lein-deb "1.0.0-SNAPSHOT"]
+                                  [lein-autodoc "0.9.0"]
+                                  [codox "0.4.0"]
+                                  [clj-glob "1.0.0"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:bench x))))
                    :integration :integration
