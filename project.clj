@@ -42,10 +42,9 @@ alerting; and to glue various monitoring systems together."
     [clj-time "0.4.3"]
     [incanter/incanter-charts "1.3.0"]
   ]
-  :profiles {:dev {:dependencies [[lein-deb "1.0.0-SNAPSHOT"]
-                                  [lein-autodoc "0.9.0"]
-                                  [codox "0.4.0"]
-                                  [clj-glob "1.0.0"]]}}
+  :profiles {:dev {:dependencies [[clj-glob "1.0.0"]]}}
+  :plugins [[codox "0.6.1"]
+            [lein-deb "1.0.0-SNAPSHOT"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:bench x))))
                    :integration :integration
@@ -66,7 +65,7 @@ alerting; and to glue various monitoring systems together."
                     :fullpath "/etc/riemann/riemann.config"}
                    {:file     "/home/aphyr/riemann/bin/riemann"
                     :fullpath "/usr/bin/riemann"
-                    :filemode "0755"}]
+                    :fileMode "755"}]
         :depends ""}
   :deb-skip-jar true
   :codox {:output-dir "site/api"}
