@@ -9,4 +9,4 @@ else
 fi
 
 
-java -XX:+UseConcMarkSweepGC -jar "$top/lib/riemann-0.1.1-standalone.jar" "$config"
+java -XX:+UseConcMarkSweepGC -jar "$top/lib/riemann-0.1.2-standalone.jar" "$config"
