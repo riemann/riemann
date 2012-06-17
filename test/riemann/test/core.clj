@@ -90,7 +90,7 @@
            (update-index core {:service 2 :ttl 1 :time (unix-time)})
 
            ; Wait for reaper to eat them
-           (Thread/sleep 10)
+           (Thread/sleep 30)
 
            ; Kill reaper
            (future-cancel reaper)
