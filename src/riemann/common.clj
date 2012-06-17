@@ -41,6 +41,13 @@
   []
   (/ (System/currentTimeMillis) 1000))
 
+(defn linear-time
+  "A current time on a linear scale with no fixed epoch; counts in seconds.
+  Unlike unix-time, which can pause, skip, or flow backwards, advances
+  consistently at (close) to wall clock time."
+  []
+  (/ (System/nanoTime) 1000000000))
+
 (defn time-at 
   "Returns the Date of a unix epoch time."
   [unix-time]
