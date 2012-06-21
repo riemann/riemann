@@ -40,10 +40,10 @@
               (:host event) " "
               (:service event) " "
               (:state event) " ("
-              (:metric event) ")\nat "
-              (time-at (:time event)) " "
-              "tags: " (join ", " (:tags event)) 
-              "\n"
+              (:metric event) ")\nAt "
+              (time-at (:time event)) "\n"
+              "Tags: " (join ", " (:tags event))
+              "\n\n"
               (:description event)))
           events)))
 
