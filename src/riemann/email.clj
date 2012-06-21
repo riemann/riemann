@@ -36,14 +36,15 @@
   (join "\n\n"
         (map 
           (fn [event]
-            (:host event) " "
-            (:service event) " "
-            (:state event) " ("
-            (:metric event) ")\nat "
-            (time-at (:time event)) " "
-            "tags: " (join ", " (:tags event)) 
-            "\n"
-            (:description event))
+            (str 
+              (:host event) " "
+              (:service event) " "
+              (:state event) " ("
+              (:metric event) ")\nat "
+              (time-at (:time event)) " "
+              "tags: " (join ", " (:tags event)) 
+              "\n"
+              (:description event)))
           events)))
 
 (defn email-event
