@@ -51,7 +51,7 @@
 (defn time-at 
   "Returns the Date of a unix epoch time."
   [unix-time]
-  (java.util.Date. (long unix-time)))
+  (java.util.Date. (long (* 1000 unix-time))))
 
 (defn unix-to-iso8601
   "Transforms unix time to iso8601 string"

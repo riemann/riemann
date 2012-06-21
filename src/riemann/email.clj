@@ -33,16 +33,16 @@
 (defn- body 
   "Constructs an email body for a set of events."
   [events]
-  (join "\n\n"
+  (join "\n\n\n"
         (map 
           (fn [event]
             (str 
+              "At " (time-at (:time event)) "\n"
               (:host event) " "
               (:service event) " "
               (:state event) " ("
-              (:metric event) ")\nAt "
-              (time-at (:time event)) "\n"
-              "Tags: " (join ", " (:tags event))
+              (:metric event) ")\n"
+              "Tags: [" (join ", " (:tags event)) "]"
               "\n\n"
               (:description event)))
           events)))
