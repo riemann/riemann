@@ -14,6 +14,7 @@
   (:use [riemann.streams :exclude [update-index delete-from-index]])
   (:use riemann.email)
   (:use riemann.graphite)
+  (:use riemann.pagerduty)
   (:gen-class))
 
 (def ^{:doc "A default core."} core (core/core))
