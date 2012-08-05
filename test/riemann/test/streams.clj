@@ -72,6 +72,16 @@
            (median events)
            (is (= (deref r) {:metric 0}))))
 
+(deftest smap-test
+         (test-stream (smap inc) [6 3 -1] [7 4 0]))
+
+(deftest sreduce-test
+         (testing "explicit value"
+                  (test-stream (sreduce + 1) [1 2 3] [2 4 7]))
+         
+         (testing "implicit value"
+                  (test-stream (sreduce +) [1 2 3 4] [3 6 10])))
+
 (deftest counter-test
          (let [r      (ref [])
                s      (counter (append r))
@@ -729,7 +739,7 @@
     (s {:service "a" :tags ["foo" "bar"]})
     (is (= (deref out) {:service "a" :tags ["foo" "bar"] :metric 2}))))
 
-(deftest ^:focus window-test
+(deftest window-test
          ; Zero-width windows.
          (is (= (run-stream (window 0) []) []))
          (is (= (run-stream (window 0) [1 2])

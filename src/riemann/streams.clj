@@ -47,6 +47,57 @@
   (fn [events]
     (call-rescue (f events) children)))
 
+(defn smap
+  "Streaming map. Calls children with (f event). Prefer this to (adjust f).
+  Example:
+
+  (smap :metric prn) ; prints the metric of each event.
+  (smap #(assoc % :state \"ok\") index) ; Indexes each event with state \"ok\""
+  [f & children]
+  (fn [event]
+    (call-rescue (f event) children)))
+
+(defn sreduce
+  "Streaming reduce. Two forms:
+
+  (sreduce f child1 child2 ...)
+  (sreduce f val child1 child2 ...)
+
+  Maintains an internal value, which defaults to the first event received or,
+  if provided, val. When the stream receives an event, calls (f val event) to
+  produce a new value, which is sent to each child. f *must* be free of side
+  effects. Examples:
+
+  Passes on events, but with the *maximum* of all received metrics:
+  (sreduce (fn [acc event] (assoc event :metric 
+                                  (+ (:metric event) (:metric acc)))) ...)
+  
+  Or, using riemann.folds, a simple moving average:
+  (sreduce (fn [acc event] (folds/mean [acc event])) ...)"
+  [f & opts]
+  (if (fn? (first opts))
+    ; No value provided
+    (let [children   opts
+          first-time (ref true)
+          acc        (ref nil)]
+      (fn [event]
+        (let [[first-time value] (dosync
+                                   (if @first-time
+                                     (do
+                                       (ref-set first-time false)
+                                       (ref-set acc event)
+                                       [true nil])
+                                     [false (alter acc f event)]))]
+          (when-not first-time
+            (call-rescue value children)))))
+
+    ; Value provided
+    (let [acc      (atom (first opts))
+          children (rest opts)]
+      (fn [event]
+        (call-rescue (swap! acc f event) children)))))
+
+
 (defn window
   "A sliding window of the last few events. Calls children with a vector of the
   last n events, from oldest to newest. Example:
