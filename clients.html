@@ -39,8 +39,7 @@ query the index.</p>
     <h2><a href="https://github.com/aphyr/riemann-java-client">Java</a></h2>
 
     <p>The Java client provides a thread-safe TCP client. It's used by Riemann
-    internally. I'm still working on getting this packaged up properly in
-    clojars/maven central.</p>
+    internally.</p>
 
 {% highlight xml %}
 <repository>
@@ -50,7 +49,7 @@ query the index.</p>
 <dependency>
   <groupId>com.aphyr</groupId>
   <artifactId>riemann-java-client</artifactId>
-  <version>0.0.1</version>
+  <version>0.0.3</version>
 </dependency>
 {% endhighlight %}
   </div>
@@ -68,13 +67,8 @@ query the index.</p>
   </div>
 
   <div class="card">
-    <h2><a href="api/riemann.client.html">Clojure</a></h2> <p>Riemann
-    comes with a built-in <a href="api/riemann.client.html">Clojure
-      client</a>. It's thread-safe, stateful, and synchronized. Does not
-    support UDP yet. You can require it as a dependency from <a
-      href="http://clojars.org/riemann">Clojars</a>. See <a
-      href="https://github.com/aphyr/riemann-bench">riemann-bench</a> for
-    an example application using the client.</p>
+    <h2><a href="https://github.com/aphyr/riemann-clojure-client">Clojure</a></h2>
+    <p><a href="https://github.com/aphyr/riemann-clojure-client">Riemann-clojure-client</a> is a small wrapper around the Java client.</p>
   </div>
 
   <div class="card">
