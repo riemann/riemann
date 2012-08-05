@@ -27,41 +27,42 @@
   (update [this event] 
           "Updates index with event"))
 
-(extend-protocol Index
-  NonBlockingHashMap
-
-  (clear [this]
-         (.clear this))
-
-  (delete [this event]
-          (.remove this [(:host event) (:service event)]))
-
-  (delete-exactly [this event]
-                  (.remove this [(:host event) (:service event)] event))
-
-  (expire [this]
-          (filter
-            (fn [{:keys [ttl time] :or {:ttl default-ttl} :as state}]
-              (let [age (- (unix-time) time)]
-                (when (> age ttl)
-                  (delete this state)
-                  true)))
-            (.values this)))
-
-  (search [this query-ast]
-          "O(n), sadly."
-          (let [matching (query/fun query-ast)]
-            (filter matching (.values this))))
-
-  (update [this event]
-          (when-not (= "expired" (:state event))
-            (.put this [(:host event) (:service event)] event)
-              event)))
-
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"
   []
-  (NonBlockingHashMap.))
+  (let [hm (NonBlockingHashMap.)]
+    (reify Index
+      (clear [this]
+             (.clear hm))
+
+      (delete [this event]
+              (.remove hm [(:host event) (:service event)]))
+
+      (delete-exactly [this event]
+                      (.remove hm [(:host event) (:service event)] event))
+
+      (expire [this]
+              (filter
+                (fn [{:keys [ttl time] :or {:ttl default-ttl} :as state}]
+                  (let [age (- (unix-time) time)]
+                    (when (> age ttl)
+                      (delete this state)
+                      true)))
+                (.values hm)))
+
+      (search [this query-ast]
+              "O(n), sadly."
+              (let [matching (query/fun query-ast)]
+                (filter matching (.values hm))))
+
+      (update [this event]
+              (when-not (= "expired" (:state event))
+                (.put hm [(:host event) (:service event)] event)
+                  event))
+
+      clojure.lang.Seqable
+      (seq [this] 
+           (seq (.values hm))))))
 
 (defn index
   "Create a new index (currently: an nhbm index)"

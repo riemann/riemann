@@ -11,7 +11,7 @@
            (update i {:host 1 :service 3 :state :ok})
            (update i {:host 1 :service 3 :description "new"})
 
-           (is (= (set (.values i))
+           (is (= (set i)
                   #{{:host 1}
                     {:host 2}
                     {:host 1 :service 3 :description "new"}}))))
@@ -22,7 +22,7 @@
            (update i {:host 2})
            (delete i {:host 1 :service 1})
            (delete i {:host 2 :state :ok})
-           (is (= (set (.values i))
+           (is (= (set i)
                   #{{:host 1}}))))
 
 (deftest nhbm-search
@@ -44,6 +44,5 @@
                               expired))
                     #{1 3})))
 
-           (is (= (map (fn [e] (:host e))
-                       (.values i))
+           (is (= (map (fn [e] (:host e)) i)
                   [2]))))

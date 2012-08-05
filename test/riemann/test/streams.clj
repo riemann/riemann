@@ -611,7 +611,7 @@
                        {:host 2 :state "ok"} 
                        {:host 1 :state "bad"}]]
            (doseq [state states] (s state))
-           (is (= (set (.values i))
+           (is (= (set i)
                   #{{:host 1 :state "bad"}
                     {:host 2 :state "ok"}}))))
 
@@ -624,7 +624,7 @@
                        {:host 1 :state "bad"}]]
            (doseq [state states] (s state))
            (doseq [state states] (d state))
-           (is (= (vec (.values i)) []))))
+           (is (= (vec (seq i)) []))))
 
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)

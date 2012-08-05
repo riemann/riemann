@@ -96,7 +96,7 @@
            (future-cancel reaper)
            
            ; Check that index does not contain these states
-           (is (= [2] (map (fn [e] (:service e)) (.values index))))
+           (is (= [2] (map (fn [e] (:service e)) index)))
 
            ; Check that expired-stream received them.
            (is (= (select-keys @res [:service :host :state])

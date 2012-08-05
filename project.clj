@@ -48,6 +48,7 @@ alerting; and to glue various monitoring systems together."
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:bench x))))
                    :integration :integration
+                   :focus :focus
                    :bench :bench
                    :all (fn [_] true)}
   :java-source-paths ["src/riemann/"]

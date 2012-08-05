@@ -1,51 +1,168 @@
 (ns riemann.test.deps
-  (:use [riemann.deps])
-  (:use [clojure.test]))
+  (:use riemann.deps
+        riemann.index
+        clojure.test))
 
-(deftest normalize-class-test
-         (is (= (normalize-class "riak")
-                [:any "riak" "ok"]))
+(defn context [events]
+  (let [i (nbhm-index)]
+    (doseq [e events]
+      (update i e))
+           i))
 
-         (is (= (normalize-class ["riak"])
-                [:any "riak" "ok"]))
+(deftest hash-match
+         ; No states
+         (is (not (match {:service "foo"}
+                         (context [])
+                         nil)))
+         ; Single state
+         (is (match {:state "ok"}
+                    (context [{:state "ok"}])
+                    nil))
+         ; Wrong state
+         (is (not (match {:state "ok"}
+                         (context [{:state "critical"}])
+                         nil))))
 
-         (is (= (normalize-class [:local "riak"])
-                [:local "riak" "ok"]))
+(deftest localhost-match
+         (let [r (localhost {:service "memcache" :state "ok"})]
+           (is (match r
+                      (context [{:host 1 :service "memcache" :state "ok"}])
+                      {:host 1}))
+           (is (not (match r
+                      (context [{:host 1 :service "memcache" :state "ok"}])
+                      {:host 2})))
+           (is (not (match r
+                      (context [{:host 1 :service "memcache" :state "false"}])
+                      {:host 1})))
+           ))
 
-         (is (= (normalize-class ["h" "riak" "weird"])
-                ["h" "riak" "weird"])))
+(deftest depends-match
+         ; Different service is always true
+         (is (match (depends {:service "x"} {:service "y"})
+                    (context [])
+                    {:service "z"}))
 
-(deftest member-test
-         (is (member? [:any "riak" "ok"] 
-                      {:service "riak" :state "ok"}))
+         ; Single dep
+         (let [r (depends {:service "x"} {:service "y" :state "ok"})]
+           (is (match r (context [{:service "y" :state "ok"}]) 
+                      {:service "x"}))
+           (is (not (match r (context [{:service "y" :state "no"}]) 
+                           {:service "x"})))
+           (is (not (match r (context [])
+                           {:service "x"})))
+           ))
 
-         
-         (is (member? [:any "riak" "ok"] 
-                      {:host "a" :service "riak" :state "ok"}))
+(deftest all-match
+         (let [r (all {:service "x"} {:service "y"})]
+           (is (match r (context [{:service "x"} {:service "y"}]) nil))
+           (is (not (match r (context []) nil)))
+           (is (not (match r (context [{:service "x"}]) nil)))))
+                    
+(deftest any-match
+         (let [r (any {:service "x"} {:service "y"})]
+           (is (match r (context [{:service "x"} {:service "y"}]) nil))
+           (is (not (match r (context []) nil)))
+           (is (match r (context [{:service "x"}]) nil))))
 
-         (is (not (member? [:any "riak" "ok"]
-                           {:host "a" :service "foo" :state "ok"})))
+(deftest real-match
+         (let [r (all (depends {:service "lbapp"} 
+                               (any {:service "riak 1" :state "ok"} 
+                                    {:service "riak 2" :state "ok"}))
+                      (depends {:service "api"}
+                               (all
+                                 (localhost
+                                   (any
+                                     {:service "memcached" :state "ok"}
+                                     {:service "redis" :state "ok"})
+                                   (any
+                                     {:service "cpu" :state "ok"}
+                                     {:service "cpu" :state "warning"}))
+                                 {:host "db" :service "postgres" :state "ok"})))
+               c (context [{:service "riak 1" :state "ok"}
+                           {:service "riak 2" :state "warning"}
+                           {:service "memcached" :host 1 :state "ok"}
+                           {:service "memcached" :host 2 :state "critical"}
+                           {:service "memcached" :host 3 :state "ok"}
+                           {:service "memcached" :host 4 :state "critical"}
+                           {:service "redis" :host 1 :state "ok"}
+                           {:service "redis" :host 2 :state "ok"}
+                           {:service "redis" :host 3 :state "critical"}
+                           {:service "redis" :host 4 :state "critical"}
+                           {:service "cpu" :host 1 :state "ok"}
+                           {:service "cpu" :host 2 :state "warning"}
+                           {:service "cpu" :host 3 :state "warning"}
+                           {:service "cpu" :host 4 :state "ok"}
+                           {:host "db" :service "postgres" :state "ok"}])]
 
-         (is (member? ["my" "cpu" :any]
-                      {:host "my" :service "cpu" :state "weird"}))
+           (is (match r c {:service "lbapp"}))
+           (is (match r c {:service "api" :host 1}))
+           (is (match r c {:service "api" :host 2}))
+           (is (match r c {:service "api" :host 3}))
+           (is (not (match r c {:service "api" :host 4})))
+           (is (not (match r c {:service "api"})))
+           (is (not (match r c {:service "api" :host :invisible})))))
 
-         (is (member? [nil "cpu" "ok"]
-                      {:service "cpu" :state "ok"}))
+(deftest tag-test
+         (let [rule (depends {:service "x"} {:service "y"})
+               index (nbhm-index)
+               out (ref [])
+               append-out (fn [e] (dosync (alter out conj e)))
+               get-out (fn [] (dosync (let [x (set (deref out))]
+                                        (ref-set out [])
+                                        x)))
+               s (deps-tag index rule append-out)]
 
-         (is (not (member? [nil "cpu" "ok"]
-                           {:host "a" :service "cpu" :state "ok"}))))
+           (is (= #{} (get-out)))
+           
+           ; Pass through unrelated events.
+           (s {})
+           (s {:service "other"})
+           (is (= #{{:deps-satisfied? true}
+                    {:deps-satisfied? true :service "other"}}
+                  (get-out)))
+           ))
 
+; Someday.
+(comment
+(deftest suppress-test
+         (let [rule (depends {:service "x"} {:service "y"})
+               index (nbhm-index)
+               out (ref [])
+               append-out (fn [e] (dosync (alter out conj e)))
+               get-out (fn [] (dosync (let [x (set (deref out))]
+                                        (ref-set out [])
+                                        x)))
+               s (suppress-dependent-failures {:index index
+                                               :interval 0.1
+                                               :rule rule}
+                                              append-out)]
 
-(deftest class-query-test
-         (is (= (class-query [:any "riak" "ok"] {})
-                (list 'and true (list '= "riak" 'service) (list '= "ok" 'state))))
+           (is (= #{} (get-out)))
+           
+           ; Should pass through unrelated events.
+           (s {})
+           (s {:service "other"})
+           (Thread/sleep 100)
+           (is (= #{{} {:service "other"}} (get-out)))
 
-         (is (= (class-query [:local "cpu" nil] {:host "shodan"})
-                (list 'and (list '= "shodan" 'host)
-                           (list '= "cpu" 'service) 
-                           (list '= nil 'state))))
+           ; Should hold on to unsatisfied events until dependencies are met.
+           (s {:service "x"})
+           (Thread/sleep 100)
+           (is (= #{} (get-out)))
+           
+           (update index {:service "y"})
+           (Thread/sleep 150)
+           (is (= #{{:service "x"}} (get-out)))
 
-         (is (= (class-query ["awesome" "cache" "ok"] {})
-                (list 'and (list '= "awesome" 'host)
-                           (list '= "cache" 'service) 
-                           (list '= "ok" 'state)))))
+           ; Should allow unsatisfied events to be updated.
+           (delete index {:service "y"})
+           (s {:service "x" :state 1})
+           (Thread/sleep 100)
+           (s {:service "x" :state 2})
+           (Thread/sleep 100)
+           (is (= #{} (get-out)))
+
+           (update index {:service "y"})
+           (Thread/sleep 150)
+           (is (= #{{:service "x" :state 2}}))
+           )))
