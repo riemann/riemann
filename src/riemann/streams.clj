@@ -47,6 +47,22 @@
   (fn [events]
     (call-rescue (f events) children)))
 
+(defn window
+  "A sliding window of the last few events. Calls children with a vector of the
+  last n events, from oldest to newest. Example:
+  
+  (window 5 (combine folds/mean index))"
+  [n & children]
+  (let [window (atom (vec []))]
+    (fn [event]
+      (let [w (swap! window (fn [w]
+                              (let [w (conj w event)
+                                    size (count w)]
+                                (if (< n size)
+                                  (subvec w (- size n))
+                                  w))))]
+        (call-rescue w children)))))
+
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
 (comment (time

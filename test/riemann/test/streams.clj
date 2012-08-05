@@ -728,3 +728,14 @@
 
     (s {:service "a" :tags ["foo" "bar"]})
     (is (= (deref out) {:service "a" :tags ["foo" "bar"] :metric 2}))))
+
+(deftest ^:focus window-test
+         ; Zero-width windows.
+         (is (= (run-stream (window 0) []) []))
+         (is (= (run-stream (window 0) [1 2])
+                [[] []]))
+
+         ; n-width windows
+         (is (= (run-stream (window 2) [1 2 3])
+                [[1] [1 2] [2 3]]))
+         )
