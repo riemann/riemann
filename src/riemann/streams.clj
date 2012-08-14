@@ -234,6 +234,24 @@
           (add bin event)
           (add (setup) event))))))
 
+(defn fold-interval
+  "Applies the folder function to all event-key values of events during
+  interval seconds."
+  [interval event-key folder & children]
+  (part-time-fast interval
+      (fn [] (ref []))
+      (fn [r event]
+        (dosync
+          (if-let [ek (event-key event)]
+            (alter r conj event))))
+      (fn [r start end]
+        (let [stat (dosync
+                    (folder (map event-key @r)))
+              event (assoc (last @r) event-key stat)]
+          (call-rescue event children)))))
+
+(defn fold-interval-metric [interval folder & children] (apply fold-interval interval :metric folder children))
+
 (defn fill-in
   "Passes on all events. Fills in gaps in event stream with copies of the given
   event, wherever interval seconds pass without an event arriving. Inserted
