@@ -520,6 +520,11 @@
                                 [{:metric 2} 0.1 {:metric 4} 0.2 {:metric 2} 0.3 {:metric 4} 1.0 {:metric 100} 0.1 {:metric 100} 1.0]
                                 (em 1.1547005383792515 0.0)))
 
+(deftest fold-interval-metric-test
+         (test-stream-intervals (riemann.streams/fold-interval-metric 1 incanter.stats/sd)
+                                [{:metric 2} 0.1 {:metric 4} 0.2 {:metric 2} 0.3 {:metric 4} 1.0 {:metric 100} 0.1 {:metric 100} 1.0]
+                                (em 1.1547005383792515 0.0)))
+
 (deftest changed-test
          (let [output (ref [])
                r (changed :state

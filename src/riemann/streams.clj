@@ -250,6 +250,8 @@
               event (assoc (last @r) event-key stat)]
           (call-rescue event children)))))
 
+(defn fold-interval-metric [interval folder & children] (apply fold-interval interval :metric folder children))
+
 (defn fill-in
   "Passes on all events. Fills in gaps in event stream with copies of the given
   event, wherever interval seconds pass without an event arriving. Inserted
