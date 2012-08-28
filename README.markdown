@@ -23,3 +23,9 @@ replaceable as I find the time. Top on my list:
 - Use Korma/HSQL to implement a faster index for query-heavy installations.
 - Reservoir sampling
 - Event pubsub
+
+Note
+====
+  
+You should try to ensure that your clocks are synchronized among the clients & the riemann server to avoid making clients  
+send expired events. 
