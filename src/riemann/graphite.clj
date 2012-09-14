@@ -4,6 +4,7 @@
   (:import [java.net Socket])
   (:import [java.io Writer])
   (:import [java.io OutputStreamWriter])
+  (:import [java.util.concurrent ArrayBlockingQueue])
   (:use [clojure.string :only [split join replace]])
   (:use clojure.tools.logging)
   (:use riemann.common))
@@ -42,50 +43,39 @@
   [opts]
   (let [opts (merge {:host "localhost" 
                      :port 2003
+                     :socket-count (* 2 (.availableProcessors
+                                         (Runtime/getRuntime)))
                      :path graphite-path-percentiles} opts)
-        sock (ref nil)
-        out  (ref nil)
-        close (fn []
-                ; Close conn
-                (when (deref out) (.close (deref out)))
-                (when (deref sock) (.close (deref sock)))
-                (dosync
-                  (ref-set sock nil)
-                  (ref-set out nil)))
-        open (fn []
-               (info (str "Opening connection to " opts))
-               (close)
-               
-                ; Open conn
-                (dosync
-                  (ref-set sock (Socket. (:host opts) (:port opts)))
-                  (ref-set out (OutputStreamWriter.
-                                 (.getOutputStream (deref sock))))))
+        sockets (ArrayBlockingQueue. (:socket-count opts) true)
+        add-socket (fn []
+                     (info (str "Opening connection to " opts))
+                     (let [sock (Socket. (:host opts) (:port opts))
+                           out (OutputStreamWriter.(.getOutputStream sock))]
+                       (.offer sockets [sock out])))
         path (:path opts)]
-        
+
     ; Try to connect immediately
     (try
-      (open)
+      (dotimes [n (:socket-count opts)]
+        (add-socket))
       (catch Exception e
         (warn e (str "Couldn't send to graphite " opts))))
-
     (fn [event]
       (when (:metric event)
-        (let [string (str (join " " [(path event) 
+        (let [[sock out] (.take sockets)
+              string (str (join " " [(path event) 
                                      (float (:metric event))
                                      (int (:time event))])
                           "\n")]
-          (locking sock
-            (when (deref sock)
-              (try
-                  (.write (deref out) string)
-                  (.flush (deref out))
-
-                (catch Exception e
-                  (warn e (str "Couldn't send to graphite " opts))
-                  (close)
-
-                  (future
-                    ; Reconnect in 5 seconds
-                    (Thread/sleep 5000)
-                    (locking sock (open))))))))))))
+          (try
+            (.write ^OutputStreamWriter out string)
+            (.flush ^OutputStreamWriter out)
+            (.offer sockets [sock out])
+            (catch Exception e
+              (warn e (str "Couldn't send to graphite " opts))
+              (.close out)
+              (.close sock)
+              (future
+                ; Reconnect in 5 seconds
+                (Thread/sleep 5000)
+                (add-socket)))))))))
