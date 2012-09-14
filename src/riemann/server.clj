@@ -25,9 +25,12 @@
                                                NioServerSocketChannelFactory)
            (org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
                                                 LengthFieldPrepender)
+           (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
            (org.jboss.netty.handler.execution
              ExecutionHandler
-             OrderedMemoryAwareThreadPoolExecutor))
+             OrderedMemoryAwareThreadPoolExecutor
+             MemoryAwareThreadPoolExecutor))
+
   (:require [riemann.query :as query])
   (:require [riemann.index :as index])
   (:use riemann.core)
@@ -77,6 +80,12 @@
   []
   (LengthFieldPrepender. 4))
 
+(defn protobuf-frame-decoder []
+  (proxy [OneToOneDecoder] []
+    (decode [context channel message]
+      (let [instream (ChannelBufferInputStream. message)]
+        (decode-inputstream instream)))))
+
 (defn tcp-handler
   "Returns a TCP handler for the given core"
   [core ^ChannelGroup channel-group]
@@ -87,12 +96,10 @@
     (messageReceived [^ChannelHandlerContext context 
                       ^MessageEvent message-event]
       (let [channel (.getChannel message-event)
-            instream (ChannelBufferInputStream.
-                       (.getMessage message-event))]
+            msg (.getMessage message-event)]
         (try
-          (let [msg (decode-inputstream instream)
-                response (handle core msg)
-                encoded (encode response)]
+          (let  [response (handle core msg)
+                 encoded (encode response)]
             (.write channel (ChannelBuffers/wrappedBuffer encoded)))
          (catch java.nio.channels.ClosedChannelException e
            (warn "channel closed"))
@@ -113,17 +120,13 @@
                  (.add channel-group (.getChannel state-event)))
 
     (messageReceived [context ^MessageEvent message-event]
-                     (let [instream (ChannelBufferInputStream.
-                                      (.getMessage message-event))
-                           msg (decode-inputstream instream)]
-                       (handle core msg)))
-    
+                     (handle core (.getMessage message-event)))
     (exceptionCaught [context ^ExceptionEvent exception-event]
-                     (warn (.getCause exception-event) "UDP handler caught"))))
+      (warn (.getCause exception-event) "UDP handler caught"))))
 
 (defn tcp-cpf
   "TCP Channel Pipeline Factory"
-  [core channel-group]
+  [core channel-group message-decoder]
   (proxy [ChannelPipelineFactory] []
     (getPipeline []
                  (let [decoder  (int32-frame-decoder)
@@ -135,19 +138,23 @@
                    (doto (Channels/pipeline)
                      (.addLast "int32-frame-decoder" decoder)
                      (.addLast "int32-frame-encoder" encoder)
+                     (.addLast "message-decoder" (message-decoder))
                      (.addLast "executor" executor)
                      (.addLast "handler" handler))))))
 
 (defn udp-cpf
   "Channel Pipeline Factory"
-  [core channel-group]
+  [core channel-group message-decoder]
   (proxy [ChannelPipelineFactory] []
     (getPipeline []
-                 (let [p (Channels/pipeline)
-                       h (udp-handler core channel-group)]
-                   (.addLast p "riemann-udp-handler" h) 
-                   p))))
-
+                 (let [executor (ExecutionHandler.
+                                 (MemoryAwareThreadPoolExecutor.
+                                  16 1048576 1048576)) ;; Moar magic!
+                       handler (udp-handler core channel-group)]
+                   (doto (Channels/pipeline)
+                     (.addLast "message-decoder" (message-decoder))
+                     (.addLast "executor" executor)
+                     (.addLast "handler" handler))))))
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
@@ -156,14 +163,15 @@
   ([core] (tcp-server core {}))
   ([core opts]
    (let [opts (merge {:host "localhost"
-                      :port 5555}
+                      :port 5555
+                      :message-decoder protobuf-frame-decoder}
                      opts)
          bootstrap (ServerBootstrap.
                      (NioServerSocketChannelFactory.
                        (Executors/newCachedThreadPool)
                        (Executors/newCachedThreadPool)))
          all-channels (DefaultChannelGroup. (str "tcp-server " opts))
-         cpf (tcp-cpf core all-channels)]
+         cpf (tcp-cpf core all-channels (:message-decoder opts))]
 
      ; Configure bootstrap
      (doto bootstrap
@@ -203,13 +211,14 @@
   ([core opts]
    (let [opts (merge {:host "localhost"
                       :port 5555
-                      :max-size 16384}
+                      :max-size 16384
+                      :message-decoder protobuf-frame-decoder}
                      opts)
          bootstrap (ConnectionlessBootstrap.
                      (NioDatagramChannelFactory.
                        (Executors/newCachedThreadPool)))
          all-channels (DefaultChannelGroup. (str "udp-server " opts))
-         cpf (udp-cpf core all-channels)] 
+         cpf (udp-cpf core all-channels (:message-decoder opts))] 
     
      ; Configure bootstrap
      (doto bootstrap
