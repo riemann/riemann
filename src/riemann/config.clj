@@ -25,6 +25,13 @@
     (alter (core :servers) conj
       (riemann.server/tcp-server core (apply hash-map opts)))))
 
+(defn graphite-server
+  "Add a new Graphite TCP server with opts to the default core."
+  [& opts]
+  (dosync
+   (alter (core :servers) conj
+     (riemann.server/graphite-server core (apply hash-map opts)))))
+
 (defn udp-server 
   "Add a new UDP server with opts to the default core."
   [& opts]
