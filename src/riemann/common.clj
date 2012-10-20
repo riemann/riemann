@@ -24,17 +24,6 @@
 (def State (protodef com.aphyr.riemann.Proto$State))
 (def Event (protodef com.aphyr.riemann.Proto$Event))
 
-; Few flow control things
-(defmacro threaded [thread-count & body]
-  `(let [futures# (map (fn [_#] (future ~@body))
-                      (range 0 ~thread-count))]
-    (doseq [fut# futures#] (deref fut#))))
-
-(defn ppmap [threads f s]
-  (let [work (partition (/ (count s) threads) s)
-        result (pmap (fn [part] (doall (map f part))) work)]
-    (doall (apply concat result))))
-
 ; Times
 (defn unix-time
   "The current unix epoch time in seconds, taken from System/currentTimeMillis."
