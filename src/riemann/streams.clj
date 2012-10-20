@@ -16,7 +16,7 @@
   (:require [riemann.periodic :as periodic])
   (:require riemann.client)
   (:require riemann.logging) 
-  (:require [clojure.set])
+  (:require [clojure.set :as set])
   (:use [clojure.math.numeric-tower])
   (:use [clojure.tools.logging]))
 
@@ -604,7 +604,7 @@
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
   (fn [event]
-    (when (subset? tags (:tags event))
+    (when (set/subset? (set tags) (set (:tags event)))
       (call-rescue event children))))
 (def tagged tagged-all)
 
