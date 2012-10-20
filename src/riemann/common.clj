@@ -173,21 +173,3 @@
   "Is r present in seqable s?"
   [r s]
   (some (fn [e] (= r e)) s))
-
-(defn subset?
-  "Are all elements of required present in seqable s?"
-  [required s]
-  (clojure.set/subset? (set required) (set s)))
-
-(defn overlap?
-  "Do a and b (any seqables) have any elements in common?"
-  [a b]
-  (some (fn [e]
-          (some (fn [r] (= e r)) a)) b))
-
-(defn disjoint?
-  "Do a and b (any seqables) have no elements in common?"
-  [a b]
-  (not-any? (fn [e] 
-             (some (fn [r] (= e r)) a))
-           b))
