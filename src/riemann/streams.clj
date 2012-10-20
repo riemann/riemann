@@ -867,6 +867,19 @@
         (list (keyword expr) 'event)
         expr))))
 
+(defmacro where-event
+  "Passes on events where expr is true, binding the provided symbol
+   to the event during evaluation.
+
+  ; Match a event which has expired.
+  (where-event event (expired? event) ...)"
+  [event-sym expr & children]
+  (let [p (where-rewrite expr)]
+    `(let [kids# [~@children]]
+      (fn [event#]
+       (when (let [~event-sym event#] ~p)
+         (call-rescue event# kids#))))))
+
 (defmacro where
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
   'event is bound to the event under consideration. Examples:
@@ -876,10 +889,7 @@
   
   ; Match a event where the metric is negative AND the state is ok.
   (where (and (> 0 metric)
-              (state \"ok\")) ...)
-
-  ; Match a event which has expired.
-  (where (expired? event) ...)
+          (state \"ok\")) ...)
 
   ; Match a event where the host begins with web
   (where (host #\"^web\") ...)"
@@ -887,8 +897,7 @@
   (let [p (where-rewrite expr)]
     `(let [kids# [~@children]]
       (fn [event#]
-       (when (let [~'event event#] ~p)
-         (call-rescue event# kids#))))))
+        (when ~p (call-rescue event# kids#))))))
 
 (defn update-index
   "Updates the given index with all events received."
