@@ -539,24 +539,14 @@
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
-  (let [past (ref {})]
-    (fn [event]
-      ; Expire old events
-      (dosync
-        (ref-set past
-                 (let [p (deref past)]
-                   (reduce (fn [res [k v]]
-                             (if (expired? v)
-                               (dissoc res k)
-                               res))
-                           p p))))
-      
-      ; Add event to memory
-      (let [events (vals
-        (dosync (alter past assoc [(:host event) (:service event)] event)))]
-        
-        ; Pass on
-        (call-rescue events children)))))
+  (let [past (atom {})]
+    (fn [{:keys [host service] :as event}]
+      (let [evkey  [host service]
+            reaper (fn [[k v]] (when-not (or (expired? v) (= evkey k)) [k v]))
+            events (swap! past (comp (partial into {})
+                                     (partial cons [evkey event])
+                                     (partial filter reaper)))]
+        (call-rescue (vals events) children)))))
 
 (defn append
   "Conj events onto the given reference"
