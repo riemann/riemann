@@ -76,3 +76,11 @@ middleware to log every request to your app, or track exceptions. Riemann
 can be configured to calculate rates, averages, min/max, distributions,
 and more. To get started, read the <a
   href="configuring.html">configuration guide</a>.</p>
+
+<h2>Best Practices</h2>
+
+Your clocks may be unsynchronized to varying degrees. In some places, Riemann
+uses the server clock as the authoritative time. In other cases, Riemann will
+use the timestamps on individual events. Clock desynchronization can lead to
+unusual consequences if you don't consider these effects carefully; we
+recommend using NTP to synchronize your clocks as closely as possible.
