@@ -13,7 +13,7 @@
 alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
-  :jvm-opts ["-server" "-Xms2048m" "-Xmx2048m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
+  :jvm-opts ["-server" "-d64" "-Xms2048m" "-Xmx2048m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
@@ -42,7 +42,8 @@ alerting; and to glue various monitoring systems together."
     [clj-time "0.4.3"]
     [incanter/incanter-charts "1.3.0"]
   ]
-  :profiles {:dev {:dependencies [[clj-glob "1.0.0"]]}}
+  :profiles {:dev {:dependencies [[clj-glob "1.0.0"]]}
+             :test {:jvm-opts ["-server" "-Xms2048m" "-Xmx2048m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]}}
   :plugins [[codox "0.6.1"]
             [lein-deb "1.0.0-SNAPSHOT"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
