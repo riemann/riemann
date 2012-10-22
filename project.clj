@@ -13,7 +13,7 @@
 alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
-  :jvm-opts ["-server" "-d64" "-Xms2048m" "-Xmx2048m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
+  :jvm-opts ["-server" "-Xms2048m" "-Xmx2048m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
