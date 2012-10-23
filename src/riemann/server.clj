@@ -3,6 +3,7 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import (java.net InetSocketAddress)
            (java.util.concurrent Executors)
+           (org.jboss.netty.util CharsetUtil)
            (org.jboss.netty.bootstrap ConnectionlessBootstrap
                                       ServerBootstrap)
            (org.jboss.netty.buffer ChannelBufferInputStream
@@ -23,8 +24,11 @@
            (org.jboss.netty.channel.socket DatagramChannelFactory)
            (org.jboss.netty.channel.socket.nio NioDatagramChannelFactory
                                                NioServerSocketChannelFactory)
+           (org.jboss.netty.handler.codec.string StringDecoder StringEncoder)
            (org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
-                                                LengthFieldPrepender)
+                                                LengthFieldPrepender
+                                                DelimiterBasedFrameDecoder
+                                                Delimiters)
            (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
            (org.jboss.netty.handler.execution
              ExecutionHandler
@@ -111,7 +115,6 @@
                      (warn (.getCause exception-event) "TCP handler caught")
                      (.close (.getChannel exception-event)))))
 
-
 (defn udp-handler
   "Returns a UDP handler for the given core."
   [core ^ChannelGroup channel-group]
@@ -155,6 +158,7 @@
                      (.addLast "message-decoder" (message-decoder))
                      (.addLast "executor" executor)
                      (.addLast "handler" handler))))))
+
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
