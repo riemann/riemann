@@ -11,12 +11,14 @@
   (:use clojure.tools.logging)
   (:use riemann.client)
   (:require [riemann.pubsub :as pubsub])
+  (:require [riemann.graphite :as graphite])
   (:use [riemann.streams :exclude [update-index delete-from-index]])
   (:use riemann.email)
-  (:use riemann.graphite)
   (:gen-class))
 
 (def ^{:doc "A default core."} core (core/core))
+
+(def graphite #'graphite/graphite)
 
 (defn tcp-server 
   "Add a new TCP server with opts to the default core."

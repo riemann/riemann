@@ -84,15 +84,6 @@
   []
   (LengthFieldPrepender. 4))
 
-(defn graphite-frame-decoder
-  "A closure which yields a graphite frame-decoder. Taking an argument
-   which will be given to decode-graphite-line (hence the closure)"
-  [parser-fn]
-  (fn []
-    (proxy [OneToOneDecoder] []
-      (decode [context channel message]
-        (decode-graphite-line message parser-fn)))))
-
 (defn protobuf-frame-decoder []
   (proxy [OneToOneDecoder] []
     (decode [context channel message]
@@ -123,28 +114,6 @@
     (exceptionCaught [context ^ExceptionEvent exception-event]
                      (warn (.getCause exception-event) "TCP handler caught")
                      (.close (.getChannel exception-event)))))
-
-(defn graphite-handler
-  "Returns a Graphite handler for the given core"
-  [core ^ChannelGroup channel-group]
-  (proxy [SimpleChannelHandler] []
-    (channelOpen [context ^ChannelStateEvent state-event]
-                 (.add channel-group (.getChannel state-event)))
-    
-    (messageReceived [^ChannelHandlerContext context 
-                      ^MessageEvent message-event]
-      (let [channel (.getChannel message-event)
-            msg (.getMessage message-event)]
-        (try
-          (let  [response (handle core msg)
-                 encoded (encode response)]
-            (.write channel (ChannelBuffers/wrappedBuffer encoded)))
-         (catch java.nio.channels.ClosedChannelException e
-           (warn "channel closed")))))
-    (exceptionCaught [context ^ExceptionEvent exception-event]
-      (warn (.getCause exception-event) "Graphite handler caught")
-      (.close (.getChannel exception-event)))))
-
 
 (defn udp-handler
   "Returns a UDP handler for the given core."
@@ -190,66 +159,6 @@
                      (.addLast "executor" executor)
                      (.addLast "handler" handler))))))
 
-(defn graphite-cpf
-  "Graphite Channel Pipeline Factory"
-  [core channel-group message-decoder]
-  (warn "graphite-cpf")
-  (proxy [ChannelPipelineFactory] []
-    (getPipeline []
-      (let [decoder (StringDecoder. CharsetUtil/UTF_8)
-            encoder (StringEncoder. CharsetUtil/UTF_8)
-            executor (ExecutionHandler.
-                                  (OrderedMemoryAwareThreadPoolExecutor.
-                                    16 1048576 1048576)) ;; Magic is the best!
-            handler  (graphite-handler core channel-group)]
-        (doto (Channels/pipeline)
-          (.addLast "framer" (DelimiterBasedFrameDecoder.
-                              1024 ;; Will the magic ever stop ?
-                              (Delimiters/lineDelimiter)))
-          (.addLast "string-decoder" decoder)
-          (.addLast "string-encoder" encoder)
-          (.addLast "message-decoder" (message-decoder))
-          (.addLast "executor" executor)
-          (.addLast "handler" handler))))))
-
-(defn graphite-server
-  "Start a graphite-server, some bits could be factored with tcp-server.
-   Only the default option map and the bootstrap change."
-  ([core] (graphite-server core {}))
-  ([core opts]
-   (let [opts (merge {:host "localhost"
-                      :port 2003
-                      :message-decoder graphite-frame-decoder}
-                     opts)
-         bootstrap (ServerBootstrap.
-                     (NioServerSocketChannelFactory.
-                       (Executors/newCachedThreadPool)
-                       (Executors/newCachedThreadPool)))
-         all-channels (DefaultChannelGroup. (str "graphite-server " opts))
-         cpf (graphite-cpf core all-channels
-                           ((:message-decoder opts) (:parser-fn opts)))]
-
-     ; Configure bootstrap
-     (doto bootstrap
-       (.setPipelineFactory cpf)
-       (.setOption "readWriteFair" true)
-       (.setOption "tcpNoDelay" true)
-       (.setOption "reuseAddress" true)
-       (.setOption "child.tcpNoDelay" true)
-       (.setOption "child.reuseAddress" true)
-       (.setOption "child.keepAlive" true))
-
-     ; Start bootstrap
-     (let [server-channel (.bind bootstrap
-                                 (InetSocketAddress. ^String (:host opts) 
-                                                     ^Integer (:port opts)))]
-       (.add all-channels server-channel))
-     (info "Graphite server" opts " online")
-
-     ; fn to close server
-     (fn []
-       (-> all-channels .close .awaitUninterruptibly)
-       (.releaseExternalResources bootstrap)))))
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
