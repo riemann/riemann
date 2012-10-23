@@ -147,11 +147,12 @@
                    {:tags ["cat", "dog"]}
                    {:tags ["kitten"]}]))))
 
-(deftest where-event
+(deftest where-event-test
          (let [r (ref [])
-               s (where (or (= "good" (:service event))
-                            (< 2 (:metric event)))
-                        (fn [e] (dosync (alter r conj e))))
+               s (where-event event
+                              (or (= "good" (:service event))
+                                  (< 2 (:metric event)))
+                              (fn [e] (dosync (alter r conj e))))
                events [{:service "good" :metric 0}
                        {:service "bad" :metric 0}
                        {:metric 1}
