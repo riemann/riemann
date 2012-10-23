@@ -990,7 +990,8 @@
   (let [p (where-rewrite expr)]
     `(let [kids# [~@children]]
       (fn [event#]
-        (when ~p (call-rescue event# kids#))))))
+        (when (let [~'event event#] ~p)
+          (call-rescue event# kids#))))))
 
 (defn update-index
   "Updates the given index with all events received."
