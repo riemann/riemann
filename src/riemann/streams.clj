@@ -335,6 +335,24 @@
           (add bin event)
           (add (setup) event))))))
 
+(defn fold-interval
+  "Applies the folder function to all event-key values of events during
+  interval seconds."
+  [interval event-key folder & children]
+  (part-time-fast interval
+      (fn [] (ref []))
+      (fn [r event]
+        (dosync
+          (if-let [ek (event-key event)]
+            (alter r conj event))))
+      (fn [r start end]
+        (let [stat (dosync
+                    (folder (map event-key @r)))
+              event (assoc (last @r) event-key stat)]
+          (call-rescue event children)))))
+
+(defn fold-interval-metric [interval folder & children] (apply fold-interval interval :metric folder children))
+
 (defn fill-in
   "Passes on all events. Fills in gaps in event stream with copies of the given
   event, wherever interval seconds pass without an event arriving. Inserted
@@ -622,24 +640,14 @@
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
-  (let [past (ref {})]
-    (fn [event]
-      ; Expire old events
-      (dosync
-        (ref-set past
-                 (let [p (deref past)]
-                   (reduce (fn [res [k v]]
-                             (if (expired? v)
-                               (dissoc res k)
-                               res))
-                           p p))))
-      
-      ; Add event to memory
-      (let [events (vals
-        (dosync (alter past assoc [(:host event) (:service event)] event)))]
-        
-        ; Pass on
-        (call-rescue events children)))))
+  (let [past (atom {})]
+    (fn [{:keys [host service] :as event}]
+      (let [evkey  [host service]
+            reaper (fn [[k v]] (when-not (or (expired? v) (= evkey k)) [k v]))
+            events (swap! past (comp (partial into {})
+                                     (partial cons [evkey event])
+                                     (partial filter reaper)))]
+        (call-rescue (vals events) children)))))
 
 (defn append
   "Conj events onto the given reference"
