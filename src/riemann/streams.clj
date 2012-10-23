@@ -98,21 +98,124 @@
         (call-rescue (swap! acc f event) children)))))
 
 
-(defn window
-  "A sliding window of the last few events. Calls children with a vector of the
-  last n events, from oldest to newest. Example:
+(defn moving-event-window
+  "A sliding window of the last few events. Every time an event arrives, calls
+  children with a vector of the last n events, from oldest to newest. Ignores
+  event times. Example:
   
-  (window 5 (combine folds/mean index))"
+  (moving-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
     (fn [event]
       (let [w (swap! window (fn [w]
-                              (let [w (conj w event)
-                                    size (count w)]
-                                (if (< n size)
-                                  (subvec w (- size n))
-                                  w))))]
+                              (vec (take-last n (conj w event)))))]
         (call-rescue w children)))))
+
+(defn fixed-event-window
+  "Passes on fixed-size windows of n events each. Accumulates n events, then
+  calls children with a vector of those events, from oldest to newest. Ignores
+  event times. Example:
+
+  (fixed-event-window 5 (combine folds/mean index))"
+  [n & children]
+  (let [buffer (atom [])]
+    (fn [event]
+      (let [events (swap! buffer (fn [events]
+                              (let [events (conj events event)]
+                                (if (< n (count events))
+                                  [event]
+                                  events))))]
+        (when (= n (count events))
+          (call-rescue events children))))))
+
+(defn moving-time-window
+  "A sliding window of all events with times within the last n seconds. Uses
+  the maximum event time as the present-time horizon. Every time a new event
+  arrives within the window, emits a vector of events in the window to
+  children.
+  
+  Events without times accrue in the current window."
+  [n & children]
+  (let [cutoff (ref 0)
+        buffer (ref [])]
+    (fn [event]
+      (let [events (dosync
+                     ; Compute minimum allowed time
+                     (let [cutoff (alter cutoff max (- (get event :time 0) n))]
+                       (when (or (nil? (:time event))
+                                 (< cutoff (:time event)))
+                         ; This event belongs in the buffer, and our cutoff may
+                         ; have changed.
+                         (alter buffer conj event)
+                         (alter buffer
+                                (fn [events]
+                                  (vec (filter 
+                                         (fn [e] (or (nil? (:time e))
+                                                     (< cutoff (:time e))))
+                                         events)))))))]
+        (when events
+          (call-rescue events children))))))
+
+(defn fixed-time-window
+  "A fixed window over the event stream in time. Emits vectors of events, such
+  that each vector has events from a distinct n-second interval. Windows do
+  *not* overlap; each event appears at most once in the output stream. Once an
+  event is emitted, all events *older or equal* to that emitted event are
+  silently dropped.
+  
+  Events without times accrue in the current window."
+  [n & children]
+  ; This is not a particularly inspired or clear implementation. :-(
+
+  (when (zero? n)
+    (throw (IllegalArgumentException. "Can't have a zero-width time window.")))
+
+  (let [start-time (ref nil)
+        buffer     (ref [])]
+    (fn [event]
+      (let [windows (dosync
+                      (cond
+                        ; No time
+                        (nil? (:time event))
+                        (do
+                          (alter buffer conj event)
+                          nil)
+
+                        ; No start time
+                        (nil? @start-time)
+                        (do
+                          (ref-set start-time (:time event))
+                          (ref-set buffer [event])
+                          nil)
+
+                        ; Too old
+                        (< (:time event) @start-time)
+                        nil
+
+                        ; Within window
+                        (< (:time event) (+ @start-time n))
+                        (do
+                          (alter buffer conj event)
+                          nil)
+
+                        ; Above window
+                        true
+                        (let [delta (- (:time event) @start-time)
+                              dstart (- delta (mod delta n))
+                              empties (dec (/ dstart n))
+                              windows (conj (repeat empties []) @buffer)]
+                          (alter start-time + dstart)
+                          (ref-set buffer [event])
+                          windows)))]
+        (when windows
+          (doseq [w windows]
+            (call-rescue w children)))))))
+
+
+(defn window
+  "Alias for moving-event-window."
+  [n & children]
+  (apply moving-event-window n children))
 
 ; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
@@ -539,24 +642,14 @@
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
-  (let [past (ref {})]
-    (fn [event]
-      ; Expire old events
-      (dosync
-        (ref-set past
-                 (let [p (deref past)]
-                   (reduce (fn [res [k v]]
-                             (if (expired? v)
-                               (dissoc res k)
-                               res))
-                           p p))))
-      
-      ; Add event to memory
-      (let [events (vals
-        (dosync (alter past assoc [(:host event) (:service event)] event)))]
-        
-        ; Pass on
-        (call-rescue events children)))))
+  (let [past (atom {})]
+    (fn [{:keys [host service] :as event}]
+      (let [evkey  [host service]
+            reaper (fn [[k v]] (when-not (or (expired? v) (= evkey k)) [k v]))
+            events (swap! past (comp (partial into {})
+                                     (partial cons [evkey event])
+                                     (partial filter reaper)))]
+        (call-rescue (vals events) children)))))
 
 (defn append
   "Conj events onto the given reference"
