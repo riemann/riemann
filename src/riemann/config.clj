@@ -32,7 +32,7 @@
   [& opts]
   (dosync
    (alter (core :servers) conj
-     (riemann.server/graphite-server core (apply hash-map opts)))))
+     (graphite/graphite-server core (apply hash-map opts)))))
 
 (defn udp-server 
   "Add a new UDP server with opts to the default core."
