@@ -108,11 +108,7 @@
   (let [window (atom (vec []))]
     (fn [event]
       (let [w (swap! window (fn [w]
-                              (let [w (conj w event)
-                                    size (count w)]
-                                (if (< n size)
-                                  (subvec w (- size n))
-                                  w))))]
+                              (vec (take-last n (conj w event)))))]
         (call-rescue w children)))))
 
 (defn fixed-event-window
