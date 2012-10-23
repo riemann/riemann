@@ -3,6 +3,7 @@
   (:use [riemann.common])
   (:use [riemann.folds :as folds])
   (:require [riemann.index :as index])
+  (:require [incanter.stats])
   (:use [clojure.test]))
 
 (defmacro run-stream
