@@ -215,7 +215,13 @@
           (doseq [w windows]
             (call-rescue w children)))))))
 
-  ; On my MBP tops out at around 300K
+
+(defn window
+  "Alias for moving-event-window."
+  [n & children]
+  (apply moving-event-window n children))
+
+; On my MBP tops out at around 300K
 ; events/sec. Experimental benchmarks suggest that:
 (comment (time
              (doseq [f (map (fn [t] (future
