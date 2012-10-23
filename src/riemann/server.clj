@@ -133,7 +133,7 @@
   [pipeline-factory handler]
   (proxy [ChannelPipelineFactory] []
     (getPipeline []
-      (doto (pipeline-factory)
+      (doto ^ChannelPipeline (pipeline-factory)
         (.addLast "executor" (ExecutionHandler.
                               (OrderedMemoryAwareThreadPoolExecutor.
                                16 1048576 1048576))) ; Maaagic values!
