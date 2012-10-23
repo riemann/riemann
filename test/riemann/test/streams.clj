@@ -739,13 +739,86 @@
     (s {:service "a" :tags ["foo" "bar"]})
     (is (= (deref out) {:service "a" :tags ["foo" "bar"] :metric 2}))))
 
-(deftest window-test
+(deftest moving-event-window-test
          ; Zero-width windows.
-         (is (= (run-stream (window 0) []) []))
-         (is (= (run-stream (window 0) [1 2])
-                [[] []]))
+         (test-stream (moving-event-window 0) [] [])
+         (test-stream (moving-event-window 0) [1 2] [[] []])
 
          ; n-width windows
-         (is (= (run-stream (window 2) [1 2 3])
-                [[1] [1 2] [2 3]]))
-         )
+         (test-stream (moving-event-window 2) [1 2 3] [[1] [1 2] [2 3]]))
+
+(deftest fixed-event-window-test
+         ; Zero-width windows.
+         (test-stream (fixed-event-window 0) [] [])
+         (test-stream (fixed-event-window 0) [1 2] [])
+
+         ; n-width windows
+         (test-stream (fixed-event-window 2) [1] [])
+         (test-stream (fixed-event-window 2) [1 2] [[1 2]])
+         (test-stream (fixed-event-window 2) [1 2 3 4 5] [[1 2] [3 4]]))
+
+(deftest moving-time-window-test
+         ; Zero-second windows.
+         (test-stream (moving-time-window 0) [] [])
+         (test-stream (moving-time-window 0) [{:time 1} {:time 2}] [])
+
+         ; n-width windows
+         (test-stream (moving-time-window 2) [] [])
+         (test-stream (moving-time-window 2) [{:time 1}] [[{:time 1}]])
+         (test-stream (moving-time-window 2) 
+                      [{:time 1} {:time 2} {:time 3} {:time 4}]
+                      [[{:time 1}]
+                       [{:time 1} {:time 2}]
+                       [{:time 2} {:time 3}]
+                       [{:time 3} {:time 4}]])
+
+         ; With out-of-order events
+         (test-stream (moving-time-window 2)
+                      [{:time 5}
+                       {:time 1}
+                       {:time 2}
+                       {:time 6}
+                       {:time 3}
+                       {:time 8}
+                       {:time 4}
+                       {:time 8}
+                       {:time 5}
+                       {:time 9}]
+                      [[{:time 5}]
+                       [{:time 5} {:time 6}]
+                       [{:time 8}]
+                       [{:time 8} {:time 8}]
+                       [{:time 8} {:time 8} {:time 9}]]))
+
+(deftest fixed-time-window-test
+         ; Zero-time windows.
+         (is (thrown? IllegalArgumentException (fixed-time-window 0)))
+
+         ; n-width windows
+         (test-stream (fixed-time-window 2) [] [])
+         (test-stream (fixed-time-window 2) [{:time 1}] [])
+         (test-stream (fixed-time-window 2) 
+                      [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5}]
+                      [[{:time 1} {:time 2}]
+                       [{:time 3} {:time 4}]])
+
+         ; With a gap
+         (test-stream (fixed-time-window 2) [{:time 1} {:time 7}] 
+                      [[{:time 1}] [] []])
+
+         ; With out-of-order events
+         (test-stream (fixed-time-window 2)
+                      [{:time 5}
+                       {:time 1}
+                       {:time 2}
+                       {:time 6}
+                       {:time 3}
+                       {:time 8}
+                       {:time 4}
+                       {:time 8}
+                       {:time 5}
+                       {:time 9}
+                       {:time 11}]
+                      [[{:time 5} {:time 6}]
+                       [{:time 8} {:time 8}]
+                       [{:time 9}]]))
