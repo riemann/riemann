@@ -127,12 +127,13 @@
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
 
-(defn channel-pipeline-factory-factory
-  "BOOM"
-  [pipeline handler]
+(defn channel-pipeline-factory
+  "Return a factory for ChannelPipelines given a wire protocol-specific
+  pipeline factory and a network protocol-specific handler."
+  [pipeline-factory handler]
   (proxy [ChannelPipelineFactory] []
     (getPipeline []
-      (doto (pipeline)
+      (doto (pipeline-factory)
         (.addLast "executor" (ExecutionHandler.
                               (OrderedMemoryAwareThreadPoolExecutor.
                                16 1048576 1048576))) ; Maaagic values!
@@ -160,7 +161,7 @@
                        (Executors/newCachedThreadPool)
                        (Executors/newCachedThreadPool)))
            all-channels (DefaultChannelGroup. (str "tcp-server " opts))
-           cpf (channel-pipeline-factory-factory
+           cpf (channel-pipeline-factory
                 (:pipeline-factory opts) (tcp-handler core all-channels))]
 
      ; Configure bootstrap
@@ -211,7 +212,7 @@
                      (NioDatagramChannelFactory.
                        (Executors/newCachedThreadPool)))
          all-channels (DefaultChannelGroup. (str "udp-server " opts))
-         cpf (channel-pipeline-factory-factory
+         cpf (channel-pipeline-factory
               (:pipeline-factory opts) (udp-handler core all-channels))]
 
      ; Configure bootstrap
