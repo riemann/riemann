@@ -127,38 +127,16 @@
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
 
-(defn tcp-cpf
-  "TCP Channel Pipeline Factory"
-  [core channel-group message-decoder]
+(defn channel-pipeline-factory-factory
+  "BOOM"
+  [pipeline handler]
   (proxy [ChannelPipelineFactory] []
     (getPipeline []
-                 (let [decoder  (int32-frame-decoder)
-                       encoder  (int32-frame-encoder)
-                       executor (ExecutionHandler.
-                                  (OrderedMemoryAwareThreadPoolExecutor.
-                                    16 1048576 1048576)) ; Maaagic values!
-                       handler  (tcp-handler core channel-group)]
-                   (doto (Channels/pipeline)
-                     (.addLast "int32-frame-decoder" decoder)
-                     (.addLast "int32-frame-encoder" encoder)
-                     (.addLast "message-decoder" (message-decoder))
-                     (.addLast "executor" executor)
-                     (.addLast "handler" handler))))))
-
-(defn udp-cpf
-  "Channel Pipeline Factory"
-  [core channel-group message-decoder]
-  (proxy [ChannelPipelineFactory] []
-    (getPipeline []
-                 (let [executor (ExecutionHandler.
-                                 (MemoryAwareThreadPoolExecutor.
-                                  16 1048576 1048576)) ;; Moar magic!
-                       handler (udp-handler core channel-group)]
-                   (doto (Channels/pipeline)
-                     (.addLast "message-decoder" (message-decoder))
-                     (.addLast "executor" executor)
-                     (.addLast "handler" handler))))))
-
+      (doto (pipeline)
+        (.addLast "executor" (ExecutionHandler.
+                              (OrderedMemoryAwareThreadPoolExecutor.
+                               16 1048576 1048576))) ; Maaagic values!
+        (.addLast "handler" handler)))))
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
@@ -166,16 +144,24 @@
   :port   The port to listen on. (default 5555)"
   ([core] (tcp-server core {}))
   ([core opts]
-   (let [opts (merge {:host "localhost"
-                      :port 5555
-                      :message-decoder protobuf-frame-decoder}
-                     opts)
-         bootstrap (ServerBootstrap.
-                     (NioServerSocketChannelFactory.
+     (let [pipeline-factory #(doto (Channels/pipeline)
+                               (.addLast "int32-frame-decoder"
+                                         (int32-frame-decoder))
+                               (.addLast "int32-frame-encoder"
+                                         (int32-frame-encoder))
+                               (.addLast "protobuf-decoder"
+                                         (protobuf-frame-decoder)))
+           opts (merge {:host "localhost"
+                        :port 5555
+                        :pipeline-factory pipeline-factory}
+                       opts)
+           bootstrap (ServerBootstrap.
+                      (NioServerSocketChannelFactory.
                        (Executors/newCachedThreadPool)
                        (Executors/newCachedThreadPool)))
-         all-channels (DefaultChannelGroup. (str "tcp-server " opts))
-         cpf (tcp-cpf core all-channels (:message-decoder opts))]
+           all-channels (DefaultChannelGroup. (str "tcp-server " opts))
+           cpf (channel-pipeline-factory-factory
+                (:pipeline-factory opts) (tcp-handler core all-channels))]
 
      ; Configure bootstrap
      (doto bootstrap
@@ -213,17 +199,21 @@
   :max-size   The maximum datagram size (default 16384 bytes)."
   ([core] (udp-server core {}))
   ([core opts]
-   (let [opts (merge {:host "localhost"
+     (let [pipeline-factory #(doto (Channels/pipeline)
+                               (.addLast "protobuf-decoder"
+                                         (protobuf-frame-decoder)))
+           opts (merge {:host "localhost"
                       :port 5555
                       :max-size 16384
-                      :message-decoder protobuf-frame-decoder}
+                      :pipeline-factory pipeline-factory}
                      opts)
          bootstrap (ConnectionlessBootstrap.
                      (NioDatagramChannelFactory.
                        (Executors/newCachedThreadPool)))
          all-channels (DefaultChannelGroup. (str "udp-server " opts))
-         cpf (udp-cpf core all-channels (:message-decoder opts))] 
-    
+         cpf (channel-pipeline-factory-factory
+              (:pipeline-factory opts) (udp-handler core all-channels))]
+
      ; Configure bootstrap
      (doto bootstrap
        (.setPipelineFactory cpf)
