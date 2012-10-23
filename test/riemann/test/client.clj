@@ -36,7 +36,7 @@
                server (tcp-server core)
                client (tcp-client)]
 
-           (dosync (ref-set (:index core) index))
+           (reset! (:index core) index)
 
            (try
              (is (thrown? com.aphyr.riemann.client.ServerError

@@ -31,9 +31,8 @@
                        {:ttl 12.0}]]
            
            (try
-             (dosync
-               (alter (core :servers) conj server)
-               (alter (core :streams) conj stream))
+             (swap! (core :servers) conj server)
+             (swap! (core :streams) conj stream)
 
              ; Send events
              (doseq [e events] (send-event client e))
@@ -52,9 +51,8 @@
                client (riemann.client/tcp-client)]
 
            (try
-             (dosync
-               (alter (core :servers) conj server)
-               (ref-set (core :index) index))
+             (swap! (core :servers) conj server)
+             (reset! (core :index) index)
 
              ; Send events
              (update-index core {:metric 1 :time 1})
@@ -81,9 +79,8 @@
                                 (fn [e] (dosync (ref-set res e))))
                reaper (periodically-expire core 0.001)]
 
-               (dosync
-                 (ref-set (:index core) index)
-                 (alter (:streams core) conj expired-stream))
+                (reset! (:index core) index)
+                (swap! (:streams core) conj expired-stream)
 
            ; Insert events
            (update-index core {:service 1 :ttl 0.00 :time (unix-time)})
@@ -139,10 +136,8 @@
                                                  (riemann.streams/append out))
                client (riemann.client/tcp-client)]
            (try
-             (dosync
-               (alter (core :servers) conj server)
-               ; (alter (core :streams) conj prn)
-               (alter (core :streams) conj stream))
+             (swap! (core :servers) conj server)
+             (swap! (core :streams) conj stream)
 
              ; Wait until we aren't aligned... ugh, timing
              ;(Thread/sleep (- 1100 (* (mod (unix-time) 1) 1000)))

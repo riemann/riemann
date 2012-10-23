@@ -23,9 +23,8 @@
 (defn tcp-server 
   "Add a new TCP server with opts to the default core."
   [& opts]
-  (dosync
-    (alter (core :servers) conj
-      (riemann.server/tcp-server core (apply hash-map opts)))))
+  (swap! (core :servers) conj
+         (riemann.server/tcp-server core (apply hash-map opts))))
 
 (defn graphite-server
   "Add a new Graphite TCP server with opts to the default core."
@@ -37,31 +36,29 @@
 (defn udp-server 
   "Add a new UDP server with opts to the default core."
   [& opts]
-  (dosync
-    (alter (core :servers) conj
-      (riemann.server/udp-server core (apply hash-map opts)))))
+  (swap! (core :servers) conj
+         (riemann.server/udp-server core (apply hash-map opts))))
 
 (defn ws-server
   "Add a new websockets server with opts to the default core."
   [& opts]
-  (dosync
-    (alter (core :servers) conj
-           (riemann.server/ws-server core (apply hash-map opts)))))
+  (swap!
+    (core :servers) conj
+    (riemann.server/ws-server core (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core." 
   [& things]
-  (dosync
-    (alter (core :streams) concat things)))
+  (swap! (core :streams) concat things))
 
 (defn index 
   "Set the index used by this core."
   [& opts]
-  (dosync
-    (ref-set (core :index) (apply riemann.index/index opts))))
+  (reset! (core :index) (apply riemann.index/index opts)))
 
 (defn update-index
-  "Updates the given index with all events received. Also publishes to the index pubsub channel."
+  "Updates the given index with all events received. Also publishes to the
+  index pubsub channel."
   [index]
   (fn [event] (core/update-index core event)))
 
@@ -73,7 +70,7 @@
 (defn periodically-expire
   "Sets up a reaper for this core. See core API docs."
   ([interval]
-    (core/periodically-expire core interval))
+   (core/periodically-expire core interval))
   ([]
    (periodically-expire 10)))
 
@@ -94,7 +91,7 @@
   core's pubsub registry."
   [channel f]
   (pubsub/subscribe (:pubsub core) channel f))
-    
+
 ; Start the core
 (defn start []
   (core/start core))

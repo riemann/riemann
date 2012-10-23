@@ -9,10 +9,10 @@
 (defn core
   "Create a new core."
   []
-  {:servers (ref [])
-   :streams (ref [])
-   :index   (ref nil)
-   :reaper  (ref nil)
+  {:servers (atom [])
+   :streams (atom [])
+   :index   (atom nil)
+   :reaper  (atom nil)
    :pubsub  (ps/pubsub-registry)})
 
 (defn periodically-expire
@@ -51,9 +51,9 @@
 (defn start
   "Start the given core. Starts reapers."
   [core]
-  (dosync
-    (when-not (deref (:reaper core))
-      (ref-set (:reaper core) (periodically-expire core 60))))
+  (swap! (:reaper core)
+         (fn [current-reaper]
+           (or current-reaper (periodically-expire core 60))))
   (info "Hyperspace core online"))
 
 (defn stop
