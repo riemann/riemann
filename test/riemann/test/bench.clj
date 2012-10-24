@@ -109,9 +109,8 @@
    (let [core (core)
          servers [(tcp-server core) (udp-server core)]
          streams (or (:streams opts) [])]
-     (dosync
-        (alter (core :servers) concat servers)
-        (alter (core :streams) concat streams))
+     (swap! (core :servers) concat servers)
+     (swap! (core :streams) concat streams)
      {:core core
       :servers servers
       :streams streams})))
