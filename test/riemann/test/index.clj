@@ -46,3 +46,40 @@
 
            (is (= (map (fn [e] (:host e)) i)
                   [2]))))
+
+(defn random-event
+  [& {:as event}]
+  (merge {:host    (rand-int 100)
+          :service (rand-int 100)
+          :ttl     (rand-int 500)
+          :time    (- (unix-time) (rand-int 30))}
+         event))
+
+(deftest ^:bench indexing-nbhm-time
+  (let [_        (println "building events, this might take some time")
+        not-much (doall (repeatedly 100 random-event))
+        a-few    (doall (repeatedly 100000 random-event))
+        a-lot    (doall (repeatedly 1000000 random-event))
+        i        (nbhm-index)]
+    (println "updating and expiring the same 100 events 10000 times:")
+    (time (dotimes [iter 10000]
+            (do (doseq [event not-much]
+                  (update i event)))))
+    (println "expiring")
+    (time (dotimes [iter 10000] (doall (expire i))))
+    (clear i)
+
+    (println "updating and expiring the same 100000 events 100 times:")
+    (time (dotimes [iter 100]
+            (do (doseq [event a-few]
+                  (update i event)))))
+    (println "expiring")
+    (time (dotimes [iter 100] (doall (expire i))))
+    (clear i)
+
+    (println "updating and expiring the same 10000000 events 10 times:")
+    (time (dotimes [iter 10]
+            (do (doseq [event a-lot]
+                  (update i event)))))
+    (println "expiring")
+    (time (dotimes [iter 10] (doall (expire i))))))
