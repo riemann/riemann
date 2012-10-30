@@ -1,0 +1,104 @@
+(ns riemann.librato
+  "Forwards events to Librato Metrics."
+  (:require [clojure.string :as string])
+  (:use [clj-librato.metrics :only [collate annotate]]
+        clojure.math.numeric-tower))
+
+(defn safe-name
+  "Converts a string into a safe name for Librato's metrics and streams. Converts spaces to periods, preserves only A-Za-z0-9.:-_, and cuts to 255 characters."
+  [s]
+  (when s
+    (-> s
+      (string/replace " " ".")
+      (string/replace #"[^-.:_\w]" "")
+      (subs 0 (min 255 (count s))))))
+
+(defn event->gauge
+  "Converts an event to a gauge."
+  [event]
+  {:name          (safe-name (:service event))
+   :source        (safe-name (:host event))
+   :value         (:metric event)
+   :measure-time  (round (:time event))})
+
+(def event->counter event->gauge)
+
+(defn event->annotation
+  "Converts an event to an annotation."
+  [event]
+  (into {} 
+        (filter second
+              {:name        (safe-name (:service event))
+               :title       (string/join 
+                              " " [(:service event) (:state event)])
+               :source      (safe-name (:host event))
+               :description (:description event)
+               :start-time  (round (:time event))
+               :end-time    (when (:end-time event) (round (:end-time event)))}
+              )))
+
+(defn librato-metrics
+  "Creates a librato metrics adapter. Takes your username and API key, and
+  returns a map of streams:
+
+  :gauge
+  :counter
+  :annotation
+  :start-annotation
+  :end-annotation
+
+  Gauge and counter submit events as measurements. Annotation creates an
+  annotation from the given event; it will have only a start time unless
+  :end-time is given. :start-annotation will *start* an annotation; the
+  annotation ID for that host and service will be remembered. :end-annotation
+  will submit an end-time for the most recent annotation submitted with
+  :start-annotation.
+  
+  Example:
+  
+  (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
+
+  (tagged \"latency\" (librato :gauge))
+
+  (where (service \"www\")
+    (changed-state
+      (where (state \"ok\") 
+        (:start-annotation librato)
+        (else
+          (:end-annotation librato)))))"
+  [user api-key]
+  (let [annotation-ids (atom {})]
+    {:gauge      (fn [event]
+                   (let [gauge (event->gauge event)]
+                     (collate user api-key [gauge] [])
+                     gauge))
+
+     :counter    (fn [event]
+                   (let [counter (event->counter event)]
+                     (collate user api-key [] [counter])
+                     counter))
+
+     :annotation (fn [event] 
+                   (let [a (event->annotation event)]
+                     (annotate user api-key (:name a)
+                               (dissoc a :name))))
+
+     :start-annotation (fn [event]
+                         (let [a (event->annotation event)
+                               res (annotate user api-key (:name a)
+                                             (dissoc a :name))]
+                           (swap! annotation-ids assoc
+                                  [(:host event) (:service event)] (:id res))
+                           res))
+
+     :end-annotation (fn [event]
+                       (let [id ((deref annotation-ids)
+                                   [(:host event) (:service event)])
+                             a (event->annotation event)]
+                         (when id
+                           (let [res (annotate 
+                                       user api-key (:name a) id 
+                                       {:end-time (round (:time event))})]
+                             (swap! annotation-ids dissoc
+                                    [(:host event) (:service event)])
+                             res))))}))

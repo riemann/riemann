@@ -41,6 +41,7 @@ alerting; and to glue various monitoring systems together."
     [clj-http "0.4.1"]
     [clj-json "0.5.0"]
     [clj-time "0.4.3"]
+    [clj-librato "0.0.2-SNAPSHOT"]
     [incanter/incanter-charts "1.3.0"]
   ]
   :profiles {:dev {:dependencies [[clj-glob "1.0.0"]]}}
@@ -49,6 +50,7 @@ alerting; and to glue various monitoring systems together."
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:bench x))))
                    :integration :integration
+                   :librato :librato
                    :focus :focus
                    :bench :bench
                    :all (fn [_] true)}
