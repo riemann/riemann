@@ -38,7 +38,7 @@
              (doseq [e events] (send-event client e))
 
              (doseq [[in out] (map (fn [a b] [a b]) events (deref out))]
-               (is (every? (fn [k] (= (in k) (out k))) (keys in))))
+               (is (every? (fn [k] (= (k in) (k out))) (keys in))))
 
              (finally
                (close-client client)
@@ -62,9 +62,9 @@
              (update-index core {:service "miao" :host "cat" :time 3})
 
              (let [r (vec (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))]
-               (is (some (fn [e] (= e {:metric 2.0, :time 3})) r))
-               (is (some (fn [e] (= e {:host "kitten" :tags ["whiskers" "paws"] :time 2})) r))
-               (is (some (fn [e] (= e {:host "cat", :service "miao", :time 3})) r))
+               (is (some #{(event {:metric 2.0, :time 3})} r))
+               (is (some #{(event {:host "kitten" :tags ["whiskers" "paws"] :time 2})} r))
+               (is (some #{(event {:host "cat", :service "miao", :time 3})} r))
                (is (= 3 (count r))))
 
              (finally
@@ -154,10 +154,10 @@
              (let [events (deref out)
                    states (fmap first (group-by :service events))]
 
-               (is (= ((states "per 0.5") :metric) 50.0))
-               (is (= ((states "per 0.95") :metric) 95.0))
-               (is (= ((states "per 0.99") :metric) 99.0))
-               (is (= ((states "per 1") :metric) 100.0)))
+               (is (= (:metric (states "per 0.5")) 50.0))
+               (is (= (:metric (states "per 0.95")) 95.0))
+               (is (= (:metric (states "per 0.99")) 99.0))
+               (is (= (:metric (states "per 1")) 100.0)))
 
              (finally
                (close-client client)

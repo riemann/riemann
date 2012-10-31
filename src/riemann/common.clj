@@ -2,28 +2,24 @@
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
 
-  (:import [java.util Date])
-  (:require gloss.io)
-  (:require clojure.set)
-  (:require [clj-json.core :as json])
-  (:require [clojure.java.io :as io])
-  (:use [clojure.string :only [split]])
-  (:use clojure.tools.logging)
-  (:use protobuf.core)
-  (:use gloss.core)
-  (:require clj-time.core)
-  (:require clj-time.format)
-  (:require clj-time.coerce)
-  (:use clojure.math.numeric-tower))
+  (:import [java.util Date]
+           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg])
+  (:require gloss.io
+            clj-time.core
+            clj-time.format
+            clj-time.coerce
+            clojure.set
+            [clj-json.core :as json]
+            [clojure.java.io :as io])
+  (:use [clojure.string :only [split]]
+        clojure.tools.logging
+        riemann.codec
+        protobuf.core
+        gloss.core
+        clojure.math.numeric-tower))
 
 ; Don't mangle underscores into dashes. <sigh>
 (protobuf.core.PersistentProtocolBufferMap/setUseUnderscores true)
-
-; Protobufs
-(def Msg (protodef com.aphyr.riemann.Proto$Msg))
-(def Query (protodef com.aphyr.riemann.Proto$Query))
-(def State (protodef com.aphyr.riemann.Proto$State))
-(def Event (protodef com.aphyr.riemann.Proto$Event))
 
 ; Times
 (defn unix-time
@@ -49,55 +45,10 @@
   (clj-time.format/unparse (clj-time.format/formatters :date-time)
                            (clj-time.coerce/from-long (long (* 1000 unix)))))
 
-(defn pre-dump-event
-  "Transforms an event (map) into a form suitable for protocol buffer encoding."
+(defn post-load-event
+  "After events are loaded, we assign default times if none exist."
   [e]
-  (let [e (if (:metric e) (assoc e :metric_f (float (:metric e))) e)
-        e (if (:ttl e)    (assoc e :ttl      (float (:ttl e)))    e)
-        e (if (:time   e) (assoc e :time     (int   (:time e)))   e)]
-    e))
-
-(defn post-load-event 
-  "Loads a protobuf event to an internal event. Converts the on-the-wire
-  metric_f to metric, creates a time if none exists, etc."
-  [e]
-  (let [e (apply hash-map (apply concat e))
-        e (if (:metric_f e) (assoc e :metric (:metric_f e)) e)
-        e (dissoc e :metric_f)
-        e (if (:time e) e (assoc e :time (unix-time)))]
-    e))
-
-; These decode-pb functions duplicate the work clojure-protobuf does; suspect
-; they're slightly faster. They're needed to translate the raw protobuf classes
-; that riemann.client uses back into clojure structures. Should unify these
-; paths later.
-
-(defn decode-pb-query
-  "Transforms a java protobuf Query to a map."
-   [^com.aphyr.riemann.Proto$Query q]
-   {:string (.getString q)})
-
-(defn decode-pb-event
-  "Transforms a java protobuf Event to a map."
-  [^com.aphyr.riemann.Proto$Event e]
-  (let [rough
-        {:host (when (.hasHost e) (.getHost e))
-         :service (when (.hasService e) (.getService e))
-         :state (when (.hasState e) (.getState e))
-         :description (when (.hasDescription e) (.getDescription e))
-         :metric (when (.hasMetricF e) (.getMetricF e))
-         :tags (when (< 0 (.getTagsCount e)) (vec (.getTagsList e)))
-         :time (if (.hasTime e) (.getTime e) (unix-time))
-         :ttl (when (.hasTtl e) (.getTtl e))}]
-    (select-keys rough (for [[k v] rough :when (not= nil v)] k))))
-
-(defn decode-pb-msg
-  "Transforms a java protobuf Msg to a map."
-  [^com.aphyr.riemann.Proto$Msg m]
-  {:ok (.getOk m)
-   :error (.getError m)
-   :events (map decode-pb-event (.getEventsList m))
-   :query (decode-pb-query (.getQuery m))})
+  (if (:time e) e (assoc e :time (unix-time))))
 
 (defn decode
   "Decode a gloss buffer to a message. Decodes the protocol buffer
@@ -106,34 +57,31 @@
   (let [buffer (gloss.io/contiguous s)
         bytes (byte-array (.remaining buffer))
         _ (.get buffer bytes 0 (alength bytes))
-        msg (protobuf-load Msg bytes)]
-    ; Can't use a protobuf Msg here--it would coerce events and drop our
-    ; metric keys.
-    {:ok (:ok msg)
-          :error (:error msg)
-          :states (map post-load-event (:states msg))
-          :query (:query msg)
-          :events (map post-load-event (:events msg))}))
-
-(defn event-to-json
-  "Convert an event to a JSON string."
-  [event]
-  (json/generate-string 
-    (assoc (pre-dump-event event)
-           :time (unix-to-iso8601 (:time event)))))
+        msg (decode-pb-msg (Proto$Msg/parseFrom bytes))]
+    (-> msg
+      (assoc :states (map post-load-event (:states msg)))
+      (assoc :events (map post-load-event (:events msg))))))
 
 (defn decode-inputstream
   "Decode an InputStream to a message. Decodes the protobuf representation of
   Msg and applies post-load-event to all events."
   [s]
-  (let [msg (protobuf-load-stream Msg s)]
-    ; Can't use a protobuf Msg here--it would coerce events and drop our
-    ; metric keys.
-    {:ok (:ok msg)
-          :error (:error msg)
-          :states (map post-load-event (:states msg))
-          :query (:query msg)
-          :events (map post-load-event (:events msg))}))
+  (let [msg (decode-pb-msg (Proto$Msg/parseFrom s))]
+    (-> msg 
+      (assoc :states (map post-load-event (:states msg)))
+      (assoc :events (map post-load-event (:events msg))))))
+
+(defn ^"[B" encode
+  "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
+  events."
+  [msg]
+  (.toByteArray (encode-pb-msg msg)))
+
+(defn event-to-json
+  "Convert an event to a JSON string."
+  [event]
+  (json/generate-string 
+    (assoc event :time (unix-to-iso8601 (:time event)))))
 
 (defn decode-graphite-line
   "Decode a line coming from graphite.
@@ -158,24 +106,12 @@
                             :metric (Float. metric)
                             :time (Long. timestamp)}]
                    (if parser-fn (merge res (parser-fn res)) res))]})))
-
-(defn ^"[B" encode
-  "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
-  events."
-  [msg]
-  (let [msg (merge msg
-                   {:events (map pre-dump-event (:events msg))
-                    :states (map pre-dump-event (:states msg))})
-        pb (apply protobuf Msg (apply concat msg))]
-    (protobuf-dump pb)))
-
 (defn event
-  "Create a new event."
+  "Create a new event from a map."
   [opts]
   (let [t (long (round (or (opts :time)
                            (unix-time))))]
-    (apply protobuf Event
-           (apply concat (merge opts {:time t})))))
+    (map->Event (merge opts {:time t}))))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of

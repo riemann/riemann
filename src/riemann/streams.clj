@@ -748,8 +748,8 @@
 (defmethod default true [defaults & children]
   (fn [event]
 ;    Merge on protobufs is broken; nil values aren't applied.
-    (let [e (reduce (fn [m, [k, v]]
-                      (if (nil? (m k)) (assoc m k v) m))
+    (let [e (reduce (fn [m [k v]]
+                      (if (nil? (get m k)) (assoc m k v) m))
                     event defaults)]
       (call-rescue e children))))
 (defmethod default false [k v & children]
