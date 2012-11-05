@@ -1,19 +1,20 @@
 (ns riemann.test.time.controlled
   (:use riemann.time.controlled
-        riemann.common
+        riemann.time
+        [riemann.common :except [unix-time]]
         clojure.math.numeric-tower
         clojure.test)
   (:require [riemann.logging :as logging]))
 
 (deftest clock-test
          (reset-time!)
-         (is (= (now) 0))
+         (is (= (unix-time-controlled) 0))
          (advance! -1)
-         (is (= (now) 0))
+         (is (= (unix-time-controlled) 0))
          (advance! 4.5)
-         (is (= (now) 4.5))
+         (is (= (unix-time-controlled) 4.5))
          (reset-time!)
-         (is (= (now) 0)))
+         (is (= (unix-time-controlled) 0)))
 
 (deftest ^:focus once-test
          (reset-time!)
