@@ -8,6 +8,12 @@
         [clojure.stacktrace :only [print-stack-trace]]
         clojure.tools.logging))
 
+(defn unix-time-real
+  []
+  (/ (System/currentTimeMillis) 1000))
+
+(def unix-time unix-time-real)
+
 (defprotocol Task
   (succ [task] "The successive task to this one.")
 
@@ -40,8 +46,8 @@
           (reset! cancelled true))
   
   Deferrable
-  (defer [this t]
-              (reset! deferred-t t)))
+  (defer [this delay]
+              (reset! deferred-t (+ (unix-time) delay))))
 
 (def max-task-id
   (atom 0))
@@ -56,12 +62,6 @@
 (def park-interval 0.1)
 (def threadpool (atom []))
 (def running (atom false))
-
-(defn unix-time-real
-  []
-  (/ (System/currentTimeMillis) 1000))
-
-(def unix-time unix-time-real)
 
 (defn task-id
   "Return a new task ID."
@@ -126,7 +126,11 @@
         (if (<= (:t task) (unix-time-real))
           (do
             ; Run task
-            (run task)
+            (try
+              (run task)
+              (catch Throwable t
+                (warn "running task threw"
+                  (with-out-str (clojure.stacktrace/print-stack-trace t)))))
             (when-let [task' (succ task)]
               ; Schedule the next task.
               (schedule-sneaky! task')))

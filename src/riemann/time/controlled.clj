@@ -3,7 +3,7 @@
   delta-in-seconds) moves the clock forward, triggering events that would have
   occurred, in sequence."
   (:use riemann.time
-          clojure.math.numeric-tower))
+        clojure.math.numeric-tower))
 
 (def clock
   "Reference to the current time, in seconds." 

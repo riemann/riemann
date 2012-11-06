@@ -13,10 +13,95 @@
 
 (deftest once-test
          "Run a function once, to verify that the threadpool works at all."
+         (reset-tasks!)
+         (start!)
          (let [t0 (unix-time)
                results (atom [])]
-           (start!)
            (after! 0.1 #(swap! results conj (- (unix-time) t0)))
            (Thread/sleep 300)
            (stop!)
-           (is (approx-equal (first @results) 1/10 0.02))))
+           (is (<= 0.085 (first @results) 0.115))))
+
+(deftest defer-cancel-test
+         (reset-tasks!)
+         (start!)
+         (let [x1 (atom 0)
+               x2 (atom 0)
+               t1 (every! 100/1000 #(swap! x1 inc))
+               t2 (every! 100/1000 100/1000 #(swap! x2 inc))]
+           (Thread/sleep 50)
+           (is (= 1 @x1))
+           (is (= 0 @x2))
+
+           (Thread/sleep 100)
+           (is (= 2 @x1))
+           (is (= 1 @x2))
+
+           ; Defer
+           (defer t1 150/1000)
+           (Thread/sleep 100)
+           (is (= 2 @x1))
+           (is (= 2 @x2))
+
+           (Thread/sleep 100)
+           (is (= 3 @x1))
+           (is (= 3 @x2))
+
+           ; Cancel
+           (cancel t2)
+           (Thread/sleep 100)
+           (is (= 4 @x1))
+           (is (= 3 @x2)))
+         (stop!))
+
+(deftest exception-recovery-test
+         (reset-tasks!)
+         (start!)
+         (let [x (atom 0)]
+           (every! 0.1 (fn [] (swap! x inc) (/ 1 0)))
+           (Thread/sleep 150)
+           (stop!)
+           (is (= 2 @x))))
+
+(defn mapvals
+  [f kv]
+  (into {} (map (fn [[k v]] [k (f v)]) kv)))
+
+(defn pairs
+  [coll]
+  (partition 2 1 coll))
+
+(defn differences
+  [coll]
+  (map (fn [[x y]] (- y x)) (pairs coll)))
+
+(deftest periodic-test
+         "Run one function periodically."
+         (reset-tasks!)
+         (let [results (atom [])]
+           (start!)
+           
+           ; For a wide variety of intervals, start periodic jobs to record
+           ; the time.
+           (doseq [interval (range 1/10 5 1/10)]
+             (every! interval #(swap! results conj [interval (unix-time)])))
+
+           (Thread/sleep 20000)
+           (stop!)
+
+           (let [groups (mapvals (fn [vs] (map second vs))
+                                 (group-by first @results))
+                 differences (mapvals differences groups)]
+             (doseq [[interval deltas] differences]
+               ; First delta will be slightly smaller because the scheduler
+               ; computed an absolute time in the *past*
+               (is (<= -0.025 (- (first deltas) interval) 0))
+
+               (let [deltas (drop 1 deltas)]
+                 ; Remaining deltas should be accurate to within 5ms.
+                 (is (every? (fn [delta]
+                               (< -0.05 (- delta interval) 0.05)) deltas))
+                 ; and moreover, there should be no cumulative drift.
+                 (is (< -0.005 
+                        (- (/ (reduce + deltas) (count deltas)) interval)
+                        0.005)))))))
