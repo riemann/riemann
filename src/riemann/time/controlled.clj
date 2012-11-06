@@ -14,9 +14,12 @@
   (reset! clock 0))
 
 (defn reset-time!
-  []
-  (reset-clock!)
-  (reset-tasks!))
+  "Resets the clock and task queue. If a function is given, calls f after
+  resetting the time and task list."
+  ([f] (reset-time!) (f))
+  ([]
+   (reset-clock!)
+   (reset-tasks!)))
 
 (defn set-time!
   "Sets the current time, without triggering callbacks."
@@ -24,6 +27,10 @@
   (reset! clock t))
 
 (defn unix-time-controlled
+  []
+  @clock)
+
+(defn linear-time-controlled
   []
   @clock)
 
@@ -44,3 +51,17 @@
           ; Return task
           (schedule-sneaky! task))))
     (swap! clock max t)))
+
+(defn control-time!
+  "Switches riemann.time functions to time.controlled counterparts, invokes f,
+  then restores them. Definitely not threadsafe. Not safe by any standard,
+  come to think of it. Only for testing purposes."
+  [f]
+  (let [unix-time   riemann.time/unix-time
+        linear-time riemann.time/linear-time]
+    ; Please forgive me.
+    (intern 'riemann.time 'unix-time unix-time-controlled)
+    (intern 'riemann.time 'linear-time linear-time-controlled)
+    (f)
+    (intern 'riemann.time 'unix-time unix-time)
+    (intern 'riemann.time 'linear-time linear-time)))

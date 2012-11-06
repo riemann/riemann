@@ -1,13 +1,15 @@
 (ns riemann.test.time.controlled
   (:use riemann.time.controlled
         riemann.time
-        [riemann.common :except [unix-time]]
+        [riemann.common :exclude [unix-time linear-time]]
         clojure.math.numeric-tower
         clojure.test)
   (:require [riemann.logging :as logging]))
 
+(use-fixtures :once control-time!)
+(use-fixtures :each reset-time!)
+
 (deftest clock-test
-         (reset-time!)
          (is (= (unix-time-controlled) 0))
          (advance! -1)
          (is (= (unix-time-controlled) 0))
@@ -17,11 +19,10 @@
          (is (= (unix-time-controlled) 0)))
 
 (deftest ^:focus once-test
-         (reset-time!)
          (let [x (atom 0)
-               once1 (once! #(swap! x inc) 1)
-               once2 (once! #(swap! x inc) 2)
-               once3 (once! #(swap! x inc) 3)]
+               once1 (once! 1 #(swap! x inc))
+               once2 (once! 2 #(swap! x inc))
+               once3 (once! 3 #(swap! x inc))]
 
            (advance! 0.5)
            (is (= @x 0))
@@ -34,10 +35,9 @@
            (is (= @x 2))))
 
 (deftest every-test
-         (reset-time!)
          (let [x (atom 0)
                bump #(swap! x inc)
-               task (every! bump 2 1)]
+               task (every! 1 2 bump)]
 
            (is (= @x 0))
 
@@ -54,13 +54,13 @@
            (is (= @x 3))
 
            ; Double-down
-           (defer task 1)
+           (defer task -3)
            (is (= @x 3))
            (advance! 5)
            (is (= @x 8))
 
            ; Into the future!
-           (defer task 9)
+           (defer task 4)
            (advance! 8)
            (is (= @x 8))
            (advance! 9)

@@ -48,11 +48,13 @@ alerting; and to glue various monitoring systems together."
   :plugins [[codox "0.6.1"]
             [lein-deb "1.0.0-SNAPSHOT"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
+                                             (:time x)
                                              (:bench x))))
                    :integration :integration
                    :librato :librato
-                   :focus :focus
+                   :time :time
                    :bench :bench
+                   :focus :focus
                    :all (fn [_] true)}
   :java-source-paths ["src/riemann/"]
   :java-source-path "src/riemann/"

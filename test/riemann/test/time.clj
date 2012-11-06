@@ -1,66 +1,70 @@
 (ns riemann.test.time
   (:use riemann.time
-        [riemann.common :exclude [unix-time]]
+        [riemann.common :exclude [unix-time linear-time]]
         clojure.math.numeric-tower
-        clojure.test)
+        clojure.test
+        clojure.tools.logging)
   (:require [riemann.logging :as logging]))
 
 (riemann.logging/init)
 
-(deftest clock-test
+(defn reset-time!
+  [f]
+  (stop!)
+  (reset-tasks!)
+  (start!)
+  (f)
+  (stop!)
+  (reset-tasks!))
+(use-fixtures :each reset-time!)
+
+(deftest ^:time clock-test
          (is (approx-equal (/ (System/currentTimeMillis) 1000)
                            (unix-time))))
 
-(deftest once-test
+(deftest ^:time once-test
          "Run a function once, to verify that the threadpool works at all."
-         (reset-tasks!)
-         (start!)
          (let [t0 (unix-time)
                results (atom [])]
            (after! 0.1 #(swap! results conj (- (unix-time) t0)))
            (Thread/sleep 300)
-           (stop!)
            (is (<= 0.085 (first @results) 0.115))))
 
-(deftest defer-cancel-test
-         (reset-tasks!)
-         (start!)
+; LMAO if this test becomes hilariously unstable and/or exhibits genuine
+; heisenbugs for any unit of time smaller than 250ms.
+(deftest ^:time defer-cancel-test
          (let [x1 (atom 0)
                x2 (atom 0)
-               t1 (every! 100/1000 #(swap! x1 inc))
-               t2 (every! 100/1000 100/1000 #(swap! x2 inc))]
-           (Thread/sleep 50)
+               t1 (every! 1 (fn [] (swap! x1 inc)))
+               t2 (every! 1 1 #(swap! x2 inc))]
+           (Thread/sleep 500)
            (is (= 1 @x1))
            (is (= 0 @x2))
 
-           (Thread/sleep 100)
+           (Thread/sleep 1000)
            (is (= 2 @x1))
            (is (= 1 @x2))
 
            ; Defer
-           (defer t1 150/1000)
-           (Thread/sleep 100)
+           (defer t1 1.5)
+           (Thread/sleep 1000)
            (is (= 2 @x1))
            (is (= 2 @x2))
 
-           (Thread/sleep 100)
+           (Thread/sleep 1000)
            (is (= 3 @x1))
            (is (= 3 @x2))
 
            ; Cancel
            (cancel t2)
-           (Thread/sleep 100)
+           (Thread/sleep 1000)
            (is (= 4 @x1))
-           (is (= 3 @x2)))
-         (stop!))
+           (is (= 3 @x2))))
 
-(deftest exception-recovery-test
-         (reset-tasks!)
-         (start!)
+(deftest ^:time exception-recovery-test
          (let [x (atom 0)]
            (every! 0.1 (fn [] (swap! x inc) (/ 1 0)))
            (Thread/sleep 150)
-           (stop!)
            (is (= 2 @x))))
 
 (defn mapvals
@@ -75,12 +79,9 @@
   [coll]
   (map (fn [[x y]] (- y x)) (pairs coll)))
 
-(deftest periodic-test
+(deftest ^:time periodic-test
          "Run one function periodically."
-         (reset-tasks!)
          (let [results (atom [])]
-           (start!)
-           
            ; For a wide variety of intervals, start periodic jobs to record
            ; the time.
            (doseq [interval (range 1/10 5 1/10)]

@@ -9,10 +9,20 @@
         clojure.tools.logging))
 
 (defn unix-time-real
+  "The current unix epoch time in seconds, taken from System/currentTimeMillis."
+
   []
   (/ (System/currentTimeMillis) 1000))
 
+(defn linear-time-real
+  "A current time on a linear scale with no fixed epoch; counts in seconds.
+  Unlike unix-time, which can pause, skip, or flow backwards, advances
+  consistently at (close) to wall clock time."
+  []
+  (/ (System/nanoTime) 1000000000))
+
 (def unix-time unix-time-real)
+(def linear-time linear-time-real)
 
 (defprotocol Task
   (succ [task] "The successive task to this one.")
@@ -153,7 +163,8 @@
     (reset! running false)
     (while (some #(.isAlive %) @threadpool)
       ; Allow at most 1/10th park-interval to pass after all threads exit.
-      (Thread/sleep (* park-interval 100)))))
+      (Thread/sleep (* park-interval 100)))
+    (reset! threadpool [])))
 
 (defn start!
   "Starts the threadpool to execute tasks on the queue automatically."
