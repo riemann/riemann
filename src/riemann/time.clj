@@ -9,8 +9,8 @@
         clojure.tools.logging))
 
 (defn unix-time-real
-  "The current unix epoch time in seconds, taken from System/currentTimeMillis."
-
+  "The current unix epoch time in seconds, taken from
+  System/currentTimeMillis."
   []
   (/ (System/currentTimeMillis) 1000))
 
@@ -68,6 +68,7 @@
     (fn [a b] (compare [(:t a) (:id a)]
                        [(:t b) (:id b)]))))
 
+; Processor-dependent threadpool sizing will happen. It's on the list. ;-)
 (def thread-count 4)
 (def park-interval 0.1)
 (def threadpool (atom []))
