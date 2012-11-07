@@ -1,10 +1,10 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
-  (:use riemann.common)
-  (:use clojure.tools.logging)
-  (:require riemann.streams)
-  (:require [riemann.index :as index])
-  (:require [riemann.pubsub :as ps]))
+  (:use [riemann.time :only [unix-time]]
+        clojure.tools.logging)
+  (:require riemann.streams
+            [riemann.index :as index]
+            [riemann.pubsub :as ps]))
 
 (defn core
   "Create a new core."
@@ -17,8 +17,9 @@
 
 (defn periodically-expire
   "Every interval (default 10) seconds, expire states from this core's index
-  and stream them to streams. The streamed states have only the host and service
-  copied, current time, and state expired. Expired events from the index are also published to the \"index\" pubsub channel."
+  and stream them to streams. The streamed states have only the host and
+  service copied, current time, and state expired. Expired events from the
+  index are also published to the \"index\" pubsub channel."
   [core interval]
   (let [interval (* 1000 (or interval 10))]
     (future (loop []

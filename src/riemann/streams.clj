@@ -10,15 +10,15 @@
   be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
-  (:use riemann.common)
-  (:require [riemann.folds :as folds])
-  (:require [riemann.index :as index])
-  (:require [riemann.periodic :as periodic])
-  (:require riemann.client)
-  (:require riemann.logging) 
-  (:require [clojure.set :as set])
-  (:use [clojure.math.numeric-tower])
-  (:use [clojure.tools.logging]))
+  (:use riemann.common
+        [riemann.time :only [unix-time linear-time every! once! defer cancel]]
+        clojure.math.numeric-tower
+        clojure.tools.logging)
+  (:require [riemann.folds :as folds]
+            [riemann.index :as index]
+            riemann.client
+            riemann.logging 
+            [clojure.set :as set]))
 
 (defn expired?
   "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
@@ -280,26 +280,25 @@
   ([f] (periodically-until-expired 1 0 f))
   ([interval f] (periodically-until-expired interval 0 f))
   ([interval delay f]
-   (let [periodic (ref nil)]
+   (let [task (atom nil)]
      (fn [event]
        (if (expired? event)
          ; Stop periodic.
-         (dosync
-           (when-let [p (deref periodic)]
-             (p)))
+         (when-let [t @task]
+           (cancel t)
+           (reset! task nil))
 
          ; Start if necessary
-         (when-not (deref periodic)
+         (when-not @task
            ; Note that we lock the periodic atom to prevent the STM from
            ; retrying our thread-creating transaction more than once. Double
            ; nil? check allows us to avoid synchronizing *every* event at the
            ; cost of a race condition over extremely short timescales. As those
            ; timescales are likely to have undefined ordering *anyway*, I don't
            ; really care about getting this particular part right.
-           (locking periodic
-             (dosync
-               (when-not (deref periodic)
-                 (ref-set periodic (periodic/every interval delay f)))))))))))
+           (locking task
+             (when-not @task
+               (reset! task (every! interval delay f))))))))))
 
 (defn part-time-fast
   "Partitions events by time (fast variant). Each <interval> seconds, creates a
@@ -362,9 +361,9 @@
   ([interval default-event & children]
    (let [fill (fn []
                 (call-rescue (assoc default-event :time (unix-time)) children))
-         new-deferrable (fn [] (periodic/deferrable-every interval 
-                                                          interval 
-                                                          fill))
+         new-deferrable (fn [] (every! interval 
+                                       interval 
+                                       fill))
          deferrable (ref (new-deferrable))]
     (fn [event]
       (let [d (deref deferrable)]
@@ -372,9 +371,9 @@
           ; We have an active deferrable
           (if (expired? event)
             (do
-              (d :stop)
+              (cancel d)
               (dosync (ref-set deferrable nil)))
-            (d :defer interval))
+            (defer d interval))
           ; Create a deferrable
           (when-not (expired? event)
             (locking deferrable
@@ -393,7 +392,7 @@
    (let [last-event (ref nil)
          fill (fn []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
-         new-deferrable (fn [] (periodic/deferrable-every interval interval fill))
+         new-deferrable (fn [] (every! interval interval fill))
          deferrable (ref nil)]
      (fn [event]
        ; Record last event
@@ -404,9 +403,9 @@
            ; We have an active deferrable
            (if (expired? event)
              (do
-               (d :stop)
+               (cancel d)
                (dosync (ref-set deferrable nil)))
-             (d :defer interval))
+             (defer d interval))
            ; Create a deferrable
            (when-not (expired? event)
              (locking deferrable
@@ -491,6 +490,7 @@
   "Take the sum of every event over interval seconds and divide by the interval
   size."
   [interval & children]
+  (let [test-time (atom (linear-time))]
   (part-time-fast interval
       (fn [] {:count (ref 0)
               :state (ref nil)})
@@ -506,7 +506,7 @@
                         rate (/ count interval)]
                     (merge state 
                            {:metric rate :time (round end)}))))]
-          (call-rescue event children)))))
+          (call-rescue event children))))))
 
 (defn percentiles
   "Over each period of interval seconds, aggregates events and selects one

@@ -12,6 +12,7 @@
             [clj-json.core :as json]
             [clojure.java.io :as io])
   (:use [clojure.string :only [split]]
+        [riemann.time :only [unix-time]]
         clojure.tools.logging
         riemann.codec
         protobuf.core
@@ -22,18 +23,6 @@
 (protobuf.core.PersistentProtocolBufferMap/setUseUnderscores true)
 
 ; Times
-(defn unix-time
-  "The current unix epoch time in seconds, taken from System/currentTimeMillis."
-  []
-  (/ (System/currentTimeMillis) 1000))
-
-(defn linear-time
-  "A current time on a linear scale with no fixed epoch; counts in seconds.
-  Unlike unix-time, which can pause, skip, or flow backwards, advances
-  consistently at (close) to wall clock time."
-  []
-  (/ (System/nanoTime) 1000000000))
-
 (defn time-at 
   "Returns the Date of a unix epoch time."
   [unix-time]

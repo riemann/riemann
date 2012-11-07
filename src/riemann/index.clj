@@ -5,7 +5,7 @@
   the index protocol is backed by a nonblockinghashmap, but I plan to add an
   HSQLDB backend as well."
   (:require [riemann.query :as query])
-  (:use riemann.common)
+  (:use [riemann.time :only [unix-time]])
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
 
 ; The index accepts states and maintains a table of the most recent state for

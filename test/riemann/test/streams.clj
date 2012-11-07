@@ -1,10 +1,15 @@
 (ns riemann.test.streams
-  (:use [riemann.streams])
-  (:use [riemann.common])
-  (:use [riemann.folds :as folds])
-  (:require [riemann.index :as index])
-  (:require [incanter.stats])
-  (:use [clojure.test]))
+  (:use riemann.streams
+        riemann.common
+        riemann.time.controlled
+        riemann.time
+        clojure.test)
+  (:require [riemann.index :as index]
+            [riemann.folds :as folds]
+            incanter.stats))
+
+(use-fixtures :once control-time!)
+(use-fixtures :each reset-time!)
 
 (defmacro run-stream
   "Applies inputs to stream, and returns outputs."
@@ -25,7 +30,7 @@
        (stream# e#)
        (when interval#
          (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
-         (Thread/sleep (* 1000 (max 0 (- (deref next-time#) (unix-time)))))))
+         (advance! (deref next-time#))))
      (let [result# (deref out#)]
        ; close stream
        (stream# {:state "expired"})
@@ -431,6 +436,8 @@
                                   {:metric -5 :time (+ 2/10 t0)} 0.1]))
                   [10 -50])))
         
+         (reset-time!)
+
          ; n events per interval
          (let [t0 (unix-time)]
            (is (= (map :metric (run-stream-intervals
@@ -456,11 +463,11 @@
            ; Generate events
            (dotimes [_ intervals]
              (dotimes [_ gen-rate]
-               (Thread/sleep (int (* 1000 gen-period)))
+               (advance! (+ (unix-time) gen-period))
                (r {:metric 1 :time (unix-time)})))
 
            ; Give all futures time to complete
-           (Thread/sleep (* 1000 interval))
+           (advance! (+ (unix-time) gen-period))
 
            ; Verify output states
            (let [o (deref output)]
@@ -506,7 +513,7 @@
                    (deref f))
              
            ; Give all futures time to complete
-           (Thread/sleep (* 1100 interval))
+           (advance! 1)
 
            (let [t1 (unix-time)
                  duration (- t1 t0)
@@ -691,7 +698,7 @@
            (stream 3)
            (is (= (deref out) [[1] [2]]))
 
-           (Thread/sleep 110)
+           (advance! (* 1 quantum))
            (is (= (deref out) [[1] [2] [3]]))
 
            (stream 4)
@@ -701,7 +708,7 @@
            (stream 7)
            (is (= (deref out) [[1] [2] [3] [4]]))
 
-           (Thread/sleep 110)
+           (advance! (* 2 quantum))
            (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))
 
 (deftest coalesce-test
@@ -726,7 +733,7 @@
            (is (= (set (deref out)) #{b d}))
 
            ; Wait for ttl expiry of d
-           (Thread/sleep 11)
+           (advance! 0.02)
 
            (s e)
            (is (= (set (deref out)) #{b e}))))

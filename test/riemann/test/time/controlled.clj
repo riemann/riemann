@@ -18,7 +18,7 @@
          (reset-time!)
          (is (= (unix-time-controlled) 0)))
 
-(deftest ^:focus once-test
+(deftest once-test
          (let [x (atom 0)
                once1 (once! 1 #(swap! x inc))
                once2 (once! 2 #(swap! x inc))

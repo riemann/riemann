@@ -1,7 +1,7 @@
 (ns riemann.test.email
-  (:use riemann.email)
-  (:use riemann.common)
-  (:use clojure.test))
+  (:use [riemann.time :only [unix-time]]
+        riemann.email
+        clojure.test))
 
 (deftest subject
          (let [s #'riemann.email/subject]
@@ -32,7 +32,7 @@
                 "foo and bar error and ok"
                 )))
 
-(deftest ^:integration email-test
+(deftest ^:email ^:integration email-test
          (let [email (mailer {})
                stream (email "aphyr@aphyr.com")]
            (stream {:host "localhost"

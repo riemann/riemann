@@ -125,6 +125,7 @@
                       interval 
                       (atom nil) 
                       (atom false)))))
+
 (defn run-tasks!
   "While running, takes tasks from the queue and executes them when ready. Will
   park the current thread when no tasks are available."

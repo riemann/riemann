@@ -1,8 +1,8 @@
 (ns riemann.test.graphite
-  (:use riemann.graphite)
-  (:use riemann.common)
-  (:require [riemann.logging :as logging])
-  (:use clojure.test))
+  (:use riemann.graphite
+        [riemann.time :only [unix-time]]
+        clojure.test)
+  (:require [riemann.logging :as logging]))
 
 (logging/init)
 

@@ -1,8 +1,8 @@
 (ns riemann.test.index
-  (:use [riemann.index])
-  (:use [riemann.query])
-  (:use [riemann.common])
-  (:use [clojure.test]))
+  (:use riemann.index
+        riemann.query
+        [riemann.time :only [unix-time]]
+        clojure.test))
 
 (deftest nbhm-update
          (let [i (nbhm-index)]

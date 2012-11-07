@@ -1,6 +1,6 @@
 (ns riemann.test.librato
   (:use riemann.librato
-        riemann.common
+        [riemann.time :only [unix-time]]
         clj-librato.metrics
         clojure.math.numeric-tower
         clojure.test)

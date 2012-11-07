@@ -1,12 +1,18 @@
 (ns riemann.test.core
-  (:require [riemann.server])
-  (:require [riemann.streams])
-  (:use [riemann.client])
-  (:use [riemann.common])
-  (:use [riemann.core])
-  (:use riemann.index)
-  (:use [clojure.algo.generic.functor :only (fmap)])
-  (:use [clojure.test]))
+  (:require riemann.server
+            riemann.streams)
+  (:use riemann.client
+        riemann.common
+        riemann.core
+        riemann.index
+        clojure.test
+        riemann.time
+        riemann.time.controlled
+        [clojure.algo.generic.functor :only [fmap]]
+        [riemann.time :only [unix-time]]))
+
+(use-fixtures :each reset-time!)
+(use-fixtures :once control-time!)
 
 (defmacro tim
   "Evaluates expr and returns the time it took in seconds"
@@ -83,8 +89,10 @@
                 (swap! (:streams core) conj expired-stream)
 
            ; Insert events
-           (update-index core {:service 1 :ttl 0.00 :time (unix-time)})
+           (update-index core {:service 1 :ttl 0.01 :time (unix-time)})
            (update-index core {:service 2 :ttl 1 :time (unix-time)})
+
+           (advance! 0.011)
 
            ; Wait for reaper to eat them
            (Thread/sleep 30)
@@ -139,16 +147,13 @@
              (swap! (core :servers) conj server)
              (swap! (core :streams) conj stream)
 
-             ; Wait until we aren't aligned... ugh, timing
-             ;(Thread/sleep (- 1100 (* (mod (unix-time) 1) 1000)))
-
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
                (send-event client {:metric n :service "per"}))
              (close-client client)
              
              ; Wait for percentiles
-             (Thread/sleep 1000)
+             (advance! 1)
 
              ; Get states
              (let [events (deref out)
