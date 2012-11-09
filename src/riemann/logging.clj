@@ -25,7 +25,8 @@
 (defn init
   "Initialize log4j. You will probably call this from the config file. Options:
 
-  :file   The file to log to. Use \"/dev/null\" to log to stdout only."
+  :file   The file to log to. 
+          Use \"/dev/null\" on *nix or \"NUL:\" on Windows to log to stdout only."
   [& { :keys [file] }]
   (let [filename (or file "riemann.log")
         rolling-policy (doto (TimeBasedRollingPolicy.)
