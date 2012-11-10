@@ -78,6 +78,7 @@
                                    (throw (RuntimeException. "whoops")))))
 
            ; Pool should have regenerated.
+           (Thread/sleep 250)
            (is (= 2 @x))))
 
 (deftest ^:time unreliable-test
