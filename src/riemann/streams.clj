@@ -696,10 +696,14 @@
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
-  (fn [event]
-    (when (set/subset? (set tags) (set (:tags event)))
-      (call-rescue event children))))
-(def tagged "Alias for tagged-all" tagged-all)
+  (if (coll? tags)
+    (fn [event]
+      (when (set/subset? (set tags) (set (:tags event)))
+        (call-rescue event children)))
+
+    (fn [event]
+      (when (member? tags (:tags event))
+        (call-rescue event children)))))
 
 (defn tagged-any
   "Passes on events where any of tags are present.
@@ -707,10 +711,17 @@
   (tagged-any \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
-  (let [required (set tags)]
+  (if (coll? tags)
+    (let [required (set tags)]
+      (fn [event]
+        (when (some required (:tags event))
+          (call-rescue event children))))
+
     (fn [event]
-      (when (some required (:tags event))
+      (when (member? tags (:tags event))
         (call-rescue event children)))))
+
+(def tagged "Alias for tagged-all" tagged-all)
 
 (defn expired
   "Passes on events with :state \"expired\"."
