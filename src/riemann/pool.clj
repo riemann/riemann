@@ -68,20 +68,20 @@
   ([open opts]
    (fixed-pool open identity opts))
   ([open close opts]
-   (let [opts (merge {:size (* 2 (.availableProcessors (Runtime/getRuntime)))
-                      :regenerate-interval  5
-                      :block-start          true}
-                     opts)]
-   (let [pool (FixedQueuePool.
-                (ArrayBlockingQueue. (opts :size) true)
+   (let [size                 (or (:size opts) (* 2 (.availableProcessors 
+                                                      (Runtime/getRuntime))))
+         regenerate-interval  (or (:regenerate-interval opts) 5)
+         block-start          (or (:block-start opts) true)
+         pool (FixedQueuePool.
+                (ArrayBlockingQueue. size true)
                 open
                 close
-                (opts :regenerate-interval))
+                regenerate-interval)
          openers (map (fn open-pool [_] (future (grow pool))) 
-                      (range (opts :size)))]
-     (when (:block-start opts)
+                      (range size))]
+     (when block-start
        (doseq [worker openers] @worker))
-     pool))))
+     pool)))
 
 (defmacro with-pool
   "Evaluates body in a try expression with a symbol 'thingy claimed from the
@@ -93,11 +93,14 @@
   (with-pool [client connection-pool 5]
     (send client a-message))"
   [[thingy pool timeout] & body]
-  `(let [~thingy (claim ~pool ~timeout)]
+  ; Destructuring bind could change nil to a, say, vector, and cause
+  ; unbalanced claim/release.
+  `(let [thingy# (claim ~pool ~timeout)
+         ~thingy thingy#]
      (try
        (let [res# (do ~@body)]
-         (release ~pool ~thingy)
+         (release ~pool thingy#)
          res#)
        (catch Throwable t#
-         (invalidate ~pool ~thingy)
+         (invalidate ~pool thingy#)
          (throw t#)))))
