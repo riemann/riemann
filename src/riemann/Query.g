@@ -68,7 +68,7 @@ t	:	'true';
 f	:	'false';
 nil	:	'null' | 'nil';
 
-field	: ('host' 
+field	: ('host'
 	| 'service'
 	| 'state'
 	| 'description'
@@ -103,15 +103,15 @@ String  :
 // Still don't understand why this doesn't work
     '"' ( EscapeSequence | ~('\u0000'..'\u001f' | '\\' | '\"' ) )* '"'
     ;
-    
+
     fragment EscapeSequence
         :   '\\' (UnicodeEscape |'b'|'t'|'n'|'f'|'r'|'\"'|'\\')
         ;
- 
+
 fragment UnicodeEscape
     : 'u' HexDigit HexDigit HexDigit HexDigit
     ;
- 
+
 fragment HexDigit
     : '0'..'9' | 'A'..'F' | 'a'..'f'
     ;

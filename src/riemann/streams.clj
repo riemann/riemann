@@ -5,7 +5,7 @@
   more. Most streams accept, after their initial arguments, any number of
   streams as children. When invoking children, they typically catch all
   exceptions and log them, then proceed to the next child.
-  
+
   Any function accepting an event map (e.g. {:service \"foo\" :metric 3.5} can
   be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
   streams namespace aims to provide a comprehensive set of widely applicable,
@@ -17,7 +17,7 @@
   (:require [riemann.folds :as folds]
             [riemann.index :as index]
             riemann.client
-            riemann.logging 
+            riemann.logging
             [clojure.set :as set]))
 
 (defn expired?
@@ -69,9 +69,9 @@
   effects. Examples:
 
   Passes on events, but with the *maximum* of all received metrics:
-  (sreduce (fn [acc event] (assoc event :metric 
+  (sreduce (fn [acc event] (assoc event :metric
                                   (+ (:metric event) (:metric acc)))) ...)
-  
+
   Or, using riemann.folds, a simple moving average:
   (sreduce (fn [acc event] (folds/mean [acc event])) ...)"
   [f & opts]
@@ -102,7 +102,7 @@
   "A sliding window of the last few events. Every time an event arrives, calls
   children with a vector of the last n events, from oldest to newest. Ignores
   event times. Example:
-  
+
   (moving-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
@@ -133,7 +133,7 @@
   the maximum event time as the present-time horizon. Every time a new event
   arrives within the window, emits a vector of events in the window to
   children.
-  
+
   Events without times accrue in the current window."
   [n & children]
   (let [cutoff (ref 0)
@@ -149,7 +149,7 @@
                          (alter buffer conj event)
                          (alter buffer
                                 (fn [events]
-                                  (vec (filter 
+                                  (vec (filter
                                          (fn [e] (or (nil? (:time e))
                                                      (< cutoff (:time e))))
                                          events)))))))]
@@ -162,7 +162,7 @@
   *not* overlap; each event appears at most once in the output stream. Once an
   event is emitted, all events *older or equal* to that emitted event are
   silently dropped.
-  
+
   Events without times accrue in the current window."
   [n & children]
   ; This is not a particularly inspired or clear implementation. :-(
@@ -251,7 +251,7 @@
                              (alter watermark max end))
                            ; Now that we're safe from modification, finish him!
                            (finish bin start end))))))
-        
+
         ; Add event to the bin for a time
         bin (fn [event t]
               (let [start (quot t interval)]
@@ -274,7 +274,7 @@
             t (or (:time event) (unix-time))]
         (bin event t)))))
 
-(defn periodically-until-expired 
+(defn periodically-until-expired
   "When an event arrives, begins calling f every interval seconds. Starts
   after delay. Stops calling f when an expired? event arrives."
   ([f] (periodically-until-expired 1 0 f))
@@ -309,7 +309,7 @@
   (let [current (ref nil)
         start (ref nil)
         setup (fn []
-                (dosync 
+                (dosync
                   (ref-set start (unix-time))
                   (ref-set current (create))))
 
@@ -328,7 +328,7 @@
       (p event)
       (if (expired? event)
         ; Kill our state
-        (dosync 
+        (dosync
           (ref-set start nil)
           (ref-set current nil))
         ; Append event to this bin
@@ -361,8 +361,8 @@
   ([interval default-event & children]
    (let [fill (fn []
                 (call-rescue (assoc default-event :time (unix-time)) children))
-         new-deferrable (fn [] (every! interval 
-                                       interval 
+         new-deferrable (fn [] (every! interval
+                                       interval
                                        fill))
          deferrable (ref (new-deferrable))]
     (fn [event]
@@ -419,17 +419,17 @@
   "Emits a constant stream of events every interval seconds, starting when an
   event is received, and ending when an expired event is received. Times are
   set to Riemann's time. The first and last events are forwarded immediately.
-  
+
   Note: ignores event times currently--will change later."
   [interval & children]
     (let [state (ref nil)
           emit-dup (fn []
-                     (call-rescue 
+                     (call-rescue
                        (assoc (deref state) :time (unix-time))
                        children))
           peri (periodically-until-expired interval emit-dup)]
       (fn [event]
-        (dosync 
+        (dosync
           (ref-set state event))
 
         (peri event)
@@ -454,7 +454,7 @@
             prev (ref nil)
             most-recent (ref nil)
             swap (fn []
-                   (let [[a b] (dosync 
+                   (let [[a b] (dosync
                                  (let [prev-event (deref prev)
                                        last-event (deref most-recent)]
                                    (ref-set prev last-event)
@@ -470,7 +470,7 @@
           (when (:metric event)
             (dosync (ref-set most-recent event)))
           (poller event))))
-    
+
     ; Emit a differential for every event
     (do
       (let [prev (ref nil)]
@@ -499,12 +499,12 @@
                       (when-let [m (:metric event)]
                         (alter (:count r) + m))))
       (fn [r start end]
-        (when-let [event 
+        (when-let [event
               (dosync
                 (when-let [state (deref (:state r))]
                   (let [count (deref (r :count))
                         rate (/ count interval)]
-                    (merge state 
+                    (merge state
                            {:metric rate :time (round end)}))))]
           (call-rescue event children))))))
 
@@ -537,7 +537,7 @@
         (let [c (dosync (alter counter + m))]
           (call-rescue (assoc event :metric c) children))))))
 
-(defn sum-over-time 
+(defn sum-over-time
   "Sums all metrics together. Emits the most recent event each time this
   stream is called, but with summed metric."
   [& children]
@@ -590,15 +590,15 @@
     (fn [sent start end])))
 
 (defn rollup
-  "Invokes children with events at most n times per m second interval. Passes 
-  *vectors* of events to children, not a single event at a time. For instance, 
+  "Invokes children with events at most n times per m second interval. Passes
+  *vectors* of events to children, not a single event at a time. For instance,
   (rollup 3 1 f) receives five events and forwards three times per second:
 
   1 -> (f [1])
   2 -> (f [2])
   3 -> (f [3])
   4 ->
-  5 -> 
+  5 ->
 
   ... and events 4 and 5 are rolled over into the next period:
 
@@ -614,7 +614,7 @@
                (if (empty? (deref carry))
                            ; We haven't send any events yet.
                            (ref 0)
-                           ; We already sent (or will shortly send) 1 event 
+                           ; We already sent (or will shortly send) 1 event
                            ; for the carry.
                            (ref 1))))
 
@@ -638,7 +638,7 @@
   "Combines events over time. Coalesce remembers the most recent event for each
   service that passes through it (limited by :ttl). Every time it receives an
   event, it passes on *all* events it remembers.
-  
+
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
@@ -690,7 +690,7 @@
 ;(defn state [value & children] (apply match :state value children))
 ;(defn time [value & children] (apply match :time value children))
 
-(defn tagged-all 
+(defn tagged-all
   "Passes on events where all tags are present.
 
   (tagged-all \"foo\" prn)
@@ -720,7 +720,7 @@
 (defmulti with
   "Transforms an event by associng a set of new k:v pairs, and passes the
   result to children. Use:
-  
+
   (with :service \"foo\" prn)
   (with {:service \"foo\" :state \"broken\"} prn)"
   (fn [& args] (map? (first args))))
@@ -738,10 +738,10 @@
     (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
       (call-rescue e children))))
 
-(defmulti default 
+(defmulti default
   "Transforms an event by associng a set of new key:value pairs, wherever the
   event has a nil value for that key. Passes the result on to children. Use:
-  
+
   (default :service \"foo\" prn)
   (default :service \"jrecursive\" :state \"chicken\"} prn)"
   (fn [& args] (map? (first args))))
@@ -791,27 +791,27 @@
     (call-rescue (f event) children)))
 
 
-(defmacro by 
+(defmacro by
   "Splits stream by field.
   Every time an event arrives with a new value of field, this macro invokes
   its child forms to return a *new*, distinct set of streams for that
   particular value.
-  
+
   (rate 5 prn) prints a single rate for all events, once every five seconds.
 
-  (by :host (rate 5) tracks a separate rate for *each host*, and prints each 
+  (by :host (rate 5) tracks a separate rate for *each host*, and prints each
   one every five seconds.
 
   You can pass multiple fields too
-  
+
   (by [:host :service])
-  
+
   Note that field can be a keyword like :host or :state, but you can *also* use
   any unary function for more complex sharding.
 
   Be aware that (by) over unbounded values can result in
   *many* substreams being created, so you wouldn't want to write
-  (by metric prn): you'd get a separate prn for *every* unique metric that 
+  (by metric prn): you'd get a separate prn for *every* unique metric that
   came in."
   [fields & children]
   ; new-fork is a function which gives us a new copy of our children.
@@ -832,24 +832,24 @@
        (let [fork-name (f event)
              fork (dosync
                     (or ((deref table) fork-name)
-                        ((alter table assoc fork-name (new-fork)) 
+                        ((alter table assoc fork-name (new-fork))
                            fork-name)))]
          (call-rescue event fork)))))
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous
   event. Options:
-  
+
   :init   The initial value to assume for (pred event).
-  
+
   ; Print all state changes
   (changed :state prn)
 
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
-  
+
   Note that f can be an arbitrary function:
-  
+
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
   (let [options (first children)
@@ -862,7 +862,7 @@
     (fn [event]
       (when
         (dosync
-          (let [cur (pred event) 
+          (let [cur (pred event)
                 old (deref previous)]
             (when-not (= cur old)
               (ref-set previous cur)
@@ -878,7 +878,7 @@
 (defn within
   "Passes on events only when their metric falls within the given inclusive
   range.
-  
+
   (within [0 1] (fn [event] do-something))"
   [r & children]
   (fn [event]
@@ -928,14 +928,14 @@
   tag vector), tagged (which checks to see if the given tag is present at all),
   metric_f, and description."
   [expr]
-  (let [syms #{'host 
-               'service 
-               'state 
+  (let [syms #{'host
+               'service
+               'state
                'metric
                'metric_f
                'time
                'ttl
-               'description 
+               'description
                'tags
                'tagged}]
     (if (list? expr)

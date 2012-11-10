@@ -19,7 +19,7 @@
         clojure.math.numeric-tower))
 
 ; Times
-(defn time-at 
+(defn time-at
   "Returns the Date of a unix epoch time."
   [unix-time]
   (java.util.Date. (long (* 1000 unix-time))))
@@ -52,7 +52,7 @@
   Msg and applies post-load-event to all events."
   [s]
   (let [msg (decode-pb-msg (Proto$Msg/parseFrom s))]
-    (-> msg 
+    (-> msg
       (assoc :states (map post-load-event (:states msg)))
       (assoc :events (map post-load-event (:events msg))))))
 
@@ -65,7 +65,7 @@
 (defn event-to-json
   "Convert an event to a JSON string."
   [event]
-  (json/generate-string 
+  (json/generate-string
     (assoc event :time (unix-to-iso8601 (:time event)))))
 
 (defn event
@@ -99,7 +99,7 @@
   ; Regexes are matched against strings.
   java.util.regex.Pattern
   (match [re string]
-         (try (re-find re string) 
+         (try (re-find re string)
            (catch NullPointerException _ false)
            (catch ClassCastException _ false)))
 
@@ -133,6 +133,6 @@
 (defn disjoint?
   "Do a and b (any seqables) have no elements in common?"
   [a b]
-  (not-any? (fn [e] 
+  (not-any? (fn [e]
              (some (fn [r] (= e r)) a))
            b))

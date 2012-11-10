@@ -8,7 +8,7 @@
 (defprotocol Pool
   (grow [pool]
         "Adds an element to the pool.")
-  (claim [pool] [pool timeout] 
+  (claim [pool] [pool timeout]
          "Take a thingy from the pool. Timeout in seconds; if unspecified, 0.
          Returns nil if no thingy available.")
   (release [pool thingy]
@@ -52,7 +52,7 @@
   the pool will immediately try to open a new one; if open throws or returns
   nil, the pool will sleep for regenerate-interval seconds before retrying
   (open).
-  
+
   :regenerate-interval    How long to wait between retrying (open).
   :size                   Number of thingys in the pool.
   :block-start            Should (fixed-pool) wait until the pool is full
@@ -68,7 +68,7 @@
   ([open opts]
    (fixed-pool open identity opts))
   ([open close opts]
-   (let [size                 (or (:size opts) (* 2 (.availableProcessors 
+   (let [size                 (or (:size opts) (* 2 (.availableProcessors
                                                       (Runtime/getRuntime))))
          regenerate-interval  (or (:regenerate-interval opts) 5)
          block-start          (or (:block-start opts) true)
@@ -77,7 +77,7 @@
                 open
                 close
                 regenerate-interval)
-         openers (map (fn open-pool [_] (future (grow pool))) 
+         openers (map (fn open-pool [_] (future (grow pool)))
                       (range size))]
      (when block-start
        (doseq [worker openers] @worker))
@@ -87,7 +87,7 @@
   "Evaluates body in a try expression with a symbol 'thingy claimed from the
   given pool, with specified claim timeout. Releases thingy at the end of the
   body, or if an exception is thrown, invalidates them and rethrows. Example:
-  
+
   ; With client, taken from connection-pool, waiting 5 seconds to claim, send
   ; client a message.
   (with-pool [client connection-pool 5]
