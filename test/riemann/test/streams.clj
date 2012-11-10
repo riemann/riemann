@@ -489,21 +489,13 @@
              )))
 
 (deftest rate-fast
-         (let [output (ref [])
+         (let [output (atom [])
                interval 1
                total 10000
                threads 4
                r (rate interval
-                        (fn [event] (dosync (alter output conj event))))
+                        (fn [event] (dosync (swap! output conj event))))
                t0 (unix-time)]
-
-           (doseq [f (map (fn [t] (future
-             (let [c (ref 0)]
-               (dotimes [i (/ total threads)]
-                       (let [e {:metric 1.0 :time (unix-time)}]
-                         (dosync (commute c + (:metric e))))))))
-                          (range threads))]
-             (deref f))
 
            ; Generate events
            (doseq [f (map (fn [t] (future 
@@ -512,15 +504,14 @@
                           (range threads))]
                    (deref f))
              
-           ; Give all futures time to complete
-           (advance! 1)
+           (advance! interval)
 
            (let [t1 (unix-time)
-                 duration (- t1 t0)
-                 o (dosync (deref output))]
+                 duration (- t1 t0)]
            
              ; All events recorded
-             (is (approx-equal total (reduce + (map :metric o))))
+             (is (= duration interval))
+             (is (approx-equal total (reduce + (map :metric @output))))
 
              )))
 
