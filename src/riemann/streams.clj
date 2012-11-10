@@ -958,6 +958,17 @@
         (list (keyword expr) 'event)
         expr))))
 
+(defn where-partition-clauses
+  "Given expressions like (a (else b) c (else d)), returns [[a c] [b d]]"
+  [exprs]
+  (map vec
+       ((juxt remove
+              (comp (partial mapcat rest) filter))
+          (fn [expr]
+            (when (list? expr)
+              (= 'else (first expr))))
+          exprs)))
+
 (defmacro where-event
   "Passes on events where expr is true, binding the provided symbol
    to the event during evaluation.
@@ -977,19 +988,28 @@
 
   ; Match any event where metric is either 1, 2, 3, or 4.
   (where (metric 1 2 3 4) ...)
-  
+
   ; Match a event where the metric is negative AND the state is ok.
   (where (and (> 0 metric)
-          (state \"ok\")) ...)
+              (state \"ok\")) ...)
 
   ; Match a event where the host begins with web
-  (where (host #\"^web\") ...)"
+  (where (host #\"^web\") ...)
+
+  If a child begins with (else ...), the else's body is executed when expr is
+  false. For instance:
+
+  (where (service \"www\")
+    (notify-www-team)
+    (else
+      (notify-misc-team)))"
   [expr & children]
-  (let [p (where-rewrite expr)]
-    `(let [kids# [~@children]]
-      (fn [event#]
-        (when (let [~'event event#] ~p)
-          (call-rescue event# kids#))))))
+  (let [p (where-rewrite expr)
+        [true-kids else-kids] (where-partition-clauses children)]
+    `(fn [event#]
+       (if (let [~'event event#] ~p)
+         (call-rescue event# ~true-kids)
+         (call-rescue event# ~else-kids)))))
 
 (defn update-index
   "Updates the given index with all events received."

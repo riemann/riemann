@@ -212,6 +212,21 @@
            (is (= (deref r)
                   [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
+(deftest where-else
+         ; Where should take an else clause.
+         (let [a (atom [])
+               b (atom [])]
+           (run-stream
+             (where (service #"a")
+                    #(swap! a conj (:service %))
+                    (else #(swap! b conj (:service %))))
+             [{:service "cat"}
+              {:service "dog"}
+              {:service nil}
+              {:service "badger"}])
+           (is (= @a ["cat" "badger"]))
+           (is (= @b ["dog" nil]))))
+
 (deftest default-kv
          (let [r (ref nil)
                s (default :service "foo" (register r))]
