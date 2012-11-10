@@ -725,6 +725,7 @@
   (with {:service \"foo\" :state \"broken\"} prn)"
   [& args]
   (if (map? (first args))
+    ; Merge in a map of new values.
     (let [[m & children] args]
       (fn [event]
         ;    Merge on protobufs is broken; nil values aren't applied.
@@ -733,31 +734,36 @@
                           (if (nil? v) (dissoc m k) (assoc m k v)))
                         event m)]
           (call-rescue e children))))
+
+    ; Change a particular key.
     (let [[k v & children] args]
       (fn [event]
         ;    (let [e (assoc event k v)]
         (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
           (call-rescue e children))))))
 
-(defmulti default
+(defn default
   "Transforms an event by associng a set of new key:value pairs, wherever the
   event has a nil value for that key. Passes the result on to children. Use:
 
   (default :service \"foo\" prn)
   (default :service \"jrecursive\" :state \"chicken\"} prn)"
-  (fn [& args] (map? (first args))))
-(defmethod default true [defaults & children]
-  (fn [event]
-;    Merge on protobufs is broken; nil values aren't applied.
-    (let [e (reduce (fn [m [k v]]
-                      (if (nil? (get m k)) (assoc m k v) m))
-                    event defaults)]
-      (call-rescue e children))))
-(defmethod default false [k v & children]
-  (fn [event]
-    (let [e (if (nil? (k event)) (assoc event k v) event)]
-      (call-rescue e children))))
+  [& args]
+  (if (map? (first args))
+    ; Merge in a map of new values.
+    (let [[defaults & children] args]
+      (fn [event]
+        ;    Merge on protobufs is broken; nil values aren't applied.
+        (let [e (reduce (fn [m [k v]]
+                          (if (nil? (get m k)) (assoc m k v) m))
+                        event defaults)]
+          (call-rescue e children))))
 
+    ; Change a particular key.
+    (let [[k v & children] args]
+      (fn [event]
+        (let [e (if (nil? (k event)) (assoc event k v) event)]
+          (call-rescue e children))))))
 
 (defmulti adjust
   "Passes on a changed version of each event by applying a function to a
