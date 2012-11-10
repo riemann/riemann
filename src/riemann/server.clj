@@ -35,20 +35,19 @@
              OrderedMemoryAwareThreadPoolExecutor
              MemoryAwareThreadPoolExecutor))
 
-  (:require [riemann.query :as query])
-  (:require [riemann.index :as index])
-  (:use riemann.core)
-  (:use riemann.common)
-  (:use riemann.pubsub)
-  (:use clojure.tools.logging)
-  (:use [protobuf.core])
-  (:use [slingshot.slingshot :only [try+]])
-  (:use clojure.stacktrace)
-  (:use lamina.core)
-  (:use aleph.http)
-  (:use [clj-http.util :only [url-decode]])
-  (:use [clojure.string :only [split]])
-  (:require gloss.io))
+  (:require [riemann.query :as query]
+            [riemann.index :as index]
+            gloss.io)
+  (:use riemann.core
+        riemann.common
+        riemann.pubsub
+        clojure.tools.logging
+        clojure.stacktrace
+        lamina.core
+        aleph.http
+        [slingshot.slingshot :only [try+]]
+        [clj-http.util :only [url-decode]]
+        [clojure.string :only [split]]))
 
 (defn handle
   "Handles a msg with the given core."

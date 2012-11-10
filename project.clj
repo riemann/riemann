@@ -30,7 +30,6 @@ alerting; and to glue various monitoring systems together."
     [log4j/apache-log4j-extras "1.0"]
     [aleph "0.2.1-beta2"]
     [io.netty/netty "3.3.0.Final"]
-    [protobuf "0.6.0-beta7"]
     [org.antlr/antlr "3.2"]
     [com.boundary/high-scale-lib "1.0.3"]
     [clj-time "0.3.4"]

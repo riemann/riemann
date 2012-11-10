@@ -15,12 +15,8 @@
         [riemann.time :only [unix-time]]
         clojure.tools.logging
         riemann.codec
-        protobuf.core
         gloss.core
         clojure.math.numeric-tower))
-
-; Don't mangle underscores into dashes. <sigh>
-(protobuf.core.PersistentProtocolBufferMap/setUseUnderscores true)
 
 ; Times
 (defn time-at 
