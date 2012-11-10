@@ -717,26 +717,27 @@
   [& children]
   (apply match :state "expired" children))
 
-(defmulti with
+(defn with
   "Transforms an event by associng a set of new k:v pairs, and passes the
   result to children. Use:
 
   (with :service \"foo\" prn)
   (with {:service \"foo\" :state \"broken\"} prn)"
-  (fn [& args] (map? (first args))))
-(defmethod with true [m & children]
-  (fn [event]
-;    Merge on protobufs is broken; nil values aren't applied.
-;    (let [e (merge event m)]
-    (let [e (reduce (fn [m, [k, v]]
-                      (if (nil? v) (dissoc m k) (assoc m k v)))
-                    event m)]
-      (call-rescue e children))))
-(defmethod with false [k v & children]
-  (fn [event]
-;    (let [e (assoc event k v)]
-    (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
-      (call-rescue e children))))
+  [& args]
+  (if (map? (first args))
+    (let [[m & children] args]
+      (fn [event]
+        ;    Merge on protobufs is broken; nil values aren't applied.
+        ;    (let [e (merge event m)]
+        (let [e (reduce (fn [m, [k, v]]
+                          (if (nil? v) (dissoc m k) (assoc m k v)))
+                        event m)]
+          (call-rescue e children))))
+    (let [[k v & children] args]
+      (fn [event]
+        ;    (let [e (assoc event k v)]
+        (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
+          (call-rescue e children))))))
 
 (defmulti default
   "Transforms an event by associng a set of new key:value pairs, wherever the
