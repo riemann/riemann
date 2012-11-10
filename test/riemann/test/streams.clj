@@ -1,6 +1,6 @@
 (ns riemann.test.streams
   (:use riemann.streams
-        riemann.common
+        [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
         clojure.test)
@@ -183,6 +183,22 @@
                        {:state "weird"}]]
            (doseq [e events] (s e))
            (is (= expect (deref r)))))
+
+(deftest where-regex
+         (test-stream (where (service #"^foo"))
+                      [{}
+                       {:service "foo"}
+                       {:service "food"}]
+                      [{:service "foo"}
+                       {:service "food"}]))
+
+(deftest where-variable
+         ; Verify that the macro allows variables to be used in predicates.
+         (let [regex #"cat"]
+           (test-stream (where (service regex))
+                        [{:service "kitten"}
+                         {:service "cats"}]
+                        [{:service "cats"}])))
 
 (deftest where-tagged
          (let [r (ref [])

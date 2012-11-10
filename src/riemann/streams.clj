@@ -10,7 +10,7 @@
   be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
-  (:use riemann.common
+  (:use [riemann.common :exclude [match]]
         [riemann.time :only [unix-time linear-time every! once! defer cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
@@ -913,12 +913,11 @@
 
 (defn- where-test [k v]
   (case k
+    ; Tagged checks that v is a member of tags.
     'tagged (list 'when (list :tags 'event)
                   (list 'riemann.common/member? v (list :tags 'event)))
-    ; Otherwise, match literal value.
-    (if (= (class v) java.util.regex.Pattern)
-      (list 'riemann.common/re-matches? v (list (keyword k) 'event))
-      (list '= v (list (keyword k) 'event)))))
+    ; Otherwise, match.
+    (list 'riemann.common/match v (list (keyword k) 'event))))
 
 ; Hack hack hack hack
 (defn where-rewrite
@@ -948,8 +947,7 @@
             ; Match one value
             (where-test field (first values))
             ; Any of the values
-            (concat '(or)
-                       (map (fn [value] (where-test field value)) values))))
+            (concat '(or) (map (fn [value] (where-test field value)) values))))
 
         ; Other list
         (map where-rewrite expr))

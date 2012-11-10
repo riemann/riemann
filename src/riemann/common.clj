@@ -91,6 +91,28 @@
   (when string
     (re-find re string)))
 
+; Matching
+(defprotocol Match
+  (match [pred object] "Does predicate describe object?"))
+
+(extend-protocol Match
+  ; Regexes are matched against strings.
+  java.util.regex.Pattern
+  (match [re string]
+         (try (re-find re string) 
+           (catch NullPointerException _ false)
+           (catch ClassCastException _ false)))
+
+  ; Functions are called with the given object.
+  java.util.concurrent.Callable
+  (match [f obj]
+         (f obj))
+
+  ; Falls back to object equality
+  java.lang.Object
+  (match [pred object]
+         (= pred object)))
+
 ; Vector set operations
 (defn member?
   "Is r present in seqable s?"
