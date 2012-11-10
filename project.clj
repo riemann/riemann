@@ -52,6 +52,7 @@ alerting; and to glue various monitoring systems together."
                                              (:bench x))))
                    :integration :integration
                    :email :email
+                   :graphite :graphite
                    :librato :librato
                    :time :time
                    :bench :bench

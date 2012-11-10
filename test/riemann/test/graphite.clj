@@ -21,25 +21,25 @@
                 "foo.bar.99"))
          )
 
-(deftest ^:integration graphite-test
-         (let [g (graphite {})]
+(deftest ^:graphite ^:integration graphite-test
+         (let [g (graphite {:block-start true})]
            (g {:host "riemann.local"
                :service "graphite test"
                :state "ok"
                :description "all clear, uh, situation normal"
-               :metric 3.14159
+               :metric -2
                :time (unix-time)}))
          
-         (let [g (graphite {})]
+         (let [g (graphite {:block-start true})]
            (g {:service "graphite test"
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 3.14159
                :time (unix-time)}))
          
-         (let [g (graphite {})]
-           (g {:host "riemann.local"
+         (let [g (graphite {:block-start true})]
+           (g {:host "no-service.riemann.local"
                :state "ok"
                :description "all clear, uh, situation normal"
-               :metric 3.14159
+               :metric 4
                :time (unix-time)})))

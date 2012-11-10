@@ -3,18 +3,18 @@
   (:refer-clojure :exclude [replace])
   (:import
    (java.net Socket)
-   (java.io Writer)
-   (java.io OutputStreamWriter)
-   (java.util.concurrent ArrayBlockingQueue)
+   (java.io Writer
+            OutputStreamWriter)
    (org.jboss.netty.channel Channels)
    (org.jboss.netty.handler.codec.frame DelimiterBasedFrameDecoder
                                         Delimiters)
    (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
    (org.jboss.netty.handler.codec.string StringDecoder StringEncoder)
    (org.jboss.netty.util CharsetUtil))
-  (:use [clojure.string :only [split join replace]])
-  (:use clojure.tools.logging)
-  (:use riemann.common)
+  (:use [clojure.string :only [split join replace]]
+        clojure.tools.logging
+        riemann.pool
+        riemann.common)
   (:require [riemann.server :as server]))
 
 (defn graphite-path-basic
@@ -41,52 +41,57 @@
 
 (defn graphite 
   "Returns a function which accepts an event and sends it to Graphite.
-  Silently eats events when graphite is down. Attempts to reconnect
+  Silently drops events when graphite is down. Attempts to reconnect
   automatically every five seconds. Use:
   
   (graphite {:host \"graphite.local\" :port 2003})
   
-  Set :path (fn [event] some-string) to change the path for each event. Uses
-  graphite-path-percentiles by default."
+  Options:
+  
+  :path       A function which, given an event, returns the string describing
+              the path of that event in graphite. graphite-path-percentiles by 
+              default.
+ 
+  :pool-size  The number of connections to keep open.
+  
+  :reconnect-interval   How many seconds to wait between attempts to connect.
+                        Default 5.
+
+  :claim-timeout        How many seconds to wait for a graphite connection from
+                        the pool. Default 0.1.
+
+  :block-start          Wait for the pool's initial connections to open
+                        before returning."
   [opts]
   (let [opts (merge {:host "localhost" 
                      :port 2003
-                     :socket-count (* 2 (.availableProcessors
-                                         (Runtime/getRuntime)))
                      :path graphite-path-percentiles} opts)
-        sockets (ArrayBlockingQueue. (:socket-count opts) true)
-        add-socket (fn []
-                     (info (str "Opening connection to " opts))
-                     (let [sock (Socket. (:host opts) (:port opts))
-                           out (OutputStreamWriter.(.getOutputStream sock))]
-                       (.offer sockets [sock out])))
+        pool (fixed-pool
+               (fn open []
+                 (info "Connecting to " (select-keys opts [:host :port]))
+                 (let [sock (Socket. (:host opts) (:port opts))
+                       out  (OutputStreamWriter. (.getOutputStream sock))]
+                   (info "Connected")
+                   [sock out]))
+               (fn close [[sock out]]
+                 (info "Closing connection to " 
+                       (select-keys opts [:host :port]))
+                 (.close out)
+                 (.close sock))
+               {:size                 (:pool-size opts)
+                :block-start          (:block-start opts)
+                :regenerate-interval  (:reconnect-interval opts)})
         path (:path opts)]
 
-    ; Try to connect immediately
-    (try
-      (dotimes [n (:socket-count opts)]
-        (add-socket))
-      (catch Exception e
-        (warn e (str "Couldn't send to graphite " opts))))
     (fn [event]
       (when (:metric event)
-        (let [[sock out] (.take sockets)
-              string (str (join " " [(path event) 
-                                     (float (:metric event))
-                                     (int (:time event))])
-                          "\n")]
-          (try
-            (.write ^OutputStreamWriter out string)
-            (.flush ^OutputStreamWriter out)
-            (.offer sockets [sock out])
-            (catch Exception e
-              (warn e (str "Couldn't send to graphite " opts))
-              (.close out)
-              (.close sock)
-              (future
-                ; Reconnect in 5 seconds
-                (Thread/sleep 5000)
-                (add-socket)))))))))
+        (with-pool [[sock out] pool (:claim-timeout opts)]
+                   (let [string (str (join " " [(path event) 
+                                                (float (:metric event))
+                                                (int (:time event))])
+                                     "\n")]
+                     (.write ^OutputStreamWriter out string)
+                     (.flush ^OutputStreamWriter out)))))))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
