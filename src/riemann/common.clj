@@ -68,29 +68,6 @@
   (json/generate-string 
     (assoc event :time (unix-to-iso8601 (:time event)))))
 
-(defn decode-graphite-line
-  "Decode a line coming from graphite.
-   Graphite uses a simple scheme where each metric is given as a CRLF delimited
-   line, space split with three items:
-
-     * The metric name
-     * The metric value (optionally NaN)
-     * The timestamp
-
-   By default, decode-graphite-line will yield a simple metric with just
-   a service metric and timestamp, a parser-fn can be given to it, which
-   will yield a map to merge onto the result. This can be used when
-   graphite metrics have known patterns that you wish to extract more
-   information (host, refined service name, tags) from"
-  [line parser-fn]
-   (when-let [[service metric timestamp] (split line #" ")]
-     (when (not= metric "nan") ;; discard nan values
-       {:ok true
-        :states []
-        :events [(let [res {:service service
-                            :metric (Float. metric)
-                            :time (Long. timestamp)}]
-                   (if parser-fn (merge res (parser-fn res)) res))]})))
 (defn event
   "Create a new event from a map."
   [opts]
