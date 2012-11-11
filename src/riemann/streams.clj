@@ -671,16 +671,23 @@
     (riemann.client/send-event client event)))
 
 (defn match
-  "Passes events on to children only when (f event) is equal to value. If f is
-  a regex, uses re-matches?"
+  "Passes events on to children only when (f event) matches value, using
+  riemann.common/match. For instance:
+
+  (match :service nil prn)
+  (match :state #{\"warning\" \"critical\"} prn)
+  (match :description #\"error\" prn)
+  (match :metric 5 prn)
+  (match expired? true prn)
+  (match (fn [e] (/ (:metric e) 1000)) 5 prn)
+  
+  For cases where you only care about whether (f event) is truthy, use (where
+  some-fn) instead of (match some-fn true)."
   [f value & children]
   (fn [event]
-    (let [x (f event)]
-      (when (if (= (class value) java.util.regex.Pattern)
-              (re-matches? value x)
-              (= value x))
-        (call-rescue event children)
-        true))))
+    (when (riemann.common/match value (f event))
+      (call-rescue event children)
+      true)))
 
 ; Shortcuts for match
 ;(defn description [value & children] (apply match :description value children))
@@ -985,18 +992,24 @@
               (= 'else (first expr))))
           exprs)))
 
-(defmacro where-event
-  "Passes on events where expr is true, binding the provided symbol
-   to the event during evaluation.
+(defmacro where* 
+  "A simpler, less magical variant of (where). Instead of binding symbols in
+  the context of an expression, where* takes a function which takes an event.
+  When (f event) is truthy, passes event to children--and otherwise, passes
+  event to (else ...) children. For example:
 
-  ; Match a event which has expired.
-  (where-event event (expired? event) ...)"
-  [event-sym expr & children]
-  (let [p (where-rewrite expr)]
-    `(let [kids# [~@children]]
-      (fn [event#]
-       (when (let [~event-sym event#] ~p)
-         (call-rescue event# kids#))))))
+  (where* (fn [e] (< 2 (:metric e))) prn)
+
+  (where* expired? 
+    (partial prn \"Expired\")
+    (else
+      (partial prn \"Not expired!\")))"
+  [f & children]
+  (let [[true-kids else-kids] (where-partition-clauses children)]
+    `(fn [event#]
+       (if (~f event#)
+         (call-rescue event# ~true-kids)
+         (call-rescue event# ~else-kids)))))
 
 (defmacro where
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.

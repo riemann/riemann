@@ -107,22 +107,31 @@
                    {:metric 1}]))))
 
 (deftest match-test
-         (let [r (ref nil)
-               s (match :service "foo" (fn [e] (dosync (ref-set r e))))]
-           (s {:service "bar"})
-           (is (= nil (deref r)))
+         ; Regular strings.
+         (test-stream (match :service "foo")
+                      [{}
+                       {:service "bar"}
+                       {:service "foo"}]
+                      [{:service "foo"}])
 
-           (s {:service "foo"})
-           (is (= {:service "foo"} (deref r))))
-        
-         ; Regex
-         (let [r (ref nil)
-               s (match :service #"^f" (fn [e] (dosync (ref-set r e))))]
-           (s {:service "bar"})
-           (is (= nil (deref r)))
+         ; Sets
+         (test-stream (match :metric #{0 2})
+                      [{}
+                       {:metric 1}
+                       {:metric 2}]
+                      [{:metric 2}])
 
-           (s {:service "foo"})
-           (is (= {:service "foo"} (deref r)))))
+         ; Regexen
+         (test-stream (match :state #"^mi")
+                      [{}
+                       {:state "migas"}
+                       {:state "other breakfast foods"}]
+                      [{:state "migas"}])
+
+         ; Functions
+         (test-stream (match identity 2)
+                      [1 2 3]
+                      [2]))
 
 (deftest tagged-all-test
          (test-stream (tagged-all ["kitten" "cat"])
@@ -163,21 +172,40 @@
                       [{:tags ["meow" "bark"]}
                        {:tags ["meow"]}]))
 
-(deftest where-event-test
-         (let [r (ref [])
-               s (where-event event
-                              (or (= "good" (:service event))
-                                  (< 2 (:metric event)))
-                              (fn [e] (dosync (alter r conj e))))
+(deftest where*-test
+         (test-stream (where* identity)
+                      [true false nil 2]
+                      [true 2])
+
+         (test-stream (where* expired?)
+                      [{:time -1 :ttl 0.5}
+                       {:time 0 :ttl 1}]
+                      [{:time -1 :ttl 0.5}])
+
+         ; Complex closure with else clause
+         (let [good (atom [])
+               bad  (atom [])
+               s (where* (fn [event]
+                           (or (= "good" (:service event))
+                               (< 2 (:metric event))))
+                         (partial swap! good conj)
+                         (else (partial swap! bad conj)))
                events [{:service "good" :metric 0}
                        {:service "bad" :metric 0}
                        {:metric 1}
                        {:service "bad" :metric 1}
-                       {:service "bad" :metric 3}]
-               expect [{:service "good" :metric 0}
                        {:service "bad" :metric 3}]]
+
+           ; Run stream
            (doseq [e events] (s e))
-           (is (= expect (deref r)))))
+
+           (is (= @good 
+                  [{:service "good" :metric 0}
+                   {:service "bad" :metric 3}]))
+           (is (= @bad
+                  [{:service "bad" :metric 0}
+                   {:metric 1}
+                   {:service "bad" :metric 1}]))))
 
 (deftest where-field
          (let [r (ref [])
