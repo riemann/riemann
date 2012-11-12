@@ -1,7 +1,7 @@
 (ns riemann.logging
   "Configures log4j to log to a file. It's a trap!"
   ; With thanks to arohner
-  (:import (org.apache.log4j 
+  (:import (org.apache.log4j
              Logger
              BasicConfigurator
              EnhancedPatternLayout
@@ -14,7 +14,7 @@
                                      RollingFileAppender))
   (:import org.apache.commons.logging.LogFactory))
 
-(defn set-level 
+(defn set-level
   "Set the level for the given logger, by string name. Use:
   (set-level \"riemann.client\", Level/DEBUG)"
   [logger level]
@@ -25,12 +25,13 @@
 (defn init
   "Initialize log4j. You will probably call this from the config file. Options:
 
-  :file   The file to log to. Use \"/dev/null\" to log to stdout only."
+  :file   The file to log to.
+          Use \"/dev/null\" on *nix or \"NUL:\" on Windows to log to stdout only."
   [& { :keys [file] }]
   (let [filename (or file "riemann.log")
         rolling-policy (doto (TimeBasedRollingPolicy.)
                          (.setActiveFileName filename)
-                         (.setFileNamePattern 
+                         (.setFileNamePattern
                            (str filename ".%d{yyyy-MM-dd}.gz"))
                          (.activateOptions))
         log-appender (doto (RollingFileAppender.)

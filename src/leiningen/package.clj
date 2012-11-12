@@ -22,8 +22,8 @@
 
   ; Build deb
   (deb project)
-  
+
   ; Rename deb
   (let [f (first (glob (str (:root project) "/*.deb")))]
-    (.renameTo f (file (:root project) 
+    (.renameTo f (file (:root project)
                   (str (:name project) "_" (:version project) ".deb")))))

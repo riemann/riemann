@@ -25,18 +25,18 @@
 (defn- subject
   "Constructs a subject line for a set of events."
   [events]
-  (join " " (keep identity 
+  (join " " (keep identity
         [(human-uniq (map :host events) "hosts")
          (human-uniq (map :service events) "services")
          (human-uniq (map :state events) "states")])))
 
-(defn- body 
+(defn- body
   "Constructs an email body for a set of events."
   [events]
   (join "\n\n\n"
-        (map 
+        (map
           (fn [event]
-            (str 
+            (str
               "At " (time-at (:time event)) "\n"
               (:host event) " "
               (:service event) " "
@@ -51,12 +51,12 @@
   "Send event(s) with the given configuration (:host, :port, :user, :to, etc)"
   [opts events]
   (let [events (flatten [events])]
-    (send-message 
+    (send-message
       (merge {:subject (subject events)
               :body    (body events)}
              opts))))
 
-(defn mailer 
+(defn mailer
   "Returns a mailer which creates email streams, which take events. The mailer
   is invoked with an address or a sequence of addresses; it returns a function
   that takes events and sends email about that event to those addresses.
@@ -67,7 +67,7 @@
                       :user \"foo\"
                       :pass \"bar\"}))
 
-  (changed :state 
+  (changed :state
     (email \"xerxes@trioptimum.org\" \"shodan@trioptimum.org\"))
 
   This makes it easy to configure your email settings once and re-use them
@@ -80,7 +80,7 @@
 
     (fn [& recipients]
       (fn [event]
-        (let [opts (if (empty? recipients) 
+        (let [opts (if (empty? recipients)
                      opts
                      (merge opts {:to recipients}))]
           (email-event opts event))))))

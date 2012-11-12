@@ -58,9 +58,9 @@ public class QueryParser extends Parser {
         }
         public QueryParser(TokenStream input, RecognizerSharedState state) {
             super(input, state);
-             
+
         }
-        
+
     protected TreeAdaptor adaptor = new CommonTreeAdaptor();
 
     public void setTreeAdaptor(TreeAdaptor adaptor) {
@@ -107,7 +107,7 @@ public class QueryParser extends Parser {
             state._fsp--;
 
             stream_or.add(or1.getTree());
-            EOF2=(Token)match(input,EOF,FOLLOW_EOF_in_expr139);  
+            EOF2=(Token)match(input,EOF,FOLLOW_EOF_in_expr139);
             stream_EOF.add(EOF2);
 
 
@@ -117,11 +117,11 @@ public class QueryParser extends Parser {
 
             // AST REWRITE
             // elements: or
-            // token labels: 
+            // token labels:
             // rule labels: retval
-            // token list labels: 
-            // rule list labels: 
-            // wildcard labels: 
+            // token list labels:
+            // rule list labels:
+            // wildcard labels:
             retval.tree = root_0;
             RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
@@ -220,7 +220,7 @@ public class QueryParser extends Parser {
             	    	case 1 :
             	    	    // src/riemann/Query.g:27:11: WS
             	    	    {
-            	    	    WS4=(Token)match(input,WS,FOLLOW_WS_in_or155); 
+            	    	    WS4=(Token)match(input,WS,FOLLOW_WS_in_or155);
             	    	    WS4_tree = (CommonTree)adaptor.create(WS4);
             	    	    adaptor.addChild(root_0, WS4_tree);
 
@@ -233,7 +233,7 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    OR5=(Token)match(input,OR,FOLLOW_OR_in_or158); 
+            	    OR5=(Token)match(input,OR,FOLLOW_OR_in_or158);
             	    OR5_tree = (CommonTree)adaptor.create(OR5);
             	    root_0 = (CommonTree)adaptor.becomeRoot(OR5_tree, root_0);
 
@@ -252,7 +252,7 @@ public class QueryParser extends Parser {
             	    	case 1 :
             	    	    // src/riemann/Query.g:27:19: WS
             	    	    {
-            	    	    WS6=(Token)match(input,WS,FOLLOW_WS_in_or161); 
+            	    	    WS6=(Token)match(input,WS,FOLLOW_WS_in_or161);
             	    	    WS6_tree = (CommonTree)adaptor.create(WS6);
             	    	    adaptor.addChild(root_0, WS6_tree);
 
@@ -404,7 +404,7 @@ public class QueryParser extends Parser {
             	    	case 1 :
             	    	    // src/riemann/Query.g:29:24: WS
             	    	    {
-            	    	    WS10=(Token)match(input,WS,FOLLOW_WS_in_and183); 
+            	    	    WS10=(Token)match(input,WS,FOLLOW_WS_in_and183);
             	    	    WS10_tree = (CommonTree)adaptor.create(WS10);
             	    	    adaptor.addChild(root_0, WS10_tree);
 
@@ -417,7 +417,7 @@ public class QueryParser extends Parser {
             	        }
             	    } while (true);
 
-            	    AND11=(Token)match(input,AND,FOLLOW_AND_in_and186); 
+            	    AND11=(Token)match(input,AND,FOLLOW_AND_in_and186);
             	    AND11_tree = (CommonTree)adaptor.create(AND11);
             	    root_0 = (CommonTree)adaptor.becomeRoot(AND11_tree, root_0);
 
@@ -436,7 +436,7 @@ public class QueryParser extends Parser {
             	    	case 1 :
             	    	    // src/riemann/Query.g:29:33: WS
             	    	    {
-            	    	    WS12=(Token)match(input,WS,FOLLOW_WS_in_and189); 
+            	    	    WS12=(Token)match(input,WS,FOLLOW_WS_in_and189);
             	    	    WS12_tree = (CommonTree)adaptor.create(WS12);
             	    	    adaptor.addChild(root_0, WS12_tree);
 
@@ -552,7 +552,7 @@ public class QueryParser extends Parser {
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            NOT15=(Token)match(input,NOT,FOLLOW_NOT_in_not208); 
+            NOT15=(Token)match(input,NOT,FOLLOW_NOT_in_not208);
             NOT15_tree = (CommonTree)adaptor.create(NOT15);
             root_0 = (CommonTree)adaptor.becomeRoot(NOT15_tree, root_0);
 
@@ -571,7 +571,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:31:12: WS
             	    {
-            	    WS16=(Token)match(input,WS,FOLLOW_WS_in_not211); 
+            	    WS16=(Token)match(input,WS,FOLLOW_WS_in_not211);
             	    WS16_tree = (CommonTree)adaptor.create(WS16);
             	    adaptor.addChild(root_0, WS16_tree);
 
@@ -702,7 +702,7 @@ public class QueryParser extends Parser {
                     // src/riemann/Query.g:35:4: ( '(' or ')' )
                     // src/riemann/Query.g:35:5: '(' or ')'
                     {
-                    char_literal19=(Token)match(input,24,FOLLOW_24_in_primary236);  
+                    char_literal19=(Token)match(input,24,FOLLOW_24_in_primary236);
                     stream_24.add(char_literal19);
 
                     pushFollow(FOLLOW_or_in_primary238);
@@ -711,7 +711,7 @@ public class QueryParser extends Parser {
                     state._fsp--;
 
                     stream_or.add(or20.getTree());
-                    char_literal21=(Token)match(input,25,FOLLOW_25_in_primary240);  
+                    char_literal21=(Token)match(input,25,FOLLOW_25_in_primary240);
                     stream_25.add(char_literal21);
 
 
@@ -721,11 +721,11 @@ public class QueryParser extends Parser {
 
                     // AST REWRITE
                     // elements: or
-                    // token labels: 
+                    // token labels:
                     // rule labels: retval
-                    // token list labels: 
-                    // rule list labels: 
-                    // wildcard labels: 
+                    // token list labels:
+                    // rule list labels:
+                    // wildcard labels:
                     retval.tree = root_0;
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
@@ -758,11 +758,11 @@ public class QueryParser extends Parser {
 
                     // AST REWRITE
                     // elements: simple
-                    // token labels: 
+                    // token labels:
                     // rule labels: retval
-                    // token list labels: 
-                    // rule list labels: 
-                    // wildcard labels: 
+                    // token list labels:
+                    // rule list labels:
+                    // wildcard labels:
                     retval.tree = root_0;
                     RewriteRuleSubtreeStream stream_retval=new RewriteRuleSubtreeStream(adaptor,"rule retval",retval!=null?retval.tree:null);
 
@@ -1055,7 +1055,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:52:10: WS
             	    {
-            	    WS35=(Token)match(input,WS,FOLLOW_WS_in_approximately345); 
+            	    WS35=(Token)match(input,WS,FOLLOW_WS_in_approximately345);
             	    WS35_tree = (CommonTree)adaptor.create(WS35);
             	    adaptor.addChild(root_0, WS35_tree);
 
@@ -1068,7 +1068,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            APPROXIMATELY36=(Token)match(input,APPROXIMATELY,FOLLOW_APPROXIMATELY_in_approximately348); 
+            APPROXIMATELY36=(Token)match(input,APPROXIMATELY,FOLLOW_APPROXIMATELY_in_approximately348);
             APPROXIMATELY36_tree = (CommonTree)adaptor.create(APPROXIMATELY36);
             root_0 = (CommonTree)adaptor.becomeRoot(APPROXIMATELY36_tree, root_0);
 
@@ -1087,7 +1087,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:52:29: WS
             	    {
-            	    WS37=(Token)match(input,WS,FOLLOW_WS_in_approximately351); 
+            	    WS37=(Token)match(input,WS,FOLLOW_WS_in_approximately351);
             	    WS37_tree = (CommonTree)adaptor.create(WS37);
             	    adaptor.addChild(root_0, WS37_tree);
 
@@ -1179,7 +1179,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:53:16: WS
             	    {
-            	    WS40=(Token)match(input,WS,FOLLOW_WS_in_lesser363); 
+            	    WS40=(Token)match(input,WS,FOLLOW_WS_in_lesser363);
             	    WS40_tree = (CommonTree)adaptor.create(WS40);
             	    adaptor.addChild(root_0, WS40_tree);
 
@@ -1192,7 +1192,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            LESSER41=(Token)match(input,LESSER,FOLLOW_LESSER_in_lesser366); 
+            LESSER41=(Token)match(input,LESSER,FOLLOW_LESSER_in_lesser366);
             LESSER41_tree = (CommonTree)adaptor.create(LESSER41);
             root_0 = (CommonTree)adaptor.becomeRoot(LESSER41_tree, root_0);
 
@@ -1211,7 +1211,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:53:28: WS
             	    {
-            	    WS42=(Token)match(input,WS,FOLLOW_WS_in_lesser369); 
+            	    WS42=(Token)match(input,WS,FOLLOW_WS_in_lesser369);
             	    WS42_tree = (CommonTree)adaptor.create(WS42);
             	    adaptor.addChild(root_0, WS42_tree);
 
@@ -1303,7 +1303,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:55:10: WS
             	    {
-            	    WS45=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal382); 
+            	    WS45=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal382);
             	    WS45_tree = (CommonTree)adaptor.create(WS45);
             	    adaptor.addChild(root_0, WS45_tree);
 
@@ -1316,7 +1316,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            LESSER_EQUAL46=(Token)match(input,LESSER_EQUAL,FOLLOW_LESSER_EQUAL_in_lesser_equal385); 
+            LESSER_EQUAL46=(Token)match(input,LESSER_EQUAL,FOLLOW_LESSER_EQUAL_in_lesser_equal385);
             LESSER_EQUAL46_tree = (CommonTree)adaptor.create(LESSER_EQUAL46);
             root_0 = (CommonTree)adaptor.becomeRoot(LESSER_EQUAL46_tree, root_0);
 
@@ -1335,7 +1335,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:55:28: WS
             	    {
-            	    WS47=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal388); 
+            	    WS47=(Token)match(input,WS,FOLLOW_WS_in_lesser_equal388);
             	    WS47_tree = (CommonTree)adaptor.create(WS47);
             	    adaptor.addChild(root_0, WS47_tree);
 
@@ -1427,7 +1427,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:56:17: WS
             	    {
-            	    WS50=(Token)match(input,WS,FOLLOW_WS_in_greater400); 
+            	    WS50=(Token)match(input,WS,FOLLOW_WS_in_greater400);
             	    WS50_tree = (CommonTree)adaptor.create(WS50);
             	    adaptor.addChild(root_0, WS50_tree);
 
@@ -1440,7 +1440,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            GREATER51=(Token)match(input,GREATER,FOLLOW_GREATER_in_greater403); 
+            GREATER51=(Token)match(input,GREATER,FOLLOW_GREATER_in_greater403);
             GREATER51_tree = (CommonTree)adaptor.create(GREATER51);
             root_0 = (CommonTree)adaptor.becomeRoot(GREATER51_tree, root_0);
 
@@ -1459,7 +1459,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:56:30: WS
             	    {
-            	    WS52=(Token)match(input,WS,FOLLOW_WS_in_greater406); 
+            	    WS52=(Token)match(input,WS,FOLLOW_WS_in_greater406);
             	    WS52_tree = (CommonTree)adaptor.create(WS52);
             	    adaptor.addChild(root_0, WS52_tree);
 
@@ -1551,7 +1551,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:58:10: WS
             	    {
-            	    WS55=(Token)match(input,WS,FOLLOW_WS_in_greater_equal419); 
+            	    WS55=(Token)match(input,WS,FOLLOW_WS_in_greater_equal419);
             	    WS55_tree = (CommonTree)adaptor.create(WS55);
             	    adaptor.addChild(root_0, WS55_tree);
 
@@ -1564,7 +1564,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            GREATER_EQUAL56=(Token)match(input,GREATER_EQUAL,FOLLOW_GREATER_EQUAL_in_greater_equal422); 
+            GREATER_EQUAL56=(Token)match(input,GREATER_EQUAL,FOLLOW_GREATER_EQUAL_in_greater_equal422);
             GREATER_EQUAL56_tree = (CommonTree)adaptor.create(GREATER_EQUAL56);
             root_0 = (CommonTree)adaptor.becomeRoot(GREATER_EQUAL56_tree, root_0);
 
@@ -1583,7 +1583,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:58:29: WS
             	    {
-            	    WS57=(Token)match(input,WS,FOLLOW_WS_in_greater_equal425); 
+            	    WS57=(Token)match(input,WS,FOLLOW_WS_in_greater_equal425);
             	    WS57_tree = (CommonTree)adaptor.create(WS57);
             	    adaptor.addChild(root_0, WS57_tree);
 
@@ -1675,7 +1675,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:60:10: WS
             	    {
-            	    WS60=(Token)match(input,WS,FOLLOW_WS_in_not_equal438); 
+            	    WS60=(Token)match(input,WS,FOLLOW_WS_in_not_equal438);
             	    WS60_tree = (CommonTree)adaptor.create(WS60);
             	    adaptor.addChild(root_0, WS60_tree);
 
@@ -1688,7 +1688,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            NOT_EQUAL61=(Token)match(input,NOT_EQUAL,FOLLOW_NOT_EQUAL_in_not_equal441); 
+            NOT_EQUAL61=(Token)match(input,NOT_EQUAL,FOLLOW_NOT_EQUAL_in_not_equal441);
             NOT_EQUAL61_tree = (CommonTree)adaptor.create(NOT_EQUAL61);
             root_0 = (CommonTree)adaptor.becomeRoot(NOT_EQUAL61_tree, root_0);
 
@@ -1707,7 +1707,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:60:25: WS
             	    {
-            	    WS62=(Token)match(input,WS,FOLLOW_WS_in_not_equal444); 
+            	    WS62=(Token)match(input,WS,FOLLOW_WS_in_not_equal444);
             	    WS62_tree = (CommonTree)adaptor.create(WS62);
             	    adaptor.addChild(root_0, WS62_tree);
 
@@ -1799,7 +1799,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:61:15: WS
             	    {
-            	    WS65=(Token)match(input,WS,FOLLOW_WS_in_equal457); 
+            	    WS65=(Token)match(input,WS,FOLLOW_WS_in_equal457);
             	    WS65_tree = (CommonTree)adaptor.create(WS65);
             	    adaptor.addChild(root_0, WS65_tree);
 
@@ -1812,7 +1812,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            EQUAL66=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_equal460); 
+            EQUAL66=(Token)match(input,EQUAL,FOLLOW_EQUAL_in_equal460);
             EQUAL66_tree = (CommonTree)adaptor.create(EQUAL66);
             root_0 = (CommonTree)adaptor.becomeRoot(EQUAL66_tree, root_0);
 
@@ -1831,7 +1831,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:61:26: WS
             	    {
-            	    WS67=(Token)match(input,WS,FOLLOW_WS_in_equal463); 
+            	    WS67=(Token)match(input,WS,FOLLOW_WS_in_equal463);
             	    WS67_tree = (CommonTree)adaptor.create(WS67);
             	    adaptor.addChild(root_0, WS67_tree);
 
@@ -1898,7 +1898,7 @@ public class QueryParser extends Parser {
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            TAGGED69=(Token)match(input,TAGGED,FOLLOW_TAGGED_in_tagged474); 
+            TAGGED69=(Token)match(input,TAGGED,FOLLOW_TAGGED_in_tagged474);
             TAGGED69_tree = (CommonTree)adaptor.create(TAGGED69);
             root_0 = (CommonTree)adaptor.becomeRoot(TAGGED69_tree, root_0);
 
@@ -1917,7 +1917,7 @@ public class QueryParser extends Parser {
             	case 1 :
             	    // src/riemann/Query.g:63:18: WS
             	    {
-            	    WS70=(Token)match(input,WS,FOLLOW_WS_in_tagged477); 
+            	    WS70=(Token)match(input,WS,FOLLOW_WS_in_tagged477);
             	    WS70_tree = (CommonTree)adaptor.create(WS70);
             	    adaptor.addChild(root_0, WS70_tree);
 
@@ -1930,7 +1930,7 @@ public class QueryParser extends Parser {
                 }
             } while (true);
 
-            String71=(Token)match(input,String,FOLLOW_String_in_tagged480); 
+            String71=(Token)match(input,String,FOLLOW_String_in_tagged480);
             String71_tree = (CommonTree)adaptor.create(String71);
             adaptor.addChild(root_0, String71_tree);
 
@@ -2033,7 +2033,7 @@ public class QueryParser extends Parser {
                 case 1 :
                     // src/riemann/Query.g:65:11: String
                     {
-                    String72=(Token)match(input,String,FOLLOW_String_in_value490); 
+                    String72=(Token)match(input,String,FOLLOW_String_in_value490);
                     String72_tree = (CommonTree)adaptor.create(String72);
                     adaptor.addChild(root_0, String72_tree);
 
@@ -2079,7 +2079,7 @@ public class QueryParser extends Parser {
                 case 5 :
                     // src/riemann/Query.g:65:34: INT
                     {
-                    INT76=(Token)match(input,INT,FOLLOW_INT_in_value506); 
+                    INT76=(Token)match(input,INT,FOLLOW_INT_in_value506);
                     INT76_tree = (CommonTree)adaptor.create(INT76);
                     adaptor.addChild(root_0, INT76_tree);
 
@@ -2089,7 +2089,7 @@ public class QueryParser extends Parser {
                 case 6 :
                     // src/riemann/Query.g:65:40: FLOAT
                     {
-                    FLOAT77=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_value510); 
+                    FLOAT77=(Token)match(input,FLOAT,FOLLOW_FLOAT_in_value510);
                     FLOAT77_tree = (CommonTree)adaptor.create(FLOAT77);
                     adaptor.addChild(root_0, FLOAT77_tree);
 
@@ -2143,7 +2143,7 @@ public class QueryParser extends Parser {
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            string_literal78=(Token)match(input,26,FOLLOW_26_in_t519); 
+            string_literal78=(Token)match(input,26,FOLLOW_26_in_t519);
             string_literal78_tree = (CommonTree)adaptor.create(string_literal78);
             adaptor.addChild(root_0, string_literal78_tree);
 
@@ -2191,7 +2191,7 @@ public class QueryParser extends Parser {
             {
             root_0 = (CommonTree)adaptor.nil();
 
-            string_literal79=(Token)match(input,27,FOLLOW_27_in_f526); 
+            string_literal79=(Token)match(input,27,FOLLOW_27_in_f526);
             string_literal79_tree = (CommonTree)adaptor.create(string_literal79);
             adaptor.addChild(root_0, string_literal79_tree);
 
@@ -2445,7 +2445,7 @@ public class QueryParser extends Parser {
             return "40:10: ( t | f | nil | tagged | approximately | lesser | lesser_equal | greater | greater_equal | not_equal | equal )";
         }
     }
- 
+
 
     public static final BitSet FOLLOW_or_in_expr137 = new BitSet(new long[]{0x0000000000000000L});
     public static final BitSet FOLLOW_EOF_in_expr139 = new BitSet(new long[]{0x0000000000000002L});
