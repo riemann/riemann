@@ -79,7 +79,13 @@
     (where (description #"an+elids"))
 
     ; The presence of a given tag
-    (where (tagged "mutant"))
+    (where (tagged-any "mutant"))
+
+    ; The presence of all the given tags
+    (where (tagged-all ["mutant", "ninja"]))
+
+    ; The presence of all the given tags - tagged is just shorthand for tagged-all
+    (where (tagged "turtle"))
 
     ; Arbitrary functions on values
     (where (> (* metric 1000) 2.5))
@@ -88,7 +94,7 @@
     (where (< 5 metric 10))
 
     ; Boolean operators
-    (where (not (or (tagged "www")
+    (where (not (or (tagged-any "www")
                     (and (state "ok") (nil? metric)))))
 
     ; And arbitrary functions
@@ -165,11 +171,11 @@
 (streams
   (where (and (service "web server")
               (state "exception"))
-         (tagged "controller"
+         (tagged-any "controller"
                  (email "5551234567@txt.att.net"))
-         (tagged "view"
+         (tagged-any "view"
                  (email "delacroix@trioptimum.com" "bronson@trioptimum.com"))
-         (tagged "model"
+         (tagged-any "model"
                  (email "staff@vonbraun.mil"))))
 
 ; The mailer can accept lists of events, too. To avoid getting slammed with

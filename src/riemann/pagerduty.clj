@@ -36,6 +36,8 @@
   be used as the incident key. The PD description will be the service, state,
   and metric. The full event will be attached as the details.
 
+  (use 'riemann.pagerduty) 
+
   (let [pd (pagerduty \"my-service-key\")]
     (changed-state
       (where (state \"ok\") (:resolve pd))
