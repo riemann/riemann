@@ -700,8 +700,7 @@
     (when (set/subset? (set tags) (set (:tags event)))
       (call-rescue event children))))
 
-(def tagged tagged-all)
-  "Alias for tagged-all."
+(def tagged "Alias for tagged-all" tagged-all)
 
 (defn tagged-any
   "Passes on events where any of tags are present.
