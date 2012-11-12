@@ -66,9 +66,9 @@
 ;                        (.listFiles (file (:library-path project))))]
 ;        (add-file release-name tar j))
 ;      (add-file (str release-name File/separator "lib") tar (file jar-file)))
-      (add-file (str release-name File/separator 
+      (add-file (str release-name File/separator
                      "lib") tar (file jar-file)))
-    
+
     (.delete bz2-file)
     (sh "bzip2" (str tar-file))
     (println "Wrote" (.getName bz2-file))

@@ -54,7 +54,7 @@
 
   (cancel [this]
           (reset! cancelled true))
-  
+
   Deferrable
   (defer [this delay]
               (reset! deferred-t (+ (unix-time) delay))))
@@ -64,7 +64,7 @@
 
 (def tasks
   "Scheduled operations."
-  (ConcurrentSkipListSet. 
+  (ConcurrentSkipListSet.
     (fn [a b] (compare [(:t a) (:id a)]
                        [(:t b) (:id b)]))))
 
@@ -121,10 +121,10 @@
    (every! interval 0 f))
   ([interval delay f]
    (schedule! (Every. (task-id)
-                      f 
-                      (+ (unix-time) delay) 
-                      interval 
-                      (atom nil) 
+                      f
+                      (+ (unix-time) delay)
+                      interval
+                      (atom nil)
                       (atom false)))))
 
 (defn run-tasks!
@@ -155,7 +155,7 @@
           ; No task available; park for a bit and try again.
           (LockSupport/parkNanos (ceil (* 1000000000 park-interval)))))
       (catch Throwable t
-        (warn "caught" 
+        (warn "caught"
               (with-out-str (clojure.stacktrace/print-stack-trace t)))))))
 
 (defn stop!

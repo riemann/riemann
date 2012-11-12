@@ -1,6 +1,6 @@
 (ns riemann.test.streams
   (:use riemann.streams
-        riemann.common
+        [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
         clojure.test)
@@ -107,67 +107,105 @@
                    {:metric 1}]))))
 
 (deftest match-test
-         (let [r (ref nil)
-               s (match :service "foo" (fn [e] (dosync (ref-set r e))))]
-           (s {:service "bar"})
-           (is (= nil (deref r)))
+         ; Regular strings.
+         (test-stream (match :service "foo")
+                      [{}
+                       {:service "bar"}
+                       {:service "foo"}]
+                      [{:service "foo"}])
 
-           (s {:service "foo"})
-           (is (= {:service "foo"} (deref r))))
-        
-         ; Regex
-         (let [r (ref nil)
-               s (match :service #"^f" (fn [e] (dosync (ref-set r e))))]
-           (s {:service "bar"})
-           (is (= nil (deref r)))
+         ; Sets
+         (test-stream (match :metric #{0 2})
+                      [{}
+                       {:metric 1}
+                       {:metric 2}]
+                      [{:metric 2}])
 
-           (s {:service "foo"})
-           (is (= {:service "foo"} (deref r)))))
+         ; Regexen
+         (test-stream (match :state #"^mi")
+                      [{}
+                       {:state "migas"}
+                       {:state "other breakfast foods"}]
+                      [{:state "migas"}])
 
-(deftest tagged-test
-         (let [r (ref [])
-               s (tagged ["kitten" "cat"] (append r))
-               events [{:tags ["kitten" "cat"]}
+         ; Functions
+         (test-stream (match identity 2)
+                      [1 2 3]
+                      [2]))
+
+(deftest tagged-all-test
+         (test-stream (tagged-all ["kitten" "cat"])
+                      [{:tags ["kitten" "cat"]}
                        {:tags ["kitten", "cat", "meow"]}
                        {:tags ["dog" "cat"]}
                        {:tags ["cat"]}
                        {:tags []}
-                       {}]]
-           (doseq [e events] (s e))
-           (is (= (deref r)
-                  [{:tags ["kitten" "cat"]}
-                   {:tags ["kitten", "cat", "meow"]}]))))
+                       {}]
+                      [{:tags ["kitten" "cat"]}
+                       {:tags ["kitten", "cat", "meow"]}])
+
+         (test-stream (tagged-all "meow")
+                      [{:tags ["meow" "bark"]}
+                       {:tags ["meow"]}
+                       {:tags ["bark"]}
+                       {}]
+                      [{:tags ["meow" "bark"]}
+                       {:tags ["meow"]}]))
 
 (deftest tagged-any-test
-         (let [r (ref [])
-               s (tagged-any ["kitten" "cat"] (append r))
-               events [{:tags ["kitten" "cat"]}
+         (test-stream (tagged-any ["kitten" "cat"])
+                      [{:tags ["kitten" "cat"]}
                        {:tags ["cat", "dog"]}
                        {:tags ["kitten"]}
                        {:tags ["dog"]}
                        {:tags []}
-                       {}]]
-           (doseq [e events] (s e))
-           (is (= (deref r)
-                  [{:tags ["kitten" "cat"]}
-                   {:tags ["cat", "dog"]}
-                   {:tags ["kitten"]}]))))
+                       {}]
+                      [{:tags ["kitten" "cat"]}
+                       {:tags ["cat", "dog"]}
+                       {:tags ["kitten"]}])
 
-(deftest where-event-test
-         (let [r (ref [])
-               s (where-event event
-                              (or (= "good" (:service event))
-                                  (< 2 (:metric event)))
-                              (fn [e] (dosync (alter r conj e))))
+         (test-stream (tagged-all "meow")
+                      [{:tags ["meow" "bark"]}
+                       {:tags ["meow"]}
+                       {:tags ["bark"]}
+                       {}]
+                      [{:tags ["meow" "bark"]}
+                       {:tags ["meow"]}]))
+
+(deftest where*-test
+         (test-stream (where* identity)
+                      [true false nil 2]
+                      [true 2])
+
+         (test-stream (where* expired?)
+                      [{:time -1 :ttl 0.5}
+                       {:time 0 :ttl 1}]
+                      [{:time -1 :ttl 0.5}])
+
+         ; Complex closure with else clause
+         (let [good (atom [])
+               bad  (atom [])
+               s (where* (fn [event]
+                           (or (= "good" (:service event))
+                               (< 2 (:metric event))))
+                         (partial swap! good conj)
+                         (else (partial swap! bad conj)))
                events [{:service "good" :metric 0}
                        {:service "bad" :metric 0}
                        {:metric 1}
                        {:service "bad" :metric 1}
-                       {:service "bad" :metric 3}]
-               expect [{:service "good" :metric 0}
                        {:service "bad" :metric 3}]]
+
+           ; Run stream
            (doseq [e events] (s e))
-           (is (= expect (deref r)))))
+
+           (is (= @good 
+                  [{:service "good" :metric 0}
+                   {:service "bad" :metric 3}]))
+           (is (= @bad
+                  [{:service "bad" :metric 0}
+                   {:metric 1}
+                   {:service "bad" :metric 1}]))))
 
 (deftest where-field
          (let [r (ref [])
@@ -184,6 +222,22 @@
            (doseq [e events] (s e))
            (is (= expect (deref r)))))
 
+(deftest where-regex
+         (test-stream (where (service #"^foo"))
+                      [{}
+                       {:service "foo"}
+                       {:service "food"}]
+                      [{:service "foo"}
+                       {:service "food"}]))
+
+(deftest where-variable
+         ; Verify that the macro allows variables to be used in predicates.
+         (let [regex #"cat"]
+           (test-stream (where (service regex))
+                        [{:service "kitten"}
+                         {:service "cats"}]
+                        [{:service "cats"}])))
+
 (deftest where-tagged
          (let [r (ref [])
                s (where (tagged "foo") (append r))
@@ -195,6 +249,21 @@
            (doseq [e events] (s e))
            (is (= (deref r)
                   [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+
+(deftest where-else
+         ; Where should take an else clause.
+         (let [a (atom [])
+               b (atom [])]
+           (run-stream
+             (where (service #"a")
+                    #(swap! a conj (:service %))
+                    (else #(swap! b conj (:service %))))
+             [{:service "cat"}
+              {:service "dog"}
+              {:service nil}
+              {:service "badger"}])
+           (is (= @a ["cat" "badger"]))
+           (is (= @b ["dog" nil]))))
 
 (deftest default-kv
          (let [r (ref nil)
@@ -489,21 +558,13 @@
              )))
 
 (deftest rate-fast
-         (let [output (ref [])
+         (let [output (atom [])
                interval 1
                total 10000
                threads 4
                r (rate interval
-                        (fn [event] (dosync (alter output conj event))))
+                        (fn [event] (dosync (swap! output conj event))))
                t0 (unix-time)]
-
-           (doseq [f (map (fn [t] (future
-             (let [c (ref 0)]
-               (dotimes [i (/ total threads)]
-                       (let [e {:metric 1.0 :time (unix-time)}]
-                         (dosync (commute c + (:metric e))))))))
-                          (range threads))]
-             (deref f))
 
            ; Generate events
            (doseq [f (map (fn [t] (future 
@@ -512,15 +573,14 @@
                           (range threads))]
                    (deref f))
              
-           ; Give all futures time to complete
-           (advance! 1)
+           (advance! interval)
 
            (let [t1 (unix-time)
-                 duration (- t1 t0)
-                 o (dosync (deref output))]
+                 duration (- t1 t0)]
            
              ; All events recorded
-             (is (approx-equal total (reduce + (map :metric o))))
+             (is (= duration interval))
+             (is (approx-equal total (reduce + (map :metric @output))))
 
              )))
 

@@ -26,10 +26,10 @@
 (defn event->annotation
   "Converts an event to an annotation."
   [event]
-  (into {} 
+  (into {}
         (filter second
               {:name        (safe-name (:service event))
-               :title       (string/join 
+               :title       (string/join
                               " " [(:service event) (:state event)])
                :source      (safe-name (:host event))
                :description (:description event)
@@ -53,16 +53,16 @@
   annotation ID for that host and service will be remembered. :end-annotation
   will submit an end-time for the most recent annotation submitted with
   :start-annotation.
-  
+
   Example:
-  
+
   (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
 
   (tagged \"latency\" (librato :gauge))
 
   (where (service \"www\")
     (changed-state
-      (where (state \"ok\") 
+      (where (state \"ok\")
         (:start-annotation librato)
         (else
           (:end-annotation librato)))))"
@@ -78,7 +78,7 @@
                      (collate user api-key [] [counter])
                      counter))
 
-     :annotation (fn [event] 
+     :annotation (fn [event]
                    (let [a (event->annotation event)]
                      (annotate user api-key (:name a)
                                (dissoc a :name))))
@@ -96,8 +96,8 @@
                                    [(:host event) (:service event)])
                              a (event->annotation event)]
                          (when id
-                           (let [res (annotate 
-                                       user api-key (:name a) id 
+                           (let [res (annotate
+                                       user api-key (:name a) id
                                        {:end-time (round (:time event))})]
                              (swap! annotation-ids dissoc
                                     [(:host event) (:service event)])

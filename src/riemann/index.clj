@@ -14,17 +14,17 @@
 (def default-ttl 60)
 
 (defprotocol Index
-  (clear [this] 
+  (clear [this]
          "Resets the index")
-  (delete [this event] 
+  (delete [this event]
           "Deletes any event with this host & service from index")
-  (delete-exactly [this event] 
+  (delete-exactly [this event]
                   "Deletes event from index")
   (expire [this]
           "Return a seq of expired states from this index, removing each.")
   (search [this query-ast]
           "Returns a seq of events from the index matching this query AST")
-  (update [this event] 
+  (update [this event]
           "Updates index with event"))
 
 (defn nbhm-index
@@ -61,7 +61,7 @@
                   event))
 
       clojure.lang.Seqable
-      (seq [this] 
+      (seq [this]
            (seq (.values hm))))))
 
 (defn index
