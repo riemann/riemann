@@ -703,6 +703,10 @@
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
+  (fn [event]
+    (when (set/subset? (set tags) (set (:tags event)))
+      (call-rescue event children))))
+
   (if (coll? tags)
     (fn [event]
       (when (set/subset? (set tags) (set (:tags event)))
@@ -711,6 +715,8 @@
     (fn [event]
       (when (member? tags (:tags event))
         (call-rescue event children)))))
+
+(def tagged "Alias for tagged-all" tagged-all)
 
 (defn tagged-any
   "Passes on events where any of tags are present.
