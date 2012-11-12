@@ -3,7 +3,7 @@
   (:require [clj-http.client :as client])
   (:require [clj-json.core :as json]))
 
-(def ^:private event-url 
+(def ^:private event-url
   "https://events.pagerduty.com/generic/2010-04-15/create_event.json")
 
 (defn- post
@@ -37,7 +37,7 @@
   and metric. The full event will be attached as the details.
 
   (let [pd (pagerduty \"my-service-key\")]
-    (changed-state 
+    (changed-state
       (where (state \"ok\") (:resolve pd))
       (where (state \"critical\") (:trigger pd))))"
   [service-key]

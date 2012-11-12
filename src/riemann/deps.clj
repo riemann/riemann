@@ -3,29 +3,29 @@
   between events. Dependencies are expressed as Rules; a Rule is a statement
   about the relationship between a particular event and the current state of
   the index.
-  
+
   Maps are rules which specify that their keys and values should be present in
   some event in the index. {} will match any non-empty index. {:service \"a\"
   :state \"ok\"} will match an index which has {:service \"a\" :state \"ok\"
   :metric 123}, and so on.
 
   (all & rules) matches only if all rules match.
-  
+
   (any & rules) matches if any of the rules match.
 
   (localhost & rules) states that all child rules must have the same host as
   the event of interest.
 
   (depends a & bs) means that if a matches the current event (and only the
-  current event, not the full index), b must match the current event and index. 
-  " 
+  current event, not the full index), b must match the current event and index.
+  "
   (:use riemann.index)
   (:require [riemann.streams :as streams]))
 
 (defprotocol Rule
   (match [this context event]))
 
-(extend-protocol Rule 
+(extend-protocol Rule
   clojure.lang.IPersistentMap
   (match [this index _]
          (some (fn [e] (= this (select-keys e (keys this))))

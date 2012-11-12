@@ -9,8 +9,8 @@
   ([interval f] (every interval 0 f))
   ([interval delay f]
    (let [s (Executors/newSingleThreadScheduledExecutor)]
-     (.scheduleAtFixedRate s f 
-                           (long (* 1000 delay)) 
+     (.scheduleAtFixedRate s f
+                           (long (* 1000 delay))
                            (long (* 1000 interval))
                            TimeUnit/MILLISECONDS)
      (fn [] (.shutdownNow s)))))
@@ -28,7 +28,7 @@
   ; Ughhhhhh. I'm so sorry.
   ([interval delay f]
    (let [waterline (ref (+ delay (unix-time)))
-         thread (Thread. 
+         thread (Thread.
                   (bound-fn []
                     (when-let [target-time (deref waterline)]
                       (let [now (unix-time)

@@ -21,7 +21,7 @@
 
 (def graphite #'graphite/graphite)
 
-(defn tcp-server 
+(defn tcp-server
   "Add a new TCP server with opts to the default core."
   [& opts]
   (swap! (core :servers) conj
@@ -34,7 +34,7 @@
    (alter (core :servers) conj
      (graphite/graphite-server core (apply hash-map opts)))))
 
-(defn udp-server 
+(defn udp-server
   "Add a new UDP server with opts to the default core."
   [& opts]
   (swap! (core :servers) conj
@@ -48,11 +48,11 @@
     (riemann.server/ws-server core (apply hash-map opts))))
 
 (defn streams
-  "Add any number of streams to the default core." 
+  "Add any number of streams to the default core."
   [& things]
   (swap! (core :streams) concat things))
 
-(defn index 
+(defn index
   "Set the index used by this core."
   [& opts]
   (reset! (core :index) (apply riemann.index/index opts)))
@@ -97,7 +97,7 @@
 (defn start []
   (core/start core))
 
-(defn include 
+(defn include
   "Include another config file.
 
   (include \"foo.clj\")"

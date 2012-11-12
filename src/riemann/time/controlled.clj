@@ -6,7 +6,7 @@
         clojure.math.numeric-tower))
 
 (def clock
-  "Reference to the current time, in seconds." 
+  "Reference to the current time, in seconds."
   (atom nil))
 
 (defn reset-clock!
@@ -34,7 +34,7 @@
   []
   @clock)
 
-(defn advance! 
+(defn advance!
   "Advances the clock to t seconds, triggering side effects."
   [t]
   (when (< @clock t)

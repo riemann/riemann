@@ -35,20 +35,19 @@
              OrderedMemoryAwareThreadPoolExecutor
              MemoryAwareThreadPoolExecutor))
 
-  (:require [riemann.query :as query])
-  (:require [riemann.index :as index])
-  (:use riemann.core)
-  (:use riemann.common)
-  (:use riemann.pubsub)
-  (:use clojure.tools.logging)
-  (:use [protobuf.core])
-  (:use [slingshot.slingshot :only [try+]])
-  (:use clojure.stacktrace)
-  (:use lamina.core)
-  (:use aleph.http)
-  (:use [clj-http.util :only [url-decode]])
-  (:use [clojure.string :only [split]])
-  (:require gloss.io))
+  (:require [riemann.query :as query]
+            [riemann.index :as index]
+            gloss.io)
+  (:use riemann.core
+        riemann.common
+        riemann.pubsub
+        clojure.tools.logging
+        clojure.stacktrace
+        lamina.core
+        aleph.http
+        [slingshot.slingshot :only [try+]]
+        [clj-http.util :only [url-decode]]
+        [clojure.string :only [split]]))
 
 (defn handle
   "Handles a msg with the given core."
@@ -58,7 +57,7 @@
     (doseq [event (concat (:events msg) (:states msg))
             stream (deref (:streams core))]
       (stream event))
-   
+
     (if (:query msg)
       ; Handle query
       (let [ast (query/ast (:string (:query msg)))]
@@ -66,7 +65,7 @@
             {:ok true :events (index/search i ast)}
             {:ok false :error "no index"}))
 
-      ; Generic acknowledge 
+      ; Generic acknowledge
       {:ok true})
 
     ; Some kind of error happened
@@ -75,7 +74,7 @@
     (catch Exception ^Exception e
       {:ok false :error (.getMessage e)})))
 
-(defn int32-frame-decoder 
+(defn int32-frame-decoder
   []
   ; Offset 0, 4 byte header, skip those 4 bytes.
   (LengthFieldBasedFrameDecoder. Integer/MAX_VALUE, 0, 4, 0, 4))
@@ -96,8 +95,8 @@
   (proxy [SimpleChannelHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
                  (.add channel-group (.getChannel state-event)))
-    
-    (messageReceived [^ChannelHandlerContext context 
+
+    (messageReceived [^ChannelHandlerContext context
                       ^MessageEvent message-event]
       (let [channel (.getChannel message-event)
             msg (.getMessage message-event)]
@@ -110,7 +109,7 @@
          (catch com.google.protobuf.InvalidProtocolBufferException e
            (warn "invalid message, closing")
            (.close channel)))))
-    
+
     (exceptionCaught [context ^ExceptionEvent exception-event]
                      (warn (.getCause exception-event) "TCP handler caught")
                      (.close (.getChannel exception-event)))))
@@ -176,7 +175,7 @@
 
      ; Start bootstrap
      (let [server-channel (.bind bootstrap
-                                 (InetSocketAddress. ^String (:host opts) 
+                                 (InetSocketAddress. ^String (:host opts)
                                                      ^Integer (:port opts)))]
        (.add all-channels server-channel))
      (info "TCP server" opts " online")
@@ -187,13 +186,13 @@
        (.releaseExternalResources bootstrap)))))
 
 (defn udp-server
-  "Starts a new UDP server for a core. Starts immediately. 
+  "Starts a new UDP server for a core. Starts immediately.
 
   IMPORTANT: The UDP server has a maximum datagram size--by default, 16384
   bytes. If your client does not agree on the maximum datagram size (and send
   big messages over TCP instead), it can send large messages which will be
   dropped with protobuf parse errors in the log.
-  
+
   Options:
   :host   The address to listen on (default localhost).
   :port   The port to listen on (default 5555).
@@ -239,7 +238,7 @@
   [string]
   (apply hash-map
          (map url-decode
-           (mapcat (fn [kv] (split kv #"=" 2)) 
+           (mapcat (fn [kv] (split kv #"=" 2))
                      (split string #"&")))))
 
 ;;; Websockets
@@ -256,7 +255,7 @@
     (receive-all ch (fn [msg]
                       (when-not msg
                         ; Shut down channel
-                        (info "Closing websocket " 
+                        (info "Closing websocket "
                               (:remote-addr hs) topic query)
                         (close ch)
                         (unsubscribe (:pubsub core) sub))))))
@@ -278,13 +277,13 @@
 
 (defn ws-handler [core]
   (fn [ch handshake]
-    (info "Websocket connection from" (:remote-addr handshake) 
-          (:uri handshake) 
+    (info "Websocket connection from" (:remote-addr handshake)
+          (:uri handshake)
           (:query-string handshake))
     (condp re-matches (:uri handshake)
       #"^/index/?$" (ws-index-handler core ch handshake)
       #"^/pubsub/[^/]+/?$" (ws-pubsub-handler core ch handshake)
-      :else (do 
+      :else (do
               (info "Unknown URI " (:uri handshake) ", closing")
               (close ch)))))
 

@@ -46,7 +46,7 @@ public class QueryLexer extends Lexer {
     // delegates
     // delegators
 
-    public QueryLexer() {;} 
+    public QueryLexer() {;}
     public QueryLexer(CharStream input) {
         this(input, new RecognizerSharedState());
     }
@@ -64,7 +64,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:5:5: ( 'and' )
             // src/riemann/Query.g:5:7: 'and'
             {
-            match("and"); 
+            match("and");
 
 
             }
@@ -85,7 +85,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:6:4: ( 'or' )
             // src/riemann/Query.g:6:6: 'or'
             {
-            match("or"); 
+            match("or");
 
 
             }
@@ -106,7 +106,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:7:5: ( 'not' )
             // src/riemann/Query.g:7:7: 'not'
             {
-            match("not"); 
+            match("not");
 
 
             }
@@ -127,7 +127,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:8:15: ( '=~' )
             // src/riemann/Query.g:8:17: '=~'
             {
-            match("=~"); 
+            match("=~");
 
 
             }
@@ -148,7 +148,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:9:11: ( '!=' )
             // src/riemann/Query.g:9:13: '!='
             {
-            match("!="); 
+            match("!=");
 
 
             }
@@ -169,7 +169,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:10:7: ( '=' )
             // src/riemann/Query.g:10:9: '='
             {
-            match('='); 
+            match('=');
 
             }
 
@@ -189,7 +189,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:11:8: ( '<' )
             // src/riemann/Query.g:11:10: '<'
             {
-            match('<'); 
+            match('<');
 
             }
 
@@ -209,7 +209,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:12:14: ( '<=' )
             // src/riemann/Query.g:12:16: '<='
             {
-            match("<="); 
+            match("<=");
 
 
             }
@@ -230,7 +230,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:13:9: ( '>' )
             // src/riemann/Query.g:13:11: '>'
             {
-            match('>'); 
+            match('>');
 
             }
 
@@ -250,7 +250,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:14:15: ( '>=' )
             // src/riemann/Query.g:14:17: '>='
             {
-            match(">="); 
+            match(">=");
 
 
             }
@@ -271,7 +271,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:15:8: ( 'tagged' )
             // src/riemann/Query.g:15:10: 'tagged'
             {
-            match("tagged"); 
+            match("tagged");
 
 
             }
@@ -292,7 +292,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:16:7: ( '(' )
             // src/riemann/Query.g:16:9: '('
             {
-            match('('); 
+            match('(');
 
             }
 
@@ -312,7 +312,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:17:7: ( ')' )
             // src/riemann/Query.g:17:9: ')'
             {
-            match(')'); 
+            match(')');
 
             }
 
@@ -332,7 +332,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:18:7: ( 'true' )
             // src/riemann/Query.g:18:9: 'true'
             {
-            match("true"); 
+            match("true");
 
 
             }
@@ -353,7 +353,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:19:7: ( 'false' )
             // src/riemann/Query.g:19:9: 'false'
             {
-            match("false"); 
+            match("false");
 
 
             }
@@ -374,7 +374,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:20:7: ( 'null' )
             // src/riemann/Query.g:20:9: 'null'
             {
-            match("null"); 
+            match("null");
 
 
             }
@@ -395,7 +395,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:21:7: ( 'nil' )
             // src/riemann/Query.g:21:9: 'nil'
             {
-            match("nil"); 
+            match("nil");
 
 
             }
@@ -416,7 +416,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:22:7: ( 'host' )
             // src/riemann/Query.g:22:9: 'host'
             {
-            match("host"); 
+            match("host");
 
 
             }
@@ -437,7 +437,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:23:7: ( 'service' )
             // src/riemann/Query.g:23:9: 'service'
             {
-            match("service"); 
+            match("service");
 
 
             }
@@ -458,7 +458,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:24:7: ( 'state' )
             // src/riemann/Query.g:24:9: 'state'
             {
-            match("state"); 
+            match("state");
 
 
             }
@@ -479,7 +479,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:25:7: ( 'description' )
             // src/riemann/Query.g:25:9: 'description'
             {
-            match("description"); 
+            match("description");
 
 
             }
@@ -500,7 +500,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:26:7: ( 'metric_f' )
             // src/riemann/Query.g:26:9: 'metric_f'
             {
-            match("metric_f"); 
+            match("metric_f");
 
 
             }
@@ -521,7 +521,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:27:7: ( 'metric' )
             // src/riemann/Query.g:27:9: 'metric'
             {
-            match("metric"); 
+            match("metric");
 
 
             }
@@ -542,7 +542,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:28:7: ( 'ttl' )
             // src/riemann/Query.g:28:9: 'ttl'
             {
-            match("ttl"); 
+            match("ttl");
 
 
             }
@@ -563,7 +563,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:29:7: ( 'time' )
             // src/riemann/Query.g:29:9: 'time'
             {
-            match("time"); 
+            match("time");
 
 
             }
@@ -656,7 +656,7 @@ public class QueryLexer extends Lexer {
                 case 1 :
                     // src/riemann/Query.g:84:7: '-'
                     {
-                    match('-'); 
+                    match('-');
 
                     }
                     break;
@@ -679,7 +679,7 @@ public class QueryLexer extends Lexer {
             	case 1 :
             	    // src/riemann/Query.g:84:12: '0' .. '9'
             	    {
-            	    matchRange('0','9'); 
+            	    matchRange('0','9');
 
             	    }
             	    break;
@@ -723,7 +723,7 @@ public class QueryLexer extends Lexer {
                 case 1 :
                     // src/riemann/Query.g:88:9: '-'
                     {
-                    match('-'); 
+                    match('-');
 
                     }
                     break;
@@ -746,7 +746,7 @@ public class QueryLexer extends Lexer {
             	case 1 :
             	    // src/riemann/Query.g:88:15: '0' .. '9'
             	    {
-            	    matchRange('0','9'); 
+            	    matchRange('0','9');
 
             	    }
             	    break;
@@ -771,7 +771,7 @@ public class QueryLexer extends Lexer {
                 case 1 :
                     // src/riemann/Query.g:88:27: '.' ( '0' .. '9' )*
                     {
-                    match('.'); 
+                    match('.');
                     // src/riemann/Query.g:88:31: ( '0' .. '9' )*
                     loop6:
                     do {
@@ -787,7 +787,7 @@ public class QueryLexer extends Lexer {
                     	case 1 :
                     	    // src/riemann/Query.g:88:32: '0' .. '9'
                     	    {
-                    	    matchRange('0','9'); 
+                    	    matchRange('0','9');
 
                     	    }
                     	    break;
@@ -814,7 +814,7 @@ public class QueryLexer extends Lexer {
                 case 1 :
                     // src/riemann/Query.g:88:45: EXPONENT
                     {
-                    mEXPONENT(); 
+                    mEXPONENT();
 
                     }
                     break;
@@ -918,7 +918,7 @@ public class QueryLexer extends Lexer {
             	case 1 :
             	    // src/riemann/Query.g:99:34: '0' .. '9'
             	    {
-            	    matchRange('0','9'); 
+            	    matchRange('0','9');
 
             	    }
             	    break;
@@ -949,7 +949,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:101:9: ( '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"' )
             // src/riemann/Query.g:104:5: '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"'
             {
-            match('\"'); 
+            match('\"');
             // src/riemann/Query.g:104:9: ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )*
             loop11:
             do {
@@ -968,7 +968,7 @@ public class QueryLexer extends Lexer {
             	case 1 :
             	    // src/riemann/Query.g:104:11: EscapeSequence
             	    {
-            	    mEscapeSequence(); 
+            	    mEscapeSequence();
 
             	    }
             	    break;
@@ -993,7 +993,7 @@ public class QueryLexer extends Lexer {
                 }
             } while (true);
 
-            match('\"'); 
+            match('\"');
 
             }
 
@@ -1011,7 +1011,7 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:108:9: ( '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' ) )
             // src/riemann/Query.g:108:13: '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
             {
-            match('\\'); 
+            match('\\');
             // src/riemann/Query.g:108:18: ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
             int alt12=8;
             switch ( input.LA(1) ) {
@@ -1066,56 +1066,56 @@ public class QueryLexer extends Lexer {
                 case 1 :
                     // src/riemann/Query.g:108:19: UnicodeEscape
                     {
-                    mUnicodeEscape(); 
+                    mUnicodeEscape();
 
                     }
                     break;
                 case 2 :
                     // src/riemann/Query.g:108:34: 'b'
                     {
-                    match('b'); 
+                    match('b');
 
                     }
                     break;
                 case 3 :
                     // src/riemann/Query.g:108:38: 't'
                     {
-                    match('t'); 
+                    match('t');
 
                     }
                     break;
                 case 4 :
                     // src/riemann/Query.g:108:42: 'n'
                     {
-                    match('n'); 
+                    match('n');
 
                     }
                     break;
                 case 5 :
                     // src/riemann/Query.g:108:46: 'f'
                     {
-                    match('f'); 
+                    match('f');
 
                     }
                     break;
                 case 6 :
                     // src/riemann/Query.g:108:50: 'r'
                     {
-                    match('r'); 
+                    match('r');
 
                     }
                     break;
                 case 7 :
                     // src/riemann/Query.g:108:54: '\\\"'
                     {
-                    match('\"'); 
+                    match('\"');
 
                     }
                     break;
                 case 8 :
                     // src/riemann/Query.g:108:59: '\\\\'
                     {
-                    match('\\'); 
+                    match('\\');
 
                     }
                     break;
@@ -1137,11 +1137,11 @@ public class QueryLexer extends Lexer {
             // src/riemann/Query.g:112:5: ( 'u' HexDigit HexDigit HexDigit HexDigit )
             // src/riemann/Query.g:112:7: 'u' HexDigit HexDigit HexDigit HexDigit
             {
-            match('u'); 
-            mHexDigit(); 
-            mHexDigit(); 
-            mHexDigit(); 
-            mHexDigit(); 
+            match('u');
+            mHexDigit();
+            mHexDigit();
+            mHexDigit();
+            mHexDigit();
 
             }
 
@@ -1183,210 +1183,210 @@ public class QueryLexer extends Lexer {
             case 1 :
                 // src/riemann/Query.g:1:10: AND
                 {
-                mAND(); 
+                mAND();
 
                 }
                 break;
             case 2 :
                 // src/riemann/Query.g:1:14: OR
                 {
-                mOR(); 
+                mOR();
 
                 }
                 break;
             case 3 :
                 // src/riemann/Query.g:1:17: NOT
                 {
-                mNOT(); 
+                mNOT();
 
                 }
                 break;
             case 4 :
                 // src/riemann/Query.g:1:21: APPROXIMATELY
                 {
-                mAPPROXIMATELY(); 
+                mAPPROXIMATELY();
 
                 }
                 break;
             case 5 :
                 // src/riemann/Query.g:1:35: NOT_EQUAL
                 {
-                mNOT_EQUAL(); 
+                mNOT_EQUAL();
 
                 }
                 break;
             case 6 :
                 // src/riemann/Query.g:1:45: EQUAL
                 {
-                mEQUAL(); 
+                mEQUAL();
 
                 }
                 break;
             case 7 :
                 // src/riemann/Query.g:1:51: LESSER
                 {
-                mLESSER(); 
+                mLESSER();
 
                 }
                 break;
             case 8 :
                 // src/riemann/Query.g:1:58: LESSER_EQUAL
                 {
-                mLESSER_EQUAL(); 
+                mLESSER_EQUAL();
 
                 }
                 break;
             case 9 :
                 // src/riemann/Query.g:1:71: GREATER
                 {
-                mGREATER(); 
+                mGREATER();
 
                 }
                 break;
             case 10 :
                 // src/riemann/Query.g:1:79: GREATER_EQUAL
                 {
-                mGREATER_EQUAL(); 
+                mGREATER_EQUAL();
 
                 }
                 break;
             case 11 :
                 // src/riemann/Query.g:1:93: TAGGED
                 {
-                mTAGGED(); 
+                mTAGGED();
 
                 }
                 break;
             case 12 :
                 // src/riemann/Query.g:1:100: T__24
                 {
-                mT__24(); 
+                mT__24();
 
                 }
                 break;
             case 13 :
                 // src/riemann/Query.g:1:106: T__25
                 {
-                mT__25(); 
+                mT__25();
 
                 }
                 break;
             case 14 :
                 // src/riemann/Query.g:1:112: T__26
                 {
-                mT__26(); 
+                mT__26();
 
                 }
                 break;
             case 15 :
                 // src/riemann/Query.g:1:118: T__27
                 {
-                mT__27(); 
+                mT__27();
 
                 }
                 break;
             case 16 :
                 // src/riemann/Query.g:1:124: T__28
                 {
-                mT__28(); 
+                mT__28();
 
                 }
                 break;
             case 17 :
                 // src/riemann/Query.g:1:130: T__29
                 {
-                mT__29(); 
+                mT__29();
 
                 }
                 break;
             case 18 :
                 // src/riemann/Query.g:1:136: T__30
                 {
-                mT__30(); 
+                mT__30();
 
                 }
                 break;
             case 19 :
                 // src/riemann/Query.g:1:142: T__31
                 {
-                mT__31(); 
+                mT__31();
 
                 }
                 break;
             case 20 :
                 // src/riemann/Query.g:1:148: T__32
                 {
-                mT__32(); 
+                mT__32();
 
                 }
                 break;
             case 21 :
                 // src/riemann/Query.g:1:154: T__33
                 {
-                mT__33(); 
+                mT__33();
 
                 }
                 break;
             case 22 :
                 // src/riemann/Query.g:1:160: T__34
                 {
-                mT__34(); 
+                mT__34();
 
                 }
                 break;
             case 23 :
                 // src/riemann/Query.g:1:166: T__35
                 {
-                mT__35(); 
+                mT__35();
 
                 }
                 break;
             case 24 :
                 // src/riemann/Query.g:1:172: T__36
                 {
-                mT__36(); 
+                mT__36();
 
                 }
                 break;
             case 25 :
                 // src/riemann/Query.g:1:178: T__37
                 {
-                mT__37(); 
+                mT__37();
 
                 }
                 break;
             case 26 :
                 // src/riemann/Query.g:1:184: ID
                 {
-                mID(); 
+                mID();
 
                 }
                 break;
             case 27 :
                 // src/riemann/Query.g:1:187: INT
                 {
-                mINT(); 
+                mINT();
 
                 }
                 break;
             case 28 :
                 // src/riemann/Query.g:1:191: FLOAT
                 {
-                mFLOAT(); 
+                mFLOAT();
 
                 }
                 break;
             case 29 :
                 // src/riemann/Query.g:1:197: WS
                 {
-                mWS(); 
+                mWS();
 
                 }
                 break;
             case 30 :
                 // src/riemann/Query.g:1:200: String
                 {
-                mString(); 
+                mString();
 
                 }
                 break;
@@ -1575,6 +1575,6 @@ public class QueryLexer extends Lexer {
             return "1:1: Tokens : ( AND | OR | NOT | APPROXIMATELY | NOT_EQUAL | EQUAL | LESSER | LESSER_EQUAL | GREATER | GREATER_EQUAL | TAGGED | T__24 | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | ID | INT | FLOAT | WS | String );";
         }
     }
- 
+
 
 }
