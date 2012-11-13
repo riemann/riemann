@@ -8,4 +8,4 @@ else
   config=$1
 fi
 
-exec java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -jar "$top/lib/riemann-0.1.2-standalone.jar" "$config"
+exec java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -jar "$top/lib/riemann.jar" "$config"
