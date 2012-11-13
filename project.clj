@@ -7,7 +7,7 @@
 (defn relative-path [path]
     (expand-path (str (dirname *file*) "/" path)))
 
-(defproject riemann "0.1.3-SNAPSHOT"
+(defproject riemann "0.1.3"
   :description 
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
@@ -40,7 +40,7 @@
     [clj-http "0.4.1"]
     [clj-json "0.5.0"]
     [clj-time "0.4.3"]
-    [clj-librato "0.0.2-SNAPSHOT"]
+    [clj-librato "0.0.2"]
     [incanter/incanter-charts "1.3.0"]
   ]
   :plugins [[codox "0.6.1"]]
