@@ -70,9 +70,10 @@
                                                 ".tar.bz2")))
                                 (.getName tar-dir))))))
 
-(defn tar [project]
-  (doto project
-    (reset)
-    (uberjar)
-    (compress (make-tar-dir project))
-    (cleanup)))
+(defn tar
+  ([project] (tar project true))
+  ([project uberjar?]
+  (reset project)
+   (when uberjar? (uberjar project))
+   (compress project (make-tar-dir project))
+   (cleanup project)))

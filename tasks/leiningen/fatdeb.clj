@@ -89,9 +89,10 @@
                    (str deb-dir) 
                    (str (file (:root project) "target"))))))
 
-(defn fatdeb [project]
-  (doto project
-    (reset)
-    (uberjar)
-    (dpkg (make-deb-dir project))
-    (cleanup)))
+(defn fatdeb
+  ([project] (fatdeb project true))
+  ([project uberjar?]
+   (reset project)
+   (when uberjar? (uberjar project))
+   (dpkg project (make-deb-dir project))
+   (cleanup project)))
