@@ -9,8 +9,7 @@
 
 (defproject riemann "0.1.3-SNAPSHOT"
   :description 
-"A network event stream processor. Intended for analytics, metrics, and
-alerting; and to glue various monitoring systems together."
+"A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
@@ -18,6 +17,7 @@ alerting; and to glue various monitoring systems together."
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
+  :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/clojure "1.4.0"]
     [org.clojure/math.numeric-tower "0.0.1"]
@@ -43,9 +43,7 @@ alerting; and to glue various monitoring systems together."
     [clj-librato "0.0.2-SNAPSHOT"]
     [incanter/incanter-charts "1.3.0"]
   ]
-  :profiles {:dev {:dependencies [[clj-glob "1.0.0"]]}}
-  :plugins [[codox "0.6.1"]
-            [lein-deb "1.0.0-SNAPSHOT"]]
+  :plugins [[codox "0.6.1"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
@@ -61,19 +59,5 @@ alerting; and to glue various monitoring systems together."
   :java-source-path "src/riemann/"
   :aot [riemann.bin]
   :main riemann.bin
-  :deb {:maintainer {:name "Kyle Kingsbury"
-                     :email "aphyr@aphyr.com"}
-        ; I wish I could use relative paths here, but lein-deb complains
-        ; "No directory specified for tarfileset", and lein macros need them
-        ; to be strings. Arrrgh.
-        :filesets [{:file     "/home/aphyr/riemann/riemann-0.1.3-standalone.jar"
-                    :fullpath "/usr/lib/riemann/riemann.jar"}
-                   {:file     "/home/aphyr/riemann/riemann.config"
-                    :fullpath "/etc/riemann/riemann.config"}
-                   {:file     "/home/aphyr/riemann/bin/riemann"
-                    :fullpath "/usr/bin/riemann"
-                    :fileMode "755"}]
-        :depends ""}
-  :deb-skip-jar true
   :codox {:output-dir "site/api"}
 )

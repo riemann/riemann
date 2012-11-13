@@ -5,8 +5,7 @@
         [leiningen.deb :only [deb]]
         [leiningen.pom :only [pom]]
         [clojure.java.io :only [file]]
-        [org.satta.glob :only [glob]]
-        ))
+        [org.satta.glob :only [glob]]))
 
 (defn package [project]
   ; Clojars pom
