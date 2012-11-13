@@ -11,6 +11,7 @@
   (:require [riemann.pubsub :as pubsub])
   (:require [riemann.graphite :as graphite])
   (:use clojure.tools.logging)
+  (:use [riemann.pagerduty :only [pagerduty]])
   (:use riemann.client)
   (:use [riemann.librato :only [librato-metrics]])
   (:use [riemann.streams :exclude [update-index delete-from-index]])
