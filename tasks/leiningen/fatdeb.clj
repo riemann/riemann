@@ -1,7 +1,7 @@
 (ns leiningen.fatdeb
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
-        [clojure.string :only [join capitalize]]
+        [clojure.string :only [join capitalize trim-newline]]
         [leiningen.uberjar :only [uberjar]]))
 
 (defn delete-file-recursively
@@ -49,7 +49,7 @@
   "Write string to file, plus newline"
   [file string]
   (with-open [w (writer file)]
-    (.write w (str string "\n"))))
+    (.write w (str (trim-newline string) "\n"))))
 
 (defn make-deb-dir
   "Creates the debian package structure in a new directory."
@@ -87,7 +87,13 @@
   [project deb-dir]
   (print (:err (sh "dpkg" "--build" 
                    (str deb-dir) 
-                   (str (file (:root project) "target"))))))
+                   (str (file (:root project) "target")))))
+  (let [deb-file (file (:root project) "target" (str (:name project) "_"
+                                                     (:version project) "_"
+                                                     "all" ".deb"))]
+    (write (str deb-file ".md5")
+           (:out (sh "md5sum" (str deb-file))))))
+                                       
 
 (defn fatdeb
   ([project] (fatdeb project true))

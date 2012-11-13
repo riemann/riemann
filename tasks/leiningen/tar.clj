@@ -1,7 +1,7 @@
 (ns leiningen.tar
   (:use [clojure.java.shell :only [sh with-sh-dir]]
         [clojure.java.io :only [file delete-file writer copy]]
-        [clojure.string :only [join capitalize]]
+        [clojure.string :only [join capitalize trim-newline]]
         [leiningen.uberjar :only [uberjar]]))
 
 (defn delete-file-recursively
@@ -57,18 +57,25 @@
 
     dir))
 
+(defn write
+  "Write string to file, plus newline"
+  [file string]
+  (with-open [w (writer file)]
+    (.write w (str (trim-newline string) "\n"))))
+
 (defn compress
   "Convert given package directory to a .tar.bz2."
   [project tar-dir]
-  (with-sh-dir (.getParent tar-dir)
-               (print (:err (sh "tar" "cvjf" 
-                                (str (file (:root project)
-                                           "target"
-                                           (str (:name project)
-                                                "-"
-                                                (:version project)
-                                                ".tar.bz2")))
-                                (.getName tar-dir))))))
+  (let [tarball (str (file (:root project)
+                           "target"
+                           (str (:name project)
+                                "-"
+                                (:version project)
+                                ".tar.bz2")))]
+    (with-sh-dir (.getParent tar-dir)
+                 (print (:err (sh "tar" "cvjf" tarball (.getName tar-dir)))))
+    (write (str tarball ".md5")
+           (:out (sh "md5sum" (str tarball))))))
 
 (defn tar
   ([project] (tar project true))
