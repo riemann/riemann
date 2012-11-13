@@ -63,6 +63,16 @@
     (write (file dir "DEBIAN" "conffiles") 
            (join "\n" ["/etc/riemann/riemann.config"]))
 
+    ; Postinst
+    ; Fakeroot plays poorly with lein; have to change permissions after
+    ; the fact. :(
+    (write (file dir "DEBIAN" "postinst")
+           "#!/bin/sh
+           chown -R root:root /usr/lib/riemann
+           chown root:root /usr/bin/riemann
+           chown -R root:root /etc/riemann")
+    (.setExecutable (file dir "DEBIAN" "postinst") true false)
+
     ; Jar
     (.mkdirs (file dir "usr" "lib" "riemann"))
     (copy (file (:root project) "target" 
