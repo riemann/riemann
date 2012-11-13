@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-if [ -z "$1" ]
-then
-  config="/etc/riemann/riemann.config"
-else
-  config=$1
-fi
-
-exec java -XX:+UseConcMarkSweepGC -jar /usr/lib/riemann/riemann.jar "$config"

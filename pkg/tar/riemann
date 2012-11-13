@@ -8,4 +8,4 @@ else
   config=$1
 fi
 
-java -XX:+UseConcMarkSweepGC -jar "$top/lib/riemann-0.1.2-standalone.jar" "$config"
+exec java -XX:+UseConcMarkSweepGC -jar "$top/lib/riemann-0.1.2-standalone.jar" "$config"
