@@ -1,5 +1,4 @@
 language: clojure
-before_script: sed -i 's,"-d64",,' project.clj
 lein: lein2
 jdk:
   - openjdk7
