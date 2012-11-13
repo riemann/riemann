@@ -87,7 +87,7 @@
   :block-start          Wait for the pool's initial connections to open
                         before returning."
   [opts]
-  (let [opts (merge {:host "localhost"
+  (let [opts (merge {:host "127.0.0.1"
                      :port 2003
                      :path graphite-path-percentiles} opts)
         pool (fixed-pool
@@ -143,7 +143,7 @@
                                (.addLast "graphite-decoder"
                                          ((graphite-frame-decoder
                                            (:parser-fn opts)))))]
-       (server/tcp-server core (merge {:host "localhost"
+       (server/tcp-server core (merge {:host "127.0.0.1"
                                        :port 2003
                                        :pipeline-factory pipeline-factory}
                                       opts)))))

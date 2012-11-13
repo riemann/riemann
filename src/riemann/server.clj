@@ -140,7 +140,7 @@
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
-  :host   The host to listen on (default localhost).
+  :host   The host to listen on (default 127.0.0.1).
   :port   The port to listen on. (default 5555)"
   ([core] (tcp-server core {}))
   ([core opts]
@@ -151,7 +151,7 @@
                                          (int32-frame-encoder))
                                (.addLast "protobuf-decoder"
                                          (protobuf-frame-decoder)))
-           opts (merge {:host "localhost"
+           opts (merge {:host "127.0.0.1"
                         :port 5555
                         :pipeline-factory pipeline-factory}
                        opts)
@@ -194,7 +194,7 @@
   dropped with protobuf parse errors in the log.
 
   Options:
-  :host   The address to listen on (default localhost).
+  :host   The address to listen on (default 127.0.0.1).
   :port   The port to listen on (default 5555).
   :max-size   The maximum datagram size (default 16384 bytes)."
   ([core] (udp-server core {}))
@@ -202,7 +202,7 @@
      (let [pipeline-factory #(doto (Channels/pipeline)
                                (.addLast "protobuf-decoder"
                                          (protobuf-frame-decoder)))
-           opts (merge {:host "localhost"
+           opts (merge {:host "127.0.0.1"
                       :port 5555
                       :max-size 16384
                       :pipeline-factory pipeline-factory}
@@ -291,11 +291,11 @@
   "Starts a new websocket server for a core. Starts immediately.
 
   Options:
-  :host   The address to listen on (default localhost)
+  :host   The address to listen on (default 127.0.0.1)
   :post   The port to listen on (default 5556)"
   ([core] (udp-server core {}))
   ([core opts]
-   (let [opts (merge {:host "localhost"
+   (let [opts (merge {:host "127.0.0.1"
                       :port 5556}
                      opts)
          s (start-http-server (ws-handler core) {:host (:host opts)
