@@ -92,6 +92,14 @@ while reading.</p>
     ; The presence of a given tag
     (where (tagged "mutant"))
 
+    ; There are also streams specifically for selecting events which have some,
+    ; or all, of a set of tags.
+    (tagged-any ["cat" "dog"] (with :service "animals/sec" (rate 1 index)))
+    (tagged-all ["ops" "ddos"] (email "ops@githug.com"))
+
+    ; tagged is shorthand for tagged-all:
+    (tagged "page" page-ops)
+    
     ; Arbitrary functions on values
     (where (>= (* metric 1000) 2.5))
 
