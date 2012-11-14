@@ -55,6 +55,7 @@
                    :bench :bench
                    :focus :focus
                    :all (fn [_] true)}
+  :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
   :java-source-path "src/riemann/"
   :aot [riemann.bin]
