@@ -32,8 +32,8 @@
   "Add a new Graphite TCP server with opts to the default core."
   [& opts]
   (dosync
-   (alter (core :servers) conj
-     (graphite/graphite-server core (apply hash-map opts)))))
+   (swap! (core :servers) conj
+          (graphite/graphite-server core (apply hash-map opts)))))
 
 (defn udp-server
   "Add a new UDP server with opts to the default core."
