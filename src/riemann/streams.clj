@@ -1086,7 +1086,7 @@
             (second clauses)
             (throw (IllegalArgumentException.
                     "cond* requires an even number of form")))
-          (cons 'rieman.streams/cond*
+          (cons 'riemann.streams/cond*
                 (cons 'else (next (next clauses)))))))
 
 (defn update-index
