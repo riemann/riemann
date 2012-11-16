@@ -1078,16 +1078,14 @@
      else*                      (with :state \"ok\" index))
    "
   [& clauses]
-  (when clauses
+  (when (and clauses (not-empty clauses))
     (list 'riemann.streams/where*
           (first clauses) ;; test
-
           (if (next clauses)
             (second clauses)
             (throw (IllegalArgumentException.
                     "cond* requires an even number of form")))
-          (cons 'riemann.streams/cond*
-                (cons 'else (next (next clauses)))))))
+          (list 'else (cons 'riemann.streams/cond* (next (next clauses)))))))
 
 (defn update-index
   "Updates the given index with all events received."
