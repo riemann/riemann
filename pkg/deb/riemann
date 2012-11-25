@@ -1,9 +1,25 @@
-#!/bin/bash
-if [ -z "$1" ]
-then
-  config="/etc/riemann/riemann.config"
-else
-  config=$1
+#!/bin/sh
+
+set -x
+
+if [ -f /etc/default/riemann ]; then
+  . /etc/default/riemann
 fi
 
-exec java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -jar "/usr/lib/riemann/riemann.jar" "$config"
+if [ x"$JVM_OPTS" = x"" ]; then
+  JVM_OPTS="-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops"
+fi
+
+if [ x"$RIEMANN_JAR" = x"" ]; then
+  RIEMANN_JAR=/usr/lib/riemann/riemann.jar
+fi
+
+if [ x"$RIEMANN_CONFIG" = x"" ]; then
+  if [ x"$1" = x"" ]; then
+    RIEMANN_CONFIG=/etc/riemann/riemann.config
+  else
+    RIEMANN_CONFIG=$1
+  fi
+fi
+
+exec java $JVM_OPTS -jar "$RIEMANN_JAR" "$RIEMANN_CONFIG"
