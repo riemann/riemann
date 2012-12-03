@@ -1,9 +1,9 @@
 (ns riemann.common
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
-
   (:import [java.util Date]
-           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg])
+           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
+           [riemann.codec Event])
   (:require gloss.io
             clj-time.core
             clj-time.format
@@ -73,7 +73,17 @@
   [opts]
   (let [t (long (round (or (opts :time)
                            (unix-time))))]
-    (map->Event (merge opts {:time t}))))
+    ; Using map->Event causes Clojure to create a distinct instance of the
+    ; Event class with the dynamic loader, which makes these events
+    ; incomparable with events returned from riemann.codec. Not sure why.
+    (Event. (:host opts)
+            (:service opts)
+            (:state opts)
+            (:description opts)
+            (:metric opts)
+            (:tags opts)
+            (or (:time opts) t)
+            (:ttl opts))))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of
