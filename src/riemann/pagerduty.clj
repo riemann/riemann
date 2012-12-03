@@ -1,7 +1,7 @@
 (ns riemann.pagerduty
   "Forwards events to Pagerduty"
   (:require [clj-http.client :as client])
-  (:require [clj-json.core :as json]))
+  (:require [cheshire.core :as json]))
 
 (def ^:private event-url
   "https://events.pagerduty.com/generic/2010-04-15/create_event.json")

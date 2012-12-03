@@ -29,7 +29,7 @@
                                        com.sun.jmx/jmxri]]
     [aleph "0.2.1-beta2"]
     [clj-http "0.4.1"]
-    [clj-json "0.5.0"]
+    [cheshire "5.0.0"]
     [clj-librato "0.0.2"]
     [clj-time "0.4.3"]
     [com.boundary/high-scale-lib "1.0.3"]

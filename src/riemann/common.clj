@@ -8,7 +8,7 @@
             clj-time.format
             clj-time.coerce
             clojure.set
-            [clj-json.core :as json]
+            [cheshire.core :as json]
             [clojure.java.io :as io])
   (:use [clojure.string :only [split]]
         [riemann.time :only [unix-time]]
