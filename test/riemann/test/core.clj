@@ -35,7 +35,6 @@
                        {:metric -1000.0}
                        {:metric Double/MAX_VALUE}
                        {:metric Long/MIN_VALUE}
-                       {:metric (inc (bigint Long/MAX_VALUE))}
                        {:time 1234}
                        {:ttl 12.0}]]
            
