@@ -1,11 +1,42 @@
 #!/bin/bash
 top="$(dirname "$0")/.."
 
-if [ -z "$1" ]
-then
-  config="$top/etc/riemann.config"
-else
-  config=$1
-fi
+JAR="$top/lib/riemann.jar"
+CONFIG="$top/etc/riemann.config"
+AGGRESSIVE_OPTS="-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops"
 
-exec java -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -jar "$top/lib/riemann.jar" "$config"
+usage()
+{
+  cat << EOF
+usage: $0 [-a] [java options ...] [config-file]
+
+Runs Riemann with the given configuration file.
+
+OPTIONS:
+  -h    Show this message
+  -a    Adds some default aggressive, nonportable JVM optimization flags.
+
+  Any unrecognized options (e.g. -XX:+UseParNewGC) will be passed on to java.
+EOF
+}
+
+OPTS=
+for arg in "$@"; do
+  case $arg in
+    "-a")
+      OPTS="$AGGRESSIVE_OPTS $OPTS"
+      ;;
+    "-h")
+      usage
+      exit 0
+      ;;
+    -*)
+      OPTS="$OPTS $arg"
+      ;;
+    *)
+      CONFIG="$arg"
+     ;;
+  esac
+done
+
+exec java $OPTS -jar "$JAR" "$CONFIG"
