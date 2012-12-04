@@ -380,6 +380,17 @@
              (s event))
            (is (= (count events) (deref i)))))
 
+(deftest by-evaluates-children-once-per-branch
+         (let [i (atom 0)
+               s (by :metric (do (swap! i inc) identity))]
+           (is (= @i 0))
+           (s {:metric 1})
+           (is (= @i 1))
+           (s {:metric 2})
+           (is (= @i 2))
+           (s {:metric 1})
+           (is (= @i 2))))
+
 (deftest fill-in-test
          (test-stream-intervals
            (fill-in 0.01 {:metric 0})
