@@ -265,6 +265,16 @@
            (is (= @a ["cat" "badger"]))
            (is (= @b ["dog" nil]))))
 
+(deftest where-child-evaluated-once
+         ; Where should evaluate its children exactly once.
+         (let [x (atom 0)
+               s (where true (do (swap! x inc) identity))]
+           (is (= @x 1))
+           (s {:service "test"})
+           (is (= @x 1))
+           (s {:service "test"})
+           (is (= @x 1))))
+
 (deftest default-kv
          (let [r (ref nil)
                s (default :service "foo" (register r))]

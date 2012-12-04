@@ -484,7 +484,7 @@
                 (let [dt (- (:time event) (:time prev-event))]
                   (when-not (zero? dt)
                     (let [diff (/ (- m (:metric prev-event)) dt)]
-                  (call-rescue (assoc event :metric diff) args))))))))))))
+                      (call-rescue (assoc event :metric diff) args))))))))))))
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
@@ -1035,10 +1035,12 @@
   [expr & children]
   (let [p (where-rewrite expr)
         [true-kids else-kids] (where-partition-clauses children)]
-    `(fn [event#]
-       (if (let [~'event event#] ~p)
-         (call-rescue event# ~true-kids)
-         (call-rescue event# ~else-kids)))))
+    `(let [true-kids# ~true-kids
+           else-kids# ~else-kids]
+       (fn [event#]
+         (if (let [~'event event#] ~p)
+           (call-rescue event# true-kids#)
+           (call-rescue event# else-kids#))))))
 
 (defn update-index
   "Updates the given index with all events received."
