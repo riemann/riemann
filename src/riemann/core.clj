@@ -61,9 +61,12 @@
   "Stops the given core. Cancels reapers, stops servers."
   [core]
   (info "Core stopping")
-  ; Stop expiry
-  (when-let [r (deref (:reaper core))]
-    (future-cancel r))
+  ; Stop reaper
+  (swap! (:reaper core)
+         (fn [reaper]
+           (when reaper
+             (future-cancel reaper)
+             nil)))
 
   ; Stop each server
   (doseq [server (deref (core :servers))]

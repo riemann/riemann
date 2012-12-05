@@ -3,24 +3,31 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
-  (:require [riemann.core :as core])
-  (:require [riemann.server])
-  (:require riemann.index)
-  (:require [riemann.logging :as logging])
-  (:require [riemann.folds :as folds])
-  (:require [riemann.pubsub :as pubsub])
-  (:require [riemann.graphite :as graphite])
-  (:use clojure.tools.logging)
-  (:use [riemann.pagerduty :only [pagerduty]])
-  (:use riemann.client)
-  (:use [riemann.librato :only [librato-metrics]])
-  (:use [riemann.streams :exclude [update-index delete-from-index]])
-  (:use riemann.email)
+  (:require [riemann.core :as core]
+            riemann.server
+            riemann.repl
+            riemann.index
+            [riemann.logging :as logging]
+            [riemann.folds :as folds]
+            [riemann.pubsub :as pubsub]
+            [riemann.graphite :as graphite]
+            [clojure.tools.nrepl.server :as repl])
+  (:use clojure.tools.logging
+        riemann.client
+        riemann.email
+        [riemann.pagerduty :only [pagerduty]]
+        [riemann.librato :only [librato-metrics]]
+        [riemann.streams :exclude [update-index delete-from-index]])
   (:gen-class))
 
 (def ^{:doc "A default core."} core (core/core))
 
 (def graphite #'graphite/graphite)
+
+(defn repl-server
+  "Adds a new REPL server with opts to the default core."
+  [& opts]
+  (riemann.repl/start-server (apply hash-map opts)))
 
 (defn tcp-server
   "Add a new TCP server with opts to the default core."
