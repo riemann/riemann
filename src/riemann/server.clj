@@ -3,6 +3,7 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import (java.net InetSocketAddress)
            (java.util.concurrent Executors)
+           (java.nio.channels ClosedChannelException)
            (org.jboss.netty.util CharsetUtil)
            (org.jboss.netty.bootstrap ConnectionlessBootstrap
                                       ServerBootstrap)
@@ -111,8 +112,10 @@
            (.close channel)))))
 
     (exceptionCaught [context ^ExceptionEvent exception-event]
-                     (warn (.getCause exception-event) "TCP handler caught")
-                     (.close (.getChannel exception-event)))))
+                     (let [cause (.getCause exception-event)]
+                       (when-not (= ClosedChannelException (class cause))
+                         (warn (.getCause exception-event) "TCP handler caught")
+                         (.close (.getChannel exception-event)))))))
 
 (defn udp-handler
   "Returns a UDP handler for the given core."
