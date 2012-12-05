@@ -1085,7 +1085,9 @@
             (second clauses)
             (throw (IllegalArgumentException.
                     "cond* requires an even number of form")))
-          (list 'else (cons 'riemann.streams/cond* (next (next clauses)))))))
+          (list 'else (cons 'riemann.streams/cond*
+                            (or (next (next clauses))
+                                (list 'riemann.streams/chain)))))))
 
 (defn update-index
   "Updates the given index with all events received."
