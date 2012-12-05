@@ -94,9 +94,20 @@
   [channel f]
   (pubsub/subscribe (:pubsub core) channel f))
 
-; Start the core
-(defn start []
+(defn start
+  "Start the core."
+  []
   (core/start core))
+
+(defn stop 
+  "Stop the core."
+  []
+  (core/stop core))
+
+(defn reset
+  "Reset the core."
+  []
+  (def core (core/core)))
 
 (defn include
   "Include another config file.
