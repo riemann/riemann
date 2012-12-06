@@ -1,6 +1,7 @@
 (ns riemann.test.core
   (:require riemann.server
-            riemann.streams)
+            riemann.streams
+            [riemann.logging :as logging])
   (:use riemann.client
         riemann.common
         riemann.core
@@ -11,6 +12,7 @@
         [clojure.algo.generic.functor :only [fmap]]
         [riemann.time :only [unix-time]]))
 
+(logging/init)
 (use-fixtures :each reset-time!)
 (use-fixtures :once control-time!)
 
@@ -24,7 +26,8 @@
 (deftest serialization
          (let [core (core)
                out (ref [])
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                                        (riemann.server/tcp-server core))
                stream (riemann.streams/append out)
                client (riemann.client/tcp-client)
                events [{:host "shiiiiire!"}
@@ -50,12 +53,14 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.core" "riemann.server"] 
+                                 (stop core))))))
 
 (deftest query-test
          (let [core (core)
                index (index)
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                                        (riemann.server/tcp-server core))
                client (riemann.client/tcp-client)]
 
            (try
@@ -77,7 +82,8 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.core" "riemann.server"]
+                 (stop core))))))
 
 (deftest expires
          (let [core (core)
@@ -142,7 +148,8 @@
 (deftest percentiles
          (let [core (core)
                out (ref [])
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                        (riemann.server/tcp-server core))
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
                client (riemann.client/tcp-client)]
@@ -169,4 +176,5 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.server" "riemann.core"]
+                                 (stop core))))))

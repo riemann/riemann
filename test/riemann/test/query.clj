@@ -1,6 +1,7 @@
 (ns riemann.test.query
-  (:use [riemann.query])
-  (:use [clojure.test]))
+  (:use riemann.query
+        [riemann.time :only [linear-time]]
+        clojure.test))
 
 (deftest ast-test
          (are [s expr] (= (ast s) expr)
@@ -151,6 +152,8 @@
                               {:host "other" :state "ok" :metric 1.2}
                               {:host "api 2" :state "no" :metric 1.2}
                               {:host "api 3" :state "ok" :metric 0.5}
-                              {}])]
-           (time (doseq [e (take 1000 events)]
-                   (fun e)))))
+                              {}])
+               t1 (linear-time)]
+           (doseq [e (take 1000 events)]
+             (fun e))
+           (is (< (- (linear-time) t1) 0.05))))

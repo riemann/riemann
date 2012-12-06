@@ -18,8 +18,23 @@
 (defn set-level
   "Set the level for the given logger, by string name. Use:
   (set-level \"riemann.client\", Level/DEBUG)"
-  [logger level]
-  (. (Logger/getLogger logger) (setLevel level)))
+  ([level]
+   (. (Logger/getRootLogger) (setLevel level)))
+  ([logger level]
+   (. (Logger/getLogger logger) (setLevel level))))
+
+(defmacro suppress
+  "Turns off logging for the evaluation of body."
+  [loggers & body]
+  (let [[logger & more] (flatten [loggers])]
+    (if logger
+      `(let [old-level# (.getLevel (Logger/getLogger ~logger))]
+         (try
+           (set-level ~logger Level/FATAL)
+           (suppress ~more ~@body)
+           (finally
+             (set-level ~logger old-level#))))
+      `(do ~@body))))
 
 (def riemann-layout 
   "A nice format for log lines."
