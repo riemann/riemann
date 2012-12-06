@@ -4,6 +4,7 @@
   above them. While you usually *start* a repl server from the config file, it
   is not bound to the usual config lifecycle and won't be shut down or
   interrupted during config reload."
+  (:use clojure.tools.logging)
   (:require [clojure.tools.nrepl.server :as nrepl]))
 
 (def server nil)
@@ -16,16 +17,18 @@
   (def server nil))
 
 (defn start-server!
-  "Starts a new repl server. Options:
+  "Starts a new repl server. Stops the old server first, if any. Options:
   
   :host (default \"127.0.0.1\")
   :port (default 5557)"
   [opts]
   (stop-server!)
-  (let [opts (apply hash-map opts)]
+  (let [opts (merge {:port 5557 :host "127.0.0.1"} 
+                    (apply hash-map opts))]
     (def server (nrepl/start-server
-                  :port (get opts :port 5557)
-                  :bind (get opts :host "127.0.0.1")))))
+                  :port (:port opts)
+                  :bind (:host opts)))
+    (info "REPL server" opts "online")))
 
 (defn start-server
   "Starts a new REPL server, when one isn't already running."
