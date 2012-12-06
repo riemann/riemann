@@ -116,11 +116,30 @@
   []
   (def core (core/core)))
 
+(defn read-strings
+  "Returns a sequence of forms read from string."
+  ([string]
+   (read-strings []
+                 (-> string (java.io.StringReader.)
+                   (clojure.lang.LineNumberingPushbackReader.))))
+  ([forms reader]
+   (let [form (clojure.lang.LispReader/read reader false ::EOF false)]
+     (if (= ::EOF form)
+       forms
+       (recur (conj forms form) reader)))))
+
+(defn validate-config
+  "Check that a config file has valid syntax."
+  [file]
+  (read-strings (slurp file)))
+
 (defn include
   "Include another config file.
 
   (include \"foo.clj\")"
   [file]
-  (let [file (or file (first *command-line-args*) "riemann.config")]
-    (binding [*ns* (find-ns 'riemann.config)]
-      (load-string (slurp file)))))
+  (binding [*ns* (find-ns 'riemann.config)]
+    (let [text (slurp file)]
+      ; Validate syntax
+      (read-strings text)
+      (load-string text))))

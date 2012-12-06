@@ -70,4 +70,5 @@
 
   ; Stop each server
   (doseq [server (deref (core :servers))]
-    (server)))
+    (server))
+  (info "Hyperspace core shut down"))
