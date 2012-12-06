@@ -40,6 +40,25 @@
            (warn e# (str child# " threw")))))
      true))
 
+(defn chain
+  "Returns a function which forwards an event to children.
+   This is useful in cases where you want to reference
+   a function in another combinatory function, for instance:
+
+   (def phase-2
+     (chain
+       (where (and (service \"api\") 
+                   (not (tagged \"transient\")))
+          (changed-state (email \"ops@example.com\")))))
+   
+   (let [index (update-index (index))]
+       (where (tagged \"cpu\") (with service \"cpu\" phase-2)
+              (else            phase-2)))
+"
+  [& children]
+  (fn [event]
+    (call-rescue event children)))
+
 (defn combine
   "Returns a function which takes a seq of events. Combines events with f, then
   forwards the result to children."
@@ -1041,6 +1060,36 @@
          (if (let [~'event event#] ~p)
            (call-rescue event# true-kids#)
            (call-rescue event# else-kids#))))))
+
+(defn else*
+  "Alway return true, no matter the input payload,
+   useful in where* expressions"
+  [& _]
+  true)
+
+(defmacro cond*
+  "Given a list of condition and action pair, execute the action
+   for the first passing condition.
+
+   Conditions are functions as for where*, actions are a single
+   expression, passed on to call-rescue. Example:
+
+   (cond*
+     (fn [e] (< 2 (:metric e))) (with :state \"critical\" index)
+     (fn [e] (< 4 (:metric e))) (with :state \"warning\" index)
+     else*                      (with :state \"ok\" index))
+   "
+  [& clauses]
+  (when (and clauses (not-empty clauses))
+    (list 'riemann.streams/where*
+          (first clauses) ;; test
+          (if (next clauses)
+            (second clauses)
+            (throw (IllegalArgumentException.
+                    "cond* requires an even number of form")))
+          (list 'else (cons 'riemann.streams/cond*
+                            (or (next (next clauses))
+                                (list 'riemann.streams/chain)))))))
 
 (defn update-index
   "Updates the given index with all events received."
