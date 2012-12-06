@@ -25,6 +25,7 @@
     [cheshire "5.0.0"]
     [clj-librato "0.0.2"]
     [clj-time "0.4.3"]
+    [clj-wallhack "1.0"]
     [com.boundary/high-scale-lib "1.0.3"]
     [com.draines/postal "1.8.0"]
     [incanter/incanter-charts "1.3.0"]

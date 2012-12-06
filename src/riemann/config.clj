@@ -131,7 +131,10 @@
 (defn validate-config
   "Check that a config file has valid syntax."
   [file]
-  (read-strings (slurp file)))
+  (try
+    (read-strings (slurp file))
+    (catch clojure.lang.LispReader$ReaderException e
+      (throw (logging/nice-syntax-error e file)))))
 
 (defn include
   "Include another config file.
@@ -139,7 +142,5 @@
   (include \"foo.clj\")"
   [file]
   (binding [*ns* (find-ns 'riemann.config)]
-    (let [text (slurp file)]
-      ; Validate syntax
-      (read-strings text)
-      (load-string text))))
+    (validate-config file)
+    (load-string (slurp file))))

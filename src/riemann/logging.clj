@@ -12,7 +12,8 @@
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
                                      RollingFileAppender))
-  (:import org.apache.commons.logging.LogFactory))
+  (:import org.apache.commons.logging.LogFactory)
+  (:require wall.hack))
 
 (defn set-level
   "Set the level for the given logger, by string name. Use:
@@ -59,3 +60,13 @@
   (.addAppender (Logger/getLogger loggername)
                 (doto (FileAppender.)
                   (.setLayout riemann-layout))))
+
+(defn nice-syntax-error
+  "Rewrites clojure.lang.LispReader$ReaderException to have error messages that
+  might actually help someone."
+  ([e] (nice-syntax-error e "(no file)"))
+  ([e file]
+   ; Lord help me.
+   (let [line (wall.hack/field (class e) :line e)
+         msg (.getMessage (or (.getCause e) e))]
+    (RuntimeException. (str "Syntax error (" file ":" line ") " msg)))))
