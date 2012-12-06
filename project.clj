@@ -1,12 +1,3 @@
-(defn dirname [path]
-    (.getParent (java.io.File. path)))
-
-(defn expand-path [path]
-    (.getCanonicalPath (java.io.File. path)))
-
-(defn relative-path [path]
-    (expand-path (str (dirname *file*) "/" path)))
-
 (defproject riemann "0.1.6-SNAPSHOT"
   :description 
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
