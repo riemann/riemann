@@ -20,28 +20,33 @@
   [logger level]
   (. (Logger/getLogger logger) (setLevel level)))
 
-(def riemann-layout (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
+(def riemann-layout 
+  "A nice format for log lines."
+  (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
 
 (defn init
   "Initialize log4j. You will probably call this from the config file. Options:
 
-  :file   The file to log to.
-          Use \"/dev/null\" on *nix or \"NUL:\" on Windows to log to stdout only."
+  :file   The file to log to. If omitted, logs to console only."
   [& { :keys [file] }]
-  (let [filename (or file "riemann.log")
-        rolling-policy (doto (TimeBasedRollingPolicy.)
-                         (.setActiveFileName filename)
-                         (.setFileNamePattern
-                           (str filename ".%d{yyyy-MM-dd}.gz"))
-                         (.activateOptions))
-        log-appender (doto (RollingFileAppender.)
-                       (.setRollingPolicy rolling-policy)
-                       (.setLayout riemann-layout)
-                       (.activateOptions))]
-    (doto (Logger/getRootLogger)
-      (.removeAllAppenders)
-      (.addAppender log-appender)
-      (.addAppender (ConsoleAppender. riemann-layout))))
+  ; Reset loggers
+  (doto (Logger/getRootLogger)
+    (.removeAllAppenders)
+    (.addAppender (ConsoleAppender. riemann-layout)))
+
+  (when file
+    (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                           (.setActiveFileName file)
+                           (.setFileNamePattern
+                             (str file ".%d{yyyy-MM-dd}.gz"))
+                           (.activateOptions))
+          log-appender (doto (RollingFileAppender.)
+                         (.setRollingPolicy rolling-policy)
+                         (.setLayout riemann-layout)
+                         (.activateOptions))]
+      (.addAppender (Logger/getRootLogger) log-appender)))
+
+  ; Set levels.
   (. (Logger/getRootLogger) (setLevel Level/INFO))
 
   (set-level "riemann.client" Level/DEBUG)

@@ -1,6 +1,7 @@
 (ns riemann.bin
   "Main function."
   (:require riemann.config
+            riemann.logging
             riemann.time)
   (:use clojure.tools.logging)
   (:gen-class))
@@ -38,11 +39,13 @@
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   [& argv]
-    (try
-      (reset! config-file (or (first argv) "riemann.config"))
-      (handle-signals)
-      (riemann.time/start!)
-      (reload)
-      nil
-      (catch Exception e
-        (error "Couldn't start" e))))
+  (riemann.logging/init)
+  (try
+    (reset! config-file (or (first argv) "riemann.config"))
+    (handle-signals)
+    (riemann.time/start!)
+    (riemann.config/include @config-file)
+    (riemann.config/start)
+    nil
+    (catch Exception e
+      (error "Couldn't start" e))))
