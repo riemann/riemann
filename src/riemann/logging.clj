@@ -12,36 +12,57 @@
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
                                      RollingFileAppender))
-  (:import org.apache.commons.logging.LogFactory))
+  (:import org.apache.commons.logging.LogFactory)
+  (:require wall.hack))
 
 (defn set-level
   "Set the level for the given logger, by string name. Use:
   (set-level \"riemann.client\", Level/DEBUG)"
-  [logger level]
-  (. (Logger/getLogger logger) (setLevel level)))
+  ([level]
+   (. (Logger/getRootLogger) (setLevel level)))
+  ([logger level]
+   (. (Logger/getLogger logger) (setLevel level))))
 
-(def riemann-layout (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
+(defmacro suppress
+  "Turns off logging for the evaluation of body."
+  [loggers & body]
+  (let [[logger & more] (flatten [loggers])]
+    (if logger
+      `(let [old-level# (.getLevel (Logger/getLogger ~logger))]
+         (try
+           (set-level ~logger Level/FATAL)
+           (suppress ~more ~@body)
+           (finally
+             (set-level ~logger old-level#))))
+      `(do ~@body))))
+
+(def riemann-layout 
+  "A nice format for log lines."
+  (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
 
 (defn init
   "Initialize log4j. You will probably call this from the config file. Options:
 
-  :file   The file to log to.
-          Use \"/dev/null\" on *nix or \"NUL:\" on Windows to log to stdout only."
+  :file   The file to log to. If omitted, logs to console only."
   [& { :keys [file] }]
-  (let [filename (or file "riemann.log")
-        rolling-policy (doto (TimeBasedRollingPolicy.)
-                         (.setActiveFileName filename)
-                         (.setFileNamePattern
-                           (str filename ".%d{yyyy-MM-dd}.gz"))
-                         (.activateOptions))
-        log-appender (doto (RollingFileAppender.)
-                       (.setRollingPolicy rolling-policy)
-                       (.setLayout riemann-layout)
-                       (.activateOptions))]
-    (doto (Logger/getRootLogger)
-      (.removeAllAppenders)
-      (.addAppender log-appender)
-      (.addAppender (ConsoleAppender. riemann-layout))))
+  ; Reset loggers
+  (doto (Logger/getRootLogger)
+    (.removeAllAppenders)
+    (.addAppender (ConsoleAppender. riemann-layout)))
+
+  (when file
+    (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                           (.setActiveFileName file)
+                           (.setFileNamePattern
+                             (str file ".%d{yyyy-MM-dd}.gz"))
+                           (.activateOptions))
+          log-appender (doto (RollingFileAppender.)
+                         (.setRollingPolicy rolling-policy)
+                         (.setLayout riemann-layout)
+                         (.activateOptions))]
+      (.addAppender (Logger/getRootLogger) log-appender)))
+
+  ; Set levels.
   (. (Logger/getRootLogger) (setLevel Level/INFO))
 
   (set-level "riemann.client" Level/DEBUG)
@@ -54,3 +75,13 @@
   (.addAppender (Logger/getLogger loggername)
                 (doto (FileAppender.)
                   (.setLayout riemann-layout))))
+
+(defn nice-syntax-error
+  "Rewrites clojure.lang.LispReader$ReaderException to have error messages that
+  might actually help someone."
+  ([e] (nice-syntax-error e "(no file)"))
+  ([e file]
+   ; Lord help me.
+   (let [line (wall.hack/field (class e) :line e)
+         msg (.getMessage (or (.getCause e) e))]
+    (RuntimeException. (str "Syntax error (" file ":" line ") " msg)))))

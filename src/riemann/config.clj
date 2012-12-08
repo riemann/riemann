@@ -3,24 +3,31 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
-  (:require [riemann.core :as core])
-  (:require [riemann.server])
-  (:require riemann.index)
-  (:require [riemann.logging :as logging])
-  (:require [riemann.folds :as folds])
-  (:require [riemann.pubsub :as pubsub])
-  (:require [riemann.graphite :as graphite])
-  (:use clojure.tools.logging)
-  (:use [riemann.pagerduty :only [pagerduty]])
-  (:use riemann.client)
-  (:use [riemann.librato :only [librato-metrics]])
-  (:use [riemann.streams :exclude [update-index delete-from-index]])
-  (:use riemann.email)
+  (:require [riemann.core :as core]
+            riemann.server
+            riemann.repl
+            riemann.index
+            [riemann.logging :as logging]
+            [riemann.folds :as folds]
+            [riemann.pubsub :as pubsub]
+            [riemann.graphite :as graphite]
+            [clojure.tools.nrepl.server :as repl])
+  (:use clojure.tools.logging
+        riemann.client
+        riemann.email
+        [riemann.pagerduty :only [pagerduty]]
+        [riemann.librato :only [librato-metrics]]
+        [riemann.streams :exclude [update-index delete-from-index]])
   (:gen-class))
 
 (def ^{:doc "A default core."} core (core/core))
 
 (def graphite #'graphite/graphite)
+
+(defn repl-server
+  "Adds a new REPL server with opts to the default core."
+  [& opts]
+  (riemann.repl/start-server (apply hash-map opts)))
 
 (defn tcp-server
   "Add a new TCP server with opts to the default core."
@@ -94,15 +101,46 @@
   [channel f]
   (pubsub/subscribe (:pubsub core) channel f))
 
-; Start the core
-(defn start []
+(defn start
+  "Start the core."
+  []
   (core/start core))
+
+(defn stop 
+  "Stop the core."
+  []
+  (core/stop core))
+
+(defn reset
+  "Reset the core."
+  []
+  (def core (core/core)))
+
+(defn read-strings
+  "Returns a sequence of forms read from string."
+  ([string]
+   (read-strings []
+                 (-> string (java.io.StringReader.)
+                   (clojure.lang.LineNumberingPushbackReader.))))
+  ([forms reader]
+   (let [form (clojure.lang.LispReader/read reader false ::EOF false)]
+     (if (= ::EOF form)
+       forms
+       (recur (conj forms form) reader)))))
+
+(defn validate-config
+  "Check that a config file has valid syntax."
+  [file]
+  (try
+    (read-strings (slurp file))
+    (catch clojure.lang.LispReader$ReaderException e
+      (throw (logging/nice-syntax-error e file)))))
 
 (defn include
   "Include another config file.
 
   (include \"foo.clj\")"
   [file]
-  (let [file (or file (first *command-line-args*) "riemann.config")]
-    (binding [*ns* (find-ns 'riemann.config)]
-      (load-string (slurp file)))))
+  (binding [*ns* (find-ns 'riemann.config)]
+    (validate-config file)
+    (load-string (slurp file))))

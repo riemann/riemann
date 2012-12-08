@@ -1,7 +1,6 @@
 (ns riemann.common
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
-
   (:import [java.util Date]
            [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg])
   (:require gloss.io
@@ -9,7 +8,7 @@
             clj-time.format
             clj-time.coerce
             clojure.set
-            [clj-json.core :as json]
+            [cheshire.core :as json]
             [clojure.java.io :as io])
   (:use [clojure.string :only [split]]
         [riemann.time :only [unix-time]]

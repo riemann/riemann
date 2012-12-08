@@ -1,6 +1,7 @@
 (ns riemann.test.core
   (:require riemann.server
-            riemann.streams)
+            riemann.streams
+            [riemann.logging :as logging])
   (:use riemann.client
         riemann.common
         riemann.core
@@ -11,6 +12,7 @@
         [clojure.algo.generic.functor :only [fmap]]
         [riemann.time :only [unix-time]]))
 
+(logging/init)
 (use-fixtures :each reset-time!)
 (use-fixtures :once control-time!)
 
@@ -24,15 +26,18 @@
 (deftest serialization
          (let [core (core)
                out (ref [])
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                                        (riemann.server/tcp-server core))
                stream (riemann.streams/append out)
                client (riemann.client/tcp-client)
                events [{:host "shiiiiire!"}
                        {:service "baaaaaginnnns!"}
                        {:state "middling"}
-                       {:description "well and truly fucked"}
+                       {:description "quite dire, really"}
                        {:tags ["oh" "sam"]}
                        {:metric -1000.0}
+                       {:metric Double/MAX_VALUE}
+                       {:metric Long/MIN_VALUE}
                        {:time 1234}
                        {:ttl 12.0}]]
            
@@ -48,12 +53,14 @@
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.core" "riemann.server"] 
+                                 (stop core))))))
 
 (deftest query-test
          (let [core (core)
                index (index)
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                                        (riemann.server/tcp-server core))
                client (riemann.client/tcp-client)]
 
            (try
@@ -67,15 +74,16 @@
                                  :tags ["whiskers" "paws"] :time 2})
              (update-index core {:service "miao" :host "cat" :time 3})
 
-             (let [r (vec (query client "host = nil or service = \"miao\" or tagged \"whiskers\""))]
-               (is (some #{(event {:metric 2.0, :time 3})} r))
-               (is (some #{(event {:host "kitten" :tags ["whiskers" "paws"] :time 2})} r))
-               (is (some #{(event {:host "cat", :service "miao", :time 3})} r))
-               (is (= 3 (count r))))
+             (let [r (set (query client "metric = 2 or service = \"miao\" or tagged \"whiskers\""))]
+               (is (= r
+                      #{(event {:metric 2, :time 3})
+                        (event {:host "kitten" :tags ["whiskers" "paws"] :time 2})
+                        (event {:host "cat", :service "miao", :time 3})} r)))
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.core" "riemann.server"]
+                 (stop core))))))
 
 (deftest expires
          (let [core (core)
@@ -104,9 +112,10 @@
            (is (= [2] (map (fn [e] (:service e)) index)))
 
            ; Check that expired-stream received them.
-           (is (= (select-keys @res [:service :host :state])
+           (is (= @res
                   {:service 1
                    :host nil
+                   :time 0.011
                    :state "expired"}))))
 
 (comment
@@ -139,7 +148,8 @@
 (deftest percentiles
          (let [core (core)
                out (ref [])
-               server (riemann.server/tcp-server core)
+               server (logging/suppress "riemann.server"
+                        (riemann.server/tcp-server core))
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
                client (riemann.client/tcp-client)]
@@ -159,11 +169,12 @@
              (let [events (deref out)
                    states (fmap first (group-by :service events))]
 
-               (is (= (:metric (states "per 0.5")) 50.0))
-               (is (= (:metric (states "per 0.95")) 95.0))
-               (is (= (:metric (states "per 0.99")) 99.0))
-               (is (= (:metric (states "per 1")) 100.0)))
+               (is (= (:metric (states "per 0.5")) 50))
+               (is (= (:metric (states "per 0.95")) 95))
+               (is (= (:metric (states "per 0.99")) 99))
+               (is (= (:metric (states "per 1")) 100)))
 
              (finally
                (close-client client)
-               (stop core)))))
+               (logging/suppress ["riemann.server" "riemann.core"]
+                                 (stop core))))))

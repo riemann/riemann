@@ -181,12 +181,13 @@
                                  (InetSocketAddress. ^String (:host opts)
                                                      ^Integer (:port opts)))]
        (.add all-channels server-channel))
-     (info "TCP server" opts " online")
+     (info "TCP server" (select-keys opts [:host :port]) "online")
 
      ; fn to close server
      (fn []
        (-> all-channels .close .awaitUninterruptibly)
-       (.releaseExternalResources bootstrap)))))
+       (.releaseExternalResources bootstrap)
+       (info "TCP server" (select-keys opts [:host :port]) "shut down")))))
 
 (defn udp-server
   "Starts a new UDP server for a core. Starts immediately.
@@ -229,12 +230,14 @@
                                  (InetSocketAddress. ^String (:host opts)
                                                      ^Integer (:port opts)))]
        (.add all-channels server-channel))
-     (info "UDP server" opts "online")
+     (info "UDP server" (select-keys opts [:host :port :max-size]) "online")
 
      ; fn to close server
      (fn []
        (-> all-channels .close .awaitUninterruptibly)
-       (.releaseExternalResources bootstrap)))))
+       (.releaseExternalResources bootstrap)
+       (info "UDP server" (select-keys opts [:host :port :max-size]) 
+             "shut down")))))
 
 (defn http-query-map
   "Converts a URL query string into a map."
@@ -305,4 +308,6 @@
                                                  :port (:port opts)
                                                  :websocket true})]
      (info "Websockets server" opts "online")
-     s)))
+     (fn []
+       (s)
+       (info "Websockets server" opts "shut down")))))

@@ -265,6 +265,16 @@
            (is (= @a ["cat" "badger"]))
            (is (= @b ["dog" nil]))))
 
+(deftest where-child-evaluated-once
+         ; Where should evaluate its children exactly once.
+         (let [x (atom 0)
+               s (where true (do (swap! x inc) identity))]
+           (is (= @x 1))
+           (s {:service "test"})
+           (is (= @x 1))
+           (s {:service "test"})
+           (is (= @x 1))))
+
 (deftest default-kv
          (let [r (ref nil)
                s (default :service "foo" (register r))]
@@ -369,6 +379,17 @@
            (doseq [event events]
              (s event))
            (is (= (count events) (deref i)))))
+
+(deftest by-evaluates-children-once-per-branch
+         (let [i (atom 0)
+               s (by :metric (do (swap! i inc) identity))]
+           (is (= @i 0))
+           (s {:metric 1})
+           (is (= @i 1))
+           (s {:metric 2})
+           (is (= @i 2))
+           (s {:metric 1})
+           (is (= @i 2))))
 
 (deftest fill-in-test
          (test-stream-intervals
