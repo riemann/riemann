@@ -3,6 +3,7 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
            [java.util.concurrent Executors]
+           [java.nio.channels ClosedChannelException]
            [org.jboss.netty.bootstrap ServerBootstrap]
            [org.jboss.netty.buffer ChannelBuffers]
            [org.jboss.netty.channel ChannelHandler
@@ -57,8 +58,10 @@
             (.close channel)))))
     
     (exceptionCaught [context ^ExceptionEvent exception-event]
-      (warn (.getCause exception-event) "TCP handler caught")
-      (.close (.getChannel exception-event)))))
+      (let [cause (.getCause exception-event)]
+        (when-not (= ClosedChannelException (class cause))
+          (warn (.getCause exception-event) "TCP handler caught")
+          (.close (.getChannel exception-event)))))))
 
 (defn tcp-server
   "Create a new TCP server for a core. Starts immediately. Options:
