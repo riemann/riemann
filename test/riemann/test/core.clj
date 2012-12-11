@@ -176,5 +176,5 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.server" "riemann.core"]
+               (logging/suppress ["riemann.transport.tcp" "riemann.core"]
                                  (stop core))))))
