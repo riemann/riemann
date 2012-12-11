@@ -1,7 +1,8 @@
 (ns riemann.test.bench
   (:use [riemann.core])
   (:use [riemann.common])
-  (:use [riemann.server])
+  (:use [riemann.transport.udp])
+  (:use [riemann.transport.tcp])
   (:use [riemann.client :only [tcp-client udp-client close-client send-event]])
   (:require [riemann.streams])
   (:use [clojure.test])
