@@ -8,24 +8,24 @@
   (:use [riemann.time :only [unix-time]])
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
 
+(defprotocol Index
+  (clear [this]
+    "Resets the index")
+  (delete [this event]
+    "Deletes any event with this host & service from index")
+  (delete-exactly [this event]
+    "Deletes event from index")
+  (expire [this]
+    "Return a seq of expired states from this index, removing each.")
+  (search [this query-ast]
+    "Returns a seq of events from the index matching this query AST")
+  (update [this event]
+    "Updates index with event"))
+
 ; The index accepts states and maintains a table of the most recent state for
 ; each unique [host, service]. It can be searched for states matching a query.
 
 (def default-ttl 60)
-
-(defprotocol Index
-  (clear [this]
-         "Resets the index")
-  (delete [this event]
-          "Deletes any event with this host & service from index")
-  (delete-exactly [this event]
-                  "Deletes event from index")
-  (expire [this]
-          "Return a seq of expired states from this index, removing each.")
-  (search [this query-ast]
-          "Returns a seq of events from the index matching this query AST")
-  (update [this event]
-          "Updates index with event"))
 
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"

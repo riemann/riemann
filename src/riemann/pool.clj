@@ -7,14 +7,14 @@
 
 (defprotocol Pool
   (grow [pool]
-        "Adds an element to the pool.")
+    "Adds an element to the pool.")
   (claim [pool] [pool timeout]
-         "Take a thingy from the pool. Timeout in seconds; if unspecified, 0.
-         Returns nil if no thingy available.")
+    "Take a thingy from the pool. Timeout in seconds; if unspecified, 0.
+     Returns nil if no thingy available.")
   (release [pool thingy]
-           "Returns a thingy to the pool.")
+    "Returns a thingy to the pool.")
   (invalidate [pool thingy]
-              "Tell the pool a thingy is no longer valid."))
+    "Tell the pool a thingy is no longer valid."))
 
 (defrecord FixedQueuePool [queue open close regenerate-interval]
   Pool
