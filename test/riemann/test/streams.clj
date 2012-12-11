@@ -79,7 +79,16 @@
            (is (= (deref r) {:metric 0}))))
 
 (deftest smap-test
-         (test-stream (smap inc) [6 3 -1] [7 4 0]))
+  (test-stream (smap inc) [6 3 -1] [7 4 0]))
+
+(deftest stream-test
+  (let [vals1   (atom [])
+        vals2   (atom [])
+        add1    #(swap! vals1 conj %)
+        add2    #(swap! vals2 conj %)]
+    (run-stream (stream add1 add2) [1 2 3])
+    (is (= @vals1 [1 2 3]))
+    (is (= @vals2 [1 2 3]))))
 
 (deftest sreduce-test
          (testing "explicit value"
