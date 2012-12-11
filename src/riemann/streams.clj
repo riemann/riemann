@@ -97,6 +97,12 @@
       (fn [event]
         (call-rescue (swap! acc f event) children)))))
 
+(defn stream
+  "Takes a list of functions f1, f2, f3, and returns f such
+   that (f event) calls (f1 event) (f2 event) (f3 event)."
+  [& children]
+  (fn [event]
+    (call-rescue event children)))
 
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
