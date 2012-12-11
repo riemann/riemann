@@ -3,9 +3,9 @@
   here since netty is the preferred method of providing transports"
   (:use     [slingshot.slingshot :only [try+]]
             [riemann.common      :only [decode-inputstream]]
-            [riemann.core        :only [core]])
-  (:require [riemann.query    :as query]
-            [riemann.protocol :as p])
+            [riemann.core        :only [core]]
+            [riemann.index       :only [search]])
+  (:require [riemann.query    :as query])
   (:import
    [org.jboss.netty.channel ChannelPipelineFactory ChannelPipeline]
    [org.jboss.netty.buffer ChannelBufferInputStream]
@@ -58,7 +58,7 @@
      ;; Handle query
      (let [ast (query/ast (:string (:query msg)))]
        (if-let [i (deref (:index core))]
-         {:ok true :events (p/search i ast)}
+         {:ok true :events (search i ast)}
          {:ok false :error "no index"}))
 
       {:ok true})
