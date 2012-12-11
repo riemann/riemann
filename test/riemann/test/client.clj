@@ -1,14 +1,14 @@
 (ns riemann.test.client
   (:use riemann.common
         riemann.core
-        riemann.server
+        riemann.transport.tcp
         riemann.client
         riemann.index
         [riemann.logging :only [suppress]]
         clojure.test))
 
 (deftest reconnect
-         (suppress "riemann.server"
+         (suppress "riemann.transport.tcp"
                    (let [server (tcp-server (core))
                          client (tcp-client)]
                      (try
@@ -34,7 +34,7 @@
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress "riemann.server"
+         (suppress "riemann.transport.tcp"
            (let [core (core)
                  index (index)
                  server (tcp-server core)

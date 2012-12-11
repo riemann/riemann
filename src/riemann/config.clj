@@ -4,13 +4,16 @@
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
   (:require [riemann.core :as core]
-            riemann.server
-            riemann.repl
-            riemann.index
+            [riemann.transport.tcp        :as tcp]
+            [riemann.transport.udp        :as udp]
+            [riemann.transport.websockets :as websockets]
+            [riemann.transport.graphite   :as graphite]
+            [riemann.repl]
+            [riemann.index]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
-            [riemann.graphite :as graphite]
+            [riemann.graphite :as graphite-client]
             [clojure.tools.nrepl.server :as repl])
   (:use clojure.tools.logging
         riemann.client
@@ -22,7 +25,7 @@
 
 (def ^{:doc "A default core."} core (core/core))
 
-(def graphite #'graphite/graphite)
+(def graphite #'graphite-client/graphite)
 
 (defn repl-server
   "Adds a new REPL server with opts to the default core."
@@ -33,7 +36,7 @@
   "Add a new TCP server with opts to the default core."
   [& opts]
   (swap! (core :servers) conj
-         (riemann.server/tcp-server core (apply hash-map opts))))
+         (tcp/tcp-server core (apply hash-map opts))))
 
 (defn graphite-server
   "Add a new Graphite TCP server with opts to the default core."
@@ -46,14 +49,14 @@
   "Add a new UDP server with opts to the default core."
   [& opts]
   (swap! (core :servers) conj
-         (riemann.server/udp-server core (apply hash-map opts))))
+         (udp/udp-server core (apply hash-map opts))))
 
 (defn ws-server
   "Add a new websockets server with opts to the default core."
   [& opts]
   (swap!
     (core :servers) conj
-    (riemann.server/ws-server core (apply hash-map opts))))
+    (websockets/ws-server core (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."

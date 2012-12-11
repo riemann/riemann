@@ -4,9 +4,21 @@
   threadpool for task execution, controlled by (start!) and (stop!)."
   (:import [java.util.concurrent ConcurrentSkipListSet]
            [java.util.concurrent.locks LockSupport])
-  (:use clojure.math.numeric-tower
-        [clojure.stacktrace :only [print-stack-trace]]
-        clojure.tools.logging))
+  (:use [clojure.math.numeric-tower :only [ceil]]
+        [clojure.stacktrace         :only [print-stack-trace]]
+        [clojure.tools.logging      :only [warn]]))
+
+(defprotocol Task
+  (succ [task]
+    "The successive task to this one.")
+  (run [task]
+    "Executes this task.")
+  (cancel [task]
+    "Cancel this task."))
+
+(defprotocol Deferrable
+  (defer [this new-time]
+    "Schedule a task for a new time."))
 
 (defn unix-time-real
   "The current unix epoch time in seconds, taken from
@@ -23,16 +35,6 @@
 
 (def unix-time unix-time-real)
 (def linear-time linear-time-real)
-
-(defprotocol Task
-  (succ [task] "The successive task to this one.")
-
-  (run [task] "Executes this task.")
-
-  (cancel [task] "Cancel this task."))
-
-(defprotocol Deferrable
-  (defer [this new-time] "Schedule a task for a new time."))
 
 (defrecord Once [id f t cancelled]
   Task

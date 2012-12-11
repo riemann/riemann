@@ -12,10 +12,13 @@
             [clojure.java.io :as io])
   (:use [clojure.string :only [split]]
         [riemann.time :only [unix-time]]
-        clojure.tools.logging
         riemann.codec
         gloss.core
         clojure.math.numeric-tower))
+
+(defprotocol Match
+  (match [pred object]
+    "Does predicate describe object?"))
 
 ; Times
 (defn time-at
@@ -91,9 +94,6 @@
     (re-find re string)))
 
 ; Matching
-(defprotocol Match
-  (match [pred object] "Does predicate describe object?"))
-
 (extend-protocol Match
   ; Regexes are matched against strings.
   java.util.regex.Pattern
