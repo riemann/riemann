@@ -1,5 +1,5 @@
 (ns riemann.test.core
-  (:require riemann.server
+  (:require riemann.transport.tcp
             riemann.streams
             [riemann.logging :as logging])
   (:use riemann.client
@@ -26,8 +26,8 @@
 (deftest serialization
          (let [core (core)
                out (ref [])
-               server (logging/suppress "riemann.server"
-                                        (riemann.server/tcp-server core))
+               server (logging/suppress "riemann.transport.tcp"
+                                        (riemann.transport.tcp/tcp-server core))
                stream (riemann.streams/append out)
                client (riemann.client/tcp-client)
                events [{:host "shiiiiire!"}
@@ -53,14 +53,14 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.server"] 
+               (logging/suppress ["riemann.core" "riemann.transport.tcp"] 
                                  (stop core))))))
 
 (deftest query-test
          (let [core (core)
                index (index)
-               server (logging/suppress "riemann.server"
-                                        (riemann.server/tcp-server core))
+               server (logging/suppress "riemann.transport.tcp"
+                                        (riemann.transport.tcp/tcp-server core))
                client (riemann.client/tcp-client)]
 
            (try
@@ -82,7 +82,7 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.server"]
+               (logging/suppress ["riemann.core" "riemann.transport.tcp"]
                  (stop core))))))
 
 (deftest expires
@@ -122,7 +122,7 @@
   (deftest sum
          (let [core (core)
                done (ref [])
-               server (riemann.server/tcp-server core)
+               server (riemann.transport.tcp/tcp-server core)
                stream (riemann.streams/sum (riemann.streams/append done)) 
                client (riemann.client/tcp-client)]
            (try
@@ -148,8 +148,8 @@
 (deftest percentiles
          (let [core (core)
                out (ref [])
-               server (logging/suppress "riemann.server"
-                        (riemann.server/tcp-server core))
+               server (logging/suppress "riemann.transport.tcp"
+                        (riemann.transport.tcp/tcp-server core))
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
                client (riemann.client/tcp-client)]
@@ -176,5 +176,5 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.server" "riemann.core"]
+               (logging/suppress ["riemann.transport.tcp" "riemann.core"]
                                  (stop core))))))

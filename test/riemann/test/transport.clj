@@ -1,7 +1,8 @@
-(ns riemann.test.server
+(ns riemann.test.transport
   (:use riemann.common
         riemann.core
-        riemann.server
+        riemann.transport.tcp
+        riemann.transport.udp
         riemann.logging
         clojure.test
         lamina.core
@@ -13,7 +14,7 @@
 (riemann.logging/init)
 
 (deftest udp
-         (riemann.logging/suppress "riemann.server"
+         (riemann.logging/suppress "riemann.transport"
            (let [server (udp-server (core))
                  client (wait-for-result (udp-socket {}))
                  msg (ChannelBuffers/wrappedBuffer
@@ -29,7 +30,7 @@
                  (server))))))
 
 (deftest ignores-garbage
-         (riemann.logging/suppress "riemann.server"
+         (riemann.logging/suppress "riemann.transport"
             (let [server (tcp-server (core))
                   client (wait-for-result 
                            (aleph.tcp/tcp-client 
