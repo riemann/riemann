@@ -1048,6 +1048,54 @@
            (call-rescue event# true-kids#)
            (call-rescue event# else-kids#))))))
 
+(defn split*-match
+  [event [pred stream]]
+  (let [stream (or stream pred)]
+    (if (or (= stream pred) (pred event))
+      stream)))
+
+(defn split-match
+  [[pred stream]]
+  (let [stream (or stream pred)]
+    (if (or (= stream pred) pred)
+      stream)))
+
+(defmacro split*
+  "Given a list of function and stream pairs, passesppp
+   the current event onto the stream associated with
+   the first passing condition.
+
+   Conditions are functions as for where*.
+   An odd number of forms will make the last form
+   the default stream.
+   Example:
+
+   (split*
+     (fn [e] (< 2 (:metric e))) (with :state \"critical\" index)
+     (fn [e] (< 4 (:metric e))) (with :state \"warning\" index)
+     (with :state \"ok\" index))
+   "
+  [& clauses]
+  `(fn [event#]
+     (when-let [stream# (some (partial split*-match event#)
+                              (partition-all 2 (list ~@clauses)))]
+       (call-rescue event# [stream#]))))
+
+(defmacro split
+  "Behave as for split*, expecting predicates to be
+  expressions - as for where - instead of functions"
+  [& clauses]
+  (let [clauses (for [[pred stream] (partition-all 2 clauses)]
+                  (if (nil? stream)
+                    [:true pred]
+                    [(where-rewrite pred) stream]))]
+    ;; I have to do the horrible assignment to event here
+    ;; This is necessary so config functions can refer
+    ;; to event implicitely
+    `(fn [~'event]
+       (when-let [stream# (some split-match (list ~@clauses))]
+         (call-rescue ~'event [stream#])))))
+
 (defn update-index
   "Updates the given index with all events received."
   [index]
