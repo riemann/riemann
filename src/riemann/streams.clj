@@ -1096,6 +1096,24 @@
        (when-let [stream# (some split-match (list ~@clauses))]
          (call-rescue ~'event [stream#])))))
 
+(defmacro splitp
+  "Takes a binary predicate, an expression and a set of
+   clauses.
+
+   For each clause, (pred test-expr expr) is evaluated, note
+   the order change from condp.
+
+   If a binary clause matches, its associated stream will be
+   executed."
+  [pred expr & clauses]
+  (let [clauses (for [[test-expr stream] (partition-all 2 clauses)]
+                  (if (nil? stream)
+                    [test-expr]
+                    [(where-rewrite (list pred test-expr expr)) stream]))]
+    `(fn [~'event]
+       (when-let [stream# (some split-match (list ~@clauses))]
+         (call-rescue ~'event [stream#])))))
+
 (defn update-index
   "Updates the given index with all events received."
   [index]

@@ -227,6 +227,22 @@
        e))
     (is (= expect @res))))
 
+(deftest splitp-test
+  ;; same test as above, using splitp
+  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
+        res    (atom [])
+        events [{:metric 15} {:metric 8} {:metric 2}]
+        expect [{:metric 15 :state :crit}
+                {:metric 8 :state :warn}
+                {:metric 2 :state :ok}]]
+    (doseq [e events]
+      ((splitp <= metric
+               10 (with :state :crit (partial swap! res conj))
+               5  (with :state :warn (partial swap! res conj))
+              (with :state :ok (partial swap! res conj)))
+       e))
+    (is (= expect @res))))
+
 (deftest where*-test
          (test-stream (where* identity)
                       [true false nil 2]
