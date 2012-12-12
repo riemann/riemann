@@ -1087,7 +1087,7 @@
   [& clauses]
   (let [clauses (for [[pred stream] (partition-all 2 clauses)]
                   (if (nil? stream)
-                    [:true pred]
+                    [pred]
                     [(where-rewrite pred) stream]))]
     ;; I have to do the horrible assignment to event here
     ;; This is necessary so config functions can refer
