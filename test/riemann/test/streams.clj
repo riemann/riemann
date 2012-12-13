@@ -649,24 +649,22 @@
 
              )))
 
-(deftest rate-threaded
+(deftest ^:focus rate-threaded
          (let [output (atom nil)
                interval 5/2
                total 10000
                threads 4
                r (rate interval
-                        (fn [event] (dosync (reset! output event))))
-               t0 (unix-time)
+                       (fn [event] (dosync (reset! output event))))
 
                ; Generate events
                workers (map (fn [t] (future 
                                       (dotimes [i (/ total threads)]
                                         (r {:metric 1 :time (unix-time)}))))
                             (range threads))]
-           
+
            ; Wait for workers
            (dorun (map deref workers))
-
            (advance! interval)
 
            ; All events recorded

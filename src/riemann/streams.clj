@@ -310,37 +310,53 @@
   "Partitions events by time (fast variant). Each <interval> seconds, creates a
   new bin by calling (create). Applies each received event to the current bin
   with (add bin event). When the time interval is over, calls (finish bin
-  start-time elapsed-time)."
+  start-time elapsed-time).
+  
+  Concurrency guarantees:
+  
+  (create) may be called multiple times for a given time slice.
+  (add)    when called, will receive exactly one distinct bucket in each time
+           slice.
+  (finish) will be called *exactly once* for each time slice."
   [interval create add finish]
-  (let [current (ref nil)
-        start (ref nil)
-        setup (fn []
-                (dosync
-                  (ref-set start (unix-time))
-                  (ref-set current (create))))
+  (let [state (atom nil)
+        ; Set up an initial bin and start time.
+        setup (fn part-time-fast-setup []
+                (swap! state #(or % {:start (unix-time)
+                                    :current (create)})))
 
-        switch (fn []
+        ; Switch to the next bin, finishing the current one.
+        switch (fn part-time-fast-switch []
                  (apply finish
-                        (dosync
-                          (when (deref start))
-                            (let [bin (deref current)
-                                old-start (deref start)
-                                boundary (unix-time)]
-                              (ref-set start boundary)
-                              (ref-set current (create))
-                              [bin old-start boundary]))))
+                        (locking state
+                          (when-let [s @state]
+                            (let [bin (:current s)
+                                  old-start (:start s)
+                                  boundary (unix-time)]
+                              (reset! state {:start boundary
+                                             :current (create)})
+                              [bin old-start boundary])))))
+
+        ; Switch bins every interval
         p (periodically-until-expired interval interval switch)]
-    (fn [event]
+
+    (fn part-time-fast' [event]
       (p event)
-      (if (expired? event)
-        ; Kill our state
-        (dosync
-          (ref-set start nil)
-          (ref-set current nil))
-        ; Append event to this bin
-        (if-let [bin (dosync (deref current))]
-          (add bin event)
-          (add (setup) event))))))
+      (cond
+        ; The event's expired
+        (expired? event)
+        (locking state
+          (reset! state nil))
+
+        ; We have a current bin
+        @state
+        (add (:current @state) event)
+       
+        ; Create an initial bin
+        :else
+        (do
+          (setup)
+          (recur event))))))
 
 (defn fold-interval
   "Applies the folder function to all event-key values of events during
@@ -498,8 +514,9 @@
   [interval & children]
   (let [test-time (atom (linear-time))]
   (part-time-fast interval
-      (fn [] {:count (ref 0)
-              :state (ref nil)})
+      (fn [] 
+        {:count (ref 0)
+         :state (ref nil)})
       (fn [r event] (dosync
                       (ref-set (:state r) event)
                       (when-let [m (:metric event)]
