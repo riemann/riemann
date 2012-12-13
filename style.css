@@ -116,13 +116,13 @@ h6:first-child {
 }
 h1,h2,h3,h4,h5,h6 {
   font-weight: bold;
+  margin: 1em 0 0.3em 0;
 }
 h4, h5, h6 {
   margin-top: 0.2em;
 }
 h1 {
   font-size: 42px;
-  margin: 20px 0;
 }
 h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
   color: inherit;
@@ -133,18 +133,16 @@ h1 a:hover, h2 a:hover, h3 a:hover {
 }
 h2 { 
   font-size: 28px;
-  margin: 20px 0;
 }
 h3 {
-  font-size: 20px;
-  margin: 16px 0;
+  font-size: 24px;
 }
 
 p {
   line-height: 134%;
   margin-top: 0.8em;
 }
-p:first-child {
+p:first-of-type {
   margin-top: 0;
 }
 
@@ -163,6 +161,7 @@ td,th {
 code {
   font: monospace;
   color: #001843;
+  background-color: #eee;
 }
 
 div.highlight, code pre {
@@ -218,7 +217,6 @@ div.highlight, code pre {
   left: 0;
   right: 0;
   bottom: 0;
-  background: red;
 }
 
 #iframe-wrapper iframe {
@@ -229,4 +227,37 @@ div.highlight, code pre {
   right: 0;
   height: 100%;
   width: 100%;
+}
+
+/* Table of contents */
+#toc {
+  -moz-column-count: 2;
+  -webkit-column-count: 2;
+  -moz-column-gap: 40px;
+  -webkit-column-gap: 40px;
+  margin-bottom: 40px;
+  text-justify: left;
+}
+
+#toc a {
+  display: block;
+  text-decoration: none;
+}
+#toc a:hover {
+  text-decoration: underline;
+}
+
+.toc-top-link:before {
+  content: "⇡";
+}
+.toc-top-link {
+  float: right;
+  font-size: 14px;
+  color: #FF0F0F;
+}
+.toc-depth-1 {
+  margin-top: 0.5em;
+  font-size: 130%;
+  color: #000;
+  font-weight: bolder;
 }

@@ -1,0 +1,618 @@
+---
+title: Riemann - Howto
+layout: default
+---
+<h1>A <span class="focus">guide</span> to working with Riemann</h1>
+
+<p>This is not a comprehensive guide to everything in Riemann, but it can get
+you started and help solve specific problems. Once you know where to look,
+learn more by reading the <a href="api">API docs</a> (especially <a href="api/riemann.streams.html">riemann.streams</a>), and <a
+  href="https://github.com/aphyr/riemann/tree/master/src/riemann">the
+  source</a>. I try hard to write readable code. I hope you'll find it concise,
+comprehensively documented, and full of examples.</p>
+
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function() { 
+      $("#toc").tableOfContents(null, {
+        startLevel: 2,
+        depth: 2,
+        topLinks: true
+      });
+  });
+</script>
+
+<div id="toc">
+</div>
+
+<h2>Instrumenting your systems</h2>
+
+<h3>Measure CPU, memory, and disk use</h3>
+
+<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes a program called riemann-health, which measures the local host's cpu, memory, and disk use. You can install it from rubygems:</p>
+
+{% highlight sh %}
+gem install riemann-tools
+{% endhighlight %}
+
+<p>... and run riemann-health with the address of your riemann server like so:</p>
+
+{% highlight sh %}
+riemann-health --host 1.2.3.4
+{% endhighlight %}
+
+<p>Riemann-health reports utilization *fractions* by default, ranging from zero
+to one. Load average is divided by the number of cores, and disk use by
+capacity. You can adjust the polling interval, what percentage of cpu use is
+considered critical, and more. <code>riemann-health --help</code> will tell you more.</p>
+
+<h3>Monitor Riak</h3>
+
+<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes
+riemann-riak, which uses riak's HTTP stats interface, some filesystem checks,
+and optionally, some erlang RPC requests to measure Riak's get and put
+latencies, request throughput, ring status, and disk use. Run riemann-riak on
+each Riak node.</p>
+
+{% highlight sh %}
+gem install riemann-tools
+riemann-riak --host 1.2.3.4
+{% endhighlight %}
+
+<p>Riemann-riak comes with defaults for the riak .deb packages shipped by Basho, but it's tunable for other configurations. See <code>riemann-riak --help</code> for more options.</p>
+
+<h2>Running Riemann</h2>
+
+<h3>Listen on a different host or port</h3>
+
+<p>Riemann includes several <i>servers</i>, which accept events from the outside world and pass them on to streams. Servers are started from the riemann config file, like so:</p>
+
+{% highlight clj %}
+(tcp-server)
+{% endhighlight %}
+
+<p>To set the host or port one of these servers listens on, just add <code>:host</code> or <code>:port</code> arguments:</p>
+
+{% highlight clj %}
+(tcp-server :host "1.2.3.4" :port 1234)
+{% endhighlight %}
+
+<h3>Change the log file</h3>
+
+<p>To log to a file, just say</p>
+
+{% highlight clj %}
+(logging/init :file "/path/to/some/riemann.log")
+{% endhighlight %}
+
+<p>If you'd prefer to only log to the console, just leave out :file</p>
+
+{% highlight clj %}
+(logging/init)
+{% endhighlight %}
+
+
+<h2>Working with streams</h2>
+
+<h3>Filter events</h3>
+
+<p>Often, we want to do some operation only on a subset of events flowing
+through a stream. For instance, we might only want to email events which have
+the state "error". The basic filtering streams are <a
+  href="api/riemann.streams.html#var-where">where</a>, her less magical sister
+<a href="api/riemann.streams.html#var-where*">where*</a>, <a
+  href="api/riemann.streams.html#var-match">match</a>, <a
+  href="api/riemann.streams.html#var-tagged-all">tagged-all</a> and <a
+  href="api/riemann.streams.html#var-tagged-any">tagged-any</a>, and <a
+  href="api/riemann.streams.html#var-expired">expired</a>. Most of the time, you'll use <code>where</code>.</p>
+
+{% highlight clj %}
+(streams
+  (where (state "error")
+    ; Only events which have the state "error" are passed on to the email
+    ; stream:
+    (email "delacroix@vonbraun.com")))
+{% endhighlight %}
+
+{% highlight clj %}
+; Where is powerful stuff. You can match using equality:
+(where (host "von braun"))
+
+; Regular expressions
+(where (description #"an+elids"))
+
+; The presence of a given tag
+(where (tagged "mutant"))
+
+; There are also streams specifically for selecting events which have some,
+; or all, of a set of tags.
+(tagged-any ["cat" "dog"] (with :service "animals/sec" (rate 1 index)))
+(tagged-all ["ops" "ddos"] (email "ops@githug.com"))
+
+; tagged is shorthand for tagged-all:
+(tagged "page" page-ops)
+
+; Arbitrary functions on values
+(where (>= (* metric 1000) 2.5))
+
+; Which makes range queries easy
+(where (< 5 metric 10))
+
+; Boolean operators
+(where (not (or (tagged "www")
+                (and (state "ok") (nil? metric)))))
+
+; And arbitrary functions
+(defn global? [event] (nil? (:host event)))
+(where (global? event))
+{% endhighlight %}
+
+<p>Where streams forward an event to their children when the predicate matches.
+When the predicate *doesn't* match, where will forward events to any children
+in an <code>(else)</code> block.</p>
+
+{% highlight clj %}
+(where (or (service "ok") (service "warning"))
+  index
+  (else
+    (email "ops@foo.com")))
+{% endhighlight %}
+
+<h3>Set thresholds</h3>
+
+<p>You can use (where) to alert you when a metric goes out of bounds. Where the
+metric falls between zero and five, inclusive, index it with state "ok".
+Otherwise, index it with "warning":</p>
+
+{% highlight clj %}
+(streams
+  (where (<= 0 metric 5)
+    (with :state "ok" index)
+    (else
+      (with :state "warning" index))))
+{% endhighlight %}
+
+<h3>Detect state transitions</h3>
+
+<p>The <a href="api/riemann.streams.html#var-changed">changed</a> stream
+forwards on events when some fields of that event change. For instance, you
+can send an email whenever the state changes:</p>
+
+{% highlight clj %}
+(streams
+  (by [:host :service]
+    (changed :state 
+      (email "ops@startup.io"))))
+{% endhighlight %}
+
+<p>Note that we use <code>(by)</code> so that each distinct host and service track their changes independently. Otherwise, we'd get alerts when service A reported "ok" and service B reported "down". There's a shorthand for this:</p>
+
+{% highlight clj %}
+(streams
+  (changed-state
+    (email "ops@startup.io")))
+{% endhighlight %}
+
+<p>When you start Riemann, it doesn't know what the previous state was. By default, <code>changed</code> will forward on the first event it receives. You can tell <code>changed</code> and <code>changed-state</code> to *assume* an initial state with the <code>:init</code> option:</p>
+
+{% highlight clj %}
+(streams
+  (changed-state {:init "ok"}
+    (email "ops@startup.io")))
+{% endhighlight %}
+
+<p>I tend to include this snippet in my riemann configurations so I can keep
+track of which services are starting, crashing, and gracefully restarting.</p>
+
+<h3>Measure your app's latency profile</h3>
+
+{% highlight clj %} 
+; Imagine you wanted to know the time it takes for your app's API requests
+; to complete. The API emits events like:
+;
+; {:service "api req"
+;  :metric: 0.240} ; 240 milliseconds
+;
+; So first, we select only the API requests
+
+(where (service "api req")
+
+       ; Now, we'll calculate the 50th, 95th, and 99th percentile for all
+       ; requests in each 5-second interval.
+
+       (percentiles 5 [0.5 0.95 0.99]
+
+                    ; Percentiles will emit events like 
+                    ; {:service "api req 0.5" :metric 0.12}
+                    ; We'll add them to the index, so they can show up
+                    ; on our dashboard.
+
+                    index)
+
+       ; What else can we do with API requests? Let's figure out the total
+       ; request rate. (rate interval & children) sums up metrics and 
+       ; divides by time. 
+       
+       (rate 5)
+
+       ; But this isn't quite right--these event metrics are *times*, so
+       ; we're actually calculating the number of seconds spent by the API,
+       ; each second. So we *set* the metric of every event to 1, *then*
+       ; take the rate:
+
+       (with :metric 1 (rate 5 index))
+
+       ; (with) takes each event and calls (rate) with a *changed*
+       ; copy--one where :metric is always 1. Then (rate) adds up all those
+       ; 1's over five seconds, and sends that metric to the index.
+       
+       ; (with) has a counterpart, by the way: (default). It works exactly
+       ; the same, but it only alters the event when the value is nil. Both
+       ; with and default accept maps as well:
+
+       (default {:state "ok" :ttl 60} index)
+)))
+{% endhighlight %}
+
+<h3>Report exceptions</h3>
+
+<p>Where you handle exceptions in your application, you can also submit an
+event to Riemann. I usually set the service to the application name, include the
+stacktrace as the description, and tag the event with both "exception" and the classname of the exception.</p>
+
+{% highlight clj %}
+(tagged "exception")
+  (email "ops@foocorp.com"))
+
+(tagged-all ["exception" "DatabaseError"]
+  (email "db@foocorp.com"))
+{% endhighlight %}
+
+<p>It's also easy to track the *rate* of exceptions per second, so you can
+graph how many unexpected failures occur per day, and determine which services need the most attention.</p>
+
+{% highlight clj %}
+(where (service "exception")
+  (with :metric 1
+    (by :service
+      (rate 10 index graph))))
+{% endhighlight %}
+
+<h3>Roll up and throttle events</h3>
+
+<p>Sometimes, when things break, they submit a *ton* of events. Maybe you receive sixty thousand exceptions in five minutes. You need to know that a problem exists--but don't need to know about *every single failure*. Riemann has two streams for controlling the rate of events.</p>
+
+<p><a href="api/riemann.streams.html#var-rollup">rollup</a> will allow a few events to pass through readily. Then it starts to accumulate events, rolling them up into a list which is submitted at the end of a given time interval.</p>
+
+<p>Let's define a new stream for alerting the operations team, which sends only five emails per hour (3600 seconds). We'll receive the first four events immediately--and at the end of the hour, a single email with a summary of all the rest.</p>
+
+{% highlight clj %}
+(def tell-ops (rollup 5 3600 (email "ops@rickenbacker.mil")))
+
+(streams
+  (where (state "error") tell-ops)
+  (tagged "exception" tell-ops))
+{% endhighlight %}
+
+<p>Rollup holds on to every event, which can use a lot of memory. Sometimes it's OK to drop some events instead of delivering them. That's where <a href="api/riemann.streams.html#var-throttle">throttle</a> comes in: it allows the first five events through, then ignores all the rest for an hour.</p>
+
+{% highlight clj %}
+(def tell-ops (throttle 5 3600 (email "ops@rickenbacker.mil)))
+{% endhighlight %}
+
+<p>And naturally, you can combine throttle and rollup to preserve *some*
+events, but not allow unbounded memory use:</p>
+
+{% highlight clj %}
+(def tell-ops 
+  (throttle 1000 3600
+    (rollup 5 3600
+      (email "ops@rickenbacker.mil))))
+{% endhighlight %}
+
+<h3>Detect down services</h3>
+
+<p>Each event has a TTL, which states how many seconds the event is valid for
+after its given time. When a service crashes catastrophically, it will stop
+submitting events and its events in the index will become stale. Periodically,
+the index sweeps out events past their lifetime, deletes them from the index,
+and streams an event for that host and service with state "expired".</p>
+
+<p>You can control how often the index scans for expired events with <code>periodically-expire</code>. Here, we check every ten seconds. If you *don't* want events to expire from the index, you can delete this line from your config:</p>
+
+{% highlight clj %}
+(periodically-expire 10)
+{% endhighlight %}
+
+<p>If events have no TTL given, the index assumes their TTL is 60 seconds. You can provide a default TTL for any incoming events that don't provide one:</p>
+
+{% highlight clj %}
+(streams
+  (default :ttl 10
+    ; your streams here
+    ))
+{% endhighlight %}
+
+<p>Now, any services that fail to check in every ten seconds will expire
+(unless they give a different TTL). Since expired events have a different
+state, any (changed :state) streams will detect the transition and can alert
+you:</p>
+
+{% highlight clj %}
+(streams
+  (changed :state {:init "ok}
+    (email "ops@foo.com")))
+{% endhighlight %}
+
+<p>You can also explicitly filter expired events:</p>
+
+{% highlight clj %}
+(streams
+  ; Email any expired event
+  (expired (email "ops@foo.com"))
+
+  ; Process only events which are *not* expired
+  (where (not (expired? event))
+    ...))
+{% endhighlight %}
+
+<h3>Group events in time</h3>
+
+<p>Sometimes you want to ask a question about the last few minutes, or of groups of 10 consecutive events at a time.</p>
+
+<ul>
+  <li><a href="api/riemann.streams.html#var-moving-time-window">moving-time-window</a> forwards the last n seconds of events</li>
+  <li><a href="api/riemann.streams.html#var-moving-event-window">moving-event-window</a> forwards the last n events</li>
+  <li><a href="api/riemann.streams.html#var-fixed-time-window">fixed-time-window</a> forwards events from disjoint n-second windows</li>
+  <li><a href="api/riemann.streams.html#var-fixed-event-window">fixed-event-window</a> forwards disjoint sequences of n events</li>
+</ul>
+
+<h3>Find the host using the most CPU</h3>
+
+<p>If you're running riemann-health, all hosts will report events like
+<code>{:service "cpu" :host "foo" :metric 0.12}</code>. You want to know which
+host is under the heaviest CPU load. The <code>coalesce</code> stream remembers
+the last events from each host and service, and sends them all as a vector to
+its children. We can map that vector of events to a single event--the one with
+the largest metric--using folds/maximum. Then we just set the service and host,
+since this event pertains to the system as a whole.</p>
+
+{% highlight clj %}
+(coalesce (smap folds/maximum
+  (with {:service "Max CPU" :host nil} prn)))
+{% endhighlight %}
+
+<h2>Integrating with other systems</h2>
+
+<h3>Send email</h3>
+
+<p><code>riemann.email</code> can send single events--or vectors of events--via email:</p>
+
+{% highlight clj %}
+(def email (mailer {:from "riemann@trioptimum.com"}))
+
+(streams
+  (where (state "critical")
+    (email "shodan@tauceti.five")))
+{% endhighlight %}
+
+<p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:
+
+{% highlight clj %}
+(mailer {:from "riemann@trioptimum.com"
+         :host "mx1.trioptimum.com"
+         :user "foo"
+         :pass "bar"})
+{% endhighlight %}
+
+<h3>Forward to Graphite</h3>
+
+<p>First, you define a client to graphite, which maintains a connection pool:</p>
+
+{% highlight clj %}
+(def graph (graphite {:host "my.graphite.server"}))
+{% endhighlight %}
+
+<p>Then, use the client as a stream:</p>
+
+{% highlight clj %}
+(streams
+  (where (service "thing-to-graph")
+    graph))
+{% endhighlight %}
+
+<p>Or just graph everything:</p>
+
+{% highlight clj %}
+(streams
+  graph)
+{% endhighlight %}
+
+<h3>Forward to Librato Metrics</h3>
+
+<p>Create a client for librato-metrics with your username and API key:</p>
+
+{% highlight clj %}
+(def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
+{% endhighlight %}
+
+<p>Then use it in streams:</p>
+
+{% highlight clj %}
+(streams
+  (tagged \"latency\" (librato :gauge)))
+{% endhighlight %}
+
+<p>You can submit events as annotations too. See the <a href="api/riemann.librato.html#var-librato-metrics">librato-metrics documentation</a>.</p>
+
+<h3>Notify with Pagerduty</h3>
+
+<p>Create a client with your pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service:</p>
+
+{% highlight clj %}
+(let [pd (pagerduty "my-service-key")]
+  (streams
+    (changed-state
+      (where (state "ok")
+        (:resolve pd))
+        (else (:trigger pd)))))
+{% endhighlight %}
+
+<h3>Forward between Riemann servers</h3>
+
+<p>When you have *many* events, you can use multiple Riemann servers to scale
+out. You might, for instance, run one Riemann server per datacenter, and
+forward only state changes in each service to a master server for a birds-eye
+view.</p>
+
+{% highlight clj %}
+(streams
+  (let [client (tcp-client :host "aggregator")]
+    (by [:host :service]
+       (changed :state 
+                (forward client)))))
+{% endhighlight %}
+
+<h2>Contributing to Riemann</h2>
+
+<h3>Write a client</h3>
+
+<p>A TCP connection to Riemann is a stream of messages. Each message is a 4
+byte network-endian integer *length*, followed by a Protocol Buffer Message of
+*length* bytes. See the <a
+  href="https://github.com/aphyr/riemann-java-client/blob/master/src/main/proto/riemann/proto.proto">protocol
+  buffer definition</a> for the details.</p>
+
+<p>Over UDP, the length header is omitted; just send the protobuf Message
+directly. UDP datagrams have a default maximum size of 16384 bytes by
+Riemann's default; larger messages should go over TCP. This limit is
+configurable in both the client and server; client values *must* be smaller
+than the server's.</p>
+
+<p>The server will accept a repeated list of Events, and respond with a
+confirmation message with either an acknowledgement or an error. Check the `ok`
+boolean in the message; if false, message.error will be a descriptive
+string.</p>
+
+<p>Because protocol buffers is strongly typed, the metric of an event is
+represented as one of metric_d (floating point 64-bit), metric_f (floating
+point 32-bit), or metric_sint (64-bit signed integer). Your client should emit
+and consume all of these types. For compatibility with older versions of
+Riemann, you may *also* emit a metric_f alongside the normal type; newer versions of Riemann will prefer the higher-resolution types.</p>
+
+<p>Events are uniquely identified by host and service. Both allow null.
+Event.time is the time in unix epoch seconds and is optional. The server will
+generate a time for each event when received if you do not provide one. I don't
+need time resolution finer than 1 second presently, but if you do, my plan is
+to add a nanosecond field as well.</p>
+
+<p>You can also query events from the index using a basic query language. Just
+submit a Message with your query in message.query.string. Search queries will
+return a message with repeated Events matching that expression. A null
+expression will return no states. For some example queries, see <a href="https://github.com/aphyr/riemann/blob/master/test/riemann/test/query.clj">The query test suite</a>.</p>
+
+<p>You might find it useful to read the <a
+  href="https://github.com/aphyr/riemann-ruby-client">Ruby client</a> source as
+a guide to writing your own client.</p>
+
+<h3>Work with the Riemann source</h3>
+
+<p>I try to keep master as clean and runnable as possible. Riemann has an
+exhaustive test suite, which helps ensure code quality. If you plan on changing the Riemann source, fork it on Github so you'll be able to send pull requests quickly. If you just want to run the latest version, go ahead and clone the official repo:</p>
+
+{% highlight sh %}
+git clone git://github.com/aphyr/riemann.git
+cd riemann
+{% endhighlight %}
+
+<p>You'll also need a JVM, and <a href="https://github.com/technomancy/leiningen">leiningen 2</a>--the Clojure build system.</p>
+
+<p>To run the tests suite, try <code>lein test</code>. To start Riemann, run
+<code>lein run</code>. Riemann will read the file <code>riemann.config</code>
+in the current directory. If you want to run a different config file, try</p>
+
+{% highlight sh %} lein run -- path/to/my/riemann.config {% endhighlight %}
+
+<p>If you want a fat jar, run <code>lein uberjar</code> and copy target/riemann-{version}-STANDALONE.jar. To build tarball and debian packages, use <code>lein pkg</code>; .debs and .tar.gz files, plus md5sums, will appear in <code>target/</code>.
+
+<p>The protocol buffer codec and clojure client live in <a
+  href="https://github.com/aphyr/riemann-clojure-client">riemann-clojure-client</a>,
+which wraps the java protobuf code and java client in <a
+  href="https://github.com/aphyr/riemann-java-client">riemann-java-client</a>.
+Both of these are available on clojars and most of the time you can ignore
+them. However, if you need to change the protocol or client, you can fork these
+projects and make your changes there.</p>
+
+<p>When you've made changes to the java client, install it with <code>mvn
+  install</code>; then test the clojure client and install it with <code>lein
+  install</code>. Finally, you can run riemann itself. You may need to check
+that the client versions you're working with match up in the riemann and
+riemann-clojure-clientproject.clj files.</p>
+
+<h3>Fix a bug or add a feature</h3>
+
+<p>First, <a href="https://github.com/aphyr/riemann">fork Riemann on
+  github</a>. Clone your fork and create a new topic branch for your fix:</p>
+
+{% highlight sh %}
+git clone git@github.com:your-github-username/riemann.git
+cd riemann
+git checkout -b fix-some-bug
+{% endhighlight %}
+
+<p>Most of Riemann's source lives in <code>src/riemann/</code>. Corresponding
+tests live in <code>test/riemann/test/</code>. When you fix a bug or add a
+feature, make sure to add new tests that confirm its correctness! You can run
+the test suite with</p>
+
+{% highlight sh %}
+lein test
+{% endhighlight %}
+
+<p>Some tests for integrating with other services require a local sendmail, or
+graphite, or credentials for a web service. If you make changes that affect
+these systems, you can test them with special selectors like <code>lein test
+  :graphite</code> or <code>lein test :email</code>. If you're working with a
+particular namespace, like <code>riemann.streams</code>, <code>lein test
+  riemann.test.streams</code> runs only the tests for that namespace. Once your
+tests pass, commit your changes and push them to github:</p>
+
+{% highlight sh %}
+git commit -a
+git push origin fix-some-bug
+{% endhighlight %}
+
+<p>If you change more than a few lines of whitespace, please make your
+formatting changes in a separate commit; it'll be easier for me to read and
+understand your changes. Please try to send me only a few commits where
+possible; use <code>rebase --interactive</code> to squash your small
+changes.</p>
+
+<h3>Help write documentation</h3>
+
+<p>Riemann's web site and documentation are in the gh-pages branch of the
+riemann repository. <a href="https://github.com/aphyr/riemann">Fork riemann on
+  github</a>, clone your fork, and check out the branch:</p>
+
+{% highlight sh %}
+git clone git@github.com:your-github-username/riemann.git
+cd riemann
+git checkout gh-pages
+vim howto.html
+{% endhighlight %}
+
+<p>Pages are built with Jekyll. To see how your changes will appear on the site,</p>
+
+{% highlight sh %}
+sudo apt-get install python-pygments jekyll
+cd riemann
+jekyll
+{% endhighlight %}
+
+<p>... and open _site/howto.html in a web browser. When you're satisfied with
+your changes, commit, push, and send me a pull request:</p>
+
+{% highlight sh %}
+git commit -am "Added a howto guide for integrating with FooService"
+git push
+{% endhighlight %}
+
