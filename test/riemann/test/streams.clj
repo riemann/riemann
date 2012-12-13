@@ -649,32 +649,28 @@
 
              )))
 
-(deftest rate-fast
-         (let [output (atom [])
-               interval 1
+(deftest rate-threaded
+         (let [output (atom nil)
+               interval 5/2
                total 10000
                threads 4
                r (rate interval
-                        (fn [event] (dosync (swap! output conj event))))
-               t0 (unix-time)]
+                        (fn [event] (dosync (reset! output event))))
+               t0 (unix-time)
 
-           ; Generate events
-           (doseq [f (map (fn [t] (future 
-                                 (dotimes [i (/ total threads)]
-                                   (r {:metric 1 :time (unix-time)}))))
-                          (range threads))]
-                   (deref f))
-             
+               ; Generate events
+               workers (map (fn [t] (future 
+                                      (dotimes [i (/ total threads)]
+                                        (r {:metric 1 :time (unix-time)}))))
+                            (range threads))]
+           
+           ; Wait for workers
+           (dorun (map deref workers))
+
            (advance! interval)
 
-           (let [t1 (unix-time)
-                 duration (- t1 t0)]
-           
-             ; All events recorded
-             (is (= duration interval))
-             (is (approx-equal total (reduce + (map :metric @output))))
-
-             )))
+           ; All events recorded
+           (is (= (/ total interval) (:metric @output)))))
 
 (deftest fold-interval-test
          (test-stream-intervals (riemann.streams/fold-interval 1 :metric incanter.stats/sd)
