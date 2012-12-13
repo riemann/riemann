@@ -88,13 +88,13 @@
 (deftest expires
          (let [core (core)
                index (index)
-               res (ref nil)
+               res (atom nil)
                expired-stream (riemann.streams/expired 
-                                (fn [e] (dosync (ref-set res e))))
+                                (fn [e] (reset! res e)))
                reaper (periodically-expire core 0.001)]
 
-                (reset! (:index core) index)
-                (swap! (:streams core) conj expired-stream)
+           (reset! (:index core) index)
+           (swap! (:streams core) conj expired-stream)
 
            ; Insert events
            (update-index core {:service 1 :ttl 0.01 :time (unix-time)})
@@ -103,7 +103,7 @@
            (advance! 0.011)
 
            ; Wait for reaper to eat them
-           (Thread/sleep 30)
+           (Thread/sleep 100)
 
            ; Kill reaper
            (future-cancel reaper)
