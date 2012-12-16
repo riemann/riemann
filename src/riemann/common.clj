@@ -37,14 +37,11 @@
   [e]
   (if (:time e) e (assoc e :time (unix-time))))
 
-(defn decode
-  "Decode a gloss buffer to a message. Decodes the protocol buffer
+(defn decode-msg
+  "Decode a protobuf to a message. Decodes the protocol buffer
   representation of Msg and applies post-load-event to all events."
-  [s]
-  (let [buffer (gloss.io/contiguous s)
-        bytes (byte-array (.remaining buffer))
-        _ (.get buffer bytes 0 (alength bytes))
-        msg (decode-pb-msg (Proto$Msg/parseFrom bytes))]
+  [msg]
+  (let [msg (decode-pb-msg msg)]
     (-> msg
       (assoc :states (map post-load-event (:states msg)))
       (assoc :events (map post-load-event (:events msg))))))
@@ -59,8 +56,7 @@
       (assoc :events (map post-load-event (:events msg))))))
 
 (defn ^"[B" encode
-  "Builds and dumps a protobuf message from a hash. Applies pre-dump-event to
-  events."
+  "Builds and dumps a protobuf message as bytes from a hash."
   [msg]
   (.toByteArray (encode-pb-msg msg)))
 

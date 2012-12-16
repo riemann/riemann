@@ -7,6 +7,8 @@
         [riemann.logging :only [suppress]]
         clojure.test))
 
+(riemann.logging/init)
+
 (deftest reconnect
          (suppress ["riemann.transport.tcp" "riemann.core"]
                    (let [server (tcp-server)

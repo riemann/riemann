@@ -15,7 +15,10 @@
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
         [riemann.service       :only [Service]]
-        [riemann.transport     :only [handle protobuf-frame-decoder
+        [riemann.transport     :only [handle 
+                                      protobuf-decoder
+                                      protobuf-encoder
+                                      msg-decoder
                                       channel-pipeline-factory]]))
 
 (defn udp-handler
@@ -27,6 +30,7 @@
 
     (messageReceived [context ^MessageEvent message-event]
                      (handle @core (.getMessage message-event)))
+
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
 
@@ -99,8 +103,13 @@
   ([] (udp-server {}))
   ([opts]
    (let [pipeline-factory #(doto (Channels/pipeline)
+                             (.addLast "protobuf-encoder"
+                                       (protobuf-encoder))
                              (.addLast "protobuf-decoder"
-                                       (protobuf-frame-decoder)))]
+                                       (protobuf-decoder))
+                             (.addLast "msg-decoder"
+                                       (msg-decoder)))]
+                                       
      (UDPServer.
        (get opts :host "127.0.0.1")
        (get opts :port 5555)

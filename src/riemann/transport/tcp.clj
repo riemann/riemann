@@ -21,12 +21,15 @@
                                                 LengthFieldPrepender]
            [org.jboss.netty.handler.execution
             OrderedMemoryAwareThreadPoolExecutor])
-  (:use [riemann.transport     :only [handle protobuf-frame-decoder
-                                      channel-pipeline-factory]]
+  (:use [riemann.transport :only [handle 
+                                  protobuf-decoder
+                                  protobuf-encoder
+                                  msg-decoder
+                                  channel-pipeline-factory]]
+        [riemann.codec :only [encode-pb-msg]]
         [riemann.service :only [Service]]
         [clojure.tools.logging :only [info warn]]
-        [riemann.transport :only [handle]]
-        [riemann.common :only [encode]]))
+        [riemann.transport :only [handle]]))
 
 (defn int32-frame-decoder
   []
@@ -49,9 +52,7 @@
       (let [channel (.getChannel message-event)
             msg     (.getMessage message-event)]
         (try
-          (let  [response (handle @core msg)
-                 encoded  (encode response)]
-            (.write channel (ChannelBuffers/wrappedBuffer encoded)))
+          (.write channel (encode-pb-msg (handle @core msg)))
           (catch java.nio.channels.ClosedChannelException e
             (warn "channel closed"))
           (catch com.google.protobuf.InvalidProtocolBufferException e
@@ -134,7 +135,11 @@
                                (.addLast "int32-frame-encoder"
                                          (int32-frame-encoder))
                                (.addLast "protobuf-decoder"
-                                         (protobuf-frame-decoder)))]
+                                         (protobuf-decoder))
+                               (.addLast "protobuf-encoder"
+                                         (protobuf-encoder))
+                               (.addLast "msg-decoder"
+                                         (msg-decoder)))]
        (TCPServer.
          (get opts :host "127.0.0.1")
          (get opts :port 5555)
