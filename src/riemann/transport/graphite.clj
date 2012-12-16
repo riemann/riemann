@@ -45,8 +45,8 @@
 (defn graphite-server
   "Start a graphite-server, some bits could be factored with tcp-server.
    Only the default option map and the bootstrap change."
-  ([core] (graphite-server core {}))
-  ([core opts]
+  ([] (graphite-server {}))
+  ([opts]
      (let [pipeline-factory #(doto (Channels/pipeline)
                                (.addLast "framer"
                                          (DelimiterBasedFrameDecoder.
@@ -59,7 +59,7 @@
                                (.addLast "graphite-decoder"
                                          ((graphite-frame-decoder
                                            (:parser-fn opts)))))]
-       (tcp-server core (merge {:host "127.0.0.1"
-                                :port 2003
-                                :pipeline-factory pipeline-factory}
-                               opts)))))
+       (tcp-server (merge {:host "127.0.0.1"
+                           :port 2003
+                           :pipeline-factory pipeline-factory}
+                          opts)))))

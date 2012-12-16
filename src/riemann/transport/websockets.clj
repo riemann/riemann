@@ -5,7 +5,7 @@
             [riemann.index    :as index]
             [riemann.pubsub   :as p])
   (:use [riemann.common        :only [event-to-json]]
-        [riemann.core          :only [core]]
+        [riemann.service       :only [Service]]
         [aleph.http            :only [start-http-server]]
         [lamina.core           :only [receive-all close enqueue]]
         [clojure.tools.logging :only [info warn]]
@@ -20,7 +20,6 @@
               (mapcat (fn [kv] (split kv #"=" 2))
                       (split string #"&")))))
 
-;;; Websockets
 (defn ws-pubsub-handler [core ch hs]
   (let [topic  (url-decode (last (split (:uri hs) #"/" 3)))
         params (http-query-map (:query-string hs))
@@ -60,11 +59,36 @@
           (:uri handshake)
           (:query-string handshake))
     (condp re-matches (:uri handshake)
-      #"^/index/?$" (ws-index-handler core ch handshake)
-      #"^/pubsub/[^/]+/?$" (ws-pubsub-handler core ch handshake)
+      #"^/index/?$" (ws-index-handler @core ch handshake)
+      #"^/pubsub/[^/]+/?$" (ws-pubsub-handler @core ch handshake)
       :else (do
               (info "Unknown URI " (:uri handshake) ", closing")
               (close ch)))))
+
+(defrecord WebsocketServer [host port core server]
+  Service
+  (equiv? [this other]
+          (and (instance? WebsocketServer other)
+               (= host (:host other))
+               (= port (:port other))))
+
+  (reload! [this new-core]
+           (reset! core new-core))
+
+  (start! [this]
+          (locking this
+            (when-not @server
+              (reset! server (start-http-server (ws-handler core)
+                                                {:host host
+                                                 :port port
+                                                 :websocket true}))
+              (info "Websockets server" host port "online"))))
+
+  (stop! [this]
+         (locking this
+           (when @server
+             (@server)
+             (info "Websockets server" host port "shut down")))))
 
 (defn ws-server
   "Starts a new websocket server for a core. Starts immediately.
@@ -72,15 +96,10 @@
   Options:
   :host   The address to listen on (default 127.0.0.1)
   :post   The port to listen on (default 5556)"
-  ([core] (ws-server core {}))
-  ([core opts]
-   (let [opts (merge {:host "127.0.0.1"
-                      :port 5556}
-                     opts)
-         s (start-http-server (ws-handler core) {:host (:host opts)
-                                                 :port (:port opts)
-                                                 :websocket true})]
-     (info "Websockets server" opts "online")
-     (fn []
-       (s)
-       (info "Websockets server" opts "shut down")))))
+  ([] (ws-server {}))
+  ([opts]
+   (WebsocketServer.
+     (get opts :host "127.0.0.1")
+     (get opts :port 5556)
+     (atom nil)
+     (atom nil))))

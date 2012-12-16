@@ -3,7 +3,6 @@
   here since netty is the preferred method of providing transports"
   (:use     [slingshot.slingshot :only [try+]]
             [riemann.common      :only [decode-inputstream]]
-            [riemann.core        :only [core]]
             [riemann.index       :only [search]])
   (:require [riemann.query    :as query])
   (:import
@@ -51,13 +50,13 @@
   (try+
    ;; Send each event/state to each stream
    (doseq [event  (concat (:events msg) (:states msg))
-           stream (deref (:streams core))]
+           stream (:streams core)]
      (stream event))
 
    (if (:query msg)
      ;; Handle query
      (let [ast (query/ast (:string (:query msg)))]
-       (if-let [i (deref (:index core))]
+       (if-let [i (:index core)]
          {:ok true :events (search i ast)}
          {:ok false :error "no index"}))
 

@@ -8,39 +8,39 @@
         clojure.test))
 
 (deftest reconnect
-         (suppress "riemann.transport.tcp"
-                   (let [server (tcp-server (core))
+         (suppress ["riemann.transport.tcp" "riemann.core"]
+                   (let [server (tcp-server)
+                         core   (transition! (core) {:services [server]})
                          client (tcp-client)]
                      (try
                        ; Initial connection works
                        (is (send-event client {:service "test"}))
 
                        ; Kill server; should fail.
-                       (server)
+                       (stop! core)
                        (.setMinimumReconnectInterval client 0)
                        (is (thrown? java.net.SocketException
                                     (send-event client {:service "test"})))
 
                        ; Restart server; should work
-                       (let [server (tcp-server (core))]
-                         (try
-                           (send-event client {:service "test"})
-                           (finally
-                             (server))))
+                       (start! core)
+                       (try
+                         (send-event client {:service "test"})
+                         (finally
+                           (stop! core)))
 
                        (finally
                          (close-client client)
-                         (server))))))
+                         (stop! core))))))
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress "riemann.transport.tcp"
-           (let [core (core)
-                 index (index)
+         (suppress ["riemann.transport.tcp" "riemann.core"]
+           (let [index (index)
                  server (tcp-server core)
+                 core   (transition! (core) {:services [server]
+                                             :index index})
                  client (tcp-client)]
-
-             (reset! (:index core) index)
 
              (try
                (is (thrown? com.aphyr.riemann.client.ServerError
@@ -53,4 +53,4 @@
                
                (finally
                  (close-client client)
-                 (server))))))
+                 (stop! core))))))

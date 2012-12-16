@@ -4,12 +4,12 @@
             [riemann.logging :as logging])
   (:use riemann.client
         riemann.common
-        riemann.core
         riemann.index
-        clojure.test
-        riemann.time
         riemann.time.controlled
+        riemann.core
+        clojure.test
         [clojure.algo.generic.functor :only [fmap]]
+        [riemann.service :only [Service]]
         [riemann.time :only [unix-time]]))
 
 (logging/init)
@@ -23,12 +23,82 @@
          ret# ~expr]
      (/ (- (. System (nanoTime)) start#) 1000000000.0)))
 
+(deftest blank-test
+         (let [c (core)]
+           (is (= [] (:streams c)))
+           (is (= [] (:services c)))
+           (is (= nil (:index c)))
+           (is (:pubsub c))))
+
+(defrecord TestService [id running core]
+  Service
+  (start!  [_]   (reset! running true))
+  (stop!   [_]   (reset! running false))
+  (reload! [_ c] (reset! core c))
+  (equiv?  [a b] (= (:id a) (:id b))))
+
+(deftest start-transition-stop
+         (logging/suppress 
+           "riemann.core"
+           (let [old-running    (atom nil)
+                 old-core       (atom nil)
+                 same-1-running (atom nil)
+                 same-1-core    (atom nil)
+                 same-2-running (atom nil)
+                 same-2-core    (atom nil)
+                 new-running    (atom nil)
+                 new-core       (atom nil)
+                 old-service    (TestService. :old  old-running    old-core)
+                 same-service-1 (TestService. :same same-1-running same-1-core)
+                 same-service-2 (TestService. :same same-2-running same-2-core)
+                 new-service    (TestService. :new  new-running    new-core)
+                 old {:services [old-service same-service-1]}
+                 new {:services [new-service same-service-2]}]
+
+             (start! old)
+             (is (= [old-service same-service-1] (:services old)))
+             (is        @old-running)
+             (is        @same-1-running)
+             (is (not   @same-2-running))
+             (is (not   @new-running))
+             (is (= old @old-core))
+             (is (= old @same-1-core))
+             (is (= nil @same-2-core))
+             (is (= nil @new-core))
+
+             ; Should preserve the same-1 service from the old core
+             (let [final (transition! old new)]
+               (is (not= new final))
+               (is (= [new-service same-service-1] (:services final)))
+               (is (not     @old-running))
+               (is          @same-1-running)
+               (is (not     @same-2-running))
+               (is          @new-running)
+               (is (= old   @old-core))
+               (is (= final @same-1-core))
+               (is (= nil   @same-2-core))
+               (is (= final @new-core))
+
+               (stop! final)
+               (is (= [new-service same-service-1] (:services final)))
+               (is (not     @old-running))
+               (is (not     @same-1-running))
+               (is (not     @same-2-running))
+               (is (not     @new-running))
+               (is (= old   @old-core))
+               (is (= final @same-1-core))
+               (is (= nil   @same-2-core))
+               (is (= final @new-core))))))
+
 (deftest serialization
-         (let [core (core)
-               out (ref [])
-               server (logging/suppress "riemann.transport.tcp"
-                                        (riemann.transport.tcp/tcp-server core))
+         (let [out (ref [])
+               server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/append out)
+               core   (logging/suppress ["riemann.transport.tcp"
+                                         "riemann.core"]
+                                        (transition! (core)
+                                                     {:services [server]
+                                                      :streams [stream]}))
                client (riemann.client/tcp-client)
                events [{:host "shiiiiire!"}
                        {:service "baaaaaginnnns!"}
@@ -42,9 +112,6 @@
                        {:ttl 12.0}]]
            
            (try
-             (swap! (core :servers) conj server)
-             (swap! (core :streams) conj stream)
-
              ; Send events
              (doseq [e events] (send-event client e))
 
@@ -54,19 +121,19 @@
              (finally
                (close-client client)
                (logging/suppress ["riemann.core" "riemann.transport.tcp"] 
-                                 (stop core))))))
+                                 (stop! core))))))
 
 (deftest query-test
-         (let [core (core)
-               index (index)
-               server (logging/suppress "riemann.transport.tcp"
-                                        (riemann.transport.tcp/tcp-server core))
+         (let [index  (index)
+               server (riemann.transport.tcp/tcp-server)
+               core   (logging/suppress ["riemann.core"
+                                         "riemann.transport.tcp"]
+                                        (transition! (core)
+                                                     {:services [server]
+                                                      :index index}))
                client (riemann.client/tcp-client)]
 
            (try
-             (swap! (core :servers) conj server)
-             (reset! (core :index) index)
-
              ; Send events
              (update-index core {:metric 1 :time 1})
              (update-index core {:metric 2 :time 3})
@@ -83,18 +150,19 @@
              (finally
                (close-client client)
                (logging/suppress ["riemann.core" "riemann.transport.tcp"]
-                 (stop core))))))
+                 (stop! core))))))
 
 (deftest expires
-         (let [core (core)
-               index (index)
+         (let [index (index)
                res (atom nil)
                expired-stream (riemann.streams/expired 
                                 (fn [e] (reset! res e)))
-               reaper (periodically-expire core 0.001)]
-
-           (reset! (:index core) index)
-           (swap! (:streams core) conj expired-stream)
+               reaper (reaper 0.001)
+               core (logging/suppress 
+                      ["riemann.core" "riemann.transport.tcp"]
+                      (transition! (core) {:services [reaper]
+                                           :streams [expired-stream]
+                                           :index index}))]
 
            ; Insert events
            (update-index core {:service 1 :ttl 0.01 :time (unix-time)})
@@ -106,7 +174,8 @@
            (Thread/sleep 100)
 
            ; Kill reaper
-           (future-cancel reaper)
+           (logging/suppress "riemann.core"
+                             (stop! core))
            
            ; Check that index does not contain these states
            (is (= [2] (map (fn [e] (:service e)) index)))
@@ -118,45 +187,17 @@
                    :time 0.011
                    :state "expired"}))))
 
-(comment
-  (deftest sum
-         (let [core (core)
-               done (ref [])
-               server (riemann.transport.tcp/tcp-server core)
-               stream (riemann.streams/sum (riemann.streams/append done)) 
-               client (riemann.client/tcp-client)]
-           (try
-             (dosync
-               (alter (core :servers) conj server)
-               (alter (core :streams) conj stream))
-
-             ; Send some events over the network
-             (send-event client {:metric 1})
-             (send-event client {:metric 2})
-             (send-event client {:metric 3})
-             (close-client client)
-             
-             ; Confirm receipt
-             (let [l (deref done)]
-               (is (= [1 3 6] 
-                      (map (fn [x] (:metric x)) l))))
-
-             (finally
-               (close-client client)
-               (stop core))))))
-
 (deftest percentiles
-         (let [core (core)
-               out (ref [])
-               server (logging/suppress "riemann.transport.tcp"
-                        (riemann.transport.tcp/tcp-server core))
+         (let [out (ref [])
+               server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
+               core   (logging/suppress 
+                        ["riemann.core" "riemann.transport.tcp"]
+                        (transition! (core) {:services [server]
+                                             :streams [stream]}))
                client (riemann.client/tcp-client)]
            (try
-             (swap! (core :servers) conj server)
-             (swap! (core :streams) conj stream)
-
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
                (send-event client {:metric n :service "per"}))
@@ -177,4 +218,4 @@
              (finally
                (close-client client)
                (logging/suppress ["riemann.transport.tcp" "riemann.core"]
-                                 (stop core))))))
+                                 (stop! core))))))

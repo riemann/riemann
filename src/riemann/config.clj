@@ -23,50 +23,59 @@
         [riemann.streams :exclude [update-index delete-from-index]])
   (:gen-class))
 
-(def ^{:doc "A default core."} core (core/core))
+(def core "The currently running core."
+  (atom (core/core)))
+(def next-core "The core which will replace the current core."
+  (atom (core/core)))
 
 (def graphite #'graphite-client/graphite)
 
 (defn repl-server
-  "Adds a new REPL server with opts to the default core."
+  "Starts a new REPL server with opts."
   [& opts]
   (riemann.repl/start-server (apply hash-map opts)))
+
+(defn add-service!
+  "Adds a service to the next core."
+  [service]
+  (locking core
+    (swap! next-core assoc :services
+           (conj (:services @next-core) service))))
 
 (defn tcp-server
   "Add a new TCP server with opts to the default core."
   [& opts]
-  (swap! (core :servers) conj
-         (tcp/tcp-server core (apply hash-map opts))))
+  (add-service! (tcp/tcp-server (apply hash-map opts))))
 
 (defn graphite-server
   "Add a new Graphite TCP server with opts to the default core."
   [& opts]
-  (dosync
-   (swap! (core :servers) conj
-          (graphite/graphite-server core (apply hash-map opts)))))
+  (add-service! (graphite/graphite-server (apply hash-map opts))))
 
 (defn udp-server
   "Add a new UDP server with opts to the default core."
   [& opts]
-  (swap! (core :servers) conj
-         (udp/udp-server core (apply hash-map opts))))
+  (add-service! (udp/udp-server (apply hash-map opts))))
 
 (defn ws-server
   "Add a new websockets server with opts to the default core."
   [& opts]
-  (swap!
-    (core :servers) conj
-    (websockets/ws-server core (apply hash-map opts))))
+  (add-service! (websockets/ws-server (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
   [& things]
-  (swap! (core :streams) concat things))
+  (locking core
+    (swap! next-core assoc :streams
+           (concat (:streams core) things))))
 
 (defn index
   "Set the index used by this core."
   [& opts]
-  (reset! (core :index) (apply riemann.index/index opts)))
+  (let [index (apply riemann.index/index opts)]
+    (locking core 
+      (swap! next-core assoc :index index))
+    index))
 
 (defn update-index
   "Updates the given index with all events received. Also publishes to the
@@ -81,43 +90,52 @@
 
 (defn periodically-expire
   "Sets up a reaper for this core. See core API docs."
-  ([interval]
-   (core/periodically-expire core interval))
   ([]
-   (periodically-expire 10)))
+   (periodically-expire 10))
+  ([interval]
+   (add-service! (core/reaper interval))))
 
 (defn pubsub
-  "Returns this core's pubsub registry."
+  "Returns the current core's pubsub registry."
   []
-  (:pubsub core))
+  (:pubsub @core))
 
 (defn publish
   "Returns a stream which publishes events to this the given channel. Uses this
   core's pubsub registry."
   [channel]
   (fn [event]
-    (pubsub/publish (:pubsub core) channel event)))
+    (pubsub/publish (:pubsub @core) channel event)))
 
 (defn subscribe
   "Subscribes to the given channel with f, which will receive events. Uses this
   core's pubsub registry."
   [channel f]
-  (pubsub/subscribe (:pubsub core) channel f))
+  (pubsub/subscribe (:pubsub @core) channel f))
 
-(defn start
-  "Start the core."
+(defn clear!
+  "Resets the next core."
   []
-  (core/start core))
+  (locking core
+    (reset! next-core (core/core))))
 
-(defn stop 
-  "Stop the core."
+(defn apply!
+  "Applies pending changes to the core. Transitions the current core to the
+  next one, and resets the next core."
   []
-  (core/stop core))
+  (locking core
+    (swap! core core/transition! @next-core)
+    (clear!)))
 
-(defn reset
-  "Reset the core."
+(defn start!
+  "Start the current core."
   []
-  (def core (core/core)))
+  (core/start! @core))
+
+(defn stop!
+  "Stop the current core."
+  []
+  (core/stop! @core))
 
 (defn read-strings
   "Returns a sequence of forms read from string."

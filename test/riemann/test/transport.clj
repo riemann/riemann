@@ -14,8 +14,9 @@
 (riemann.logging/init)
 
 (deftest udp
-         (riemann.logging/suppress "riemann.transport"
-           (let [server (udp-server (core))
+         (riemann.logging/suppress ["riemann.transport" "riemann.core"]
+           (let [server (udp-server)
+                 core   (transition! (core) {:services [server]})
                  client (wait-for-result (udp-socket {}))
                  msg (ChannelBuffers/wrappedBuffer
                        (encode {:ok true}))]
@@ -27,11 +28,12 @@
                (Thread/sleep 100)
                (finally
                  (close client)
-                 (server))))))
+                 (stop! core))))))
 
 (deftest ignores-garbage
-         (riemann.logging/suppress "riemann.transport"
-            (let [server (tcp-server (core))
+         (riemann.logging/suppress ["riemann.transport" "riemann.core"]
+            (let [server (tcp-server)
+                  core   (transition! (core) {:services [server]})
                   client (wait-for-result 
                            (aleph.tcp/tcp-client 
                              {:host "localhost" 
@@ -46,4 +48,4 @@
                 (is (closed? client))
                 (finally
                   (close client)
-                  (server))))))
+                  (stop! core))))))

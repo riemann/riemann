@@ -1,14 +1,15 @@
 (ns riemann.test.bench
-  (:use [riemann.core])
-  (:use [riemann.common])
-  (:use [riemann.transport.udp])
-  (:use [riemann.transport.tcp])
-  (:use [riemann.client :only [tcp-client udp-client close-client send-event]])
-  (:require [riemann.streams])
-  (:use [clojure.test])
-  (:use [clojure.java.shell])
-  (:use [clojure.string :only [trim-newline]])
-  (:use [incanter core charts]))
+  (:use riemann.core
+        riemann.common
+        riemann.logging
+        riemann.transport.udp
+        riemann.transport.tcp
+        clojure.test
+        clojure.java.shell
+        [clojure.string :only [trim-newline]]
+        incanter core charts
+        [riemann.client :only [tcp-client udp-client close-client send-event]])
+  (:require riemann.streams)
 
 (defn git-version
   "Returns a human-readable version name for this commit."
@@ -107,11 +108,11 @@
 (defn core-package 
   ([] (core-package [{}]))
   ([opts]
-   (let [core (core)
-         servers [(tcp-server core) (udp-server core)]
-         streams (or (:streams opts) [])]
-     (swap! (core :servers) concat servers)
-     (swap! (core :streams) concat streams)
+   (let [servers [(tcp-server core) (udp-server core)]
+         streams (or (:streams opts) [])
+         core    (suppress "riemann.core"
+                           (transition! (core) {:streams streams 
+                                                :services servers}))]
      {:core core
       :servers servers
       :streams streams})))
@@ -125,7 +126,7 @@
                {:title "drop tcp events"
                 :n 100000})
              (finally
-               (stop core)))))
+               (stop! core)))))
 
 (deftest ^:bench drop-udp-events
          (let [{:keys [core]} (core-package)
@@ -136,7 +137,7 @@
                {:title "drop udp events"
                 :n 100000})
              (finally
-               (stop core)))))
+               (stop! core)))))
 
 (comment
 (deftest sum-test

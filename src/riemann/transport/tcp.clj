@@ -23,6 +23,7 @@
             OrderedMemoryAwareThreadPoolExecutor])
   (:use [riemann.transport     :only [handle protobuf-frame-decoder
                                       channel-pipeline-factory]]
+        [riemann.service :only [Service]]
         [clojure.tools.logging :only [info warn]]
         [riemann.transport :only [handle]]
         [riemann.common :only [encode]]))
@@ -37,7 +38,7 @@
   (LengthFieldPrepender. 4))
 
 (defn tcp-handler
-  "Returns a TCP handler for the given core"
+  "Returns a TCP handler around the given atom pointing to a core"
   [core ^ChannelGroup channel-group]
   (proxy [SimpleChannelHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
@@ -48,7 +49,7 @@
       (let [channel (.getChannel message-event)
             msg     (.getMessage message-event)]
         (try
-          (let  [response (handle core msg)
+          (let  [response (handle @core msg)
                  encoded  (encode response)]
             (.write channel (ChannelBuffers/wrappedBuffer encoded)))
           (catch java.nio.channels.ClosedChannelException e
@@ -63,51 +64,80 @@
           (warn (.getCause exception-event) "TCP handler caught")
           (.close (.getChannel exception-event)))))))
 
+(defrecord TCPServer [host port pipeline-factory core killer]
+  ; core is a reference to a core
+  ; killer is a reference to a function which shuts down the server.
+
+  Service
+  ; TODO compare pipeline-factory!
+  (equiv? [this other]
+          (and (instance? TCPServer other)
+               (= host (:host other))
+               (= port (:port other))))
+  
+  (reload! [this new-core]
+           (reset! core new-core))
+
+  (start! [this]
+          (locking this
+            (when-not @killer
+              (let [bootstrap (ServerBootstrap.
+                                (NioServerSocketChannelFactory.
+                                  (Executors/newCachedThreadPool)
+                                  (Executors/newCachedThreadPool)))
+                    all-channels (DefaultChannelGroup. 
+                                   (str "tcp-server " host ":" port))
+                    cpf (channel-pipeline-factory 
+                          pipeline-factory
+                          (tcp-handler core all-channels))]
+
+                ; Configure bootstrap
+                (doto bootstrap
+                  (.setPipelineFactory cpf)
+                  (.setOption "readWriteFair" true)
+                  (.setOption "tcpNoDelay" true)
+                  (.setOption "reuseAddress" true)
+                  (.setOption "child.tcpNoDelay" true)
+                  (.setOption "child.reuseAddress" true)
+                  (.setOption "child.keepAlive" true))
+
+                ; Start bootstrap
+                (let [server-channel (.bind bootstrap
+                                            (InetSocketAddress. host port))]
+                  (.add all-channels server-channel))
+                (info "TCP server" host port "online")
+
+                ; fn to close server
+                (reset! killer 
+                        (fn []
+                          (-> all-channels .close .awaitUninterruptibly)
+                          (.releaseExternalResources bootstrap)
+                          (info "TCP server" host port "shut down")))))))
+
+  (stop! [this]
+         (locking this
+           (when @killer
+             (@killer)
+             (reset! killer nil)))))
+
 (defn tcp-server
-  "Create a new TCP server for a core. Starts immediately. Options:
+  "Create a new TCP server. Doesn't start until (service/start!). Options:
   :host   The host to listen on (default 127.0.0.1).
-  :port   The port to listen on. (default 5555)"
-  ([core]
-     (tcp-server core {}))
-  ([core opts]
+  :port   The port to listen on. (default 5555)
+  :pipeline-factory"
+  ([]
+   (tcp-server {}))
+  ([opts]
      (let [pipeline-factory #(doto (Channels/pipeline)
                                (.addLast "int32-frame-decoder"
                                          (int32-frame-decoder))
                                (.addLast "int32-frame-encoder"
                                          (int32-frame-encoder))
                                (.addLast "protobuf-decoder"
-                                         (protobuf-frame-decoder)))
-           opts (merge {:host "127.0.0.1"
-                        :port 5555
-                        :pipeline-factory pipeline-factory}
-                       opts)
-           bootstrap (ServerBootstrap.
-                      (NioServerSocketChannelFactory.
-                       (Executors/newCachedThreadPool)
-                       (Executors/newCachedThreadPool)))
-           all-channels (DefaultChannelGroup. (str "tcp-server " opts))
-           cpf (channel-pipeline-factory
-                (:pipeline-factory opts) (tcp-handler core all-channels))]
-
-       ;; Configure bootstrap
-       (doto bootstrap
-         (.setPipelineFactory cpf)
-         (.setOption "readWriteFair" true)
-         (.setOption "tcpNoDelay" true)
-         (.setOption "reuseAddress" true)
-         (.setOption "child.tcpNoDelay" true)
-         (.setOption "child.reuseAddress" true)
-         (.setOption "child.keepAlive" true))
-       
-       ;; Start bootstrap
-       (let [server-channel (.bind bootstrap
-                                   (InetSocketAddress. ^String (:host opts)
-                                                       ^Integer (:port opts)))]
-         (.add all-channels server-channel))
-       (info "TCP server" (select-keys opts [:host :port]) "online")
-       
-       ;; fn to close server
-       (fn []
-         (-> all-channels .close .awaitUninterruptibly)
-         (.releaseExternalResources bootstrap)
-         (info "TCP server" (select-keys opts [:host :port]) "shut down")))))
+                                         (protobuf-frame-decoder)))]
+       (TCPServer.
+         (get opts :host "127.0.0.1")
+         (get opts :port 5555)
+         (get opts :pipeline-factory pipeline-factory)
+         (atom nil)
+         (atom nil)))))
