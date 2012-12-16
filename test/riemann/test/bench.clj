@@ -7,9 +7,9 @@
         clojure.test
         clojure.java.shell
         [clojure.string :only [trim-newline]]
-        incanter core charts
+        [incanter core charts]
         [riemann.client :only [tcp-client udp-client close-client send-event]])
-  (:require riemann.streams)
+  (:require riemann.streams))
 
 (defn git-version
   "Returns a human-readable version name for this commit."
@@ -108,10 +108,10 @@
 (defn core-package 
   ([] (core-package [{}]))
   ([opts]
-   (let [servers [(tcp-server core) (udp-server core)]
+   (let [servers [(tcp-server) (udp-server)]
          streams (or (:streams opts) [])
          core    (suppress "riemann.core"
-                           (transition! (core) {:streams streams 
+                           (transition! (core) {:streams streams
                                                 :services servers}))]
      {:core core
       :servers servers
@@ -138,33 +138,3 @@
                 :n 100000})
              (finally
                (stop! core)))))
-
-(comment
-(deftest sum-test
-         (let [final (ref nil)
-               core (core)
-               server (tcp-server core)
-               stream (sum (register final))
-               n 100
-               threads 10
-               events (take n (repeatedly (fn [] 
-                        {:metric 1})))]
-
-           (dosync
-             (alter (core :servers) conj server)
-             (alter (core :streams) conj stream))
-
-           (doall events)
-
-           (try 
-             (time (threaded threads
-                             (let [client (tcp-client)]
-                                (doseq [e events]
-                                  ; Send all events to server
-                                  (send-event client e))
-                               (close-client client))))
-             
-            (is (= (* threads n) (:metric (deref final)))) 
-
-            (finally
-              (stop core))))))
