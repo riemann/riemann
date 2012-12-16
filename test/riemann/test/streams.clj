@@ -649,7 +649,7 @@
 
              )))
 
-(deftest ^:focus rate-threaded
+(deftest rate-threaded
          (let [output (atom nil)
                interval 5/2
                total 10000
