@@ -67,7 +67,7 @@
   [& things]
   (locking core
     (swap! next-core assoc :streams
-           (concat (:streams core) things))))
+           (concat (:streams @next-core) things))))
 
 (defn index
   "Set the index used by this core."
@@ -81,12 +81,12 @@
   "Updates the given index with all events received. Also publishes to the
   index pubsub channel."
   [index]
-  (fn [event] (core/update-index core event)))
+  (fn [event] (core/update-index @core event)))
 
 (defn delete-from-index
   "Deletes any events that pass through from the index"
   [index]
-  (fn [event] (core/delete-from-index core event)))
+  (fn [event] (core/delete-from-index @core event)))
 
 (defn periodically-expire
   "Sets up a reaper for this core. See core API docs."
@@ -95,13 +95,8 @@
   ([interval]
    (add-service! (core/reaper interval))))
 
-(defn pubsub
-  "Returns the current core's pubsub registry."
-  []
-  (:pubsub @core))
-
 (defn publish
-  "Returns a stream which publishes events to this the given channel. Uses this
+  "Returns a stream which publishes events to the given channel. Uses this
   core's pubsub registry."
   [channel]
   (fn [event]
@@ -111,7 +106,7 @@
   "Subscribes to the given channel with f, which will receive events. Uses this
   core's pubsub registry."
   [channel f]
-  (pubsub/subscribe (:pubsub @core) channel f))
+  (pubsub/subscribe (:pubsub @next-core) channel f))
 
 (defn clear!
   "Resets the next core."
