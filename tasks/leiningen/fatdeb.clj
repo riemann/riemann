@@ -83,7 +83,7 @@
     ; Jar
     (.mkdirs (file dir "usr" "lib" "riemann"))
     (copy (file (:root project) "target" 
-                (str "riemann-" (get-version project) "-standalone.jar"))
+                (str "riemann-" (:version project) "-standalone.jar"))
           (file dir "usr" "lib" "riemann" "riemann.jar"))
 
     ; Binary
