@@ -26,12 +26,14 @@
   [line parser-fn]
   (when-let [[service metric timestamp] (split line #" ")]
     (when (not= metric "nan") ;; discard nan values
-      {:ok true
-       :states []
-       :events [(let [res {:service service
-                           :metric (Float. metric)
-                           :time (Long. timestamp)}]
-                  (if parser-fn (merge res (parser-fn res)) res))]})))
+      (try
+        {:ok true
+         :states []
+         :events [(let [res {:service service
+                             :metric (Float. metric)
+                             :time (Long. timestamp)}]
+                    (if parser-fn (merge res (parser-fn res)) res))]}
+        (catch Exception e {:ok :true :service "exception"})))))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
@@ -61,5 +63,6 @@
                                            (:parser-fn opts)))))]
        (tcp-server (merge {:host "127.0.0.1"
                            :port 2003
+                           :write-back false
                            :pipeline-factory pipeline-factory}
                           opts)))))
