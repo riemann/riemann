@@ -453,8 +453,8 @@ since this event pertains to the system as a whole.</p>
   (streams
     (changed-state
       (where (state "ok")
-        (:resolve pd))
-        (else (:trigger pd)))))
+        (:resolve pd)
+        (else (:trigger pd))))))
 {% endhighlight %}
 
 <h3>Forward between Riemann servers</h3>
