@@ -296,7 +296,7 @@ graph how many unexpected failures occur per day, and determine which services n
 <p>Rollup holds on to every event, which can use a lot of memory. Sometimes it's OK to drop some events instead of delivering them. That's where <a href="api/riemann.streams.html#var-throttle">throttle</a> comes in: it allows the first five events through, then ignores all the rest for an hour.</p>
 
 {% highlight clj %}
-(def tell-ops (throttle 5 3600 (email "ops@rickenbacker.mil)))
+(def tell-ops (throttle 5 3600 (email "ops@rickenbacker.mil")))
 {% endhighlight %}
 
 <p>And naturally, you can combine throttle and rollup to preserve *some*
@@ -306,7 +306,7 @@ events, but not allow unbounded memory use:</p>
 (def tell-ops 
   (throttle 1000 3600
     (rollup 5 3600
-      (email "ops@rickenbacker.mil))))
+      (email "ops@rickenbacker.mil"))))
 {% endhighlight %}
 
 <h3>Detect down services</h3>
@@ -339,7 +339,7 @@ you:</p>
 
 {% highlight clj %}
 (streams
-  (changed :state {:init "ok}
+  (changed :state {:init "ok"}
     (email "ops@foo.com")))
 {% endhighlight %}
 
