@@ -42,7 +42,7 @@
 
 (defn tcp-handler
   "Returns a TCP handler around the given atom pointing to a core"
-  [core ^ChannelGroup channel-group]
+  [core ^ChannelGroup channel-group encode-fn]
   (proxy [SimpleChannelHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
       (.add channel-group (.getChannel state-event)))
@@ -52,7 +52,9 @@
       (let [channel (.getChannel message-event)
             msg     (.getMessage message-event)]
         (try
-          (.write channel (encode-pb-msg (handle @core msg)))
+          (let [out (handle @core msg)]
+            (when encode-fn
+              (.write channel (encode-fn out))))
           (catch java.nio.channels.ClosedChannelException e
             (warn "channel closed"))
           (catch com.google.protobuf.InvalidProtocolBufferException e
@@ -65,7 +67,7 @@
           (warn (.getCause exception-event) "TCP handler caught")
           (.close (.getChannel exception-event)))))))
 
-(defrecord TCPServer [host port pipeline-factory core killer]
+(defrecord TCPServer [host port pipeline-factory core killer write-back encode-fn]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -90,7 +92,8 @@
                                    (str "tcp-server " host ":" port))
                     cpf (channel-pipeline-factory 
                           pipeline-factory
-                          (tcp-handler core all-channels))]
+                          (tcp-handler core all-channels
+                                       (if write-back encode-fn)))]
 
                 ; Configure bootstrap
                 (doto bootstrap
@@ -145,4 +148,6 @@
          (get opts :port 5555)
          (get opts :pipeline-factory pipeline-factory)
          (atom nil)
-         (atom nil)))))
+         (atom nil)
+         (get opts :write-back true)
+         (get opts :encode-fn encode-pb-msg)))))
