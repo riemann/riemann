@@ -1,8 +1,10 @@
 (ns leiningen.fatdeb
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
-        [clojure.string :only [join capitalize trim-newline]]
-        [leiningen.uberjar :only [uberjar]]))
+        [clojure.string :only [join capitalize trim-newline replace]]
+        [leiningen.uberjar :only [uberjar]])
+  (:import java.text.SimpleDateFormat
+           java.util.Date))
 
 (defn delete-file-recursively
     "Delete file f. If it's a directory, recursively delete all its contents.
@@ -31,13 +33,18 @@
   (cleanup project)
   (sh "rm" (str (:root project) "/target/*.deb")))
 
+(defn get-version
+  [project]
+  (let [df   (SimpleDateFormat. "yyyyMMdd-HHmmss")]
+    (replace (:version project) #"SNAPSHOT" (.format df (Date.)))))
+
 (defn control
   "Control file"
   [project]
   (join "\n"
         (map (fn [[k v]] (str (capitalize (name k)) ": " v))
              {:package (:name project)
-              :version (:version project)
+              :version (get-version project)
               :section "base"
               :priority "optional"
               :architecture "all"
@@ -99,7 +106,7 @@
                    (str deb-dir) 
                    (str (file (:root project) "target")))))
   (let [deb-file (file (:root project) "target" (str (:name project) "_"
-                                                     (:version project) "_"
+                                                     (get-version project) "_"
                                                      "all" ".deb"))]
     (write (str deb-file ".md5")
            (:out (sh "md5sum" (str deb-file))))))
