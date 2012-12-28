@@ -2,7 +2,10 @@
   "Forwards events to Graphite."
   (:refer-clojure :exclude [replace])
   (:import
-   (java.net Socket)
+   (java.net Socket
+             DatagramSocket
+             DatagramPacket
+             InetAddress)
    (java.io Writer
             OutputStreamWriter)
    (org.jboss.netty.channel Channels)
@@ -16,6 +19,44 @@
         riemann.pool
         riemann.common))
 
+(defprotocol GraphiteClient
+  (open [client]
+        "Creates a Graphite client")
+  (send! [client line]
+        "Sends a formatted line to Graphite")
+  (close [client]
+         "Cleans up"))
+
+(defrecord GraphiteTCPClient [host port]
+  GraphiteClient
+  (open [this]
+    (let [sock (Socket. host port)]
+      (assoc this 
+             :socket sock
+             :out (OutputStreamWriter. (.getOutputStream sock)))))
+  (send! [this line]
+    (let [out (:out this)]
+      (.write ^OutputStreamWriter out line)
+      (.flush ^OutputStreamWriter out)))
+  (close [this]
+    (.close (:out this))
+    (.close (:socket this))))
+
+(defrecord GraphiteUDPClient [host port]
+  GraphiteClient
+  (open [this]
+    (assoc this 
+           :socket (DatagramSocket.)
+           :host host
+           :port port))
+  (send! [this line]
+    (let [bytes (.getBytes line)
+          length (count line)
+          addr (InetAddress/getByName (:host this))
+          datagram (DatagramPacket. bytes length addr (:port this))]
+      (.send (:socket this) datagram)))
+  (close [this]
+    (.close (:socket this))))
 
 (defn graphite-path-basic
   "Constructs a path for an event. Takes the hostname fqdn, reversed,
@@ -65,19 +106,23 @@
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 2003
+                     :protocol :tcp
                      :path graphite-path-percentiles} opts)
         pool (fixed-pool
-               (fn open []
+               (fn []
                  (info "Connecting to " (select-keys opts [:host :port]))
-                 (let [sock (Socket. (:host opts) (:port opts))
-                       out  (OutputStreamWriter. (.getOutputStream sock))]
+                 (let [host (:host opts)
+                       port (:port opts)
+                       client (open (condp = (:protocol opts)
+                                      :tcp (GraphiteTCPClient. host port)
+                                      :udp (GraphiteUDPClient. host port)))]
                    (info "Connected")
-                   [sock out]))
-               (fn close [[sock out]]
+                   client))
+               (fn [client]
                  (info "Closing connection to "
                        (select-keys opts [:host :port]))
-                 (.close out)
-                 (.close sock))
+                 (prn client)
+                 (close client))
                {:size                 (:pool-size opts)
                 :block-start          (:block-start opts)
                 :regenerate-interval  (:reconnect-interval opts)})
@@ -85,12 +130,10 @@
 
     (fn [event]
       (when (:metric event)
-        (with-pool [[sock out] pool (:claim-timeout opts)]
+        (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
                                                 (float (:metric event))
                                                 (int (:time event))])
                                      "\n")]
-                     (.write ^OutputStreamWriter out string)
-                     (.flush ^OutputStreamWriter out)))))))
-
-
+                     (prn "sending " client string)
+                     (send! client string)))))))
