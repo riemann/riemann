@@ -46,7 +46,7 @@
   (let [params (http-query-map (:query-string hs))
         query  (params "query")
         ast    (query/ast query)]
-    (when-let [i (deref (:index core))]
+    (when-let [i (:index core)]
       (doseq [event (index/search i ast)]
         (enqueue ch (event-to-json event))))
     (if (= (params "subscribe") "true")
