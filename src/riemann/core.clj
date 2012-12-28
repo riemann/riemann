@@ -28,6 +28,7 @@
             (doseq [state (index/expire i)]
               (let [e {:host (:host state)
                        :service (:service state)
+                       :tags (:tags state)
                        :state "expired"
                        :time (unix-time)}]
                 (when-let [registry (:pubsub core)]
