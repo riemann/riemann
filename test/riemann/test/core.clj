@@ -165,7 +165,7 @@
                                            :index index}))]
 
            ; Insert events
-           (update-index core {:service 1 :ttl 0.01 :time (unix-time)})
+           (update-index core {:service 1 :ttl 0.01 :tags ["a"] :time (unix-time)})
            (update-index core {:service 2 :ttl 1 :time (unix-time)})
 
            (advance! 0.011)
@@ -184,6 +184,7 @@
            (is (= @res
                   {:service 1
                    :host nil
+                   :tags ["a"]
                    :time 0.011
                    :state "expired"}))))
 
