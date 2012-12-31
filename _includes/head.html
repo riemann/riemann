@@ -20,7 +20,7 @@
     <script type="text/javascript">
       if (window.location.host == "aphyr.github.com") {
         window.location = "http://riemann.io" + 
-          window.location.pathname + 
+          window.location.pathname.replace(/^\/riemann/, '') + 
           window.location.hash;
       }
     </script>
