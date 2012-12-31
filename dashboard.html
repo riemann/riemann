@@ -2,30 +2,80 @@
 title: Riemann - Dashboards
 layout: default
 ---
-<h1><span class="focus">What's going on</span> in there, anyway?</h1>
 
-<img src="images/dash-full.jpg" alt="Showyou's dashboard" class="float-left-large" />
+<style>
+  body {
+background: #84c5ff; /* Old browsers */
 
-<div class="float-right-small">
-  <p>The <a href="https://github.com/aphyr/riemann-dash">Riemann-dash</a> is a
-  Sinatra app that makes it easy to write complex views over thousands of
-  states. It queries Riemann's index for the states you care about and presents
-  them as charts. Hover over any state for details.</p>
+background: -moz-radial-gradient(center, ellipse cover,  #84c5ff 0%, #009cd1 100%); /* FF3.6+ */
 
-  <img src="images/dash-details.png" alt="Dashboard showing CPU use for a host" />
+background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#84c5ff), color-stop(100%,#009cd1)); /* Chrome,Safari4+ */
 
-  <p class="callout"><a href="https://github.com/aphyr/riemann-dash">Get started at Github</a>. It's available as a Gem.</p>
+background: -webkit-radial-gradient(center, ellipse cover,  #84c5ff 0%,#009cd1 100%); /* Chrome10+,Safari5.1+ */
+
+background: -o-radial-gradient(center, ellipse cover,  #84c5ff 0%,#009cd1 100%); /* Opera 12+ */
+
+background: -ms-radial-gradient(center, ellipse cover,  #84c5ff 0%,#009cd1 100%); /* IE10+ */
+
+background: radial-gradient(ellipse at center,  #84c5ff 0%,#009cd1 100%); /* W3C */
+
+filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#84c5ff', endColorstr='#009cd1',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+
+
+  }
+</style>
+
+<div class="row">
+  <div class="twelvecol">
+    <h1><span class="focus">You're clear for launch.</h1>
+  </div>
 </div>
 
-<div class="clear"></div>
+<div class="row">
+  <div class="sevencol">
+    <img src="images/dash-full.jpg" alt="Showyou's dashboard" />
+  </div>
 
-<h1>Other dashboards</h1>
-
-<div class="cards">
-  <div class="card">
-    <h2>Riemann-grid</h2>
-    <p>Pierre-Yves Ritschard of Exoscale has put together a simple grid view
-    for Riemann events: <a
-      href="https://github.com/exoscale/riemann-grid">https://github.com/exoscale/riemann-grid</a>.</p>
+  <div class="fivecol last">
+    <img src="images/dash-details.png" alt="Dashboard showing CPU use for a host" />
+  </div>
 </div>
 
+</div><!-- container -->
+<div class="light">
+
+<div class="container">
+  <div class="row">
+    <div class="sixcol">
+      <p><a href="https://github.com/aphyr/riemann-dash">Riemann-dash</a> is
+      a Sinatra app that makes it easy to write complex views over thousands of
+      states. It queries Riemann's index for the states you care about and
+      presents them as charts. Hover over any state for details.</p>
+    </div>
+
+    <div class="sixcol last">
+      <p class="callout"><a href="https://github.com/aphyr/riemann-dash">Get
+        started at Github</a>, or see the <a href="quickstart.html">quickstart
+        guide</a>. It's available as a Gem.</p>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+    <div class="twelvecol">
+      <h1>Other dashboards</h1>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+    <div class="sixcol">
+      <h2>Riemann-grid</h2>
+      <p>Pierre-Yves Ritschard of Exoscale has put together a simple grid view
+      for Riemann events: <a
+        href="https://github.com/exoscale/riemann-grid">https://github.com/exoscale/riemann-grid</a>.</p>
+    </div>
+  </div>
+</div>

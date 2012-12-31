@@ -5,18 +5,24 @@
   </head>
 
   <body id="top">
-    {% include nav.html %}
+    <div class="container">
+      {% include nav.html %}
 
-    <div id="content">
       {{ content }}
     </div>
-
     <div id="footer">
-      <p>Riemann is written by <a href="http://aphyr.com">Kyle Kingsbury</a>,
-      together with dozens of <a href="/thanks">terrific contributors</a>.
-      You can email me at <a href="mailto:aphyr@aphyr.com">aphyr@aphyr.com</a>,
-      or <a href="http://twitter.com/aphyr">follow me on twitter</a> for
-      updates.</p>
+      <div class="container">
+        <div class="row">
+          <div class="twelvecol">
+            <p>Riemann is written by <a href="http://aphyr.com">Kyle
+              Kingsbury</a>, together with dozens of <a href="/thanks">terrific
+              contributors</a>.  You can email me at <a
+              href="mailto:aphyr@aphyr.com">aphyr@aphyr.com</a>, or <a
+              href="http://twitter.com/aphyr">follow me on twitter</a> for
+            updates.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="text/javascript">

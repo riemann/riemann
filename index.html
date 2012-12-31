@@ -2,93 +2,154 @@
 layout: default
 title: Riemann - A network monitoring system
 ---
-<h1><span class="focus">Riemann</span> monitors distributed systems.</h1>
+<style>
+  body {
+    background: #b70034; /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover,  #b70034 0%, #5e0406 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#b70034), color-stop(100%,#5e0406)); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  #b70034 0%,#5e0406 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  #b70034 0%,#5e0406 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  #b70034 0%,#5e0406 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  #b70034 0%,#5e0406 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#b70034', endColorstr='#5e0406',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  }
+</style>
 
-<div class="float-left-large">
-  <p>Riemann aggregates events from your servers and applications with a
-  powerful stream processing language. Send an email for every exception
-  raised by your code. Track the latency distribution of your web app.
-  See the top processes on any host, by memory and CPU. Combine
-  statistics from every Riak node in your cluster and forward to
-  Graphite. Send alerts when a key process fails to check in. Know how
-  many users signed up right this second.</p>
-
-  <p class="callout">Riemann provides <i class="focus">low-latency,
-    transient shared state</i> for systems with many moving parts.</p>
+<div class="row">
+  <h1 class="twelvecol last"><span class="focus">Riemann</span> monitors distributed systems.</h1>
 </div>
 
-<div class="float-right-small">
-  <div class="cta">
-    <h2>Version 0.1.5</h2>
-    Tar: <a href="http://aphyr.com/riemann/riemann-0.1.5.tar.bz2">riemann-0.1.5.tar.bz2</a><br />
-    Deb: <a href="http://aphyr.com/riemann/riemann_0.1.5_all.deb">riemann_0.1.5_all.deb</a>
+<div class="row">
+  <div class="eightcol">
+    <div class="video-container">
+      <iframe src="http://player.vimeo.com/video/38377415"
+        frameborder="0" webkitallowfullscreen mozallowfullscreen
+        allowfullscreen></iframe>
     </div>
-</div>
-
-<div class="clear"></div>
-
-<div class="cards">
-  <div class="card">
-    <h2>Instant overview</h2>
-    <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
-    <p>A small, extendable <a href="dashboard.html">Sinatra app</a> shows
-    your system at a glance. Instantly identify hotspots, down services,
-    and unbalanced loads.</p>
   </div>
 
-  <div class="card">
-    <h2>Email alerts</h2>
+  <div class="fourcol last">
+    <p>Riemann aggregates events from your servers and applications with a
+    powerful stream processing language. Send an email for every exception
+    raised by your code. Track the latency distribution of your web app.
+    See the top processes on any host, by memory and CPU. Combine
+    statistics from every Riak node in your cluster and forward to
+    Graphite. Send alerts when a key process fails to check in. Know how
+    many users signed up right this second.</p>
+
+    <p class="callout">Riemann provides <i class="focus">low-latency,
+      transient shared state</i> for systems with many moving parts.</p>
+
+    <h2>Download Riemann 0.1.5</h2>
+    <table class="plain">
+      <tr>
+        <td style="padding-right: 16px">
+          <a href="http://aphyr.com/riemann/riemann_0.1.5_all.deb">
+            <img src="images/deb.png" alt="Debian Package" style="width: 100%" />
+        </a>
+        </td>
+        <td>
+          <a href="http://aphyr.com/riemann/riemann-0.1.5.tar.bz2">
+            <img src="images/tar.png" alt="Gzipped Tarball" style="width: 100%" />
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+
+
+</div> <!-- End of top container -->
+<div class="light">
+  
+  
+  
+<div class="container">
+  <div class="row">
+    <div class="sixcol">
+      <h2>Powerful stream primitives</h2>
+
+{% highlight clj %}
+(where (or (service #"^api")
+           (service #"^app"))
+  (where (tagged "exception")
+    (rollup 5 3600 
+      (email "dev@foo.com"))
+    (else
+      (changed-state
+        (email "ops@foo.com")))))
+{% endhighlight %}
+
+      <p>Riemann streams are just functions which accept an event. Events are
+      just structs with some common fields like <code>:host</code> and
+      <code>:service</code> You can use dozens of built-in streams for <a
+        href="/howto.html#working-with-streams">filtering, altering, and
+        combining events</a>, or write your own.</p>
+
+      <p>Since Riemann's configuration is a <i>Clojure program</i>, its syntax
+      is concise, regular, and extendable. Configuration-as-code minimizes
+      boilerplate and gives you the flexibility to adapt to complex
+      situations.</p>
+
+      <p>I've built a monitoring system for people like me. For operations
+      staff trying to keep a large, dynamic infrastructure running with
+      unreliable but fault-tolerant components. For engineers who need to
+      understand the source of errors and performance bottlenecks in
+      production. For everyone fed up with traditional approaches; who want
+      something fast, expressive, and powerful.</p>
+    </div>
+    
+    <div class="sixcol last">
+      <h2>All systems go</h2>
+      <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
+      <p>A small, extendable <a href="dashboard.html">Sinatra app</a> shows
+      your system at a glance. Instantly identify hotspots, down services,
+      and unbalanced loads.</p>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+    <div class="sixcol">
+      <h2>Phone, SMS and email alerts</h2>
+      
 {% highlight clj %}
 (rollup 5 3600
-  (email "dev@startup.com", "ops@startup.com"))
+  (email "dev@startup.com"))
 {% endhighlight %}
 
-    <img src="images/email.png" alt="An email describing a failure in a
-    thumbnailer service." />
-    <p>Riemann can tell you as much or as little as you want. Throttle or
-    roll up multiple events into a single messages. Get emails about
-    exceptions in your code, provider downtime, or latency spikes. You can
-    also integrate with <a href="https://github.com/aphyr/riemann/blob/master/src/riemann/pagerduty.clj">PagerDuty</a>.</p>
-  </div>
+      <img src="images/email.png" alt="An email describing a failure in a
+      thumbnailer service." />
 
-  <div class="card">
-    <h2>Powerful stream primitives</h2>
+      <p>Riemann can tell you as much or as little as you want. Throttle or
+      roll up multiple events into a single messages. Get emails about
+      exceptions in your code, provider downtime, or latency spikes. You can
+      also integrate with <a href="https://github.com/aphyr/riemann/blob/master/src/riemann/pagerduty.clj">PagerDuty</a> for SMS or phone alerts.</p>
+    </div>
 
-{% highlight clj %}
-(where (and (service "api") 
-            (not (tagged "transient")))
-  graph
-  index
-  (changed-state 
-    (email "5551231234@vtext.com")))
-{% endhighlight %}
+    <div class="sixcol last">
+      <h2>Graph everything</h2>
 
-    <p>Riemann streams are just Clojure functions. You can use dozens of
-    built-in streams for combining, filtering, altering, and forwarding
-    events, or write your own.</p>
-  </div>
-  
-  <div class="card">
-    <h2>Graph everything</h2>
 {% highlight clj %}
 (graphite {:host "graphs.pdx"})
 {% endhighlight %}
 
-    <img src="images/api-latency.png" alt="An API latency graph" />
-    <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can forward any event stream to <a href="http://graphite.wikidot.com">Graphite</a>.</p>
+      <img src="images/api-latency.png" alt="An API latency graph" />
+
+      <p>Like <a href="https://github.com/etsy/statsd">Statsd</a>, Riemann can
+      forward any event stream to <a
+        href="http://graphite.wikidot.com">Graphite</a>. Librato Metrics
+      integration? Built in.</p>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Query states</h2>
-{% highlight clj %}
-state = "error rate" and (not host =~ "www.%")
-{% endhighlight %}
-    <p>Search the Riemann index with a small query language. Clients can
-    monitor each other, generate reports, or produce dashboards.</p>
-  </div>
 
-  <div class="card">
-    <h2>Simple clients</h2>
+
+  <div class="row">
+    <div class="sixcol">
+      <h2>Simple clients</h2>
 
 {% highlight ruby %}
 r = Riemann::Client.new
@@ -97,58 +158,70 @@ r['state = "down"']
 # => [#<Riemann::Event @service="www" ... >]
 {% endhighlight %}
 
-    <p>Riemann speaks <a href="http://code.google.com/p/protobuf/">Protocol
-      Buffers</a> over TCP and UDP for a compact, portable, and fast wire
-    protocol. See the <a
-      href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
-      client</a> as a guide.</a>
+      <p>Riemann speaks <a href="http://code.google.com/p/protobuf/">Protocol
+        Buffers</a> over TCP and UDP for a compact, portable, and fast wire
+      protocol. See the <a
+        href="https://github.com/aphyr/riemann-ruby-client/tree/master/lib/riemann">Ruby
+        client</a> as a guide.</a>
+    </div>
+
+    <div class="sixcol last">
+      <h2>Query states</h2>
+    
+{% highlight clj %}
+state = "error rate" and (not host =~ "www.%")
+{% endhighlight %}
+
+      <p>Search the Riemann index with a small query language. Clients can
+      monitor each other, generate reports, or render dashboards.</p>
+
+      <p>Riemann queries form the basis for the realtime websockets
+      dashboard, showing updated events as soon as they arrive.</p>
+    </div>
   </div>
 
-  <div class="card">
-    <h2>Excuse me, but how is this better than Hadoop?</h2>
-    <p>I built Riemann because <a href="http://showyou.com">Showyou</a>
-    has hundreds of moving parts spread over dozens of systems, and I
-    needed host- and app-level monitoring that didn't suck.  I've had a
-    long history with monitoring, and have some objections to existing
-    tools like Nagios, Cacti, and the like. Specifically:</p>
 
-      <p>Configuration as code.</p>
 
-      <p>Make the client experience so friendly, people actually <i>want</i> to
-      instrument their code.</p>
+  <div class="row">
+    <div class="sixcol">
+      <h2>See problems faster</h2>
 
-      <p>Push instead of polling. Lower latency, simpler code, less
-      firewall complexity.</p>
+      <p>Traditional monitoring systems run polling loops every five minutes,
+      or roll up metrics on a minutely basis. Riemann is reactive: events are
+      pushed by clients and typically processed in 5 milliseconds or less.
+      Low latencies let you see outages faster--and know the instant you've
+      fixed the problem.</p>
 
-      <p>Integrate with other systems. Re-use existing libraries and
-      monitoring tools.</p>
+      <p>Throughput depends a lot on what your streams <i>do</i> with incoming
+      events, but real-world clients have reported pushing 14,000
+      events/sec per core on commodity X86 hardware. Riemann is fully parallel
+      and leverages the Clojure STM heavily.</p>
+    </div>
 
-      <p>Flexibility. Ops is all about adapting someone else's code to
-      your own complex system. Create many small, composable pieces.</p>
+    <div class="sixcol last">
+      <h2>Brought to you by&hellip;</h2>
 
-      <p>Faster. This all depends on what kind of streams you use, but
-      our (pretty complex) installation at Showyou will handle 11,000
-      <i>synchronous</i> events/sec, and I haven't even started
-      optimizing. My goal is somewhere around 100K/s. This is nothing in
-      Real Programmer terms, but it should be sufficient.</p>
+      <p>Rieman was made possible by the <a href="/thanks.html">hard work</a>
+        of many open-source contributors. Everyone who's offered advice, asked
+        questions, and submitted code has my deepest appreciation.</p>
+
+      <p>I wrote Riemann to help solve problems at my jobs: both <a
+        href="http://showyou.com">Showyou</a> and <a
+        href="http://boundary.com">Boundary</a> deserve thanks for letting me
+      build this crazy thing and share it with the world. <a
+        href="https://metrics.librato.com/">Librato</a> sponsored the Librato
+      Metrics integration. <a href="https://www.bluemountaincapital.com/">Blue
+        Mountain Capital</a> donated to help make Riemann faster.</p>
+
+      <p>Riemann uses YourKit for performance analysis. YourKit is kindly
+      supporting open source projects with its full-featured Java Profiler.
+      YourKit, LLC is the creator of innovative and intelligent tools for
+      profiling Java and .NET applications. Take a look at YourKit's leading
+      software products: <a
+        href="http://www.yourkit.com/java/profiler/index.jsp">YourKit Java
+        Profiler</a> and <a
+        href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET
+        Profiler</a>.</p>
+    </div>
   </div>
-</div>
-
-<div class="supporters">
-  <h2>Supporters</h2>
-  <p>Riemann was made possible by the generous support of <a
-    href="http://showyou.com">Showyou</a> and <a
-    href="http://boundary.com">Boundary</a>. <a
-    href="https://metrics.librato.com/">Librato</a> sponsored the Librato
-  Metrics integration. <a href="https://www.bluemountaincapital.com/">Blue
-    Mountain Capital</a> donated to help make Riemann faster.</p>
-
-  <p>Riemann uses YourKit for performance analysis. YourKit is kindly
-  supporting open source projects with its full-featured Java Profiler.
-  YourKit, LLC is the creator of innovative and intelligent tools for profiling
-  Java and .NET applications. Take a look at YourKit's leading software
-  products: <a href="http://www.yourkit.com/java/profiler/index.jsp">YourKit
-    Java Profiler</a> and <a
-    href="http://www.yourkit.com/.net/profiler/index.jsp">YourKit .NET
-    Profiler</a>.</p> 
 </div>

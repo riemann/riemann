@@ -2,166 +2,214 @@
 title: Riemann - Thanks
 layout: default
 ---
-<h1>Thank <span class="focus">you</span></h1>
 
-<p>I built Riemann to solve my problems, but I want it to work for you, too. If
-you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an email</a> about
-how it's working for you, or what needs to change</a>. Frustrated with the API?
-Find a bug? <a href="https://github.com/aphyr/riemann/issues">Open an
-  issue</a>.</p>
+<style>
+  body {
+    background: #09ba32; /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover,  #09ba32 0%, #05490c 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#09ba32), color-stop(100%,#05490c)); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  #09ba32 0%,#05490c 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  #09ba32 0%,#05490c 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  #09ba32 0%,#05490c 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  #09ba32 0%,#05490c 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#09ba32', endColorstr='#05490c',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  }
+</style>
 
-<p class="callout">The best way to say "thank you" is to contribute code. <a
-  href="https://github.com/aphyr/riemann">It's all on Github</a>.</p>
+<div class="row">
+  <div class="twelvecol">
+    <h1>Thank <span class="focus">you</span></h1>
+  </div>
+</div>
 
-<h2>Contributors</h2>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann is a team effort. I've been working on this idea for about three
+    years, and wrote most of the core server and dash, but every aspect of
+    Riemann's design and source has been influenced by my peers. To everyone
+    who wrote a client, built a dashboard, pointed out bugs, submitted patches,
+    or just asked tough questions: <b>thank you</b>.</p>
+  </div>
 
-<p>clee fixed some missing endquotes in the howto.</p>
+  <div class="sixcol last">
+    <p>If you use Riemann, <a href="mailto:aphyr@aphyr.com">send me an
+      email</a> about how it's working for you, or what needs to change</a>.
+  Frustrated with the API?  Find a bug? <a
+    href="https://github.com/aphyr/riemann/issues">Open an issue</a>.</p>
 
-<p>dgtized fixed a typo in riemann-riak.</p>
+    <p class="callout">The best way to help out is to contribute code or
+    documentation! See the <a
+      href="howto.html#contributing-to-riemann">contributing guide</a>, or fork
+    the project on <a href="https://github.com/aphyr/riemann">Github</a>.</p>
+  </div>
+</div>
 
-<p>Manos fixed a paren mismatch in the howto.</p>
 
-<p>Pierre-Yves Ritschard (pyr) formalized the protocol for riemann servers and
-split up the riemann.server namespace into distinct, modular transports. He
-suppressed the unnecessary close-channel logging messages from the TCP server.
-Pyr added streams/stream for composing streams together, and streams/split,
-split*, and splitp for branching conditionals. And riemann-puppet-ring. And
-riemann-mysql. As if that wasn't enough, he added debian package timestamps for snapshot builds. Jeez that guy's been busy! :D</p>
+</div> <!-- container -->
+<div class="light">
 
-<h2>0.1.5</h2>
 
-<p>Ben Firshman reported a critical bug in (where).</p>
+<div class="container">
+  <div class="row">
+    <div class="twelvecol">
+      <h2>Contributors to the next release</h2>
 
-<h2>0.1.4</h2>
+      <p>Tyler Schuett helped design Riemann's visual identity.</p>
 
-<p>jib and lwf pointed out that Cheshire would fix some JSON encoding
-problems.</p>
+      <p>Daniel Hilst wrote a C client.</p>
 
-<p>jib and hhenkel reported issues with various JVM flags.</p>
+      <p>Miquel Ruiz wrote a Perl client.</p>
 
-<p>Dave Cottlehuber (dch) changed riemann-health to report comm instead of
-full process args in cpu descriptions.</p>
+      <p>clee fixed some missing endquotes in the howto.</p>
 
-<p>Pierre-Yves Ritschard (pyr) put together a simple Riemann grid at
-Exoscale, corrected documentation on lein run, and fixed a bug in
-graphite-server.</p>
+      <p>dgtized fixed a typo in riemann-riak.</p>
 
-<h2>0.1.3</h2>
+      <p>Manos fixed a paren mismatch in the howto.</p>
 
-<p>Jos Bourmans (jib) helped clarify Riemann's documentation, fixed
-streams, and made /usr/bin/riemann properly exec java.</p>
+      <p>Pierre-Yves Ritschard (pyr) formalized the protocol for riemann servers and
+      split up the riemann.server namespace into distinct, modular transports. He
+      suppressed the unnecessary close-channel logging messages from the TCP server.
+      Pyr added streams/stream for composing streams together, and streams/split,
+      split*, and splitp for branching conditionals. And riemann-puppet-ring. And
+      riemann-mysql. As if that wasn't enough, he added debian package timestamps for snapshot builds. Jeez that guy's been busy! :D</p>
 
-<p>Henrik Nordvik (zerd) fixed a few bugs in riemann-health's OS X
-support.</p>
+      <h2>0.1.5</h2>
 
-<p>Banjiewen fixed a memory leak in moving-event-window, and reworked the
-Netty socket handler.</p>
+      <p>Ben Firshman reported a critical bug in (where).</p>
 
-<p>David J Rusek wrote a new Java client for Riemann, based on Netty and
-Guaava futures.</p>
+      <h2>0.1.4</h2>
 
-<p>Pierre-Yves Ritschard improved (coalesce), cleaned up some code in
-riemann.common, added Travis-CI support, a Graphite-compatible server, and
-improved performance of pubsub. He added performance tests for the index.</p>
+      <p>jib and lwf pointed out that Cheshire would fix some JSON encoding
+      problems.</p>
 
-<p>William Jimenez added a KVM monitor to riemann-tools.</p>
+      <p>jib and hhenkel reported issues with various JVM flags.</p>
 
-<p>lwf added custom tags to riemann-tools, as well as riemann-diskstats.</p>
+      <p>Dave Cottlehuber (dch) changed riemann-health to report comm instead of
+      full process args in cpu descriptions.</p>
 
-<p>Derek Perez added Redis, Haproxy, and Cloudant monitors to
-riemann-tools, plus countless other commits. Rock on, man!</p>
+      <p>Pierre-Yves Ritschard (pyr) put together a simple Riemann grid at
+      Exoscale, corrected documentation on lein run, and fixed a bug in
+      graphite-server.</p>
 
-<p>Carl Yeksigian of Blue Mountain Capital published a C# client.</p>
+      <h2>0.1.3</h2>
 
-<p>Jake Luciani of Blue Mountain Capital contributed a Cassandra
-watcher.</p>
+      <p>Jos Bourmans (jib) helped clarify Riemann's documentation, fixed
+      streams, and made /usr/bin/riemann properly exec java.</p>
 
-<p>Ben Black contributed streams for fast reduction of events and metrics
-over time, experimented with integrating Parallel Colt, and suggested
-windowing API ideas.</p>
+      <p>Henrik Nordvik (zerd) fixed a few bugs in riemann-health's OS X
+      support.</p>
 
-<p>Gareth Rushgrove made it easier for folks to get started with
-Riemann-dash by fixing typos, adding 1.8 compatibility, and writing
-a puppet module.</p>
+      <p>Banjiewen fixed a memory leak in moving-event-window, and reworked the
+      Netty socket handler.</p>
 
-<p>Edward Ribeiro refactored riemann-java-client's reporting.</p>
+      <p>David J Rusek wrote a new Java client for Riemann, based on Netty and
+      Guaava futures.</p>
 
-<p>Derek Perez wrote a node.js client</p>
+      <p>Pierre-Yves Ritschard improved (coalesce), cleaned up some code in
+      riemann.common, added Travis-CI support, a Graphite-compatible server, and
+      improved performance of pubsub. He added performance tests for the index.</p>
 
-<p>Joeseph Abrahamson, of Reify Health, wrote an Erlang client: Zeta.</p>
+      <p>William Jimenez added a KVM monitor to riemann-tools.</p>
 
-<p>Joe Caswell added FreeBSD and Darwin support to riemann-health.</p>
+      <p>lwf added custom tags to riemann-tools, as well as riemann-diskstats.</p>
 
-<p>Michael Klishin (antares) helped get Riemann's build process up to
-speed with Leiningen 2.</p>
+      <p>Derek Perez added Redis, Haproxy, and Cloudant monitors to
+      riemann-tools, plus countless other commits. Rock on, man!</p>
 
-<h2>0.1.2</h2>
+      <p>Carl Yeksigian of Blue Mountain Capital published a C# client.</p>
 
-<p>Michael Bernstein (mrb) got Riemann running on Clojure 1.4 and Lein2.</p>
+      <p>Jake Luciani of Blue Mountain Capital contributed a Cassandra
+      watcher.</p>
 
-<p>Brian Shumate corrected a non-portable shebang line.</p>
+      <p>Ben Black contributed streams for fast reduction of events and metrics
+      over time, experimented with integrating Parallel Colt, and suggested
+      windowing API ideas.</p>
 
-<p>Jeremy Carroll pointed out my evil lies in the configuration guide.</p>
+      <p>Gareth Rushgrove made it easier for folks to get started with
+      Riemann-dash by fixing typos, adding 1.8 compatibility, and writing
+      a puppet module.</p>
 
-<h2>0.1.1</h2>
+      <p>Edward Ribeiro refactored riemann-java-client's reporting.</p>
 
-<p>Michael Fairley added a hostname override to RiemannReporter.</p>
+      <p>Derek Perez wrote a node.js client</p>
 
-<p>Edward Ribeiro improved concurrency in the Java client and fixed lots of
-little bugs, misphrasings, and typos.</p>
+      <p>Joeseph Abrahamson, of Reify Health, wrote an Erlang client: Zeta.</p>
 
-<p> Tom Crayford pointed out a typo.</p>
+      <p>Joe Caswell added FreeBSD and Darwin support to riemann-health.</p>
 
-<p>Benjamin Anderson (banjiewen) wrote a new Python client.</p>
+      <p>Michael Klishin (antares) helped get Riemann's build process up to
+      speed with Leiningen 2.</p>
 
-<p>Steve Losh (sjl) wrote streams/fill-in-last and polished several rough
-edges in common, streams, and periodic. Steve also expanded the adjust
-stream to take a function which arbitrarily transforms entire events.</p>
+      <h2>0.1.2</h2>
 
-<p>Mårten Gustafson started work on the Java client, added timeouts, and
-tests.</p>
+      <p>Michael Bernstein (mrb) got Riemann running on Clojure 1.4 and Lein2.</p>
 
-<p>Paul Butcher fixed a typo in the quickstart.</p>
+      <p>Brian Shumate corrected a non-portable shebang line.</p>
 
-<p>Obfuscurity and Lusis contributed ideas for HA failover and peer
-discovery.</p>
+      <p>Jeremy Carroll pointed out my evil lies in the configuration guide.</p>
 
-<p>Lusis wrote an adapter between <a
-  href="http://logstash.net/">logstash</a> and Riemann.</p>
+      <h2>0.1.1</h2>
 
-<p>Eric Lindvall (lindvall) updated riak-ruby-client to be
-1.8-compatible.</p>
+      <p>Michael Fairley added a hostname override to RiemannReporter.</p>
 
-<h2>0.1.0</h2>
+      <p>Edward Ribeiro improved concurrency in the Java client and fixed lots of
+      little bugs, misphrasings, and typos.</p>
 
-<p>#flatland, #clojure and #leiningen, including jodaro, ninjudd,
-raynes, and amalloy, helped with protobufs parsing, leiningen, and
-general Clojure questions.</p>
+      <p> Tom Crayford pointed out a typo.</p>
 
-<p><a href="http://showyou.com">Showyou</a>, my employer, gave me the
-infrastructure I needed Riemann for, and the chance to share it with
-the world.</p>
+      <p>Benjamin Anderson (banjiewen) wrote a new Python client.</p>
 
-<p>John Mullerleile (jrecursive) was deeply involved in talking
-through the concept and structure of Riemann, as well as advice
-around the JVM and profiling.</p>
+      <p>Steve Losh (sjl) wrote streams/fill-in-last and polished several rough
+      edges in common, streams, and periodic. Steve also expanded the adjust
+      stream to take a function which arbitrarily transforms entire events.</p>
 
-<p>C Scott Andreas (cscotta) and the <a
-  href="http://boundary.com">Boundary</a> crew gave many helpful
-suggestions around the JVM, Maven, high_scale_lib, and profiling. Our
-conversations yielded many references, algorithms and ideas.</p>
+      <p>Mårten Gustafson started work on the Java client, added timeouts, and
+      tests.</p>
 
-<p>Allen Rohner (arohner) on #clojure offered a logging configuration
-snippet.</p>
+      <p>Paul Butcher fixed a typo in the quickstart.</p>
 
-<p>Ryan Grove and Sean Cribbs gave feedback on documentation and
-design.</p>
+      <p>Obfuscurity and Lusis contributed ideas for HA failover and peer
+      discovery.</p>
 
-<p>Reid Draper contributed a syntactic patch.</p>
+      <p>Lusis wrote an adapter between <a
+        href="http://logstash.net/">logstash</a> and Riemann.</p>
 
-<p>Sam Newman (snewman) brought Riemann up to speed with Clojure
-1.3.</p>
+      <p>Eric Lindvall (lindvall) updated riak-ruby-client to be
+      1.8-compatible.</p>
 
-<p>Tyler Schuett offered graphic design advice.</p>
+      <h2>0.1.0</h2>
 
-<p>Gleicon wrote the Python client.</p>
+      <p>#flatland, #clojure and #leiningen, including jodaro, ninjudd,
+      raynes, and amalloy, helped with protobufs parsing, leiningen, and
+      general Clojure questions.</p>
+
+      <p><a href="http://showyou.com">Showyou</a>, my employer, gave me the
+      infrastructure I needed Riemann for, and the chance to share it with
+      the world.</p>
+
+      <p>John Mullerleile (jrecursive) was deeply involved in talking
+      through the concept and structure of Riemann, as well as advice
+      around the JVM and profiling.</p>
+
+      <p>C Scott Andreas (cscotta) and the <a
+        href="http://boundary.com">Boundary</a> crew gave many helpful
+      suggestions around the JVM, Maven, high_scale_lib, and profiling. Our
+      conversations yielded many references, algorithms and ideas.</p>
+
+      <p>Allen Rohner (arohner) on #clojure offered a logging configuration
+      snippet.</p>
+
+      <p>Ryan Grove and Sean Cribbs gave feedback on documentation and
+      design.</p>
+
+      <p>Reid Draper contributed a syntactic patch.</p>
+
+      <p>Sam Newman (snewman) brought Riemann up to speed with Clojure
+      1.3.</p>
+
+      <p>Tyler Schuett offered graphic design advice.</p>
+
+      <p>Gleicon wrote the Python client.</p>
+    </div>
+  </div>
+</div>

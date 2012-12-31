@@ -2,103 +2,178 @@
 layout: default
 title: Riemann - Clients
 ---
-<h1><span class="focus">Clients</span> send events to Riemann.</h1>
 
-<p>Riemann clients speak <a href="howto.html#write-a-client">Protocol
-  Buffers</a> over TCP and UDP. They can submit events to Riemann and
-query the index.</p>
+<style>
+  body {
+    background: #8300ff; /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover,  #8300ff 0%, #2c0070 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#8300ff), color-stop(100%,#2c0070)); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  #8300ff 0%,#2c0070 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  #8300ff 0%,#2c0070 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  #8300ff 0%,#2c0070 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  #8300ff 0%,#2c0070 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#8300ff', endColorstr='#2c0070',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  }
+</style>
 
-<div class="cards">
-  <div class="card">
-    <h2><a href="https://github.com/aphyr/riemann-tools">Tools</a></h2>
-    <p>I maintain a <a href="https://github.com/aphyr/riemann-tools">Ruby
-        gem</a> with little daemons to monitor key systems.</p>
+<div class="row">
+  <div class="twelvecol">
+    <h1><span class="focus">Clients</span> send events to Riemann.</h1>
+  </div>
+</div>
 
-    <p>Blue Mountain Capital has written a <a
-          href="https://github.com/BlueMountainCapital/riemann-cassandra">Java
-        tool to monitor Cassandra with Riemann</a>.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann clients speak <a href="howto.html#write-a-client">Protocol
+      Buffers</a> over TCP and UDP. They can submit events to Riemann and query
+    the index.</p>
   </div>
 
-  <div class="card">
-    <h2><a href="https://github.com/aphyr/riemann-ruby-client">Ruby</a></h2>
-    <p>The <a
-      href="https://github.com/aphyr/riemann-ruby-client"</a>Riemann Ruby
-    client</a> is my threadsafe, auto-retrying reference implementation,
-  supporting both TCP and UDP. It also provides utility classes to help
-  manage service state.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/BlueMountainCapital/riemann-csharp">C#</a></h2>
-
-    <p>Blue Mountain Capital has written a <a
-          href="https://github.com/BlueMountainCapital/riemann-csharp">C#
-        client</a>.</p>
-  </div>    
-
-  <div class="card">
-    <h2>Python</h2>
-
-    <p><a href="https://github.com/banjiewen/bernhard">Bernhard</a> is
-    Banjiewen's Python client. You can install it with <code>pip install
-      bernhard</code></p>
-
-    <p><a href="https://github.com/gleicon">Gleicon</a> has also written a <a
-      href="https://github.com/gleicon/pyriemann">Python client</a> which
-    supports submitting events over TCP and UDP, and querying the index.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/aphyr/riemann-java-client">Java</a></h2>
-
-    <p><a
-      href="https://github.com/aphyr/riemann-java-client">riemann-java-client</a>
-    provides a basic thread-safe TCP and UDP client. It's used by Riemann
-    internally. You can grab it from <a href="http://clojars.org/com.aphyr/riemann-java-client">clojars</a>.</p>
-
-    <p><a href="https://github.com/mgodave/riemann-client">mgodave's
-      riemann-client</a>is based on Netty and Java Futures.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/perezd/riemann-nodejs-client">Node.js</h2>
-
-    <p><a href="https://github.com/perezd">Derek Perez</a> is working on a <a href="https://github.com/perezd/riemann-nodejs-client">Node.js client</a>.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/reifyhealth/zeta">Erlang</a></h2>
-
-    <p><a href="http://reifyhealth.com/">Reify Health</a> has published <a href="https://github.com/reifyhealth/zeta">Zeta</a>, an Erlang client.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/aphyr/riemann-clojure-client">Clojure</a></h2>
-    <p><a href="https://github.com/aphyr/riemann-clojure-client">Riemann-clojure-client</a> is a small wrapper around the Java client.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/alcy/riemann-hbase">HBase</a></h2>
-    <p><a href="https://github.com/alcy/riemann-hbase">Riemann-hbase</a>
-    forwards some JMX metrics from an HBase server to Riemann.</p>
-  </div>
-
-  <div class="card">
-    <h2><a href="https://github.com/exoscale/riemann-puppet-ping">ICMP Ping</a></h2>
-    <p><a href="https://github.com/exoscale/riemann-puppet-ping">Riemann-icmp-ping</a>
-    monitors hosts from puppet via ICMP ping.</p>
-  </div>
-  
-  <div class="card">
-    <h2><a href="https://github.com/exoscale/riemann-mysql">Mysql</a></h2>
-    <p><a href="https://github.com/exoscale/riemann-mysql">Riemann-mysql</a>
-    monitors a mysql server's replication status.</p>
-  </div>
-
-  <div class="card">
-    <h2>Your Name Here</h2>
+  <div class="sixcol last">
     <p>Write a client in your favorite language? Need help with the
-    protocol? See <a href="howto.html#write-a-client">the client implementors'
-      guide</a>, or <a href="mailto:aphyr@aphyr.com">drop me a line</a>.
+      protocol? See <a href="howto.html#write-a-client">the client implementors'
+        guide</a>, or <a href="mailto:aphyr@aphyr.com">drop me a line</a>.</p>
+  </div>
+</div>
+
+</div><!-- container -->
+<div class="light">
+
+<div class="container">
+  <div class="row">
+    <div class="threecol">
+
+      <h2>Riemann-Tools</h2>
+      <p>I maintain a <a href="https://github.com/aphyr/riemann-tools">Ruby
+          gem</a> with little daemons to monitor key systems.</p>
+    </div>
+
+    <div class="threecol">
+      <h2>Ruby</h2>
+      <p>The <a
+        href="https://github.com/aphyr/riemann-ruby-client"</a>Riemann Ruby
+      client</a> is my threadsafe, auto-retrying reference implementation,
+    supporting both TCP and UDP. It also provides utility classes to help
+    manage service state.</p>
+    </div>
+    
+    <div class="threecol">
+      <h2>Java</h2>
+
+      <p><a
+        href="https://github.com/aphyr/riemann-java-client">riemann-java-client</a>
+      provides a basic thread-safe TCP and UDP client. It's used by Riemann
+      internally. You can grab it from <a href="http://clojars.org/com.aphyr/riemann-java-client">clojars</a>.</p>
+
+      <p>mgodave's <a href="https://github.com/mgodave/riemann-client">riemann-client</a>is based on Netty and Java Futures.</p>
+    </div>
+
+
+    <div class="threecol last">
+      <h2>Python</h2>
+
+      <p><a href="https://github.com/banjiewen/bernhard">Bernhard</a> is
+      Banjiewen's Python client. You can install it with <code>pip install
+        bernhard</code></p>
+
+      <p><a href="https://github.com/gleicon">Gleicon</a> has also written a <a
+        href="https://github.com/gleicon/pyriemann">Python client</a> which
+      supports submitting events over TCP and UDP, and querying the index.</p>
+    </div>
+  </div>
+
+
+
+
+  <div class="row">
+    <div class="threecol">
+      <h2>C#</h2>
+
+      <p>Blue Mountain Capital has written a <a
+            href="https://github.com/BlueMountainCapital/riemann-csharp">C#
+          client</a>.</p>
+    </div>
+
+
+    <div class="threecol">
+      <h2>Clojure</h2>
+      <p><a href="https://github.com/aphyr/riemann-clojure-client">Riemann-clojure-client</a> is a small wrapper around the Java client.</p>
+    </div>
+
+
+    <div class="threecol">
+      <h2>Node.js</h2>
+
+      <p><a href="https://github.com/perezd">Derek Perez</a> is working on a <a href="https://github.com/perezd/riemann-nodejs-client">Node.js client</a>.</p>
+    </div>
+
+
+    <div class="threecol last">
+      <h2>Erlang</h2>
+
+      <p><a href="http://reifyhealth.com/">Reify Health</a> has published <a href="https://github.com/reifyhealth/zeta">Zeta</a>, an Erlang client.</p>
+    </div>
+  </div>
+
+
+
+
+  <div class="row">
+    <div class="threecol">
+      <h2>Perl</h2>
+      
+      <p>Miquel Ruiz has written a <a href="https://github.com/miquelruiz/Riemann-Client">Perl client</a>, available on CPAN.</p>
+    </div>
+    
+    
+    <div class="threecol">
+      <h2>C</h2>
+      <p>Daniel Hilst wrote a <a href="https://github.com/gkos/riemann-c-client-lib">client in C</a>, supporting both events and queries.</p>
+    </div>
+  </div>
+
+
+
+
+  <div class="row">
+    <div class="twelvecol">
+      <h1>Monitoring other systems</h1>
+    </div>
+  </div>
+
+
+
+
+  <div class="row">
+    <div class="threecol">
+      <h2>HBase</h2>
+      <p><a href="https://github.com/alcy/riemann-hbase">Riemann-hbase</a>
+      forwards some JMX metrics from an HBase server to Riemann.</p>
+    </div>
+
+
+    <div class="threecol">
+      <h2>Cassandra</h2>
+
+      <p>Blue Mountain Capital has written a <a
+            href="https://github.com/BlueMountainCapital/riemann-cassandra">Java
+            tool to monitor Cassandra with Riemann</a>.</p>
+    </div>
+
+
+    <div class="threecol">
+      <h2>Puppet</h2> 
+      
+      <p><a
+        href="https://github.com/exoscale/riemann-puppet-ping">Riemann-icmp-ping</a>
+      monitors hosts from puppet via ICMP ping.</p>
+    </div>
+
+   
+    <div class="threecol last">
+      <h2>Mysql</h2>
+      <p><a href="https://github.com/exoscale/riemann-mysql">Riemann-mysql</a>
+      monitors a mysql server's replication status.</p>
+    </div>
   </div>
 </div>

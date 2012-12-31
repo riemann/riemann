@@ -2,14 +2,46 @@
 title: Riemann - Howto
 layout: default
 ---
-<h1>A <span class="focus">guide</span> to working with Riemann</h1>
 
-<p>This is not a comprehensive guide to everything in Riemann, but it can get
-you started and help solve specific problems. Once you know where to look,
-learn more by reading the <a href="api">API docs</a> (especially <a href="api/riemann.streams.html">riemann.streams</a>), and <a
-  href="https://github.com/aphyr/riemann/tree/master/src/riemann">the
-  source</a>. I try hard to write readable code. I hope you'll find it concise,
-comprehensively documented, and full of examples.</p>
+<style>
+  body {
+    background: #ff9000; /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover,  #ff9000 0%, #d14c00 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#ff9000), color-stop(100%,#d14c00)); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  #ff9000 0%,#d14c00 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff9000', endColorstr='#d14c00',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  }
+</style>
+
+<div class="row">
+  <h1 class="twelvecol">A <span class="focus">guide</span> to working with Riemann</h1>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>This is not a comprehensive guide to everything in Riemann, but it can
+    get you started and help solve specific problems. Want to add your own
+    article to this page? <a href="#help-write-documentation">Send me a pull
+      request!</a></p>
+  </div>
+
+  <div class="sixcol last">
+    <p>Once you know where to look, you can learn more by reading the <a
+      href="api">API docs</a> (especially <a
+      href="api/riemann.streams.html">riemann.streams</a>), and <a
+      href="https://github.com/aphyr/riemann/tree/master/src/riemann">the
+      source</a>.  I try hard to write readable code. The <a
+      href="https://github.com/aphyr/riemann/tree/master/test/riemann/test">test
+      suite</a> is also a great place to look for use examples.</p>
+  </div>
+</div>
+
+</div><!-- container -->
+<div class="light">
+  <div class="container">
 
 <script type="text/javascript" charset="utf-8">
   $(document).ready(function() { 
@@ -21,8 +53,15 @@ comprehensively documented, and full of examples.</p>
   });
 </script>
 
-<div id="toc">
+<div class="row">
+  <div class="twelvecol">
+    <div id="toc">
+    </div>
+  </div>
 </div>
+
+<div class="row">
+  <div class="twelvecol">
 
 <h2>Instrumenting your systems</h2>
 
@@ -616,3 +655,5 @@ git commit -am "Added a howto guide for integrating with FooService"
 git push
 {% endhighlight %}
 
+</div>
+</div>
