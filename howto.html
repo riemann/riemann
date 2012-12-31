@@ -41,29 +41,30 @@ layout: default
 
 </div><!-- container -->
 <div class="light">
-  <div class="container">
 
-<script type="text/javascript" charset="utf-8">
-  $(document).ready(function() { 
+<div class="container">
+
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() { 
       $("#toc").tableOfContents(null, {
         startLevel: 2,
         depth: 2,
         topLinks: true
       });
-  });
-</script>
+    });
+  </script>
 
-<div class="row">
-  <div class="twelvecol">
-    <div id="toc">
+  <div class="row">
+    <div class="twelvecol">
+      <div id="toc">
+      </div>
     </div>
   </div>
-</div>
 
-<div class="row">
-  <div class="twelvecol">
+  <div class="row">
+    <div class="twelvecol">
 
-<h2>Instrumenting your systems</h2>
+      <h2>Instrumenting your systems</h2>
 
 <h3>Measure CPU, memory, and disk use</h3>
 
@@ -655,5 +656,6 @@ git commit -am "Added a howto guide for integrating with FooService"
 git push
 {% endhighlight %}
 
-</div>
+    </div>
+  </div>
 </div>
