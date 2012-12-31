@@ -1,6 +1,8 @@
     <meta charset="utf-8">
     <title>{{ page.title }}</title>
 
+    <link rel="canonical" href="http://riemann.io{{ page.url }}" />
+
     <!-- YUI CSS reset -->
     <link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.4.1/build/cssreset/cssreset-min.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,6 +15,15 @@
 
     <link rel="stylesheet" type="text/css" href="css/style.css" media="screen" />
     <link rel="stylesheet" type="text/css" href="css/syntax.css" />
+
+    <!-- Redirect from old github pages -->
+    <script type="text/javascript">
+      if (window.location.host == "aphyr.github.com") {
+        window.location = "http://riemann.io" + 
+          window.location.pathname + 
+          window.location.hash;
+      }
+    </script>
 
     <!--css3-mediaqueries-js - http://code.google.com/p/css3-mediaqueries-js/ - Enables media queries in some unsupported browsers-->
     <script type="text/javascript" src="js/css3-mediaqueries.js"></script>
