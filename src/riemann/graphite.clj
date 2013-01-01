@@ -22,10 +22,10 @@
 (defprotocol GraphiteClient
   (open [client]
         "Creates a Graphite client")
-  (send! [client line]
+  (send-line [client line]
         "Sends a formatted line to Graphite")
   (close [client]
-         "Cleans up"))
+         "Cleans up (closes sockets etc.)"))
 
 (defrecord GraphiteTCPClient [host port]
   GraphiteClient
@@ -34,7 +34,7 @@
       (assoc this 
              :socket sock
              :out (OutputStreamWriter. (.getOutputStream sock)))))
-  (send! [this line]
+  (send-line [this line]
     (let [out (:out this)]
       (.write ^OutputStreamWriter out line)
       (.flush ^OutputStreamWriter out)))
@@ -49,12 +49,12 @@
            :socket (DatagramSocket.)
            :host host
            :port port))
-  (send! [this line]
+  (send-line [this line]
     (let [bytes (.getBytes line)
           length (count line)
           addr (InetAddress/getByName (:host this))
           datagram (DatagramPacket. bytes length addr (:port this))]
-      (.send (:socket this) datagram)))
+      (.send ^DatagramSocket (:socket this) datagram)))
   (close [this]
     (.close (:socket this))))
 
@@ -102,7 +102,9 @@
                         the pool. Default 0.1.
 
   :block-start          Wait for the pool's initial connections to open
-                        before returning."
+                        before returning.
+
+  :protocol             Protocol to use. Either :tcp (default) or :udp."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 2003
@@ -121,7 +123,6 @@
                (fn [client]
                  (info "Closing connection to "
                        (select-keys opts [:host :port]))
-                 (prn client)
                  (close client))
                {:size                 (:pool-size opts)
                 :block-start          (:block-start opts)
@@ -135,5 +136,4 @@
                                                 (float (:metric event))
                                                 (int (:time event))])
                                      "\n")]
-                     (prn "sending " client string)
-                     (send! client string)))))))
+                     (send-line client string)))))))
