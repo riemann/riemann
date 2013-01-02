@@ -26,14 +26,17 @@
               streams (:streams core)]
           (when i
             (doseq [state (index/expire i)]
-              (let [e {:host (:host state)
-                       :service (:service state)
-                       :state "expired"
-                       :time (unix-time)}]
-                (when-let [registry (:pubsub core)]
-                  (ps/publish registry "index" e))
-                (doseq [stream streams]
-                  (stream e))))))))))
+              (try
+                (let [e {:host (:host state)
+                         :service (:service state)
+                         :state "expired"
+                         :time (unix-time)}]
+                  (when-let [registry (:pubsub core)]
+                    (ps/publish registry "index" e))
+                  (doseq [stream streams]
+                    (stream e)))
+                (catch Exception e
+                  (warn e "Caught exception while processing expired events"))))))))))
 
 (defn core
   "Create a new core."
