@@ -3,6 +3,7 @@
   here since netty is the preferred method of providing transports"
   (:use [slingshot.slingshot :only [try+]]
         [riemann.common      :only [decode-msg]]
+        [riemann.codec       :only [encode-pb-msg]]
         [riemann.index       :only [search]]
         clojure.tools.logging)
   (:require [riemann.query       :as query])
@@ -10,7 +11,8 @@
     (com.aphyr.riemann Proto$Msg)
     (org.jboss.netty.channel ChannelPipelineFactory ChannelPipeline)
     (org.jboss.netty.buffer ChannelBufferInputStream)
-    (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
+    (org.jboss.netty.handler.codec.oneone OneToOneDecoder
+                                          OneToOneEncoder)
     (org.jboss.netty.handler.codec.protobuf ProtobufDecoder
                                             ProtobufEncoder)
     (org.jboss.netty.handler.execution ExecutionHandler
@@ -58,6 +60,14 @@
   (proxy [OneToOneDecoder] []
     (decode [context channel message]
             (decode-msg message))))
+
+(defn msg-encoder
+  "Netty encoder for maps -> Msg protobuf objects"
+  []
+  (proxy [OneToOneEncoder] []
+    (encode [context channel message]
+            (encode-pb-msg message))))
+
 
 (defn handle
   "Handles a msg with the given core."

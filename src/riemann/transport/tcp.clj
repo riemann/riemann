@@ -25,8 +25,8 @@
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
+                                  msg-encoder
                                   channel-pipeline-factory]]
-        [riemann.codec :only [encode-pb-msg]]
         [riemann.service :only [Service]]
         [clojure.tools.logging :only [info warn]]
         [riemann.transport :only [handle]]))
@@ -40,34 +40,35 @@
   []
   (LengthFieldPrepender. 4))
 
-(defn tcp-handler
-  "Returns a TCP handler around the given atom pointing to a core"
-  [core ^ChannelGroup channel-group encode-fn]
+(defn gen-tcp-handler
+  "Wraps netty boilerplate for common TCP server handlers. Given a reference to
+  a core, a channel group, and a handler fn, returns a SimpleChannelHandler
+  which calls (handler core message-event) with each received message."
+  [core ^ChannelGroup channel-group handler]
   (proxy [SimpleChannelHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
       (.add channel-group (.getChannel state-event)))
 
     (messageReceived [^ChannelHandlerContext context
                       ^MessageEvent message-event]
-      (let [channel (.getChannel message-event)
-            msg     (.getMessage message-event)]
         (try
-          (let [out (handle @core msg)]
-            (when encode-fn
-              (.write channel (encode-fn out))))
+          (handler @core message-event)
           (catch java.nio.channels.ClosedChannelException e
-            (warn "channel closed"))
-          (catch com.google.protobuf.InvalidProtocolBufferException e
-            (warn "invalid message, closing")
-            (.close channel)))))
+            (warn "channel closed"))))
     
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (let [cause (.getCause exception-event)]
-        (when-not (= ClosedChannelException (class cause))
+        (when-not (instance? ClosedChannelException cause)
           (warn (.getCause exception-event) "TCP handler caught")
           (.close (.getChannel exception-event)))))))
 
-(defrecord TCPServer [host port pipeline-factory core killer write-back encode-fn]
+(defn tcp-handler
+  "Given a core and a MessageEvent, applies the message to core."
+  [core ^MessageEvent e]
+  (.write (.getChannel e)
+          (handle core (.getMessage e))))
+
+(defrecord TCPServer [host port pipeline-factory handler core killer]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -92,8 +93,7 @@
                                    (str "tcp-server " host ":" port))
                     cpf (channel-pipeline-factory 
                           pipeline-factory
-                          (tcp-handler core all-channels
-                                       (if write-back encode-fn)))]
+                          (gen-tcp-handler core all-channels handler))]
 
                 ; Configure bootstrap
                 (doto bootstrap
@@ -142,12 +142,13 @@
                                (.addLast "protobuf-encoder"
                                          (protobuf-encoder))
                                (.addLast "msg-decoder"
-                                         (msg-decoder)))]
+                                         (msg-decoder))
+                               (.addLast "msg-encoder"
+                                         (msg-encoder)))]
        (TCPServer.
          (get opts :host "127.0.0.1")
          (get opts :port 5555)
          (get opts :pipeline-factory pipeline-factory)
+         (get opts :handler tcp-handler)
          (atom nil)
-         (atom nil)
-         (get opts :write-back true)
-         (get opts :encode-fn encode-pb-msg)))))
+         (atom nil)))))

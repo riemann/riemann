@@ -27,12 +27,10 @@
   (when-let [[service metric timestamp] (split line #" ")]
     (when (not= metric "nan") ;; discard nan values
       (try
-        {:ok true
-         :states []
-         :events [(let [res {:service service
-                             :metric (Float. metric)
-                             :time (Long. timestamp)}]
-                    (if parser-fn (merge res (parser-fn res)) res))]}
+        (let [res {:service service
+                   :metric (Float. metric)
+                   :time (Long. timestamp)}]
+          (if parser-fn (merge res (parser-fn res)) res))
         (catch Exception e {:ok :true :service "exception"})))))
 
 (defn graphite-frame-decoder
@@ -43,6 +41,12 @@
     (proxy [OneToOneDecoder] []
       (decode [context channel message]
         (decode-graphite-line message parser-fn)))))
+
+(defn graphite-handler
+  "Given a core and a MessageEvent, applies the message to core."
+  [core e]
+  (doseq [stream (:streams core)]
+    (stream (.getMsg e))))
 
 (defn graphite-server
   "Start a graphite-server, some bits could be factored with tcp-server.
@@ -63,6 +67,6 @@
                                            (:parser-fn opts)))))]
        (tcp-server (merge {:host "127.0.0.1"
                            :port 2003
-                           :write-back false
-                           :pipeline-factory pipeline-factory}
+                           :pipeline-factory pipeline-factory
+                           :handler graphite-handler}
                           opts)))))
