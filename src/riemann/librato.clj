@@ -5,13 +5,14 @@
         clojure.math.numeric-tower))
 
 (defn safe-name
-  "Converts a string into a safe name for Librato's metrics and streams. Converts spaces to periods, preserves only A-Za-z0-9.:-_, and cuts to 255 characters."
+  "Converts a string into a safe name for Librato's metrics and streams.
+  Converts spaces to periods, preserves only A-Za-z0-9.:-_, and cuts to 255
+  characters."
   [s]
   (when s
-    (-> s
-      (string/replace " " ".")
-      (string/replace #"[^-.:_\w]" "")
-      (subs 0 (min 255 (count s))))))
+    (let [s (string/replace s " " ".")
+          s (string/replace s #"[^-.:_\w]" "")]
+      (subs s 0 (min 255 (count s))))))
 
 (defn event->gauge
   "Converts an event to a gauge."
