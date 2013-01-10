@@ -46,7 +46,7 @@
   "Given a core and a MessageEvent, applies the message to core."
   [core e]
   (doseq [stream (:streams core)]
-    (stream (.getMsg e))))
+    (stream (.getMessage e))))
 
 (defn graphite-server
   "Start a graphite-server, some bits could be factored with tcp-server.
