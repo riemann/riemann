@@ -130,6 +130,29 @@ riemann-riak --host 1.2.3.4
 (logging/init)
 {% endhighlight %}
 
+<h3>Overriding Riemann functions</h3>
+
+<p>Sometimes, something in Riemann doesn't work the way you'd like. When this
+happens, you can redefine any function in Riemann in the config file. Just
+switch to the appropriate namespace, redefine the function, and switch back to
+<code>riemann.config</code>.</p>
+
+<p>For instance, let's say you wanted to change how emails are formatted. The
+namespace <code>riemann.email</code> has a function called <code>body</code>,
+which accepts a sequence of events and returns a string. We'll override it in
+our config file:</p>
+
+{% highlight clj %}
+(ns riemann.email)
+(defn body [events]
+  ; pr-str formats events as a clojure-readable string.
+  (pr-str events))
+(ns riemann.config)
+
+; And then your servers, streams, etc...
+(tcp-server ...)
+(streams ...)
+{% endhighlight %}
 
 <h2>Working with streams</h2>
 
