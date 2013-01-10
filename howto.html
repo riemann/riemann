@@ -582,6 +582,11 @@ Both of these are available on clojars and most of the time you can ignore
 them. However, if you need to change the protocol or client, you can fork these
 projects and make your changes there.</p>
 
+<h3>Building riemann-java-client</h3>
+
+<p>You'll need maven, and the protocol buffers compiler (protoc) version
+2.4.1.</p>
+
 <p>When you've made changes to the java client, install it with <code>mvn
   install</code>; then test the clojure client and install it with <code>lein
   install</code>. Finally, you can run riemann itself. You may need to check
