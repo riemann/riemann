@@ -510,26 +510,47 @@
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
-  size."
+  size. Emits one event every interval seconds. Starts as soon as an event is
+  received, stops when an expired event arrives. Uses the most recently
+  received event with a metric as a template. Event ttls decrease constantly if
+  no new events arrive."
   [interval & children]
-  (let [test-time (atom (linear-time))]
-  (part-time-fast interval
-      (fn [] 
-        {:count (ref 0)
-         :state (ref nil)})
-      (fn [r event] (dosync
-                      (ref-set (:state r) event)
-                      (when-let [m (:metric event)]
-                        (alter (:count r) + m))))
-      (fn [r start end]
-        (when-let [event
-              (dosync
-                (when-let [state (deref (:state r))]
-                  (let [count (deref (r :count))
-                        rate (/ count interval)]
-                    (merge state
-                           {:metric rate :time (round end)}))))]
-          (call-rescue event children))))))
+  (assert (< 0 interval))
+  (let [last-event (atom nil)
+        sum (atom '(0 0))
+
+        add-sum  (fn add-sum [[current previous] addend]
+                              (list (+ current addend) previous))
+        swap-sum (fn swap-sum [[current previous]]
+                               (list 0 current))
+
+        swap-event (fn swap-event [e sum]
+                     (let [e (merge e {:metric (/ sum interval)
+                                       :time   (unix-time)})]
+                       (if-let [ttl (:ttl e)]
+                         (assoc e :ttl (- ttl interval))
+                         e)))
+
+        tick (fn tick []
+               ; Get last metric
+               (let [sum (second (swap! sum swap-sum))
+                     event (swap! last-event swap-event sum)]
+                 ; Forward event to children.
+                 (call-rescue event children)))
+
+        poller (periodically-until-expired interval interval tick)]
+
+    (fn rate' [event]
+      (when-let [m (:metric event)]
+        ; TTLs decay by interval when emitted, so we add interval once.
+        ; That way, incoming and outgoing TTLs, under constant event flow, are
+        ; the same.
+        (reset! last-event
+                (if-let [ttl (:ttl event)]
+                  (assoc event :ttl (+ ttl interval))
+                  event))
+        (swap! sum add-sum m))
+      (poller event))))
 
 (defn percentiles
   "Over each period of interval seconds, aggregates events and selects one

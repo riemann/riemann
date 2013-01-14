@@ -670,6 +670,18 @@
            ; All events recorded
            (is (= (/ total interval) (:metric @output)))))
 
+(deftest rate-without-input
+         (test-stream-intervals
+           (rate 1)
+           [{:metric 1 :service "foo"} 0.5
+            {:metric 1 :service "bar"} 0.5
+            {:metric 1 :service "baz" :ttl 3} 3
+            {:state "expired"}]
+           [{:time 1 :metric 2 :service "bar"}
+            {:time 2 :metric 1 :service "baz" :ttl 3}
+            {:time 3 :metric 0 :service "baz" :ttl 2}
+            {:time 4 :metric 0 :service "baz" :ttl 1}]))
+
 (deftest fold-interval-test
          (test-stream-intervals 
            (riemann.streams/fold-interval 1 :metric incanter.stats/sd)
