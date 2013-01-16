@@ -33,7 +33,11 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#84c5ff', end
 
 <div class="row">
   <div class="sevencol">
-    <img src="images/dash-full.jpg" alt="Showyou's dashboard" />
+    <div class="video-container">
+      <iframe src="http://www.youtube.com/embed/jEO81l5HgEc" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <p>Riemann-dash is <i>fast</i>. It'll render well over a thousand events per second.</p>
+    <!-- <img src="images/dash-full.jpg" alt="Showyou's dashboard" />-->
   </div>
 
   <div class="fivecol last">
@@ -47,17 +51,48 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#84c5ff', end
 <div class="container">
   <div class="row">
     <div class="sixcol">
-      <p><a href="https://github.com/aphyr/riemann-dash">Riemann-dash</a> is
-      a Sinatra app that makes it easy to write complex views over thousands of
-      states. It queries Riemann's index for the states you care about and
-      presents them as charts. Hover over any state for details.</p>
-    </div>
+      <h2>A realtime JS dashboard</h2>
+      <p><a href="https://github.com/aphyr/riemann-dash">Riemann-dash</a> 0.2.0
+      is here. It uses websockets and some terrifying javascript to let you
+      compose fully interactive, low-latency visualizations of Riemann's
+      index.</p>
 
-    <div class="sixcol last">
+      <p>0.2.0 includes a tiling window manager. Each workspace (top right) is
+      an arrangement of views. Each view is a single query, visualized in a
+      specific way. I've only written two views so far--a single-cell "Gauge"
+      and the familiar host-by-service table. I'll be adding new types of views
+      over time; expect time-series plots and scrolling logs, for starters.</p>
+
+      <p>There's a basic keyboard control scheme that'll greet you on first
+      start up. When you're happy with your layout, just hit "s" to save.
+      Riemann-dash will store your config as a JSON file in the config/
+      directory.</p>
+
       <p class="callout"><a href="https://github.com/aphyr/riemann-dash">Get
         started at Github</a>, or see the <a href="quickstart.html">quickstart
         guide</a>. It's available as a Gem.</p>
     </div>
+
+    <div class="sixcol last">
+      <h2>Notes for current users</h2>
+
+      <p>If you're migrating from the old Sinatra app, your old configuration
+      won't apply here. They're completely separate applications, though most
+      of the old dashboard's features are in the new JS dash too.</p>
+
+      <p>I don't like to leave folks hanging, but the old dash had fundamental
+      constraints around performance, latency, and ease-of-use. I'm hoping to
+      address all three with this redesign. If you prefer the old static dash,
+      just stick with 0.1.0.</p>
+    </div>
+
+    <h2>Help Out!</h2>
+
+    <p>Frontend design is <i>not</i> my strong suit. The dashboard is full of
+    rough edges, and though I've put several hundred hours into it... this is
+    just the start. You'll find CSS in <code>lib/riemann/dash/views/</code>,
+    and JS in <code>lib/riemann/dash/public/</code>. Try writing a view, based
+    on <code>views/gauge.js</code>, to get familiar with the codebase.
   </div>
 
 

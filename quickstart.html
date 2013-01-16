@@ -57,18 +57,30 @@ cd riemann-0.1.5</pre></code>
       <code><pre>riemann-dash</pre></code>
 
       <p>Point your web browser to <a
-        href="http://localhost:4567/">http://localhost:4567/</a>. You should
-      see a few empty boxes; that's because there are no events in the index
-      yet. Let's send some:</p>
+        href="http://localhost:4567/">http://localhost:4567/</a>. You'll see a
+      big title and a quick overview of the control scheme in the bottom pane.
+      At the top right is the current host your browser is connected to. At the
+      top left is the pager, which shows your workspaces--like tabs, in a
+      browser.</p>
+
+
+      <p>Let's change the title into a Grid view. Click the title "Riemann",
+      press "e" to edit, and change "Title" to "Grid". We need to choose a
+      <i>query</i> to select specific states from the index. For starters,
+      let's select <i>everything</i> by typing <code>true</code> in the query
+      field. Hit "Apply" when you're ready.</p>
+
+      <p>Right now the index is empty, so you won't see any events. Let's send
+      some:</p>
 
       <code><pre>riemann-health</pre></code>
 
       <p>The riemann-health daemon is a little Ruby program that submits events
       about the state of your CPU, memory, load, and disks to a Riemann server.
       If you switch back to the dashboard, you'll see your local host's state
-      appear under Health. The Problems list shows any states that aren't "ok",
-      so if you're running low on disk or ram they'll appear there. You can
-      hover over a state, like CPU, to see its description.</p>
+      appear. The Grid view organizes events according to their host and
+      service. Color indicates state, and the shaded bars show metrics. You can
+      hover over an event, like CPU, to see its description.</p>
     </div>
 
     <div class="sixcol last">
