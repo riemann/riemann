@@ -825,6 +825,18 @@
            (doseq [state states] (d state))
            (is (= (vec (seq i)) []))))
 
+(deftest delete-by-test
+         (let [index (index/index)
+               update (update-index index)
+               delete (delete-by index :host)
+               states [{:host 1 :service "a" :state "ok"}
+                       {:host 2 :service "a" :state "critical"}
+                       {:host 1 :service "b" :state "warning"}]]
+               (doseq [state states] (update state))
+               (delete {:host 1})
+               (is (= (vec (seq index))
+                   [{:host 2 :service "a" :state "critical"}]))))
+
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)
                       (em 1 10 20 -100 4)

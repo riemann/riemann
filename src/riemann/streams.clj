@@ -1163,3 +1163,11 @@
   [index]
   (fn [event]
     (index/delete index event)))
+
+(defn delete-by [index fields]
+  "Deletes events with matching fields from the index. Takes two arguments: an index and a vector of fields or a single field as arguments. For instance, if you wanted to delete all events for a specific host when an event from it arrives, you could do (delete-by index :host)"
+  (let [match-fn (if (vector? fields) (apply juxt fields) fields)]
+    (fn [event]
+      (let [match (match-fn event)]
+        (doseq [event (filter #(= match (match-fn %)) index)]
+          (index/delete-exactly index event))))))
