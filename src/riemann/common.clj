@@ -12,6 +12,7 @@
             [clojure.java.io :as io])
   (:use [clojure.string :only [split]]
         [riemann.time :only [unix-time]]
+        clojure.tools.logging
         riemann.codec
         gloss.core
         clojure.math.numeric-tower))
@@ -19,6 +20,14 @@
 (defprotocol Match
   (match [pred object]
     "Does predicate describe object?"))
+
+; Deprecation
+(defmacro deprecated
+  "Wraps body in an implicit (do), and logs a deprecation notice when invoked."
+  [comment & body]
+  `(do
+     (info ~(str "Deprecated: " comment))
+     ~@body))
 
 ; Times
 (defn time-at
@@ -32,6 +41,7 @@
   (clj-time.format/unparse (clj-time.format/formatters :date-time)
                            (clj-time.coerce/from-long (long (* 1000 unix)))))
 
+; Events
 (defn post-load-event
   "After events are loaded, we assign default times if none exist."
   [e]
