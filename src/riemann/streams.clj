@@ -1151,23 +1151,3 @@
     `(fn [~'event]
        (when-let [stream# (some split-match (list ~@clauses))]
          (call-rescue ~'event [stream#])))))
-
-(defn delete-from-index
-  "Deletes similar events from the index. By default, deletes events with the
-  same host and service. If a field, or a list of fields, is given, deletes any
-  events with matching values for all of those fields.
-  
-  ; Delete all events in the index with the same host
-  (delete-from-index index :host)
-  
-  ; Delete all events in the index with the same host and state.
-  (delete-from-index index [:host :state])"
-  ([index]
-   (fn [event]
-     (index/delete index event)))
-  ([index fields]
-   (let [match-fn (if (coll? fields) (apply juxt fields) fields)]
-     (fn [event]
-       (let [match (match-fn event)]
-         (doseq [event (filter #(= match (match-fn %)) index)]
-           (index/delete-exactly index event)))))))

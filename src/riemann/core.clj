@@ -100,6 +100,20 @@
       (ps/publish registry "index" event))))
 
 (defn delete-from-index
-  "Updates this core's index with an event."
-  [core event]
-  (index/delete (:index core) event))
+  "Deletes similar events from the index. By default, deletes events with the
+  same host and service. If a field, or a list of fields, is given, deletes any
+  events with matching values for all of those fields.
+  
+  ; Delete all events in the index with the same host
+  (delete-from-index index :host event)
+  
+  ; Delete all events in the index with the same host and state.
+  (delete-from-index index [:host :state] event)"
+  ([core event]
+   (index/delete (:index core) event))
+  ([core fields event]
+   (let [match-fn (if (coll? fields) (apply juxt fields) fields)
+         match (match-fn event)
+         index (:index core)]
+       (doseq [event (filter #(= match (match-fn %)) index)]
+         (index/delete-exactly index event)))))

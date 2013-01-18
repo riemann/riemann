@@ -71,6 +71,29 @@
            (up {:service 1 :state "ok"})
            (is (= (seq i) [{:service 1 :state "ok"}]))))
 
+(deftest delete-from-index-test
+         (let [i (index)
+               update (update-index i)
+               delete (delete-from-index)
+               states [{:host 1 :state "ok"}
+                       {:host 2 :state "ok"}
+                       {:host 1 :state "bad"}]]
+           (apply!)
+           (dorun (map update states))
+           (delete {:host 1 :state "definitely not seen before"})
+           (is (= (seq i) [{:host 2 :state "ok"}]))))
+
+(deftest delete-from-index-fields
+         (let [i (index)
+               update (update-index i)
+               delete (delete-from-index [:host :state])]
+           (apply!)
+           (update {:host 1 :state "foo"})
+           (update {:host 2 :state "bar"})
+           (delete {:host 1 :state "not seen"})
+           (delete {:host 2 :state "bar"})
+           (is (= (seq i) [{:host 1 :state "foo"}]))))
+
 (deftest subscribe-in-stream-test
          (let [received (promise)]
            (streams
