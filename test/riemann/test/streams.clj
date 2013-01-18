@@ -828,12 +828,12 @@
 (deftest delete-by-test
          (let [index (index/index)
                update (update-index index)
-               delete (delete-by index :host)
+               delete (delete-from-index index :host)
                states [{:host 1 :service "a" :state "ok"}
                        {:host 2 :service "a" :state "critical"}
                        {:host 1 :service "b" :state "warning"}]]
-               (doseq [state states] (update state))
-               (delete {:host 1})
+               (dorun (map update states))
+               (delete {:host 1 :service "c"})
                (is (= (vec (seq index))
                    [{:host 2 :service "a" :state "critical"}]))))
 
