@@ -45,7 +45,7 @@ layout: default
 <div class="container">
 
   <script type="text/javascript" charset="utf-8">
-    $(document).ready(function() { 
+    $(document).ready(function() {
       $("#toc").tableOfContents(null, {
         startLevel: 2,
         depth: 2,
@@ -243,7 +243,7 @@ can send an email whenever the state changes:</p>
 {% highlight clj %}
 (streams
   (by [:host :service]
-    (changed :state 
+    (changed :state
       (email "ops@startup.io"))))
 {% endhighlight %}
 
@@ -268,7 +268,7 @@ track of which services are starting, crashing, and gracefully restarting.</p>
 
 <h3>Measure your app's latency profile</h3>
 
-{% highlight clj %} 
+{% highlight clj %}
 ; Imagine you wanted to know the time it takes for your app's API requests
 ; to complete. The API emits events like:
 ;
@@ -284,7 +284,7 @@ track of which services are starting, crashing, and gracefully restarting.</p>
 
        (percentiles 5 [0.5 0.95 0.99]
 
-                    ; Percentiles will emit events like 
+                    ; Percentiles will emit events like
                     ; {:service "api req 0.5" :metric 0.12}
                     ; We'll add them to the index, so they can show up
                     ; on our dashboard.
@@ -292,9 +292,9 @@ track of which services are starting, crashing, and gracefully restarting.</p>
                     index)
 
        ; What else can we do with API requests? Let's figure out the total
-       ; request rate. (rate interval & children) sums up metrics and 
-       ; divides by time. 
-       
+       ; request rate. (rate interval & children) sums up metrics and
+       ; divides by time.
+
        (rate 5)
 
        ; But this isn't quite right--these event metrics are *times*, so
@@ -307,7 +307,7 @@ track of which services are starting, crashing, and gracefully restarting.</p>
        ; (with) takes each event and calls (rate) with a *changed*
        ; copy--one where :metric is always 1. Then (rate) adds up all those
        ; 1's over five seconds, and sends that metric to the index.
-       
+
        ; (with) has a counterpart, by the way: (default). It works exactly
        ; the same, but it only alters the event when the value is nil. Both
        ; with and default accept maps as well:
@@ -366,7 +366,7 @@ graph how many unexpected failures occur per day, and determine which services n
 events, but not allow unbounded memory use:</p>
 
 {% highlight clj %}
-(def tell-ops 
+(def tell-ops
   (throttle 1000 3600
     (rollup 5 3600
       (email "ops@rickenbacker.mil"))))
@@ -443,6 +443,132 @@ since this event pertains to the system as a whole.</p>
 (coalesce (smap folds/maximum
   (with {:service "Max CPU" :host nil} prn)))
 {% endhighlight %}
+
+<h2>Working with dashboard</h2>
+
+<h3>Application specific host grouping</h3>
+<p>
+It is generally desirable to group all the hosts for a specific service into a
+single dashboard view. For example, all the web servers are in single view while
+all the database servers are in another view.
+</p>
+
+<p>
+This is usually not an issue when you are sending custom metrics using Riemann
+client. However, there are cases where you are using something that you do not
+control how the metrics are being sent. i.e., Riemann-tools.
+</p>
+
+<p>
+Since Riemann-tools scripts are application agnostic, in order for the
+dashboard view to group hosts, we must inject some application specific
+information into the tags field. Tags is a collection of arbitrary strings.
+In the case of Riemann-tools scripts you can pass in arbitrary strings on the
+command line.
+</p>
+
+<p>
+  <code>riemann-health --host 127.0.0.1 --tag "prod" --tag "webserver"</code>
+</p>
+
+<p>In this case, the above health check will include two extra tags "prod" and
+"webserver". On the dashboard side, you can create a grid view contains the
+following query:
+</p>
+
+<p><code>'(tagged = "prod" and tagged = "webserver")'</code></p>
+
+<img src="https://a248.e.akamai.net/camo.github.com/9b4831e731adaaf5221f099a01912d7b859bbac1/687474703a2f2f636c2e6c792f696d6167652f3243306932413254335a31462f53637265656e73686f74253230313a32303a313325323031313a3333253230504d2e706e67"/>
+
+<p>
+tagged keyword in the query will search for all tags of an event. The query
+above will return only "prod" and "webservers" hosts.
+</p>
+
+<h3>Count total number of hosts</h3>
+
+<p>
+Sometimes it is useful to know how many hosts are sending data to Riemann.
+This is especially useful in cloud type of environment where nodes are
+constantly scaling up and down.
+</p>
+
+<p>
+Since Riemann server knows all the sending hosts, we will create a new stream
+that will keep track of unique hosts and index it as a new service so the
+Riemann dashboard can query it. In riemann.config you should have something
+that looks like below:
+</p>
+
+{% highlight clj %}
+(let [index (default :ttl 300 (update-index (index)))]
+    (streams
+      prn
+      index))
+{% endhighlight %}
+
+<p>
+Since stream is just a function that takes an event as an argument,
+we will just create an anonymous function to existing streams that will do all
+the work.
+</p>
+
+{% highlight clj %}
+(let [hosts (atom #{})]
+  (fn [event]
+    (swap! hosts conj (:host event))
+    (prn :hosts @hosts)
+    (index {:service "unique hosts"
+            :time (unix-time)
+            :metric (count @hosts)})))
+{% endhighlight %}
+
+<p>On the dashboard you can create a gauge view with the following query:</p>
+
+<p><code>'(service = "unique hosts")'</code></p>
+
+<img src="https://a248.e.akamai.net/camo.github.com/cfc22f7f9d6d19190409daeaf2e5fb02f72b2faf/687474703a2f2f636c2e6c792f696d6167652f3062316a314b306e316730782f53637265656e73686f74253230313a32303a313325323031313a3138253230504d2e706e67">
+
+<p>If you created the query correctly, you should see something like below:</p>
+
+<img src="https://a248.e.akamai.net/camo.github.com/2722f6e795bedf43fcba78c4ba7e006153ab2187/687474703a2f2f636c2e6c792f696d6167652f337a3232326e3352326834342f53637265656e73686f74253230313a32303a313325323031313a3134253230504d2e706e67">
+
+<h3>Count number of hosts by application grouping</h3>
+
+<p>
+Assuming you already included special tags that you would like to group your
+application hosts by. You can use the following code in riemann.config to
+create a index that will count the number of unique hosts for a given group of
+tags.
+</p>
+
+{% highlight clj %}
+(let [hosts (atom {}) host (atom #{})]
+  (fn [event]
+    (let [tag-str (keyword (clojure.string/join "-" (:tags event)))]
+    (swap! hosts assoc tag-str (conj (tag-str @hosts #{}) (:host event)))
+    (index {:service (str (name tag-str) "-count")
+            :time (unix-time)
+            :metric (count (tag-str @hosts))}))))
+{% endhighlight %}
+
+<p>
+The above code will create a unique service using all your tags with "-count"
+appended to the end. For example, if you have "webserver" and "prod" tags, the
+new service that will count unique hosts will be named "webserver-prod-count".
+In your dashboard you can query it like below:
+</p>
+
+<p><code>'(service = "webserver-prod-count")'</code></p>
+
+<img src="https://a248.e.akamai.net/camo.github.com/62ec7bafdf2e7d4a54ca29907c0d95f2ab4d8427/687474703a2f2f636c2e6c792f696d6167652f33713142336c3032326a31692f53637265656e73686f74253230313a32303a313325323031313a3239253230504d2e706e67">
+
+<p>
+If you create a new gauge view with that query, you will get the current
+count of all your production web servers.
+</p>
+
+<img src="https://a248.e.akamai.net/camo.github.com/9537ab09bbd5378942b16482669e932ed9bad8f9/687474703a2f2f636c2e6c792f696d6167652f3077324231473031335a31452f53637265656e73686f74253230313a32303a313325323031313a3332253230504d2e706e67">
 
 <h2>Integrating with other systems</h2>
 
@@ -531,7 +657,7 @@ view.</p>
 (streams
   (let [client (tcp-client :host "aggregator")]
     (by [:host :service]
-       (changed :state 
+       (changed :state
                 (forward client)))))
 {% endhighlight %}
 
