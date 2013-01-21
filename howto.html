@@ -549,7 +549,8 @@ tags.
     (swap! hosts assoc tag-str (conj (tag-str @hosts #{}) (:host event)))
     (index {:service (str (name tag-str) "-count")
             :time (unix-time)
-            :metric (count (tag-str @hosts))}))))
+            :metric (count (tag-str @hosts))})
+    (swap! hosts (atom {})))))
 {% endhighlight %}
 
 <p>
