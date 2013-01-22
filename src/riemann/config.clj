@@ -16,11 +16,12 @@
             [riemann.graphite :as graphite-client]
             [clojure.tools.nrepl.server :as repl])
   (:use clojure.tools.logging
+        [clojure.java.io :only [file]]
         riemann.client
         riemann.email
         [riemann.pagerduty :only [pagerduty]]
         [riemann.librato :only [librato-metrics]]
-        [riemann.streams])
+        riemann.streams)
   (:gen-class))
 
 (def core "The currently running core."
@@ -154,6 +155,10 @@
        forms
        (recur (conj forms form) reader)))))
 
+(def ^:dynamic *config-file*
+  "The config file currently being included."
+  nil)
+
 (defn validate-config
   "Check that a config file has valid syntax."
   [file]
@@ -166,7 +171,14 @@
   "Include another config file.
 
   (include \"foo.clj\")"
-  [file]
-  (binding [*ns* (find-ns 'riemann.config)]
-    (validate-config file)
-    (load-string (slurp file))))
+  [filename]
+  (let [dir (-> (or *config-file* "ZARDOZ")
+              (file)
+              (.getCanonicalPath)
+              (file)
+              (.getParent))
+        path (str (file dir filename))]
+    (binding [*config-file* path
+              *ns* (find-ns 'riemann.config)]
+      (validate-config path)
+      (load-string (slurp path)))))
