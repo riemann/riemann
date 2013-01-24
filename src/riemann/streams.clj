@@ -681,19 +681,29 @@
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
   service that passes through it (limited by :ttl). Every time it receives an
-  event, it passes on *all* events it remembers.
+  event, it passes on *all* events it remembers. When events expire, they are
+  included in the emitted sequence of events *once*, and removed from the state
+  table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
-  (let [past (atom {})]
-    (fn [{:keys [host service] :as event}]
-      (let [evkey  [host service]
-            reaper (fn [[k v]] (when-not (or (expired? v) (= evkey k)) [k v]))
-            events (swap! past (comp (partial into {})
-                                     (partial cons [evkey event])
-                                     (partial filter reaper)))]
-        (call-rescue (vals events) children)))))
+  ; Past is [{keys -> events}, expired-events]
+  (let [past (atom [{} []])]
+    (fn stream [{:keys [host service] :as event}]
+      (let [ekey  [host service]
+            ; Updates the state map and delivers expired events to an atom.
+            update (fn update [[ok _]]
+                     (map persistent!
+                          (reduce (fn part [[ok expired] [k v]]
+                                    (if (expired? v)
+                                      [ok (conj! expired v)]
+                                      [(assoc! ok k v) expired]))
+                                  [(transient {})
+                                   (transient [])]
+                                  (assoc ok ekey event))))
+            [ok expired] (swap! past update)]
+        (call-rescue (concat expired (vals ok)) children)))))
 
 (defn append
   "Conj events onto the given reference"

@@ -860,31 +860,32 @@
            (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))
 
 (deftest coalesce-test
-         (let [out (ref [])
-               s (coalesce (register out))
-               a {:service 1 :state "ok" :time (unix-time)}
-               b {:service 2 :state "ok" :time (unix-time)}
-               c {:service 1 :state "bad" :time (unix-time)}
-               d {:service 1 :state "ok" :time (unix-time) :ttl 0.01}
-               e {:service 3 :state "ok" :time (unix-time)}]
+         (let [out (atom [])
+               s (coalesce #(reset! out %))
+               a1 {:service :a :state "one" :time 0}
+               b1 {:service :b :state "one" :time 0}
+               a2 {:service :a :state "two" :time 0 :ttl 1}
+               c1 {:service :c :state "one" :time 0}
+               b2 {:service :b :state "two" :time 0}]
 
-           (s a)
-           (is (= (set (deref out)) #{a}))
+           (s a1)
+           (is (= (set @out) #{a1}))
 
-           (s b)
-           (is (= (set (deref out)) #{a b}))
+           (s b1)
+           (is (= (set @out) #{a1 b1}))
 
-           (s c)
-           (is (= (set (deref out)) #{b c}))
+           (s a2)
+           (is (= (set @out) #{a2 b1}))
 
-           (s d)
-           (is (= (set (deref out)) #{b d}))
+           ; Wait for ttl expiry of a2
+           (advance! 2)
 
-           ; Wait for ttl expiry of d
-           (advance! 0.02)
-
-           (s e)
-           (is (= (set (deref out)) #{b e}))))
+           ; Should receive expired a2 once
+           (s c1)
+           (is (= (set @out) #{a2 b1 c1}))
+           
+           (s b2)
+           (is (= (set @out) #{b2 c1}))))
 
 (deftest adjust-test
   (let [out (ref nil)
