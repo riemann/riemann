@@ -33,7 +33,7 @@
                 )))
 
 (deftest ^:email ^:integration email-test
-         (let [email (mailer {})
+         (let [email (mailer {:from "riemann-test"})
                stream (email "aphyr@aphyr.com")]
            (stream {:host "localhost"
                     :service "email test"
