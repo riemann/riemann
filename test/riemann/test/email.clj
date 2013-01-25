@@ -32,6 +32,19 @@
                 "foo and bar error and ok"
                 )))
 
+(deftest override-formatting-test
+         (let [a (promise)]
+           (with-redefs [postal.core/send-message #(deliver a [%1 %2])]
+             (email-event {} {:body (fn [events]
+                                      (apply str "body " 
+                                             (map :service events)))
+                              :subject (fn [events] 
+                                         (apply str "subject " 
+                                                (map :service events)))}
+                          {:service "foo"}))
+           (is (= @a [{} {:subject "subject foo"
+                          :body    "body foo"}]))))
+
 (deftest ^:email ^:integration email-test
          (let [email (mailer {:from "riemann-test"})
                stream (email "aphyr@aphyr.com")]

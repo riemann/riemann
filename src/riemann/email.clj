@@ -51,12 +51,12 @@
   "Send an event, or a sequence of events, with the given smtp and msg
   options."
   [smtp-opts msg-opts events]
-  (let [events (flatten [events])]
+  (let [events  (flatten [events])
+        subject ((get msg-opts :subject subject) events)
+        body    ((get msg-opts :body body) events)]
     (send-message
       smtp-opts
-      (merge msg-opts
-             {:subject (get msg-opts :subject (subject events))
-              :body    (get msg-opts :body    (body events))}))))
+      (merge msg-opts {:subject subject :body body}))))
 
 (defn mailer
   "Returns a mailer, which is a function invoked with an address or a sequence
@@ -85,7 +85,15 @@
                       :from \"riemann@trioptimum.com\"}))
   
   smtp-opts and msg-opts are passed to postal. For more documentation, see
-  https://github.com/drewr/postal"
+  https://github.com/drewr/postal
+  
+  By default, riemann uses (subject events) and (body events) to format emails.
+  You can set your own subject or body formatter functions by including
+  :subject or :body in msg-opts. These formatting functions take a sequence of
+  events and return a string.
+
+  (def email (mailer {} {:body (fn [events] 
+                                 (apply prn-str events))}))"
   ([] (mailer {}))
   ([opts]
         (let [smtp-keys #{:host :port :user :pass :ssl :tls :sender}
