@@ -853,13 +853,6 @@
       (call-rescue event children)
       true)))
 
-; Shortcuts for match
-;(defn description [value & children] (apply match :description value children))
-;(defn host [value & children] (apply match :host value children))
-;(defn metric [value & children] (apply match :metric value children))
-;(defn service [value & children] (apply match :service value children))
-;(defn state [value & children] (apply match :state value children))
-;(defn time [value & children] (apply match :time value children))
 
 (defn tagged-all
   "Passes on events where all tags are present.
