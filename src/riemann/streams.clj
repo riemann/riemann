@@ -659,7 +659,6 @@
   [[smallest top] k f event]
   (let [value (f event)
         ekey [(:host event) (:service event)]
-;        ekey (:service event)
         scan (fn scan [top]
                (if (empty? top)
                  nil
