@@ -41,7 +41,8 @@
   (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
 
 (defn init
-  "Initialize log4j. You will probably call this from the config file. Options:
+  "Initialize log4j. You will probably call this from the config file. You can
+  call init more than once; its changes are destructive. Options:
 
   :file   The file to log to. If omitted, logs to console only."
   [& { :keys [file] }]
