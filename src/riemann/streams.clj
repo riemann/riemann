@@ -608,29 +608,49 @@
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn counter
-  "Counts things. All metrics are summed together; passes on each event with
-  the summed metric. When an event has tag \"reset\", resets the counter to
-  zero and continues summing."
+  "Counts things. The first argument may be an initial counter value, which
+  defaults to zero.
+  
+  ; Starts at zero
+  (counter index)
+
+  ; Starts at 500
+  (counter 500 index)
+
+  Events without metrics are passed through unchanged. Events with metrics
+  increment the counter, and are passed on with their metric set to the current
+  count.
+
+  You can reset the counter by passing it an event with a metric, tagged
+  \"reset\"; the count will be reset to that metric."
   [& children]
-  (let [counter (ref 0)]
-    (fn [event]
-      (when (member? "reset" (:tags event))
-        (dosync (ref-set counter 0)))
-      (when-let [m (:metric event)]
-        (let [c (dosync (alter counter + m))]
-          (call-rescue (assoc event :metric c) children))))))
+  (let [counter (atom (if (number? (first children))
+                        (first children)
+                        0))
+        children (if (number? (first children))
+                   (rest children)
+                   children)]
+    (fn stream [event]
+      (if-let [metric (:metric event)]
+        (do
+          (if (member? "reset" (:tags event))
+            (reset! counter metric)
+            (swap! counter + metric))
+          (call-rescue (assoc event :metric @counter) children))
+        (call-rescue event children)))))
 
 (defn sum-over-time
   "Sums all metrics together. Emits the most recent event each time this
   stream is called, but with summed metric."
   [& children]
-  (let [sum (ref 0)]
-    (fn [event]
-      (let [s (dosync
-                (when-let [m (:metric event)]
-                  (commute sum + (:metric event))))
-            event (assoc event :metric s)]
-        (call-rescue event children)))))
+  (deprecated "Use streams/counter"
+              (let [sum (ref 0)]
+                (fn [event]
+                  (let [s (dosync
+                            (when-let [m (:metric event)]
+                              (commute sum + (:metric event))))
+                        event (assoc event :metric s)]
+                    (call-rescue event children))))))
 
 (defn mean-over-time
   "Emits the most recent event each time this stream is called, but with the

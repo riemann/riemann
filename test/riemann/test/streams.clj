@@ -98,22 +98,28 @@
                   (test-stream (sreduce +) [1 2 3 4] [3 6 10])))
 
 (deftest counter-test
-         (let [r      (ref [])
-               s      (counter (append r))
-               events [{:metric 2}
-                       {}
-                       {:metric 1}
-                       {:metric 5}
-                       {:tags ["reset"] :metric -1}
-                       {:metric 2}]]
-           (doseq [e events] (s e))
-           
-           (is (= (deref r)
-                  [{:metric 2}
-                   {:metric 3}
-                   {:metric 8}
-                   {:tags ["reset"] :metric -1}
-                   {:metric 1}]))))
+         (testing "passes through events without metrics"
+                  (test-stream (counter)
+                               [{} {:state "expired"} {:service "foo"}]
+                               [{} {:state "expired"} {:service "foo"}]))
+
+         (testing "counts"
+                  (test-stream (counter)
+                               [{:metric 2} {} {:metric 3}]
+                               [{:metric 2} {} {:metric 5}])
+
+                  (test-stream (counter 100)
+                               [{:metric 2} {} {:metric 3}]
+                               [{:metric 102} {} {:metric 105}]))
+
+         (testing "resets"
+                  (test-stream (counter 100)
+                               [{:metric 1} 
+                                {:metric 200 :tags ["reset"]}
+                                {:metric 5}]
+                               [{:metric 101} 
+                                {:metric 200 :tags ["reset"]}
+                                {:metric 205}])))
 
 (deftest match-test
          ; Regular strings.
