@@ -853,7 +853,6 @@
       (call-rescue event children)
       true)))
 
-
 (defn tagged-all
   "Passes on events where all tags are present.
 
@@ -970,6 +969,18 @@
               event (assoc event field value)]
           (call-rescue event children))))
     (apply smap (first args) (rest args))))
+
+(defn tag
+  "Adds a new tag, or set of tags, to events which flow through.
+  
+  (tag \"foo\" index)
+  (tag [\"foo\" \"bar\"] index)"
+  [tags & children]
+  (let [tags (flatten [tags])]
+    (apply smap (fn stream [event]
+                  (assoc event :tags
+                         (distinct (concat tags (:tags event)))))
+           children)))
 
 (defmacro by
   "Splits stream by field.

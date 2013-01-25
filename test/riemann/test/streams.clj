@@ -142,6 +142,25 @@
                       [1 2 3]
                       [2]))
 
+(deftest tag-test
+         ; Single tag
+         (test-stream (tag "foo")
+                      [{}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["bar" "baz"]}]
+                      [{:tags ["foo"]}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["foo" "bar" "baz"]}])
+
+         ; Multiple tags
+         (test-stream (tag ["foo" "bar"])
+                      [{}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["foo" "baz"]}]
+                      [{:tags ["foo" "bar"]}
+                       {:service :a :tags ["foo" "bar"]}
+                       {:service :b :tags ["foo" "bar" "baz"]}]))
+
 (deftest tagged-all-test
          (test-stream (tagged-all ["kitten" "cat"])
                       [{:tags ["kitten" "cat"]}
