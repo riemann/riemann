@@ -297,6 +297,12 @@
                    {:metric 1}
                    {:service "bad" :metric 1}]))))
 
+(deftest where*-return-value
+         ; Where*'s return value should be whether the predicate matched.
+         (is (= true ((where* expired? (fn [e] "hi"))
+                        (expire {}))))
+         (is (= 2 ((where* (constantly 2)) :zoom))))
+
 (deftest where-field
          (let [r (ref [])
                s (where (or (state "ok" "good")
@@ -364,6 +370,23 @@
            (is (= @x 1))
            (s {:service "test"})
            (is (= @x 1))))
+
+(deftest where-return-value
+         ; Where's return value should be whether the predicate matched.
+         (is (= true  ((where (service "foo")) {:service "foo"})))
+         (is (= false ((where (service "foo")) {:service "bar"})))
+         (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
+         (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+
+         (is (= true ((where (service "foo") 
+                             (fn [event] 2)) 
+                        {:service "foo"})))
+         (is (= false ((where (service "foo")
+                              (else (fn [event] 2)))
+                         {:service "bar"})))
+         
+         (is (= 2 ((where 2) :wheeee!)))
+         (is (= nil ((where nil) :zoooom!))))
 
 (deftest default-kv
          (let [r (ref nil)
