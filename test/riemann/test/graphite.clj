@@ -19,7 +19,9 @@
          (is (= (graphite-path-percentiles
                   {:service "foo bar 0.99"})
                 "foo.bar.99"))
-         )
+         (is (= (graphite-path-percentiles
+                  {:service "foo bar 0.999"})
+                "foo.bar.999")))
 
 (deftest ^:graphite ^:integration graphite-test
          (let [g (graphite {:block-start true})]
