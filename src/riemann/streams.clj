@@ -20,6 +20,9 @@
             riemann.logging
             [clojure.set :as set]))
 
+(def  infinity (/  1.0 0))
+(def -infinity (/ -1.0 0))
+
 (defn expired?
   "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
   [event]
@@ -39,6 +42,34 @@
          (catch Exception e#
            (warn e# (str child# " threw")))))
      true))
+
+(defn bit-bucket
+  "Discards arguments."
+  [args])
+
+(defn dual
+  "A stream which splits events into two mirror-images streams, based on (pred
+  e). If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
+  If (pred e) is false, does the opposite. Expired events are forwarded to both
+  streams.
+  
+  (pred e) is always called once per incoming event."
+  [pred true-stream false-stream]
+  (fn stream [event]
+    (let [value (pred event)]
+      (cond
+        (expired? event)
+        (call-rescue event [true-stream false-stream])
+
+        value
+        (do
+          (call-rescue (expire event) [false-stream])
+          (call-rescue event [true-stream]))
+
+        :else
+        (do
+          (call-rescue (expire event) [true-stream])
+          (call-rescue event [false-stream]))))))
 
 (defn combine
   "Returns a function which takes a seq of events. Combines events with f, then
@@ -622,6 +653,80 @@
                   (ref-set m (+ (* c-existing (deref m))
                                 (* c-new metric-new)))))]
         (call-rescue (assoc event :metric m) children)))))
+
+(defn- top-update
+  "Helper for top atomic state updates."
+  [[smallest top] k f event]
+  (let [value (f event)
+        ekey [(:host event) (:service event)]
+;        ekey (:service event)
+        scan (fn scan [top]
+               (if (empty? top)
+                 nil
+                 (first (apply min-key second top))))
+        trim (fn trim [top smallest]
+               (if (< k (count top))
+                 (dissoc top smallest)
+                 top))]
+    (cond
+      ; Expired or irrelevant event
+      (or (expired? event)
+          (nil? value))
+      (let [top (dissoc top ekey)]
+        (if (top smallest)
+          [smallest top]
+          [(scan top) top]))
+
+      ; Empty set
+      (nil? smallest)
+      [ekey (assoc top ekey value)]
+
+      ; Falls outside the top set.
+      (and (not (top ekey))
+           (<= value (top smallest))
+           (<= k (count top)))
+      [smallest top]
+
+      ; In the top set
+      :else
+      (let [top (trim (assoc top ekey value) smallest)]
+        (if (or (nil? (top smallest))
+                (< value (top smallest)))
+          [(scan top) top]
+          [smallest top])))))
+
+(defn top
+  "Bifurcates a stream into a dual pair of streams: one for the top k events,
+  and one for the bottom k events.
+  
+  f is a function which maps events to comparable values, e.g. numbers. If an
+  incoming event e falls in the top k, the top stream receives e and the bottom
+  stream receives (expire e). If the event is *not* in the top k, calls (top
+  (expire e)) and (bottom e).
+
+  If an inbound event is already expired, it is forwarded directly to both
+  streams. In this way, both top- and bottom-stream have a consistent, dual
+  view of the event space.
+
+  Index the top 10 events, by metric:
+
+  (top 10 :metric index)
+ 
+  Index everything, but tag the top k events with \"top\":
+
+  (top 10 :metric
+    (adjust [:tags conj \"top\"]
+      index)
+    index)"
+  ([k f top-stream]
+   (top k f top-stream bit-bucket))
+  ([k f top-stream bottom-stream]
+   (let [state (atom [nil {}])]
+     (dual (fn stream [event]
+             (let [top   (second (swap! state top-update k f event))]
+               (top [(:host event) (:service event)])))
+           top-stream
+           bottom-stream))))
 
 (defn throttle
   "Passes on n events every m seconds. Drops events when necessary."

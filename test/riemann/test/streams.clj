@@ -814,6 +814,63 @@
                       (em 1   1   1   1     1    )
                       (em 1/2 3/4 7/8 15/16 31/32)))
 
+(deftest top-test
+         (let [e (fn [s m] {:service s :metric m})
+               a (fn [m] (e :a m))
+               b (fn [m] (e :b m))
+               c (fn [m] (e :c m))
+               d (fn [m] (e :d m))]
+
+           ; A single event
+           (test-stream (top 1 :metric)
+                        [(a 1)]
+                        [(a 1)])
+
+           ; Repeating the same service
+           (test-stream (top 1 :metric)
+                        [(a 1) (a 2) (a 1) (a 3)]
+                        [(a 1) (a 2) (a 1) (a 3)])
+
+           ; Displacing a smaller event
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3) (a 1)          (b 2)]
+                        [(a 1) (b 2) (c 3) (expire (a 1)) (b 2)])
+         
+           ; Allowing in a smaller event when there's room
+           (test-stream (top 2 :metric)
+                        [(a 2) (b 2) (c 1)          (a 5) (c 1)          (a 0) (c 1)]
+                        [(a 2) (b 2) (expire (c 1)) (a 5) (expire (c 1)) (a 0) (c 1)])
+
+           ; Ignoring smaller events
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3)         (d 1)          (a 2)          (b nil) (d 2)]
+                        [(a 1) (b 2) (c 3) (expire (d 1)) (expire (a 2)) (expire (b nil)) (d 2)])
+
+           ; Events without metrics
+           (test-stream (top 1 :metric)
+                        [(a nil)          (b 1) (a nil)]
+                        [(expire (a nil)) (b 1) (expire (a nil))])
+
+           ; Events without metrics displace previous events
+           (test-stream (top 1 :metric)
+                        [(b 2) (b nil)          (a 1)]
+                        [(b 2) (expire (b nil)) (a 1)])
+
+           ; Expiring a nonexistent event
+           (test-stream (top 2 :metric)
+                        [(expire (a 2))]
+                        [(expire (a 2))])
+
+           ; Expiring an existing event
+           (test-stream (top 1 :metric)
+                        [(a 2) (expire (a 1)) (b 1)]
+                        [(a 2) (expire (a 1)) (b 1)])
+
+           ; Ring
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3) (d 4)         (a 2)          (b 3)  (c 4) (d 5)]
+                        [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])))
+
 (deftest throttle-test
          (let [out (ref [])
                quantum 0.1

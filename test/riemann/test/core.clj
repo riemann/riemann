@@ -4,7 +4,7 @@
             [riemann.logging :as logging])
   (:use riemann.client
         riemann.common
-        riemann.index
+        [riemann.index :only [index]]
         riemann.time.controlled
         riemann.core
         clojure.test

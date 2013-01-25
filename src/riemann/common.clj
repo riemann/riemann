@@ -70,6 +70,13 @@
   [msg]
   (.toByteArray (encode-pb-msg msg)))
 
+(defn expire
+  "An expired version of an event."
+  [event]
+  (into (select-keys event [:host :service])
+        [[:time (unix-time)]
+         [:state "expired"]]))
+
 (defn event-to-json
   "Convert an event to a JSON string."
   [event]
