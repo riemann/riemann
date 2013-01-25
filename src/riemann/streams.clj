@@ -716,7 +716,13 @@
   (top 10 :metric
     (adjust [:tags conj \"top\"]
       index)
-    index)"
+    index)
+  
+  This implementation of top is lazy, in a sense. It won't proactively expire
+  events which are bumped from the top-k set--you have to wait for another
+  event with the same host and service to arrive before child streams will know
+  it's expired. At some point I (or an enterprising committer) should fix
+  that."
   ([k f top-stream]
    (top k f top-stream bit-bucket))
   ([k f top-stream bottom-stream]
