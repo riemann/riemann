@@ -178,7 +178,13 @@
                        {:tags ["bark"]}
                        {}]
                       [{:tags ["meow" "bark"]}
-                       {:tags ["meow"]}]))
+                       {:tags ["meow"]}])
+         
+         (testing "return values"
+                  (is (true? ((tagged-all ["meow" "bark"])
+                                {:tags ["meow" "bark" "grr"]})))
+                  (is (nil? ((tagged-all ["meow" "bar"])
+                               {:tags ["meow"]})))))
 
 (deftest tagged-any-test
          (test-stream (tagged-any ["kitten" "cat"])
@@ -192,13 +198,19 @@
                        {:tags ["cat", "dog"]}
                        {:tags ["kitten"]}])
 
-         (test-stream (tagged-all "meow")
+         (test-stream (tagged-any "meow")
                       [{:tags ["meow" "bark"]}
                        {:tags ["meow"]}
                        {:tags ["bark"]}
                        {}]
                       [{:tags ["meow" "bark"]}
-                       {:tags ["meow"]}]))
+                       {:tags ["meow"]}])
+
+         (testing "return values"
+                  (is (true? ((tagged-any ["meow" "bark"])
+                                {:tags ["meow" "moo"]})))
+                  (is (nil? ((tagged-any ["meow" "bar"])
+                               {:tags ["moo"]})))))
 
 (deftest split*-test
   (test-stream (split* identity)

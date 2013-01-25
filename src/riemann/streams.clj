@@ -862,7 +862,8 @@
       true)))
 
 (defn tagged-all
-  "Passes on events where all tags are present.
+  "Passes on events where all tags are present. This stream returns true if an
+  event it receives matches those tags, nil otherwise.
 
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
@@ -870,14 +871,17 @@
   (if (coll? tags)
     (fn [event]
       (when (set/subset? (set tags) (set (:tags event)))
-        (call-rescue event children)))
+        (call-rescue event children)
+        true))
 
     (fn [event]
       (when (member? tags (:tags event))
-        (call-rescue event children)))))
+        (call-rescue event children)
+        true))))
 
 (defn tagged-any
-  "Passes on events where any of tags are present.
+  "Passes on events where any of tags are present. This stream returns true if
+  an event it receives matches those tags, nil otherwise.
 
   (tagged-any \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
@@ -886,11 +890,13 @@
     (let [required (set tags)]
       (fn [event]
         (when (some required (:tags event))
-          (call-rescue event children))))
+          (call-rescue event children)
+          true)))
 
     (fn [event]
       (when (member? tags (:tags event))
-        (call-rescue event children)))))
+        (call-rescue event children)
+        true))))
 
 (def tagged "Alias for tagged-all" tagged-all)
 
