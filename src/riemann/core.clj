@@ -75,6 +75,8 @@
 
     ; Start merged services
     (dorun (pmap service/start! merged-services))
+
+    (info "Hyperspace core online")
     merged))
 
 (defn start!
