@@ -160,6 +160,20 @@
   "The config file currently being included."
   nil)
 
+(defn config-file-path
+  "Computes the full path to a config file. Absolute paths are returned
+  unchanged. Relative paths are expanded relative to *config-file*. Returns a
+  string."
+  [path]
+  (if (-> path (file) (.isAbsolute))
+    path
+    (let [dir (-> (or *config-file* "ZARDOZ")
+                (file)
+                (.getCanonicalPath)
+                (file)
+                (.getParent))]
+      (str (file dir path)))))
+
 (defn validate-config
   "Check that a config file has valid syntax."
   [file]
@@ -171,14 +185,13 @@
 (defn include
   "Include another config file.
 
-  (include \"foo.clj\")"
-  [filename]
-  (let [dir (-> (or *config-file* "ZARDOZ")
-              (file)
-              (.getCanonicalPath)
-              (file)
-              (.getParent))
-        path (str (file dir filename))]
+  ; Relative to the current config file, or cwd
+  (include \"foo.clj\")
+
+  ; Absolute path
+  (include \"/foo/bar.clj\")"
+  [path]
+  (let [path (config-file-path path)]
     (binding [*config-file* path
               *ns* (find-ns 'riemann.config)]
       (validate-config path)
