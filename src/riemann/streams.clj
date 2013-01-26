@@ -11,7 +11,7 @@
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
   (:use [riemann.common :exclude [match]]
-        [riemann.time :only [unix-time linear-time every! once! defer cancel]]
+        [riemann.time :only [unix-time linear-time every! once! after! next-tick defer cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
@@ -772,7 +772,7 @@
     (fn [sent start end])))
 
 (defn rollup
-  "Invokes children with events at most n times per m second interval. Passes
+  "Invokes children with events at most n times per dt second interval. Passes
   *vectors* of events to children, not a single event at a time. For instance,
   (rollup 3 1 f) receives five events and forwards three times per second:
 
@@ -785,36 +785,48 @@
   ... and events 4 and 5 are rolled over into the next period:
 
     -> (f [4 5])"
-  [n m & children]
+  [n dt & children]
+  (let [anchor (unix-time)
+        state (atom {:sent 0
+                     :buffer []
+                     :flushed nil})
+        ; Flush buffer of events
+        flush (fn flush [state]
+                (if (empty? (:buffer state))
+                  (merge state {:sent 0
+                                :flushed nil})
+                  (merge state {:sent 1
+                                :buffer []
+                                :flushed (:buffer state)})))
 
-  (let [carry (ref [])]
-    ; This implementation relies on stable, one-after-the-other creation of
-    ; buckets from part-time. This is NOT always the case, so consider
-    ; carefully which part-time implementation is used.
-    (part-time-fast m
-      (fn [] (dosync
-               (if (empty? (deref carry))
-                           ; We haven't send any events yet.
-                           (ref 0)
-                           ; We already sent (or will shortly send) 1 event
-                           ; for the carry.
-                           (ref 1))))
+        ; Tick function; flushes buffer and invokes children.
+        tick (fn tick []
+               (let [state (swap! state flush)]
+                 ; Reschedule another tick if necessary
+                 (when (= 1 (:sent state))
+                   (once! (next-tick anchor dt) tick))
+                 ; Flush any previously buffered events.
+                 (when (:flushed state)
+                   (call-rescue (:flushed state) children))))
 
-      (fn [sent event]
-        (if (dosync (< n (alter sent inc)))
-          ; Overtime!
-          (dosync (alter carry conj event))
-          ; Send right away
-          (call-rescue [event] children)))
-
-      (fn [sent start end]
-        ; Dispatch carried events if present.
-        (let [events (dosync
-                       (let [x (deref carry)]
-                         (ref-set carry [])
-                         x))]
-          (when-not (empty? events)
-            (call-rescue events children)))))))
+        ; Enqueue an event. Increments :sent until a critical threshold, then
+        ; starts storing events in buffer.
+        enqueue (fn enqueue [state event]
+                  (merge state {:sent (inc (:sent state))
+                                :flushed nil
+                                :buffer (if (< (:sent state) n)
+                                          (:buffer state)
+                                          (conj (:buffer state) event))}))]
+    
+    ; Stream: accept events and enqueue into state.
+    (fn stream [event]
+      (let [state (swap! state enqueue event)]
+        (when (= 1 (:sent state))
+          ; We claimed the right to set up the next tick.
+          (once! (next-tick anchor dt) tick))
+        (when (<= (:sent state) n)
+          ; We're clear to send immediately.
+          (call-rescue [event] children))))))
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each

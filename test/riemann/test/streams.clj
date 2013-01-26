@@ -20,7 +20,8 @@
      (deref out#)))
 
 (defmacro run-stream-intervals
-  "Applies a seq of alternating events and intervals (in seconds) between them to stream, returning outputs."
+  "Applies a seq of alternating events and intervals (in seconds) between them
+  to stream, returning outputs."
   [stream inputs-and-intervals]
   `(let [out# (ref [])
          stream# (~@stream (append out#))
@@ -42,7 +43,8 @@
   `(is (= (run-stream ~stream ~inputs) ~outputs)))
 
 (defmacro test-stream-intervals
-  "Verifies that run-stream-intervals, taking inputs/intervals, forwards outputs to chldren."
+  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
+  outputs to chldren."
   [stream inputs-and-intervals outputs]
   `(is (= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
@@ -951,30 +953,25 @@
              (is (zero? (mod count 5))))))
 
 (deftest rollup-test
-         (let [out (ref [])
-               quantum 0.1
-               stream (rollup 2 quantum (append out))
-               t1 (unix-time)]
-          
-           (stream 1)
-           (is (= (deref out) [[1]]))
-           (stream 2)
-           (is (= (deref out) [[1] [2]]))
-           (stream 3)
-           (is (= (deref out) [[1] [2]]))
+         (testing "basic rollups"
+                  (test-stream-intervals 
+                    (rollup 2 1)
+                    [ 1 0 2 0 3 1   4 0 5 0 6 0 7 1       :foo 10]
+                    [[1] [2]   [3] [4]           [5 6 7] [:foo]  ]))
 
-           (advance! (* 1 quantum))
-           (is (= (deref out) [[1] [2] [3]]))
+         (testing "expired events"
+                  (reset-time!)
+                  (test-stream-intervals
+                    (rollup 2 3)
+                    [ 1 0 {:state "expired"} 0 :a 1 :b 1 :c 1 ]
+                    [[1] [{:state "expired"}]              [:a :b :c]])
 
-           (stream 4)
-           (is (= (deref out) [[1] [2] [3] [4]]))
-           (stream 5)
-           (stream 6)
-           (stream 7)
-           (is (= (deref out) [[1] [2] [3] [4]]))
-
-           (advance! (* 2 quantum))
-           (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))
+                  (reset-time!)
+                  (let [e {:state "expired"}]
+                    (test-stream-intervals
+                      (rollup 2 2)
+                      [ e 0 e 0 e 1 e 1]
+                      [[e] [e]       [e e]]))))
 
 (deftest coalesce-test
          (let [out (atom [])
