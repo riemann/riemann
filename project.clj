@@ -29,7 +29,7 @@
     [com.boundary/high-scale-lib "1.0.3"]
     [com.draines/postal "1.9.0"]
     [incanter/incanter-charts "1.3.0"]
-    [io.netty/netty "3.3.0.Final"]
+    [io.netty/netty "3.6.1.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.6.4"]
