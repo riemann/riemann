@@ -51,9 +51,9 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [bootstrap (ConnectionlessBootstrap.
-                                (NioDatagramChannelFactory.
-                                  (Executors/newCachedThreadPool)))
+              (let [pool (Executors/newCachedThreadPool)
+                    bootstrap (ConnectionlessBootstrap.
+                                (NioDatagramChannelFactory. pool))
                     all-channels (DefaultChannelGroup. 
                                    (str "udp-server " host port max-size))
                     cpf (channel-pipeline-factory
@@ -77,6 +77,7 @@
                         (fn []
                           (-> all-channels .close .awaitUninterruptibly)
                           (.releaseExternalResources bootstrap)
+                          (.shutdown pool)
                           (info "UDP server" host port max-size "shut down")
                           ))))))
 
