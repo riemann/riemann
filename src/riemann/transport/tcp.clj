@@ -15,7 +15,7 @@
                                     ExceptionEvent
                                     MessageEvent
                                     SimpleChannelHandler]
-           [org.jboss.netty.channel.group ChannelGroup DefaultChannelGroup]
+           [org.jboss.netty.channel.group ChannelGroup]
            [org.jboss.netty.channel.socket.nio NioServerSocketChannelFactory]
            [org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
                                                 LengthFieldPrepender]
@@ -26,6 +26,8 @@
                                   protobuf-encoder
                                   msg-decoder
                                   msg-encoder
+                                  execution-handler
+                                  channel-group
                                   channel-pipeline-factory]]
         [riemann.service :only [Service]]
         [clojure.tools.logging :only [info warn]]
@@ -68,7 +70,7 @@
   (.write (.getChannel e)
           (handle core (.getMessage e))))
 
-(defrecord TCPServer [host port pipeline-factory handler core killer]
+(defrecord TCPServer [host port channel-group pipeline-factory core killer]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -90,16 +92,11 @@
                     bootstrap (ServerBootstrap.
                                 (NioServerSocketChannelFactory.
                                   boss-pool
-                                  worker-pool))
-                    all-channels (DefaultChannelGroup. 
-                                   (str "tcp-server " host ":" port))
-                    cpf (channel-pipeline-factory 
-                          pipeline-factory
-                          (gen-tcp-handler core all-channels handler))]
+                                  worker-pool))]
 
                 ; Configure bootstrap
                 (doto bootstrap
-                  (.setPipelineFactory cpf)
+                  (.setPipelineFactory pipeline-factory)
                   (.setOption "readWriteFair" true)
                   (.setOption "tcpNoDelay" true)
                   (.setOption "reuseAddress" true)
@@ -110,13 +107,13 @@
                 ; Start bootstrap
                 (let [server-channel (.bind bootstrap
                                             (InetSocketAddress. host port))]
-                  (.add all-channels server-channel))
+                  (.add channel-group server-channel))
                 (info "TCP server" host port "online")
 
                 ; fn to close server
                 (reset! killer 
                         (fn []
-                          (-> all-channels .close .awaitUninterruptibly)
+                          (-> channel-group .close .awaitUninterruptibly)
                           (.releaseExternalResources bootstrap)
                           (.shutdown worker-pool)
                           (.shutdown boss-pool)
@@ -130,29 +127,31 @@
 
 (defn tcp-server
   "Create a new TCP server. Doesn't start until (service/start!). Options:
-  :host   The host to listen on (default 127.0.0.1).
-  :port   The port to listen on. (default 5555)
-  :pipeline-factory"
+  :host             The host to listen on (default 127.0.0.1).
+  :port             The port to listen on. (default 5555)
+  :core             An atom used to track the active core for this server
+  :channel-group    A global channel group used to track all connections.
+  :pipeline-factory A ChannelPipelineFactory for creating new pipelines."
   ([]
    (tcp-server {}))
   ([opts]
-     (let [pipeline-factory #(doto (Channels/pipeline)
-                               (.addLast "int32-frame-decoder"
-                                         (int32-frame-decoder))
-                               (.addLast "int32-frame-encoder"
-                                         (int32-frame-encoder))
-                               (.addLast "protobuf-decoder"
-                                         (protobuf-decoder))
-                               (.addLast "protobuf-encoder"
-                                         (protobuf-encoder))
-                               (.addLast "msg-decoder"
-                                         (msg-decoder))
-                               (.addLast "msg-encoder"
-                                         (msg-encoder)))]
-       (TCPServer.
-         (get opts :host "127.0.0.1")
-         (get opts :port 5555)
-         (get opts :pipeline-factory pipeline-factory)
-         (get opts :handler tcp-handler)
-         (atom nil)
-         (atom nil)))))
+     (let [core          (get opts :core (atom nil))
+           host          (get opts :host "127.0.0.1")
+           port          (get opts :port 5555)
+           channel-group (get opts :channel-group
+                              (channel-group 
+                                (str "tcp-server " host ":" port)))
+           pf (get opts :pipeline-factory
+                    (channel-pipeline-factory
+                               int32-frame-decoder (int32-frame-decoder)
+                      ^:shared int32-frame-encoder (int32-frame-encoder)
+                      ^:shared protobuf-decoder    (protobuf-decoder)
+                      ^:shared protobuf-encoder    (protobuf-encoder)
+                      ^:shared msg-decoder         (msg-decoder)
+                      ^:shared msg-encoder         (msg-encoder)
+                      ^:shared executor            (execution-handler)
+                      ^:shared handler             (gen-tcp-handler 
+                                                     core
+                                                     channel-group
+                                                     tcp-handler)))]
+       (TCPServer. host port channel-group pf core (atom nil)))))
