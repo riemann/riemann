@@ -85,10 +85,12 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [bootstrap (ServerBootstrap.
+              (let [boss-pool (Executors/newCachedThreadPool)
+                    worker-pool (Executors/newCachedThreadPool)
+                    bootstrap (ServerBootstrap.
                                 (NioServerSocketChannelFactory.
-                                  (Executors/newCachedThreadPool)
-                                  (Executors/newCachedThreadPool)))
+                                  boss-pool
+                                  worker-pool))
                     all-channels (DefaultChannelGroup. 
                                    (str "tcp-server " host ":" port))
                     cpf (channel-pipeline-factory 
@@ -116,6 +118,8 @@
                         (fn []
                           (-> all-channels .close .awaitUninterruptibly)
                           (.releaseExternalResources bootstrap)
+                          (.shutdown worker-pool)
+                          (.shutdown boss-pool)
                           (info "TCP server" host port "shut down")))))))
 
   (stop! [this]
