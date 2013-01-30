@@ -145,11 +145,11 @@
                     (channel-pipeline-factory
                                int32-frame-decoder (int32-frame-decoder)
                       ^:shared int32-frame-encoder (int32-frame-encoder)
+                      ^:shared executor            (execution-handler)
                       ^:shared protobuf-decoder    (protobuf-decoder)
                       ^:shared protobuf-encoder    (protobuf-encoder)
                       ^:shared msg-decoder         (msg-decoder)
                       ^:shared msg-encoder         (msg-encoder)
-                      ^:shared executor            (execution-handler)
                       ^:shared handler             (gen-tcp-handler 
                                                      core
                                                      channel-group

@@ -68,10 +68,7 @@
   []
   (proxy [OneToOneDecoder] []
     (decode [context channel message]
-            ; Use the protobuf object's serialized size as an estimate for the
-            ; decoded record size.
-            (with-meta (decode-msg message)
-                       {:bytesize (.getSerializedSize message)}))))
+            (decode-msg message))))
 
 (defn msg-encoder
   "Netty encoder for maps -> Msg protobuf objects"
@@ -79,21 +76,6 @@
   (proxy [OneToOneEncoder] []
     (encode [context channel message]
             (encode-pb-msg message))))
-
-(defn msg-size-estimator
-  "An ObjectSizeEstimator, because Netty takes a long time traversing object
-  graphs."
-  []
-  (proxy [DefaultObjectSizeEstimator] []
-    (estimateSize [object]
-                  (if (instance? Proto$Msg object)
-                    (do
-                      (prn "Got a Msg" object)
-                      (prn "meta" (meta object))
-                      (-> object (meta) (:bytesize)))
-                    (do
-                      (prn "Got unknown" (class object) object)
-                      (proxy-super estimateSize object))))))
 
 (defn execution-handler
   "Creates a new netty execution handler."
@@ -103,10 +85,6 @@
       16       ; Core pool size
       1048576  ; 1MB per channel queued
       10485760 ; 10MB total queued
-;      300      ; Keepalive
-;      TimeUnit/SECONDS
-;      (msg-size-estimator)
-;      (Executors/defaultThreadFactory)
       )))
   
 (defn handle

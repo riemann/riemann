@@ -113,10 +113,10 @@
                                    "(" max-size ")")))
          pipeline-factory (get opts :pipeline-factory
                                (channel-pipeline-factory
+                                 ^:shared executor         (execution-handler)
                                  ^:shared protobuf-decoder (protobuf-decoder)
                                  ^:shared protobuf-encoder (protobuf-encoder)
                                  ^:shared msg-decoder      (msg-decoder)
-                                 ^:shared executor         (execution-handler)
                                  ^:shared handler          (udp-handler core
                                                                channel-group)))]
      (UDPServer. host port max-size channel-group pipeline-factory core 
