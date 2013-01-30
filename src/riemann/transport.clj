@@ -32,6 +32,10 @@
   (stop [this]
     "Gracefully stop the server"))
 
+(def shared-execution-handler
+  "ExecutionHandler instance shared among all channel pipeline factories."
+  (ExecutionHandler. (OrderedMemoryAwareThreadPoolExecutor. 16 1048576 1048576))) ; Maaagic values!
+
 (defn channel-pipeline-factory
   "Return a factory for ChannelPipelines given a wire protocol-specific
   pipeline factory and a network protocol-specific handler."
@@ -39,9 +43,7 @@
   (reify ChannelPipelineFactory
     (getPipeline [this]
       (doto ^ChannelPipeline (pipeline-factory)
-        (.addLast "executor" (ExecutionHandler.
-                              (OrderedMemoryAwareThreadPoolExecutor.
-                               16 1048576 1048576))) ; Maaagic values!
+        (.addLast "executor" shared-execution-handler) 
         (.addLast "handler" handler)))))
 
 (defn protobuf-decoder
