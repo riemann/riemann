@@ -26,7 +26,7 @@
                                   protobuf-encoder
                                   msg-decoder
                                   msg-encoder
-                                  execution-handler
+                                  shared-execution-handler
                                   channel-group
                                   channel-pipeline-factory]]
         [riemann.service :only [Service]]
@@ -145,7 +145,7 @@
                     (channel-pipeline-factory
                                int32-frame-decoder (int32-frame-decoder)
                       ^:shared int32-frame-encoder (int32-frame-encoder)
-                      ^:shared executor            (execution-handler)
+                      ^:shared executor            shared-execution-handler
                       ^:shared protobuf-decoder    (protobuf-decoder)
                       ^:shared protobuf-encoder    (protobuf-encoder)
                       ^:shared msg-decoder         (msg-decoder)

@@ -9,7 +9,7 @@
                                       gen-tcp-handler]]
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
-                                  execution-handler]]
+                                  shared-execution-handler]]
         [clojure.string :only [split]]))
 
 (defn decode-graphite-line
@@ -71,6 +71,7 @@
                                                         CharsetUtil/UTF_8)
                               ^:shared string-encoder (StringEncoder. 
                                                         CharsetUtil/UTF_8)
+                              ^:shared executor shared-execution-handler
                               ^:shared graphite-decoder (graphite-frame-decoder
                                                           (:parser-fn opts))
                               ^:shared handler (gen-tcp-handler core

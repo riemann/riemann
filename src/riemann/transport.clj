@@ -86,7 +86,10 @@
       1048576  ; 1MB per channel queued
       10485760 ; 10MB total queued
       )))
-  
+
+(defonce shared-execution-handler
+  (execution-handler))
+
 (defn handle
   "Handles a msg with the given core."
   [core msg]

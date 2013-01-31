@@ -20,7 +20,7 @@
                                       protobuf-decoder
                                       protobuf-encoder
                                       msg-decoder
-                                      execution-handler
+                                      shared-execution-handler
                                       channel-pipeline-factory]]))
 
 (defn udp-handler
@@ -111,13 +111,12 @@
                             (channel-group
                               (str "udp-server" host ":" port 
                                    "(" max-size ")")))
-         pipeline-factory (get opts :pipeline-factory
-                               (channel-pipeline-factory
-                                 ^:shared executor         (execution-handler)
-                                 ^:shared protobuf-decoder (protobuf-decoder)
-                                 ^:shared protobuf-encoder (protobuf-encoder)
-                                 ^:shared msg-decoder      (msg-decoder)
-                                 ^:shared handler          (udp-handler core
-                                                               channel-group)))]
-     (UDPServer. host port max-size channel-group pipeline-factory core 
-                 (atom nil)))))
+         pf (get opts :pipeline-factory
+                 (channel-pipeline-factory
+                   ^:shared executor         shared-execution-handler
+                   ^:shared protobuf-decoder (protobuf-decoder)
+                   ^:shared protobuf-encoder (protobuf-encoder)
+                   ^:shared msg-decoder      (msg-decoder)
+                   ^:shared handler          (udp-handler core
+                                                          channel-group)))]
+     (UDPServer. host port max-size channel-group pf core (atom nil)))))
