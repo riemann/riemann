@@ -23,8 +23,7 @@
   :port (default 5557)"
   [opts]
   (stop-server!)
-  (let [opts (merge {:port 5557 :host "127.0.0.1"} 
-                    (apply hash-map opts))]
+  (let [opts (merge {:port 5557 :host "127.0.0.1"} opts)]
     (def server (nrepl/start-server
                   :port (:port opts)
                   :bind (:host opts)))
