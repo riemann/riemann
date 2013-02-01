@@ -15,28 +15,40 @@
   (default 10) seconds. Expired events are streamed to the core's streams. The
   streamed states have only the host and service copied, current time, and
   state expired. Expired events from the index are also published to the
-  \"index\" pubsub channel."
-  [interval]
-  (let [interval (* 1000 (or interval 10))]
-    (service/thread-service
-      :reaper interval
-      (fn worker [core]
-        (Thread/sleep interval)
-        (let [i       (:index core)
-              streams (:streams core)]
-          (when i
-            (doseq [state (index/expire i)]
-              (try
-                (let [e {:host (:host state)
-                         :service (:service state)
-                         :state "expired"
-                         :time (unix-time)}]
-                  (when-let [registry (:pubsub core)]
-                    (ps/publish registry "index" e))
-                  (doseq [stream streams]
-                    (stream e)))
-                (catch Exception e
-                  (warn e "Caught exception while processing expired events"))))))))))
+  \"index\" pubsub channel.
+  
+  Options:
+  
+  :keep-keys A list of event keys which should be preserved from the indexed 
+             event in the expired event. Defaults to [:host :service], which
+             means that when an event expires, its :host and :service are
+             copied to a new event, but no other keys are preserved.
+
+             The state of an expired event is always \"expired\", and its time
+             is always the time that the event expired."
+  ([] (reaper 10))
+  ([interval] (reaper interval {}))
+  ([interval opts]
+   (let [interval  (* 1000 (or interval 10))
+         keep-keys (get opts :keep-keys [:host :service])]
+     (service/thread-service
+       :reaper interval
+       (fn worker [core]
+         (Thread/sleep interval)
+         (let [i       (:index core)
+               streams (:streams core)]
+           (when i
+             (doseq [state (index/expire i)]
+               (try
+                 (let [e (-> (select-keys state keep-keys)
+                           (merge {:state "expired"
+                                   :time (unix-time)}))]
+                   (when-let [registry (:pubsub core)]
+                     (ps/publish registry "index" e))
+                   (doseq [stream streams]
+                     (stream e)))
+                 (catch Exception e
+                   (warn e "Caught exception while processing expired events")))))))))))
 
 (defn core
   "Create a new core."

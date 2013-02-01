@@ -101,11 +101,11 @@
    (fn delete [event] (core/delete-from-index @core fields event))))
 
 (defn periodically-expire
-  "Sets up a reaper for this core. See core API docs."
+  "Sets up a reaper for this core. See riemann.core/reaper."
   ([]
    (periodically-expire 10))
-  ([interval]
-   (add-service! (core/reaper interval))))
+  ([& args]
+   (add-service! (apply core/reaper args))))
 
 (defn publish
   "Returns a stream which publishes events to the given channel. Uses this
