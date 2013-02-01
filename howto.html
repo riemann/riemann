@@ -518,18 +518,13 @@ above will return only "prod" and "webservers" hosts.
 
 <h3>Count total number of hosts</h3>
 
-<p>
-Sometimes it is useful to know how many hosts are sending data to Riemann.
-This is especially useful in cloud type of environment where nodes are
-constantly scaling up and down.
-</p>
+<p>Sometimes it is useful to know how many hosts are sending data to Riemann.
+This is especially useful in cloud environments where nodes are constantly
+scaling up and down.</p>
 
-<p>
-Since Riemann server knows all the sending hosts, we will create a new stream
-that will keep track of unique hosts and index it as a new service so the
-Riemann dashboard can query it. In riemann.config you should have something
-that looks like below:
-</p>
+<p>We'll create a new stream that will keep track of unique hosts and index it
+as a new service so the Riemann dashboard can query it. In riemann.config you
+should have something that looks like below:</p>
 
 {% highlight clj %}
 (let [index (default :ttl 300 (update-index (index)))]
@@ -538,11 +533,8 @@ that looks like below:
       index))
 {% endhighlight %}
 
-<p>
-Since stream is just a function that takes an event as an argument,
-we will just create an anonymous function to existing streams that will do all
-the work.
-</p>
+<p>Since stream is just a function that takes an event as an argument, we'll add
+an anonymous function to <code>(streams)</code> that will store a set of hosts.</p>
 
 {% highlight clj %}
 (let [hosts (atom #{})]
@@ -564,14 +556,10 @@ the work.
 
 <img src="https://a248.e.akamai.net/camo.github.com/2722f6e795bedf43fcba78c4ba7e006153ab2187/687474703a2f2f636c2e6c792f696d6167652f337a3232326e3352326834342f53637265656e73686f74253230313a32303a313325323031313a3134253230504d2e706e67">
 
-<h3>Count number of hosts by application grouping</h3>
+<h3>Count number of hosts by application group</h3>
 
-<p>
-Assuming you already included special tags that you would like to group your
-application hosts by. You can use the following code in riemann.config to
-create a index that will count the number of unique hosts for a given group of
-tags.
-</p>
+<p>Let's say events from each host come with a particular tag, like "production" or "staging".
+You'd like to know how many hosts have a certain tag. In riemann.config, try this stream:</p>
 
 {% highlight clj %}
 (let [hosts (atom {}) host (atom #{})]
@@ -584,12 +572,10 @@ tags.
     (swap! hosts (atom {})))))
 {% endhighlight %}
 
-<p>
-The above code will create a unique service using all your tags with "-count"
+<p>The above code will create a unique service using all your tags with "-count"
 appended to the end. For example, if you have "webserver" and "prod" tags, the
 new service that will count unique hosts will be named "webserver-prod-count".
-In your dashboard you can query it like below:
-</p>
+In your dashboard you can query it like below:</p>
 
 <p><code>'(service = "webserver-prod-count")'</code></p>
 
