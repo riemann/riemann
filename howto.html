@@ -68,7 +68,9 @@ layout: default
 
 <h3>Measure CPU, memory, and disk use</h3>
 
-<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes a program called riemann-health, which measures the local host's cpu, memory, and disk use. You can install it from rubygems:</p>
+<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes
+a program called riemann-health, which measures the local host's cpu, memory,
+and disk use. You can install it from rubygems:</p>
 
 {% highlight sh %}
 gem install riemann-tools
@@ -98,19 +100,24 @@ gem install riemann-tools
 riemann-riak --host 1.2.3.4
 {% endhighlight %}
 
-<p>Riemann-riak comes with defaults for the riak .deb packages shipped by Basho, but it's tunable for other configurations. See <code>riemann-riak --help</code> for more options.</p>
+<p>Riemann-riak comes with defaults for the riak .deb packages shipped by
+Basho, but it's tunable for other configurations. See <code>riemann-riak
+  --help</code> for more options.</p>
 
 <h2>Running Riemann</h2>
 
 <h3>Listen on a different host or port</h3>
 
-<p>Riemann includes several <i>servers</i>, which accept events from the outside world and pass them on to streams. Servers are started from the riemann config file, like so:</p>
+<p>Riemann includes several <i>servers</i>, which accept events from the
+outside world and pass them on to streams. Servers are started from the riemann
+config file, like so:</p>
 
 {% highlight clj %}
 (tcp-server)
 {% endhighlight %}
 
-<p>To set the host or port one of these servers listens on, just add <code>:host</code> or <code>:port</code> arguments:</p>
+<p>To set the host or port one of these servers listens on, just add
+<code>:host</code> or <code>:port</code> arguments:</p>
 
 {% highlight clj %}
 (tcp-server :host "1.2.3.4" :port 1234)
@@ -166,7 +173,8 @@ the state "error". The basic filtering streams are <a
   href="api/riemann.streams.html#var-match">match</a>, <a
   href="api/riemann.streams.html#var-tagged-all">tagged-all</a> and <a
   href="api/riemann.streams.html#var-tagged-any">tagged-any</a>, and <a
-  href="api/riemann.streams.html#var-expired">expired</a>. Most of the time, you'll use <code>where</code>.</p>
+  href="api/riemann.streams.html#var-expired">expired</a>. Most of the time,
+you'll use <code>where</code>.</p>
 
 {% highlight clj %}
 (streams
@@ -247,7 +255,9 @@ can send an email whenever the state changes:</p>
       (email "ops@startup.io"))))
 {% endhighlight %}
 
-<p>Note that we use <code>(by)</code> so that each distinct host and service track their changes independently. Otherwise, we'd get alerts when service A reported "ok" and service B reported "down". There's a shorthand for this:</p>
+<p>Note that we use <code>(by)</code> so that each distinct host and service
+track their changes independently. Otherwise, we'd get alerts when service A
+reported "ok" and service B reported "down". There's a shorthand for this:</p>
 
 {% highlight clj %}
 (streams
@@ -255,7 +265,10 @@ can send an email whenever the state changes:</p>
     (email "ops@startup.io")))
 {% endhighlight %}
 
-<p>When you start Riemann, it doesn't know what the previous state was. By default, <code>changed</code> will forward on the first event it receives. You can tell <code>changed</code> and <code>changed-state</code> to *assume* an initial state with the <code>:init</code> option:</p>
+<p>When you start Riemann, it doesn't know what the previous state was. By
+default, <code>changed</code> will forward on the first event it receives. You
+can tell <code>changed</code> and <code>changed-state</code> to *assume* an
+initial state with the <code>:init</code> option:</p>
 
 {% highlight clj %}
 (streams
@@ -319,8 +332,9 @@ track of which services are starting, crashing, and gracefully restarting.</p>
 <h3>Report exceptions</h3>
 
 <p>Where you handle exceptions in your application, you can also submit an
-event to Riemann. I usually set the service to the application name, include the
-stacktrace as the description, and tag the event with both "exception" and the classname of the exception.</p>
+event to Riemann. I usually set the service to the application name, include
+the stacktrace as the description, and tag the event with both "exception" and
+the classname of the exception.</p>
 
 {% highlight clj %}
 (tagged "exception")
@@ -331,7 +345,8 @@ stacktrace as the description, and tag the event with both "exception" and the c
 {% endhighlight %}
 
 <p>It's also easy to track the *rate* of exceptions per second, so you can
-graph how many unexpected failures occur per day, and determine which services need the most attention.</p>
+graph how many unexpected failures occur per day, and determine which services
+need the most attention.</p>
 
 {% highlight clj %}
 (where (service "exception")
@@ -342,11 +357,19 @@ graph how many unexpected failures occur per day, and determine which services n
 
 <h3>Roll up and throttle events</h3>
 
-<p>Sometimes, when things break, they submit a *ton* of events. Maybe you receive sixty thousand exceptions in five minutes. You need to know that a problem exists--but don't need to know about *every single failure*. Riemann has two streams for controlling the rate of events.</p>
+<p>Sometimes, when things break, they submit a *ton* of events. Maybe you
+receive sixty thousand exceptions in five minutes. You need to know that a
+problem exists--but don't need to know about *every single failure*. Riemann
+has two streams for controlling the rate of events.</p>
 
-<p><a href="api/riemann.streams.html#var-rollup">rollup</a> will allow a few events to pass through readily. Then it starts to accumulate events, rolling them up into a list which is submitted at the end of a given time interval.</p>
+<p><a href="api/riemann.streams.html#var-rollup">rollup</a> will allow a few
+events to pass through readily. Then it starts to accumulate events, rolling
+them up into a list which is submitted at the end of a given time interval.</p>
 
-<p>Let's define a new stream for alerting the operations team, which sends only five emails per hour (3600 seconds). We'll receive the first four events immediately--and at the end of the hour, a single email with a summary of all the rest.</p>
+<p>Let's define a new stream for alerting the operations team, which sends only
+five emails per hour (3600 seconds). We'll receive the first four events
+immediately--and at the end of the hour, a single email with a summary of all
+the rest.</p>
 
 {% highlight clj %}
 (def tell-ops (rollup 5 3600 (email "ops@rickenbacker.mil")))
@@ -356,7 +379,10 @@ graph how many unexpected failures occur per day, and determine which services n
   (tagged "exception" tell-ops))
 {% endhighlight %}
 
-<p>Rollup holds on to every event, which can use a lot of memory. Sometimes it's OK to drop some events instead of delivering them. That's where <a href="api/riemann.streams.html#var-throttle">throttle</a> comes in: it allows the first five events through, then ignores all the rest for an hour.</p>
+<p>Rollup holds on to every event, which can use a lot of memory. Sometimes
+it's OK to drop some events instead of delivering them. That's where <a
+  href="api/riemann.streams.html#var-throttle">throttle</a> comes in: it allows
+the first five events through, then ignores all the rest for an hour.</p>
 
 {% highlight clj %}
 (def tell-ops (throttle 5 3600 (email "ops@rickenbacker.mil")))
@@ -380,13 +406,17 @@ submitting events and its events in the index will become stale. Periodically,
 the index sweeps out events past their lifetime, deletes them from the index,
 and streams an event for that host and service with state "expired".</p>
 
-<p>You can control how often the index scans for expired events with <code>periodically-expire</code>. Here, we check every ten seconds. If you *don't* want events to expire from the index, you can delete this line from your config:</p>
+<p>You can control how often the index scans for expired events with
+<code>periodically-expire</code>. Here, we check every ten seconds. If you
+*don't* want events to expire from the index, you can delete this line from
+your config:</p>
 
 {% highlight clj %}
 (periodically-expire 10)
 {% endhighlight %}
 
-<p>If events have no TTL given, the index assumes their TTL is 60 seconds. You can provide a default TTL for any incoming events that don't provide one:</p>
+<p>If events have no TTL given, the index assumes their TTL is 60 seconds. You
+can provide a default TTL for any incoming events that don't provide one:</p>
 
 {% highlight clj %}
 (streams
@@ -420,7 +450,8 @@ you:</p>
 
 <h3>Group events in time</h3>
 
-<p>Sometimes you want to ask a question about the last few minutes, or of groups of 10 consecutive events at a time.</p>
+<p>Sometimes you want to ask a question about the last few minutes, or of
+groups of 10 consecutive events at a time.</p>
 
 <ul>
   <li><a href="api/riemann.streams.html#var-moving-time-window">moving-time-window</a> forwards the last n seconds of events</li>
@@ -687,7 +718,8 @@ string.</p>
 represented as one of metric_d (floating point 64-bit), metric_f (floating
 point 32-bit), or metric_sint (64-bit signed integer). Your client should emit
 and consume all of these types. For compatibility with older versions of
-Riemann, you may *also* emit a metric_f alongside the normal type; newer versions of Riemann will prefer the higher-resolution types.</p>
+Riemann, you may *also* emit a metric_f alongside the normal type; newer
+versions of Riemann will prefer the higher-resolution types.</p>
 
 <p>Events are uniquely identified by host and service. Both allow null.
 Event.time is the time in unix epoch seconds and is optional. The server will
@@ -698,7 +730,9 @@ to add a nanosecond field as well.</p>
 <p>You can also query events from the index using a basic query language. Just
 submit a Message with your query in message.query.string. Search queries will
 return a message with repeated Events matching that expression. A null
-expression will return no states. For some example queries, see <a href="https://github.com/aphyr/riemann/blob/master/test/riemann/test/query.clj">The query test suite</a>.</p>
+expression will return no states. For some example queries, see <a
+  href="https://github.com/aphyr/riemann/blob/master/test/riemann/test/query.clj">The
+  query test suite</a>.</p>
 
 <p>You might find it useful to read the <a
   href="https://github.com/aphyr/riemann-ruby-client">Ruby client</a> source as
@@ -707,14 +741,19 @@ a guide to writing your own client.</p>
 <h3>Work with the Riemann source</h3>
 
 <p>I try to keep master as clean and runnable as possible. Riemann has an
-exhaustive test suite, which helps ensure code quality. If you plan on changing the Riemann source, fork it on Github so you'll be able to send pull requests quickly. If you just want to run the latest version, go ahead and clone the official repo:</p>
+exhaustive test suite, which helps ensure code quality. If you plan on changing
+the Riemann source, fork it on Github so you'll be able to send pull requests
+quickly. If you just want to run the latest version, go ahead and clone the
+official repo:</p>
 
 {% highlight sh %}
 git clone git://github.com/aphyr/riemann.git
 cd riemann
 {% endhighlight %}
 
-<p>You'll also need a JVM, and <a href="https://github.com/technomancy/leiningen">leiningen 2</a>--the Clojure build system.</p>
+<p>You'll also need a JVM, and <a
+  href="https://github.com/technomancy/leiningen">leiningen 2</a>--the Clojure
+build system.</p>
 
 <p>To run the tests suite, try <code>lein test</code>. To start Riemann, run
 <code>lein run</code>. Riemann will read the file <code>riemann.config</code>
@@ -722,7 +761,10 @@ in the current directory. If you want to run a different config file, try</p>
 
 {% highlight sh %} lein run -- path/to/my/riemann.config {% endhighlight %}
 
-<p>If you want a fat jar, run <code>lein uberjar</code> and copy target/riemann-{version}-STANDALONE.jar. To build tarball and debian packages, use <code>lein pkg</code>; .debs and .tar.gz files, plus md5sums, will appear in <code>target/</code>.
+<p>If you want a fat jar, run <code>lein uberjar</code> and copy
+target/riemann-{version}-STANDALONE.jar. To build tarball and debian packages,
+use <code>lein pkg</code>; .debs and .tar.gz files, plus md5sums, will appear
+in <code>target/</code>.
 
 <p>The protocol buffer codec and clojure client live in <a
   href="https://github.com/aphyr/riemann-clojure-client">riemann-clojure-client</a>,
