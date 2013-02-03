@@ -349,10 +349,11 @@ graph how many unexpected failures occur per day, and determine which services
 need the most attention.</p>
 
 {% highlight clj %}
-(where (service "exception")
+(where (tagged "exception")
   (with :metric 1
     (by :service
-      (rate 10 index graph))))
+      (adjust [:service (str " exception rate")]
+        (rate 10 index graph)))))
 {% endhighlight %}
 
 <h3>Roll up and throttle events</h3>
