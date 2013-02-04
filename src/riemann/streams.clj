@@ -844,14 +844,15 @@
       (let [ekey  [host service]
             ; Updates the state map and delivers expired events to an atom.
             update (fn update [[ok _]]
-                     (map persistent!
-                          (reduce (fn part [[ok expired] [k v]]
-                                    (if (expired? v)
-                                      [ok (conj! expired v)]
-                                      [(assoc! ok k v) expired]))
-                                  [(transient {})
-                                   (transient [])]
-                                  (assoc ok ekey event))))
+                     (doall
+                       (map persistent!
+                            (reduce (fn part [[ok expired] [k v]]
+                                      (if (expired? v)
+                                        [ok (conj! expired v)]
+                                        [(assoc! ok k v) expired]))
+                                    [(transient {})
+                                     (transient [])]
+                                    (assoc ok ekey event)))))
             [ok expired] (swap! past update)]
         (call-rescue (concat expired (vals ok)) children)))))
 
