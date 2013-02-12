@@ -968,7 +968,7 @@
   event has a nil value for that key. Passes the result on to children. Use:
 
   (default :service \"foo\" prn)
-  (default :service \"jrecursive\" :state \"chicken\"} prn)"
+  (default {:service \"jrecursive\" :state \"chicken\"} prn)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
