@@ -107,14 +107,18 @@
 
         ; Binary
         {:directory "/usr/bin"
-         :filemode "0755"
+         :filemode "755"
          :sources [(source (file (:root project) "pkg" "deb" "riemann")
                            "riemann")]}
 
-        ; Config
+        ; Config dir
         {:directory "/etc/riemann"
-         :filemode "0644"
-         :directory-included? true
+         :filemode "755"
+         :directory-included? true}
+        
+        ; Config file
+        {:directory "/etc/riemann"
+         :filemode "644"
          :configuration true
          :sources [(source (file (:root project) "pkg" "riemann.config")
                            "riemann.config")]}]))
