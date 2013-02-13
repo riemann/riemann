@@ -15,6 +15,7 @@
     [org.clojure/math.numeric-tower "0.0.1"]
     [org.clojure/tools.logging "0.2.3"]
     [org.clojure/tools.nrepl "0.2.0-RC1"]
+    [org.clojure/java.data "0.1.1"]
     [clojure-complete "0.2.2"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
@@ -36,7 +37,8 @@
     [riemann-clojure-client "0.0.7-SNAPSHOT"]
     [slingshot "0.10.2"]
   ]
-  :plugins [[codox "0.6.1"]]
+  :plugins [[codox "0.6.1"
+             lein-rpm "0.0.5"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
