@@ -5,16 +5,23 @@
         [clojure.string :only [join capitalize trim-newline replace]]
         [leiningen.uberjar :only [uberjar]])
   (:import java.util.Date
-           java.text.SimpleDateFormat)
-  (:import [org.codehaus.mojo.rpm RPMMojo AbstractRPMMojo Mapping Source SoftlinkSource Scriptlet]
-           [org.apache.maven.project MavenProject]
-           [org.apache.maven.shared.filtering DefaultMavenFileFilter]
-           [org.codehaus.plexus.logging.console ConsoleLogger]))
+           java.text.SimpleDateFormat
+           (org.codehaus.mojo.rpm RPMMojo 
+                                  AbstractRPMMojo
+                                  Mapping Source
+                                  SoftlinkSource
+                                  Scriptlet)
+           (org.apache.maven.project MavenProject)
+           (org.apache.maven.shared.filtering DefaultMavenFileFilter)
+           (org.codehaus.plexus.logging.console ConsoleLogger)))
 
-(def foo (prn "hi"))
+(defn workarea
+  [project]
+  (file (:root project) "target" "rpm"))
 
 (defn cleanup
-  [project])
+  [project]
+  (sh "rm" "-rf" (str (workarea project))))
 
 (defn reset
   [project]
@@ -23,8 +30,8 @@
 
 (defn get-version
   [project]
-  (let [df   (SimpleDateFormat. "yyyyMMdd-HHmmss")]
-    (replace (:version project) #"SNAPSHOT" (.format df (Date.)))))
+  (let [df   (SimpleDateFormat. ".yyyyMMdd.HHmmss")]
+    (replace (:version project) #"-SNAPSHOT" (.format df (Date.)))))
 
 (defn set-mojo! 
   "Set a field on an AbstractRPMMojo object."
@@ -40,6 +47,12 @@
     (doseq [item list] (.add list item))
     list))
 
+(defn scriptlet
+  "Creates a scriptlet backed by a file"
+  [filename]
+  (doto (Scriptlet.)
+    (.setScriptFile (file filename))))
+
 (defn source
   "Create a source with a local location and a destination."
   ([] (Source.))
@@ -47,9 +60,9 @@
    (doto (Source.)
      (.setLocation (str location))))
   ([location destination]
-    (doto (Source.)
-      (.setLocation (str location))
-      (.setDestination (str destination)))))
+   (doto (Source.)
+     (.setLocation (str location))
+     (.setDestination (str destination)))))
 
 (defn mapping
   [m]
@@ -59,23 +72,24 @@
                               true  "true"
                               false "false"
                               nil   "false"
-                              (:configuration m))
-    (.setDependency         (:dependency m))
-    (.setDirectory          (:directory m))
-    (.setDirectoryIncluded  (:directory-included? m))
-    (.setDocumentation      (:documentation? m))
+                              (:configuration m))) 
+    (.setDependency         (:dependency m)) 
+    (.setDirectory          (:directory m)) 
+    (.setDirectoryIncluded  (boolean (:directory-included? m)))
+    (.setDocumentation      (boolean (:documentation? m)))
     (.setFilemode           (:filemode m))
     (.setGroupname          (:groupname m))
-    (.setRecurseDirectories (:recurse-directories? m))
+    (.setRecurseDirectories (boolean (:recurse-directories? m)))
     (.setSources            (:sources m))
-    (.setUsername           (:username m)))))
+    (.setUsername           (:username m))))
 
 (defn mappings
   [project]
   (map (comp mapping 
              (partial merge {:username "riemann"
-                             :groupname "riemann"})
-       [; JAR
+                             :groupname "riemann"})) 
+
+       [; Jar
         {:directory "/usr/lib/riemann/"
          :filemode "644"
          :sources [(source (str (file (:root project) 
@@ -117,22 +131,37 @@
 (defn make-rpm
   "Create and execute a Mojo RPM."
   [project]
-  (let [rpm 
-        (doto (blank-rpm)
-          (set-mojo! "projversion" (get-version project))
-          (set-mojo! "name" (:name project))
-          (set-mojo! "summary" (:description project))
-          (set-mojo! "workarea" (file (:root project) "target"))
-          (set-mojo! "requires" (create-dependency "jre >= 1.6.0"))
-          (set-mojo! "mappings" (array-list (mappings project))))]
-    (prn "RPM is" rpm)
-    (.execute rpm)))
+  (doto (blank-rpm)
+    (set-mojo! "projversion" (get-version project))
+    (set-mojo! "name" (:name project))
+    (set-mojo! "summary" (:description project))
+    (set-mojo! "copyright" "Kyle Kingsbury & contributors")
+    (set-mojo! "workarea" (workarea project))
+    (set-mojo! "mappings" (mappings project))
+    (set-mojo! "preinstallScriptlet" (scriptlet 
+                                       (file (:root project)
+                                             "pkg" "deb" "preinst.sh")))
+    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"]))
+    (.execute)))
+
+(defn extract-rpm
+  "Snags the RPM file out of its little mouse-hole and brings it up to target/"
+  [project]
+  (let [dir (file (workarea project)
+                  (:name project)
+                  "RPMS"
+                  "noarch")
+        rpms (remove #(.isDirectory %) (.listFiles dir))]
+    (doseq [rpm rpms]
+      (.renameTo rpm (file (:root project)
+                           "target"
+                           (.getName rpm))))))
 
 (defn fatrpm
-  ([project] (fatrpm project true))
+  ([project] (fatrpm project false))
   ([project uberjar?]
-   (prn "hi")
    (reset project)
    (when uberjar? (uberjar project))
    (make-rpm project)
-   (cleanup project)))
+   (extract-rpm project)))
+;   (cleanup project)))
