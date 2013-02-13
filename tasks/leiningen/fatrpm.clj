@@ -15,6 +15,12 @@
            (org.apache.maven.shared.filtering DefaultMavenFileFilter)
            (org.codehaus.plexus.logging.console ConsoleLogger)))
 
+(defn write
+  "Write string to file, plus newline"
+  [file string]
+  (with-open [w (writer file)]
+    (.write w (str (trim-newline string) "\n"))))
+
 (defn workarea
   [project]
   (file (:root project) "target" "rpm"))
@@ -145,7 +151,8 @@
     (.execute)))
 
 (defn extract-rpm
-  "Snags the RPM file out of its little mouse-hole and brings it up to target/"
+  "Snags the RPM file out of its little mouse-hole and brings it up to target/,
+  then generates an md5"
   [project]
   (let [dir (file (workarea project)
                   (:name project)
@@ -153,15 +160,19 @@
                   "noarch")
         rpms (remove #(.isDirectory %) (.listFiles dir))]
     (doseq [rpm rpms]
-      (.renameTo rpm (file (:root project)
-                           "target"
-                           (.getName rpm))))))
+      (let [dest (file (:root project) "target" (.getName rpm))]
+        ; Move
+        (.renameTo rpm dest)
+
+        ; MD5
+        (write (str dest ".md5")
+               (:out (sh "md5sum" (str dest))))))))
 
 (defn fatrpm
-  ([project] (fatrpm project false))
+  ([project] (fatrpm project true))
   ([project uberjar?]
    (reset project)
    (when uberjar? (uberjar project))
    (make-rpm project)
-   (extract-rpm project)))
-;   (cleanup project)))
+   (extract-rpm project)
+   (cleanup project)))
