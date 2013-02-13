@@ -1,4 +1,5 @@
 (ns leiningen.fatdeb
+  (:refer-clojure :exclude [replace])
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
         [clojure.string :only [join capitalize trim-newline replace]]
