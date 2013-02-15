@@ -40,6 +40,14 @@ start() {
     return $RETVAL
 }
 
+reload() {
+    echo -n $"Reloading ${NAME}: "
+    killproc -p ${PID_FILE} $DAEMON -1
+    RETVAL=$?
+    echo
+    return $RETVAL
+}
+
 stop() {
     echo -n $"Stopping ${NAME}: "
     killproc -p ${PID_FILE} -d 10 $DAEMON
@@ -60,7 +68,10 @@ case "$1" in
         status -p ${PID_FILE} $DAEMON
         RETVAL=$?
         ;;
-    restart|force-reload)
+    reload|force-reload)
+        reload
+        ;;
+    restart)
         stop
         start
         ;;
