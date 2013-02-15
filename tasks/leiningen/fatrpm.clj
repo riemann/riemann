@@ -111,6 +111,11 @@
          :sources [(source (file (:root project) "pkg" "deb" "riemann")
                            "riemann")]}
 
+        ; Log dir
+        {:directory "/var/log/riemann"
+         :filemode "755"
+         :directory-included? true}
+        
         ; Config dir
         {:directory "/etc/riemann"
          :filemode "755"
@@ -121,7 +126,15 @@
          :filemode "644"
          :configuration true
          :sources [(source (file (:root project) "pkg" "riemann.config")
-                           "riemann.config")]}]))
+                           "riemann.config")]}
+        
+        ; Init script
+        {:directory "/etc/init.d"
+         :filemode "755"
+         :username "root"
+         :groupname "root"
+         :sources [(source (file (:root project) "pkg" "rpm" "init.sh")
+                           "riemann")]}]))
 
 (defn blank-rpm
   "Create a new RPM file"
@@ -148,10 +161,11 @@
     (set-mojo! "copyright" "Kyle Kingsbury & contributors")
     (set-mojo! "workarea" (workarea project))
     (set-mojo! "mappings" (mappings project))
-    (set-mojo! "preinstallScriptlet" (scriptlet 
+    (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"]))
+    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"
+                                              "daemonize >= 1.7.3"]))
     (.execute)))
 
 (defn extract-rpm
