@@ -44,6 +44,14 @@
          :metric
          (reduce - (map :metric events))))
 
+(defn product
+  "Multiplies events. Returns the first event, with its metric multiplied by
+  the metrics of all other events."
+  [events]
+  (assoc (first events)
+         :metric
+         (reduce * (map :metric events))))
+
 (defn quotient
   "Divides events. Returns the first event, with its metric divided by the
   product of the metrics of all subsequent events."

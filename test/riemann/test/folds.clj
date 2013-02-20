@@ -29,3 +29,14 @@
 
               [{:metric 10} {:metric -7} {:metric 2}]
               {:metric (/ 10 -7 2)}))
+
+(deftest product-test
+         (are [es e] (= (product es) e)
+              [{:metric 1 :a true}]
+              {:metric 1 :a true}
+              
+              [{:metric 1 :a true} {:metric 2 :b true}]
+              {:metric 2 :a true}
+
+              [{:metric 10} {:metric -7} {:metric 2}]
+              {:metric -140}))
