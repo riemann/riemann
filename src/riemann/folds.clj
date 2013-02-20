@@ -52,13 +52,38 @@
          :metric
          (reduce * (map :metric events))))
 
-(defn quotient
-  "Divides events. Returns the first event, with its metric divided by the
-  product of the metrics of all subsequent events."
+(defn quotient*
+  "Divides events. Like quotient, but throws when any metric is nil or a
+  divisor is zero."
   [events]
   (assoc (first events)
          :metric
          (reduce / (map :metric events))))
+
+(defn quotient
+  "Divides events. Returns the first event, with its metric divided by the
+  product of the metrics of all subsequent events. If the first event's metric
+  is nil, or any later metric is zero or nil, returns :metric nil and
+  :description explaining the failure."
+  [events]
+  (try
+    (quotient* events)
+    (catch NullPointerException e
+      (merge (first events)
+             {:metric nil
+              :description "Can't divide nil metrics"}))
+    (catch ArithmeticException e
+      (merge (first events)
+             {:metric nil
+              :description "Can't divide by zero"}))))
+
+(defn sloppy-quotient
+  "Like quotient, but considers 0/0 = 0. Useful for relative rates, when you
+  want the rate of change between x(t1) = 0 and x(t2) = 0 to be zero."
+  [events]
+  (if (zero? (:metric (first events)))
+    (first events)
+    (quotient events)))
 
 (defn mean
   "Averages events together. Mean metric, merged into first of events."

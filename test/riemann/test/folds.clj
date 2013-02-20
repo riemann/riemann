@@ -28,7 +28,25 @@
               {:metric 1/2 :a true}
 
               [{:metric 10} {:metric -7} {:metric 2}]
-              {:metric (/ 10 -7 2)}))
+              {:metric (/ 10 -7 2)})
+
+         (testing "exceptions"
+                  (is (= (quotient [{:service "hi" :metric 1} 
+                                   {:metric 2} 
+                                   {:metric 0}])
+                         {:service "hi"
+                          :metric nil
+                          :description "Can't divide by zero"}))
+                  (is (= (quotient [{:service "hi"} {:metric 2}])
+                         {:service "hi"
+                          :metric nil
+                          :description "Can't divide nil metrics"}))))
+
+(deftest sloppy-quotient-test
+         (is (= (sloppy-quotient [{:metric 2} {:metric -3}])
+                {:metric -2/3}))
+         (is (= (sloppy-quotient [{:metric 0 :a true} {:metric 0}])
+                {:metric 0 :a true})))
 
 (deftest product-test
          (are [es e] (= (product es) e)
