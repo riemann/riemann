@@ -36,6 +36,14 @@
          :metric
          (reduce + (map :metric events))))
 
+(defn difference
+  "Subtracts events. Returns the first event, with its metric reduced by the
+  metrics of all subsequent events."
+  [events]
+  (assoc (first events)
+         :metric
+         (reduce - (map :metric events))))
+
 (defn mean
   "Averages events together. Mean metric, merged into last of events."
   [events]
