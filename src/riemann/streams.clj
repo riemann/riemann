@@ -855,7 +855,7 @@
                                     (assoc ok ekey event)))))
             [ok expired] (swap! past update)]
         (call-rescue (concat expired (vals ok)) children)))))
-
+    
 (defn append
   "Conj events onto the given reference"
   [reference]
@@ -1330,3 +1330,66 @@
     `(fn [~'event]
        (when-let [stream# (some split-match (list ~@clauses))]
          (call-rescue ~'event [stream#])))))
+
+(defn project*
+  "Like project, but takes predicate *functions* instead of where expressions."
+  [predicates & children]
+  (let [n          (count predicates)
+                   ; A vector of the current state and the *returned* state
+                   ; which allows us to submit expired events exactly once.
+        state      (atom [(vec (repeat n nil)) nil])
+        ; Returns a vector of two states: one with expired events replaced
+        ; by nil, and one with expired events replaced with (expire event).
+        clean-expire (fn clean-expire [state]
+                       (loop [i 0
+                              clean state
+                              expired state]
+                         (if (<= n i)
+                           [clean expired]
+                           (if (expired? (state i))
+                             (recur (inc i) 
+                                    (assoc clean i nil)
+                                    (assoc expired i (expire (state i))))
+                             (recur (inc i) clean expired)))))
+        ; Updates the state vector with a new event at specific indices
+        update (fn update [[state _] indices event]
+                 (clean-expire (reduce (fn r [state index]
+                                   (assoc state index event))
+                                 state
+                                 indices)))]
+    (fn stream [event]
+      ; Find matching predicates
+      (let [indices (loop [i       0
+                           indices (list)]
+                      (if (<= n i)
+                        indices
+                        (recur (inc i)
+                               (if ((predicates i) event)
+                                 (conj indices i)
+                                 indices))))]
+        ; Apply changes atomically and call
+        (when (not (empty? indices))
+          (let [[_ events] (swap! state update indices event)]
+            (call-rescue events children)))))))
+  
+(defmacro project
+  "Projects an event stream into a specific basis--like (coalesce), but where
+  you only want to compare two or three specific events. Takes a vector of
+  predicate expressions, like those used in (where). Project maintains a vector
+  of the most recent event for each predicate. An incoming event is compared
+  against each predicate; if it matches, the event replaces any previous event
+  in that position and the entire vector of events is forwarded to all child
+  streams. Expired events are included in the emitted vector of events *once*,
+  and removed from the state vector thereafter.
+
+  Use project when you want to compare a small number of distinct states over
+  time. For instance, to find the ratio of enqueues to dequeues:
+
+  (project [(service \"enqueues\")
+            (service \"dequeues\")]
+    (fn [[enq deq]]
+      (prn (/ (:metric enq)
+              (:metric deq)))))"
+  [basis & children]
+  (let [wrapped (mapv (fn [expr] `(where ~expr)) basis)]
+    `(project* ~wrapped ~@children)))

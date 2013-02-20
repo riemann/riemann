@@ -1001,6 +1001,71 @@
            (s b2)
            (is (= (set @out) #{b2 c1}))))
 
+(deftest project-test
+         ; Empty -> empty
+         (test-stream (project [(service :foo) (service :bar)])
+                      []
+                      [])
+
+         ; Without anything to project to, does nothing
+         (test-stream (project [])
+                      [1 2 3]
+                      [])
+
+         ; Basic test: ignores non-matching events, updates state properly
+         (test-stream (project [(service "foo") (service "bar")])
+                      [{:service "cat"}
+                       {:service "foo" :a 1}
+                       {:service "foo" :a 2}
+                       {:service "meow"}
+                       {:service "bar" :b 3}
+                       {:service "foo" :b 4}]
+                      [[{:service "foo" :a 1} nil]
+                       [{:service "foo" :a 2} nil]
+                       [{:service "foo" :a 2} {:service "bar" :b 3}]
+                       [{:service "foo" :b 4} {:service "bar" :b 3}]])
+
+         ; Passes on initially expired events correctly
+         (test-stream
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "expired"}
+            {:service "foo" :state "expired"}
+            {:service "cat"}]
+           [[{:service "foo" :time 0 :state "expired"} nil]
+            [{:service "foo" :time 0 :state "expired"} nil]])
+
+         ; Expires existing events
+         (test-stream
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "ok"}
+            {:service "bar" :state "ok"}
+            {:service "bar" :state "expired"}
+            {:service "foo" :state "expired"}
+            {:service "bar" :state "expired"}]
+           [[{:service "foo" :state "ok"}
+             nil]
+            [{:service "foo" :state "ok"} 
+             {:service "bar" :state "ok"}]
+            [{:service "foo" :state "ok"} 
+             {:service "bar" :state "expired" :time 0}]
+            [{:service "foo" :state "expired" :time 0}
+             nil]
+            [nil 
+             {:service "bar" :state "expired" :time 0}]])
+
+         ; Expiration test: expires own events when the time comes.
+         (test-stream-intervals
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "ok" :time 0 :ttl 1}
+            2
+            {:service "bar" :state "ok"}
+            1
+            {:service "bar" :state "ok2"}]
+           [[{:service "foo" :state "ok" :time 0 :ttl 1} nil]
+            [{:service "foo" :state "expired" :time 2}
+             {:service "bar" :state "ok"}]
+            [nil {:service "bar" :state "ok2"}]]))
+
 (deftest adjust-test
   (let [out (ref nil)
         s (adjust [:state str " 2"] (register out))]
