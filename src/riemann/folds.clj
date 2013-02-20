@@ -30,9 +30,9 @@
        (sorted-sample-extract s points)))
 
 (defn sum
-  "Adds events together. Sums metric, merges into last of events."
+  "Adds events together. Sums metric, merges into first of events."
   [events]
-  (assoc (last events)
+  (assoc (first events)
          :metric
          (reduce + (map :metric events))))
 
@@ -61,9 +61,9 @@
          (reduce / (map :metric events))))
 
 (defn mean
-  "Averages events together. Mean metric, merged into last of events."
+  "Averages events together. Mean metric, merged into first of events."
   [events]
-  (assoc (last events)
+  (assoc (first events)
          :metric
          (/ (reduce + (map :metric events)) (count events))))
 
