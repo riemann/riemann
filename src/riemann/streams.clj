@@ -1278,14 +1278,11 @@
       stream)))
 
 (defn split*
-  "Given a list of function and stream pairs, passes
-   the current event onto the stream associated with
-   the first passing condition.
+  "Given a list of function and stream pairs, passes the current event onto the
+  stream associated with the first passing condition.
 
-   Conditions are functions as for where*.
-   An odd number of forms will make the last form
-   the default stream.
-   Example:
+   Conditions are functions as for where*.  An odd number of forms will make
+  the last form the default stream. For example:
 
    (split*
      (fn [e] (< 2 (:metric e))) (with :state \"critical\" index)
@@ -1299,8 +1296,8 @@
         (call-rescue event [stream])))))
 
 (defmacro split
-  "Behave as for split*, expecting predicates to be
-  expressions - as for where - instead of functions"
+  "Behave as for split*, expecting predicates to be expressions - as for where
+  - instead of functions"
   [& clauses]
   (let [clauses (mapcat (fn [clause]
                           (if (nil? (second clause))
@@ -1310,14 +1307,12 @@
     `(split* ~@clauses)))
 
 (defmacro splitp
-  "Takes a binary predicate, an expression and a set of
-   clauses.
+  "Takes a binary predicate, an expression and a set of clauses.
 
-   For each clause, (pred test-expr expr) is evaluated, note
-   the order change from condp.
+   For each clause, (pred test-expr expr) is evaluated, note the order change
+  from condp.
 
-   If a binary clause matches, its associated stream will be
-   executed."
+   If a binary clause matches, its associated stream will be executed."
   [pred expr & clauses]
   (let [clauses (for [[test-expr stream] (partition-all 2 clauses)]
                   (if (nil? stream)
