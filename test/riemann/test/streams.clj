@@ -264,7 +264,20 @@
               (> metric 5) (with :state :warn (partial swap! res conj))
               (with :state :ok (partial swap! res conj)))
        e))
-    (is (= expect @res))))
+    (is (= expect @res)))
+         
+         (testing "evaluates streams once"
+                  (let [res (atom [])
+                        stream (split 
+                                 true
+                                 (let [state (atom 0)]
+                                   (fn [_]
+                                     (swap! res conj
+                                            (swap! state inc)))))]
+                    (stream :x)
+                    (stream :x)
+                    (stream :x)
+                    (is (= @res [1 2 3])))))
 
 (deftest splitp-test
   ;; same test as above, using splitp

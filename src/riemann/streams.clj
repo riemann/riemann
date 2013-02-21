@@ -1277,8 +1277,8 @@
     (if (or (= stream pred) pred)
       stream)))
 
-(defmacro split*
-  "Given a list of function and stream pairs, passesppp
+(defn split*
+  "Given a list of function and stream pairs, passes
    the current event onto the stream associated with
    the first passing condition.
 
@@ -1293,25 +1293,21 @@
      (with :state \"ok\" index))
    "
   [& clauses]
-  `(fn [event#]
-     (when-let [stream# (some (partial split*-match event#)
-                              (partition-all 2 (list ~@clauses)))]
-       (call-rescue event# [stream#]))))
+  (let [clauses (partition-all 2 clauses)]
+    (fn stream [event]
+      (when-let [stream (some (partial split*-match event) clauses)]
+        (call-rescue event [stream])))))
 
 (defmacro split
   "Behave as for split*, expecting predicates to be
   expressions - as for where - instead of functions"
   [& clauses]
-  (let [clauses (for [[pred stream] (partition-all 2 clauses)]
-                  (if (nil? stream)
-                    [pred]
-                    [(where-rewrite pred) stream]))]
-    ;; I have to do the horrible assignment to event here
-    ;; This is necessary so config functions can refer
-    ;; to event implicitely
-    `(fn [~'event]
-       (when-let [stream# (some split-match (list ~@clauses))]
-         (call-rescue ~'event [stream#])))))
+  (let [clauses (mapcat (fn [clause]
+                          (if (nil? (second clause))
+                            clause
+                            [`(where ~(first clause)) (second clause)]))
+                            (partition-all 2 clauses))]
+    `(split* ~@clauses)))
 
 (defmacro splitp
   "Takes a binary predicate, an expression and a set of
