@@ -1285,10 +1285,9 @@
   the last form the default stream. For example:
 
    (split*
-     (fn [e] (< 2 (:metric e))) (with :state \"critical\" index)
-     (fn [e] (< 4 (:metric e))) (with :state \"warning\" index)
-     (with :state \"ok\" index))
-   "
+     (fn [e] (< 0.75 (:metric e))) (with :state \"warning\" index)
+     (fn [e] (< 0.9  (:metric e))) (with :state \"critical\" index)
+     (with :state \"ok\" index))"
   [& clauses]
   (let [clauses (partition-all 2 clauses)]
     (fn stream [event]
@@ -1296,8 +1295,12 @@
         (call-rescue event [stream])))))
 
 (defmacro split
-  "Behave as for split*, expecting predicates to be expressions - as for where
-  - instead of functions"
+  "Behave as for split*, expecting predicates to be (where) expressions instead
+  of functions. Example:
+  
+  (split
+    (< 0.75 metric) (with :state \"warning\" index)
+    (< 0.9  metric) (with :state \"critical\" index))"
   [& clauses]
   (let [clauses (mapcat (fn [clause]
                           (if (nil? (second clause))
@@ -1307,20 +1310,65 @@
     `(split* ~@clauses)))
 
 (defmacro splitp
-  "Takes a binary predicate, an expression and a set of clauses.
+  "Takes a binary predicate, an expression and a set of clauses. Each clause
+  takes the form
 
-   For each clause, (pred test-expr expr) is evaluated, note the order change
-  from condp.
+  test-expr stream
 
-   If a binary clause matches, its associated stream will be executed."
+  splitp returns a stream which accepts an event. Expr is a (where) expression,
+  which will be evaluated against the event to obtain a value for selecting a
+  clause. For each clause, evaluates (pred test-expr value). If the result is
+  logical true, evaluates (stream event) and returns that value. 
+  
+  A single default stream can follow the clauses, and its value will be
+  returned if no clause matches. If no default stream is provided and no clause
+  matches, an IllegalArgumentException is thrown.
+  
+  Splitp evaluates streams once at invocation time.
+  
+  Example:
+  
+  (splitp < metric
+    0.9  (with :state \"critical\" index)
+    0.75 (with :state \"warning\" index)
+         (with :state \"ok\" index))"
   [pred expr & clauses]
-  (let [clauses (for [[test-expr stream] (partition-all 2 clauses)]
-                  (if (nil? stream)
-                    [test-expr]
-                    [(where-rewrite (list pred test-expr expr)) stream]))]
-    `(fn [~'event]
-       (when-let [stream# (some split-match (list ~@clauses))]
-         (call-rescue ~'event [stream#])))))
+  (let [; Split up clauses into [stream test-expr] pairs
+        clauses (map (fn [[a b :as clause]]
+                       (case (count clause)
+                         1 [a]
+                         2 [b a]))
+                     (partition-all 2 clauses))
+
+        ; Symbol for an event
+        event-sym (gensym "event__")
+
+        ; Symbols to store streams
+        stream-syms (repeatedly (count clauses) #(gensym "stream__"))
+
+        ; Binding symbols to stream expressions
+        stream-bindings (mapcat (fn [stream-sym [stream test-expr]]
+                                  [stream-sym stream])
+                                stream-syms
+                                clauses)
+
+        ; Transform clauses into a form for condp
+        condp-clauses (mapcat (fn [stream-sym [stream test-expr :as clause]]
+                                (if (= 1 (count clause))
+                                  [`(~stream-sym ~event-sym)]
+                                  [test-expr `(~stream-sym ~event-sym)]))
+                              stream-syms
+                              clauses)]
+
+    `(let [; A function which extracts a value from an event
+           valuefn# (where ~expr)
+           ; Bind streams to symbols
+           ~@stream-bindings]
+       ; Return a stream function
+       (fn splitp-stream# [~event-sym]
+         ; Which extracts a value from the event and calls condp
+         (condp ~pred (valuefn# ~event-sym)
+           ~@condp-clauses)))))
 
 (defn project*
   "Like project, but takes predicate *functions* instead of where expressions."

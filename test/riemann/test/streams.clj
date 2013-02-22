@@ -280,20 +280,43 @@
                     (is (= @res [1 2 3])))))
 
 (deftest splitp-test
-  ;; same test as above, using splitp
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((splitp <= metric
-               10 (with :state :crit (partial swap! res conj))
-               5  (with :state :warn (partial swap! res conj))
-              (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res))))
+         ;; same test as above, using splitp
+         (testing "basics"
+                  (let [res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :crit}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (splitp <= metric
+                                       10 (with :state :crit 
+                                                (partial swap! res conj))
+                                       5  (with :state :warn 
+                                                (partial swap! res conj))
+                                       (with :state :ok 
+                                             (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
+
+         (testing "Without a default"
+                  (is (thrown? IllegalArgumentException
+                               ((splitp = true
+                                        false :doesnt-happen)
+                                  :foo))))
+         
+         (testing "Evaluates child streams once at creation time"
+                  (let [a (atom 0)
+                        b (atom 0)
+                        s (splitp = state
+                                  :foo (do (swap! a inc) identity)
+                                       (do (swap! b inc) identity))]
+                    (is (= 1 @a))
+                    (is (= 1 @b))
+                    (s {:state :foo})
+                    (s {:state :foo})
+                    (s {:state :bar})
+                    (s {:state :baz})
+                    (is (= 1 @a))
+                    (is (= 1 @b)))))
 
 (deftest where*-test
          (test-stream (where* identity)
