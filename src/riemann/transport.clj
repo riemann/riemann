@@ -3,44 +3,55 @@
   here since netty is the preferred method of providing transports"
   (:use [slingshot.slingshot :only [try+]]
         [riemann.common      :only [decode-msg]]
+        [riemann.codec       :only [encode-pb-msg]]
         [riemann.index       :only [search]]
         clojure.tools.logging)
   (:require [riemann.query       :as query])
   (:import
+    (java.util.concurrent TimeUnit
+                          Executors)
     (com.aphyr.riemann Proto$Msg)
     (org.jboss.netty.channel ChannelPipelineFactory ChannelPipeline)
+    (org.jboss.netty.channel.group ChannelGroup DefaultChannelGroup)
     (org.jboss.netty.buffer ChannelBufferInputStream)
-    (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
+    (org.jboss.netty.util DefaultObjectSizeEstimator)
+    (org.jboss.netty.handler.codec.oneone OneToOneDecoder
+                                          OneToOneEncoder)
     (org.jboss.netty.handler.codec.protobuf ProtobufDecoder
                                             ProtobufEncoder)
     (org.jboss.netty.handler.execution ExecutionHandler
                                        OrderedMemoryAwareThreadPoolExecutor)))
 
-(defprotocol Transport
-  "A riemann transport is a way of emitting and receiving events
-   over the wire."
-  (setup [this opts]
-    "Setup step for transports. In order to handle server life-cycle
-     correctly, can be called several times.")
-  (capabilities [this]
-    "Return a collection of keywords representing what the transport
-     can handle, possible values are: :queries and :events")
-  (start [this]
-    "Start listening for events and ")
-  (stop [this]
-    "Gracefully stop the server"))
+(defn channel-group
+  "Make a channel group with a given name."
+  [name]
+  (DefaultChannelGroup. name))
 
-(defn channel-pipeline-factory
-  "Return a factory for ChannelPipelines given a wire protocol-specific
-  pipeline factory and a network protocol-specific handler."
-  [pipeline-factory handler]
-  (reify ChannelPipelineFactory
-    (getPipeline [this]
-      (doto ^ChannelPipeline (pipeline-factory)
-        (.addLast "executor" (ExecutionHandler.
-                              (OrderedMemoryAwareThreadPoolExecutor.
-                               16 1048576 1048576))) ; Maaagic values!
-        (.addLast "handler" handler)))))
+(defmacro channel-pipeline-factory
+  "Constructs an instance of a Netty ChannelPipelineFactory from a list of
+  names and expressions which return handlers. Handlers with :shared metadata
+  on their names are bound once and re-used in every invocation of
+  getPipeline(), other handlers will be evaluated each time.
+
+  (channel-pipeline-factory
+             frame-decoder    (make-an-int32-frame-decoder)
+    ^:shared protobuf-decoder (ProtobufDecoder. (Proto$Msg/getDefaultInstance))
+    ^:shared msg-decoder      msg-decoder)"
+  [& names-and-exprs]
+  (assert (even? (count names-and-exprs)))
+  (let [handlers (partition 2 names-and-exprs)
+        shared (filter (comp :shared meta first) handlers)
+        forms (map (fn [[h-name h-expr]]
+                        `(.addLast ~(str h-name)
+                                   ~(if (:shared (meta h-name))
+                                     h-name
+                                     h-expr)))
+                   handlers)]
+    `(let [~@(apply concat shared)]
+       (reify ChannelPipelineFactory
+         (getPipeline [this]
+                      (doto (org.jboss.netty.channel.Channels/pipeline)
+                        ~@forms))))))
 
 (defn protobuf-decoder
   "Decodes protobufs to Msg objects"
@@ -58,6 +69,26 @@
   (proxy [OneToOneDecoder] []
     (decode [context channel message]
             (decode-msg message))))
+
+(defn msg-encoder
+  "Netty encoder for maps -> Msg protobuf objects"
+  []
+  (proxy [OneToOneEncoder] []
+    (encode [context channel message]
+            (encode-pb-msg message))))
+
+(defn execution-handler
+  "Creates a new netty execution handler."
+  []
+  (ExecutionHandler.
+    (OrderedMemoryAwareThreadPoolExecutor.
+      16       ; Core pool size
+      1048576  ; 1MB per channel queued
+      10485760 ; 10MB total queued
+      )))
+
+(defonce shared-execution-handler
+  (execution-handler))
 
 (defn handle
   "Handles a msg with the given core."

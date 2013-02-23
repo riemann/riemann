@@ -18,6 +18,21 @@
   (reset-tasks!))
 (use-fixtures :each reset-time!)
 
+(deftest next-tick-test
+         (are [anchor dt now next] (= (next-tick anchor dt now) next)
+              0 1 0 1
+              0 2 0 2
+              1 1 0 1
+              2 1 0 1
+              0 2 0 2
+              0 2 1 2
+              0 2 2 4
+              2 2 2 4
+              4 2 2 4
+              1 2 1 3
+              1 2 2 3
+              1 2 3 5))
+
 (deftest ^:time clock-test
          (is (approx-equal (/ (System/currentTimeMillis) 1000)
                            (unix-time))))

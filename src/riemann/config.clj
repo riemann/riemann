@@ -16,11 +16,13 @@
             [riemann.graphite :as graphite-client]
             [clojure.tools.nrepl.server :as repl])
   (:use clojure.tools.logging
+        [clojure.java.io :only [file]]
         riemann.client
         riemann.email
+        [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
         [riemann.librato :only [librato-metrics]]
-        [riemann.streams :exclude [update-index delete-from-index]])
+        riemann.streams)
   (:gen-class))
 
 (def core "The currently running core."
@@ -70,7 +72,7 @@
            (concat (:streams @next-core) things))))
 
 (defn index
-  "Set the index used by this core."
+  "Set the index used by this core. Returns the index."
   [& opts]
   (let [index (apply riemann.index/index opts)]
     (locking core 
@@ -81,19 +83,29 @@
   "Updates the given index with all events received. Also publishes to the
   index pubsub channel."
   [index]
-  (fn [event] (core/update-index @core event)))
+  (fn update [event] (core/update-index @core event)))
 
 (defn delete-from-index
-  "Deletes any events that pass through from the index"
-  [index]
-  (fn [event] (core/delete-from-index @core event)))
+  "Deletes any events that pass through from the index. By default, deletes
+  events with the same host and service. If a field, or a list of fields, is
+  given, deletes any events with matching values for all of those fields.
+
+  ; Delete all events in the index with the same host
+  (delete-from-index :host event)
+  
+  ; Delete all events in the index with the same host and state.
+  (delete-from-index [:host :state] event)"
+  ([]
+   (fn delete [event] (core/delete-from-index @core event)))
+  ([fields]
+   (fn delete [event] (core/delete-from-index @core fields event))))
 
 (defn periodically-expire
-  "Sets up a reaper for this core. See core API docs."
+  "Sets up a reaper for this core. See riemann.core/reaper."
   ([]
    (periodically-expire 10))
-  ([interval]
-   (add-service! (core/reaper interval))))
+  ([& args]
+   (add-service! (apply core/reaper args))))
 
 (defn publish
   "Returns a stream which publishes events to the given channel. Uses this
@@ -144,6 +156,24 @@
        forms
        (recur (conj forms form) reader)))))
 
+(def ^:dynamic *config-file*
+  "The config file currently being included."
+  nil)
+
+(defn config-file-path
+  "Computes the full path to a config file. Absolute paths are returned
+  unchanged. Relative paths are expanded relative to *config-file*. Returns a
+  string."
+  [path]
+  (if (-> path (file) (.isAbsolute))
+    path
+    (let [dir (-> (or *config-file* "ZARDOZ")
+                (file)
+                (.getCanonicalPath)
+                (file)
+                (.getParent))]
+      (str (file dir path)))))
+
 (defn validate-config
   "Check that a config file has valid syntax."
   [file]
@@ -155,8 +185,14 @@
 (defn include
   "Include another config file.
 
-  (include \"foo.clj\")"
-  [file]
-  (binding [*ns* (find-ns 'riemann.config)]
-    (validate-config file)
-    (load-string (slurp file))))
+  ; Relative to the current config file, or cwd
+  (include \"foo.clj\")
+
+  ; Absolute path
+  (include \"/foo/bar.clj\")"
+  [path]
+  (let [path (config-file-path path)]
+    (binding [*config-file* path
+              *ns* (find-ns 'riemann.config)]
+      (validate-config path)
+      (load-string (slurp path)))))

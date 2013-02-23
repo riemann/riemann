@@ -1,4 +1,5 @@
 (ns leiningen.fatdeb
+  (:refer-clojure :exclude [replace])
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
         [clojure.string :only [join capitalize trim-newline replace]]
@@ -70,14 +71,14 @@
     (write (file dir "DEBIAN" "conffiles") 
            (join "\n" ["/etc/riemann/riemann.config"]))
 
+    ; Preinst
+    (copy (file (:root project) "pkg" "deb" "preinst.sh")
+          (file dir "DEBIAN" "preinst"))
+    (.setExecutable (file dir "DEBIAN" "preinst") true false)
+
     ; Postinst
-    ; Fakeroot plays poorly with lein; have to change permissions after
-    ; the fact. :(
-    (write (file dir "DEBIAN" "postinst")
-           "#!/bin/sh
-           chown -R root:root /usr/lib/riemann
-           chown root:root /usr/bin/riemann
-           chown -R root:root /etc/riemann")
+    (copy (file (:root project) "pkg" "deb" "postinst.sh")
+          (file dir "DEBIAN" "postinst"))
     (.setExecutable (file dir "DEBIAN" "postinst") true false)
 
     ; Jar
@@ -92,11 +93,20 @@
           (file dir "usr" "bin" "riemann"))
     (.setExecutable (file dir "usr" "bin" "riemann") true false)
 
+    ; Log dir
+    (.mkdirs (file dir "var" "log" "riemann"))
+
     ; Config
     (.mkdirs (file dir "etc" "riemann"))
     (copy (file (:root project) "pkg" "riemann.config")
           (file dir "etc" "riemann" "riemann.config"))
 
+    ; Init script
+    (.mkdirs (file dir "etc" "init.d"))
+    (copy (file (:root project) "pkg" "deb" "init.sh")
+          (file dir "etc" "init.d" "riemann"))
+    (.setExecutable (file dir "etc" "init.d" "riemann") true false)
+   
     dir))
 
 (defn dpkg
@@ -110,7 +120,6 @@
                                                      "all" ".deb"))]
     (write (str deb-file ".md5")
            (:out (sh "md5sum" (str deb-file))))))
-                                       
 
 (defn fatdeb
   ([project] (fatdeb project true))
@@ -118,4 +127,5 @@
    (reset project)
    (when uberjar? (uberjar project))
    (dpkg project (make-deb-dir project))
-   (cleanup project)))
+   (cleanup project)
+   (flush)))

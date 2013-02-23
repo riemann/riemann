@@ -12,9 +12,10 @@
   (clear [this]
     "Resets the index")
   (delete [this event]
-    "Deletes any event with this host & service from index")
+    "Deletes any event with this host & service from index. Returns the deleted
+    event, or nil.")
   (delete-exactly [this event]
-    "Deletes event from index")
+    "Deletes event from index. Returns the deleted event, or nil.")
   (expire [this]
     "Return a seq of expired states from this index, removing each.")
   (search [this query-ast]

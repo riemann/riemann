@@ -3,7 +3,7 @@
         riemann.core
         riemann.transport.tcp
         riemann.client
-        riemann.index
+        [riemann.index :only [index]]
         [riemann.logging :only [suppress]]
         clojure.test))
 

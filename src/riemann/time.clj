@@ -81,6 +81,15 @@
   []
   (swap! max-task-id inc))
 
+(defn next-tick
+  "Given a period dt, beginning at some point in time anchor, finds the next
+  tick after time now, such that the next tick is separate from anchor by an
+  exact multiple of dt. If now is omitted, defaults to (unix-time)."
+  ([anchor dt]
+   (next-tick anchor dt (unix-time)))
+  ([anchor dt now]
+   (+ now (- dt (mod (- now anchor) dt)))))
+
 ; Look at all these bang! methods! Mutability is SO EXCITING!
 
 (defn reset-tasks!

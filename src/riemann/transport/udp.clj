@@ -10,15 +10,17 @@
                                     FixedReceiveBufferSizePredictorFactory
                                     MessageEvent
                                     SimpleChannelUpstreamHandler]
-           [org.jboss.netty.channel.group ChannelGroup DefaultChannelGroup]
+           [org.jboss.netty.channel.group ChannelGroup]
            [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
         [riemann.service       :only [Service]]
-        [riemann.transport     :only [handle 
+        [riemann.transport     :only [handle
+                                      channel-group
                                       protobuf-decoder
                                       protobuf-encoder
                                       msg-decoder
+                                      shared-execution-handler
                                       channel-pipeline-factory]]))
 
 (defn udp-handler
@@ -34,7 +36,7 @@
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
 
-(defrecord UDPServer [host port max-size pipeline-factory core killer]
+(defrecord UDPServer [host port max-size channel-group pipeline-factory core killer]
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
   
@@ -51,32 +53,30 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [bootstrap (ConnectionlessBootstrap.
-                                (NioDatagramChannelFactory.
-                                  (Executors/newCachedThreadPool)))
-                    all-channels (DefaultChannelGroup. 
-                                   (str "udp-server " host port max-size))
-                    cpf (channel-pipeline-factory
-                          pipeline-factory (udp-handler core all-channels))]
+              (let [pool (Executors/newCachedThreadPool)
+                    bootstrap (ConnectionlessBootstrap.
+                                (NioDatagramChannelFactory. pool))]
 
                 ; Configure bootstrap
                 (doto bootstrap
-                  (.setPipelineFactory cpf)
+                  (.setPipelineFactory pipeline-factory)
                   (.setOption "broadcast" "false")
                   (.setOption "receiveBufferSizePredictorFactory"
-                              (FixedReceiveBufferSizePredictorFactory. max-size)))
+                              (FixedReceiveBufferSizePredictorFactory.
+                                max-size)))
 
                 ; Start bootstrap
                 (let [server-channel (.bind bootstrap
                                             (InetSocketAddress. host port))]
-                  (.add all-channels server-channel))
+                  (.add channel-group server-channel))
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn []
-                          (-> all-channels .close .awaitUninterruptibly)
+                          (-> channel-group .close .awaitUninterruptibly)
                           (.releaseExternalResources bootstrap)
+                          (.shutdown pool)
                           (info "UDP server" host port max-size "shut down")
                           ))))))
 
@@ -96,24 +96,27 @@
   dropped with protobuf parse errors in the log.
 
   Options:
-  :host       The address to listen on (default 127.0.0.1).
-  :port       The port to listen on (default 5555).
-  :max-size   The maximum datagram size (default 16384 bytes).
-  :pipeline-factory"
+  :host             The address to listen on (default 127.0.0.1).
+  :port             The port to listen on (default 5555).
+  :max-size         The maximum datagram size (default 16384 bytes).
+  :channel-group    A ChannelGroup used to track all connections
+  :pipeline-factory A ChannelPipelineFactory"
   ([] (udp-server {}))
   ([opts]
-   (let [pipeline-factory #(doto (Channels/pipeline)
-                             (.addLast "protobuf-encoder"
-                                       (protobuf-encoder))
-                             (.addLast "protobuf-decoder"
-                                       (protobuf-decoder))
-                             (.addLast "msg-decoder"
-                                       (msg-decoder)))]
-                                       
-     (UDPServer.
-       (get opts :host "127.0.0.1")
-       (get opts :port 5555)
-       (get opts :max-size 16384)
-       (get opts :pipeline-factory pipeline-factory)
-       (atom nil)
-       (atom nil)))))
+   (let [core (atom nil)
+         host (get opts :host "127.0.0.1")
+         port (get opts :port 5555)
+         max-size (get opts :max-size 16384)
+         channel-group (get opts :channel-group
+                            (channel-group
+                              (str "udp-server" host ":" port 
+                                   "(" max-size ")")))
+         pf (get opts :pipeline-factory
+                 (channel-pipeline-factory
+                   ^:shared executor         shared-execution-handler
+                   ^:shared protobuf-decoder (protobuf-decoder)
+                   ^:shared protobuf-encoder (protobuf-encoder)
+                   ^:shared msg-decoder      (msg-decoder)
+                   ^:shared handler          (udp-handler core
+                                                          channel-group)))]
+     (UDPServer. host port max-size channel-group pf core (atom nil)))))

@@ -27,16 +27,17 @@
     [clj-time "0.4.3"]
     [clj-wallhack "1.0"]
     [com.boundary/high-scale-lib "1.0.3"]
-    [com.draines/postal "1.8.0"]
+    [com.draines/postal "1.9.0"]
     [incanter/incanter-charts "1.3.0"]
-    [io.netty/netty "3.3.0.Final"]
+    [io.netty/netty "3.6.1.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.6.4"]
-    [riemann-clojure-client "0.0.6"]
+    [riemann-clojure-client "0.0.7-SNAPSHOT"]
     [slingshot "0.10.2"]
   ]
-  :plugins [[codox "0.6.1"]]
+  :plugins [[codox "0.6.1"]
+            [lein-rpm "0.0.5"]]
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))

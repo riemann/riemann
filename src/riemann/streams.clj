@@ -11,7 +11,7 @@
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
   (:use [riemann.common :exclude [match]]
-        [riemann.time :only [unix-time linear-time every! once! defer cancel]]
+        [riemann.time :only [unix-time linear-time every! once! after! next-tick defer cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
@@ -19,6 +19,9 @@
             riemann.client
             riemann.logging
             [clojure.set :as set]))
+
+(def  infinity (/  1.0 0))
+(def -infinity (/ -1.0 0))
 
 (defn expired?
   "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
@@ -39,6 +42,34 @@
          (catch Exception e#
            (warn e# (str child# " threw")))))
      true))
+
+(defn bit-bucket
+  "Discards arguments."
+  [args])
+
+(defn dual
+  "A stream which splits events into two mirror-images streams, based on (pred
+  e). If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
+  If (pred e) is false, does the opposite. Expired events are forwarded to both
+  streams.
+  
+  (pred e) is always called once per incoming event."
+  [pred true-stream false-stream]
+  (fn stream [event]
+    (let [value (pred event)]
+      (cond
+        (expired? event)
+        (call-rescue event [true-stream false-stream])
+
+        value
+        (do
+          (call-rescue (expire event) [false-stream])
+          (call-rescue event [true-stream]))
+
+        :else
+        (do
+          (call-rescue (expire event) [true-stream])
+          (call-rescue event [false-stream]))))))
 
 (defn combine
   "Returns a function which takes a seq of events. Combines events with f, then
@@ -97,12 +128,20 @@
       (fn [event]
         (call-rescue (swap! acc f event) children)))))
 
-(defn stream
-  "Takes a list of functions f1, f2, f3, and returns f such
-   that (f event) calls (f1 event) (f2 event) (f3 event)."
+(defn sdo
+  "Takes a list of functions f1, f2, f3, and returns f such that (f event)
+  calls (f1 event) (f2 event) (f3 event). Useful for binding several streams to
+  a single variable.
+  
+  (sdo prn (rate 5 index))"
   [& children]
   (fn [event]
     (call-rescue event children)))
+
+(defn stream
+  [& args]
+  (deprecated "riemann.streams/stream is now streams/sdo."
+              (apply sdo args)))
 
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
@@ -510,26 +549,47 @@
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
-  size."
+  size. Emits one event every interval seconds. Starts as soon as an event is
+  received, stops when an expired event arrives. Uses the most recently
+  received event with a metric as a template. Event ttls decrease constantly if
+  no new events arrive."
   [interval & children]
-  (let [test-time (atom (linear-time))]
-  (part-time-fast interval
-      (fn [] 
-        {:count (ref 0)
-         :state (ref nil)})
-      (fn [r event] (dosync
-                      (ref-set (:state r) event)
-                      (when-let [m (:metric event)]
-                        (alter (:count r) + m))))
-      (fn [r start end]
-        (when-let [event
-              (dosync
-                (when-let [state (deref (:state r))]
-                  (let [count (deref (r :count))
-                        rate (/ count interval)]
-                    (merge state
-                           {:metric rate :time (round end)}))))]
-          (call-rescue event children))))))
+  (assert (< 0 interval))
+  (let [last-event (atom nil)
+        sum (atom '(0 0))
+
+        add-sum  (fn add-sum [[current previous] addend]
+                              (list (+ current addend) previous))
+        swap-sum (fn swap-sum [[current previous]]
+                               (list 0 current))
+
+        swap-event (fn swap-event [e sum]
+                     (let [e (merge e {:metric (/ sum interval)
+                                       :time   (unix-time)})]
+                       (if-let [ttl (:ttl e)]
+                         (assoc e :ttl (- ttl interval))
+                         e)))
+
+        tick (fn tick []
+               ; Get last metric
+               (let [sum (second (swap! sum swap-sum))
+                     event (swap! last-event swap-event sum)]
+                 ; Forward event to children.
+                 (call-rescue event children)))
+
+        poller (periodically-until-expired interval interval tick)]
+
+    (fn rate' [event]
+      (when-let [m (:metric event)]
+        ; TTLs decay by interval when emitted, so we add interval once.
+        ; That way, incoming and outgoing TTLs, under constant event flow, are
+        ; the same.
+        (reset! last-event
+                (if-let [ttl (:ttl event)]
+                  (assoc event :ttl (+ ttl interval))
+                  event))
+        (swap! sum add-sum m))
+      (poller event))))
 
 (defn percentiles
   "Over each period of interval seconds, aggregates events and selects one
@@ -548,29 +608,49 @@
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn counter
-  "Counts things. All metrics are summed together; passes on each event with
-  the summed metric. When an event has tag \"reset\", resets the counter to
-  zero and continues summing."
+  "Counts things. The first argument may be an initial counter value, which
+  defaults to zero.
+  
+  ; Starts at zero
+  (counter index)
+
+  ; Starts at 500
+  (counter 500 index)
+
+  Events without metrics are passed through unchanged. Events with metrics
+  increment the counter, and are passed on with their metric set to the current
+  count.
+
+  You can reset the counter by passing it an event with a metric, tagged
+  \"reset\"; the count will be reset to that metric."
   [& children]
-  (let [counter (ref 0)]
-    (fn [event]
-      (when (member? "reset" (:tags event))
-        (dosync (ref-set counter 0)))
-      (when-let [m (:metric event)]
-        (let [c (dosync (alter counter + m))]
-          (call-rescue (assoc event :metric c) children))))))
+  (let [counter (atom (if (number? (first children))
+                        (first children)
+                        0))
+        children (if (number? (first children))
+                   (rest children)
+                   children)]
+    (fn stream [event]
+      (if-let [metric (:metric event)]
+        (do
+          (if (member? "reset" (:tags event))
+            (reset! counter metric)
+            (swap! counter + metric))
+          (call-rescue (assoc event :metric @counter) children))
+        (call-rescue event children)))))
 
 (defn sum-over-time
   "Sums all metrics together. Emits the most recent event each time this
   stream is called, but with summed metric."
   [& children]
-  (let [sum (ref 0)]
-    (fn [event]
-      (let [s (dosync
-                (when-let [m (:metric event)]
-                  (commute sum + (:metric event))))
-            event (assoc event :metric s)]
-        (call-rescue event children)))))
+  (deprecated "Use streams/counter"
+              (let [sum (ref 0)]
+                (fn [event]
+                  (let [s (dosync
+                            (when-let [m (:metric event)]
+                              (commute sum + (:metric event))))
+                        event (assoc event :metric s)]
+                    (call-rescue event children))))))
 
 (defn mean-over-time
   "Emits the most recent event each time this stream is called, but with the
@@ -602,6 +682,85 @@
                                 (* c-new metric-new)))))]
         (call-rescue (assoc event :metric m) children)))))
 
+(defn- top-update
+  "Helper for top atomic state updates."
+  [[smallest top] k f event]
+  (let [value (f event)
+        ekey [(:host event) (:service event)]
+        scan (fn scan [top]
+               (if (empty? top)
+                 nil
+                 (first (apply min-key second top))))
+        trim (fn trim [top smallest]
+               (if (< k (count top))
+                 (dissoc top smallest)
+                 top))]
+    (cond
+      ; Expired or irrelevant event
+      (or (expired? event)
+          (nil? value))
+      (let [top (dissoc top ekey)]
+        (if (top smallest)
+          [smallest top]
+          [(scan top) top]))
+
+      ; Empty set
+      (nil? smallest)
+      [ekey (assoc top ekey value)]
+
+      ; Falls outside the top set.
+      (and (not (top ekey))
+           (<= value (top smallest))
+           (<= k (count top)))
+      [smallest top]
+
+      ; In the top set
+      :else
+      (let [top (trim (assoc top ekey value) smallest)]
+        (if (or (nil? (top smallest))
+                (< value (top smallest)))
+          [(scan top) top]
+          [smallest top])))))
+
+(defn top
+  "Bifurcates a stream into a dual pair of streams: one for the top k events,
+  and one for the bottom k events.
+  
+  f is a function which maps events to comparable values, e.g. numbers. If an
+  incoming event e falls in the top k, the top stream receives e and the bottom
+  stream receives (expire e). If the event is *not* in the top k, calls (top
+  (expire e)) and (bottom e).
+
+  If an inbound event is already expired, it is forwarded directly to both
+  streams. In this way, both top- and bottom-stream have a consistent, dual
+  view of the event space.
+
+  Index the top 10 events, by metric:
+
+  (top 10 :metric index)
+ 
+  Index everything, but tag the top k events with \"top\":
+
+  (top 10 :metric
+    (adjust [:tags conj \"top\"]
+      index)
+    index)
+  
+  This implementation of top is lazy, in a sense. It won't proactively expire
+  events which are bumped from the top-k set--you have to wait for another
+  event with the same host and service to arrive before child streams will know
+  it's expired. At some point I (or an enterprising committer) should fix
+  that."
+  ([k f top-stream]
+   (top k f top-stream bit-bucket))
+  ([k f top-stream bottom-stream]
+   (let [state (atom [nil {}])]
+     (dual (fn stream [event]
+             (let [top   (second (swap! state top-update k f event))]
+               (top [(:host event) (:service event)])))
+           top-stream
+           bottom-stream))))
+
 (defn throttle
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
@@ -613,7 +772,7 @@
     (fn [sent start end])))
 
 (defn rollup
-  "Invokes children with events at most n times per m second interval. Passes
+  "Invokes children with events at most n times per dt second interval. Passes
   *vectors* of events to children, not a single event at a time. For instance,
   (rollup 3 1 f) receives five events and forwards three times per second:
 
@@ -626,54 +785,77 @@
   ... and events 4 and 5 are rolled over into the next period:
 
     -> (f [4 5])"
-  [n m & children]
+  [n dt & children]
+  (let [anchor (unix-time)
+        state (atom {:sent 0
+                     :buffer []
+                     :flushed nil})
+        ; Flush buffer of events
+        flush (fn flush [state]
+                (if (empty? (:buffer state))
+                  (merge state {:sent 0
+                                :flushed nil})
+                  (merge state {:sent 1
+                                :buffer []
+                                :flushed (:buffer state)})))
 
-  (let [carry (ref [])]
-    ; This implementation relies on stable, one-after-the-other creation of
-    ; buckets from part-time. This is NOT always the case, so consider
-    ; carefully which part-time implementation is used.
-    (part-time-fast m
-      (fn [] (dosync
-               (if (empty? (deref carry))
-                           ; We haven't send any events yet.
-                           (ref 0)
-                           ; We already sent (or will shortly send) 1 event
-                           ; for the carry.
-                           (ref 1))))
+        ; Tick function; flushes buffer and invokes children.
+        tick (fn tick []
+               (let [state (swap! state flush)]
+                 ; Reschedule another tick if necessary
+                 (when (= 1 (:sent state))
+                   (once! (next-tick anchor dt) tick))
+                 ; Flush any previously buffered events.
+                 (when (:flushed state)
+                   (call-rescue (:flushed state) children))))
 
-      (fn [sent event]
-        (if (dosync (< n (alter sent inc)))
-          ; Overtime!
-          (dosync (alter carry conj event))
-          ; Send right away
-          (call-rescue [event] children)))
-
-      (fn [sent start end]
-        ; Dispatch carried events if present.
-        (let [events (dosync
-                       (let [x (deref carry)]
-                         (ref-set carry [])
-                         x))]
-          (when-not (empty? events)
-            (call-rescue events children)))))))
+        ; Enqueue an event. Increments :sent until a critical threshold, then
+        ; starts storing events in buffer.
+        enqueue (fn enqueue [state event]
+                  (merge state {:sent (inc (:sent state))
+                                :flushed nil
+                                :buffer (if (< (:sent state) n)
+                                          (:buffer state)
+                                          (conj (:buffer state) event))}))]
+    
+    ; Stream: accept events and enqueue into state.
+    (fn stream [event]
+      (let [state (swap! state enqueue event)]
+        (when (= 1 (:sent state))
+          ; We claimed the right to set up the next tick.
+          (once! (next-tick anchor dt) tick))
+        (when (<= (:sent state) n)
+          ; We're clear to send immediately.
+          (call-rescue [event] children))))))
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
   service that passes through it (limited by :ttl). Every time it receives an
-  event, it passes on *all* events it remembers.
+  event, it passes on *all* events it remembers. When events expire, they are
+  included in the emitted sequence of events *once*, and removed from the state
+  table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
   [& children]
-  (let [past (atom {})]
-    (fn [{:keys [host service] :as event}]
-      (let [evkey  [host service]
-            reaper (fn [[k v]] (when-not (or (expired? v) (= evkey k)) [k v]))
-            events (swap! past (comp (partial into {})
-                                     (partial cons [evkey event])
-                                     (partial filter reaper)))]
-        (call-rescue (vals events) children)))))
-
+  ; Past is [{keys -> events}, expired-events]
+  (let [past (atom [{} []])]
+    (fn stream [{:keys [host service] :as event}]
+      (let [ekey  [host service]
+            ; Updates the state map and delivers expired events to an atom.
+            update (fn update [[ok _]]
+                     (doall
+                       (map persistent!
+                            (reduce (fn part [[ok expired] [k v]]
+                                      (if (expired? v)
+                                        [ok (conj! expired v)]
+                                        [(assoc! ok k v) expired]))
+                                    [(transient {})
+                                     (transient [])]
+                                    (assoc ok ekey event)))))
+            [ok expired] (swap! past update)]
+        (call-rescue (concat expired (vals ok)) children)))))
+    
 (defn append
   "Conj events onto the given reference"
   [reference]
@@ -712,16 +894,9 @@
       (call-rescue event children)
       true)))
 
-; Shortcuts for match
-;(defn description [value & children] (apply match :description value children))
-;(defn host [value & children] (apply match :host value children))
-;(defn metric [value & children] (apply match :metric value children))
-;(defn service [value & children] (apply match :service value children))
-;(defn state [value & children] (apply match :state value children))
-;(defn time [value & children] (apply match :time value children))
-
 (defn tagged-all
-  "Passes on events where all tags are present.
+  "Passes on events where all tags are present. This stream returns true if an
+  event it receives matches those tags, nil otherwise.
 
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
@@ -729,14 +904,17 @@
   (if (coll? tags)
     (fn [event]
       (when (set/subset? (set tags) (set (:tags event)))
-        (call-rescue event children)))
+        (call-rescue event children)
+        true))
 
     (fn [event]
       (when (member? tags (:tags event))
-        (call-rescue event children)))))
+        (call-rescue event children)
+        true))))
 
 (defn tagged-any
-  "Passes on events where any of tags are present.
+  "Passes on events where any of tags are present. This stream returns true if
+  an event it receives matches those tags, nil otherwise.
 
   (tagged-any \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
@@ -745,11 +923,13 @@
     (let [required (set tags)]
       (fn [event]
         (when (some required (:tags event))
-          (call-rescue event children))))
+          (call-rescue event children)
+          true)))
 
     (fn [event]
       (when (member? tags (:tags event))
-        (call-rescue event children)))))
+        (call-rescue event children)
+        true))))
 
 (def tagged "Alias for tagged-all" tagged-all)
 
@@ -788,7 +968,7 @@
   event has a nil value for that key. Passes the result on to children. Use:
 
   (default :service \"foo\" prn)
-  (default :service \"jrecursive\" :state \"chicken\"} prn)"
+  (default {:service \"jrecursive\" :state \"chicken\"} prn)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -836,6 +1016,18 @@
               event (assoc event field value)]
           (call-rescue event children))))
     (apply smap (first args) (rest args))))
+
+(defn tag
+  "Adds a new tag, or set of tags, to events which flow through.
+  
+  (tag \"foo\" index)
+  (tag [\"foo\" \"bar\"] index)"
+  [tags & children]
+  (let [tags (flatten [tags])]
+    (apply smap (fn stream [event]
+                  (assoc event :tags
+                         (distinct (concat tags (:tags event)))))
+           children)))
 
 (defmacro by
   "Splits stream by field.
@@ -1030,9 +1222,11 @@
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
     `(fn [event#]
-       (if (~f event#)
-         (call-rescue event# ~true-kids)
-         (call-rescue event# ~else-kids)))))
+       (let [value# (~f event#)]
+         (if value#
+           (call-rescue event# ~true-kids)
+           (call-rescue event# ~else-kids))
+         value#))))
 
 (defmacro where
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
@@ -1054,16 +1248,22 @@
   (where (service \"www\")
     (notify-www-team)
     (else
-      (notify-misc-team)))"
+      (notify-misc-team)))
+  
+  The streams generated by (where) return the value of expr: truthy if expr
+  matched the given event, and falsey otherwise. This means (where (metric 5))
+  tests events and returns true if their metric is five."
   [expr & children]
   (let [p (where-rewrite expr)
         [true-kids else-kids] (where-partition-clauses children)]
     `(let [true-kids# ~true-kids
            else-kids# ~else-kids]
-       (fn [event#]
-         (if (let [~'event event#] ~p)
-           (call-rescue event# true-kids#)
-           (call-rescue event# else-kids#))))))
+       (fn stream [event#]
+         (let [value# (let [~'event event#] ~p)]
+           (if value#
+             (call-rescue event# true-kids#)
+             (call-rescue event# else-kids#))
+           value#)))))
 
 (defn split*-match
   [event [pred stream]]
@@ -1071,74 +1271,159 @@
     (if (or (= stream pred) (pred event))
       stream)))
 
-(defn split-match
-  [[pred stream]]
-  (let [stream (or stream pred)]
-    (if (or (= stream pred) pred)
-      stream)))
+(defn split*
+  "Given a list of function and stream pairs, passes the current event onto the
+  stream associated with the first passing condition.
 
-(defmacro split*
-  "Given a list of function and stream pairs, passesppp
-   the current event onto the stream associated with
-   the first passing condition.
-
-   Conditions are functions as for where*.
-   An odd number of forms will make the last form
-   the default stream.
-   Example:
+   Conditions are functions as for where*.  An odd number of forms will make
+  the last form the default stream. For example:
 
    (split*
-     (fn [e] (< 2 (:metric e))) (with :state \"critical\" index)
-     (fn [e] (< 4 (:metric e))) (with :state \"warning\" index)
-     (with :state \"ok\" index))
-   "
+     (fn [e] (< 0.9  (:metric e))) (with :state \"critical\" index)
+     (fn [e] (< 0.75 (:metric e))) (with :state \"warning\" index)
+     (with :state \"ok\" index))"
   [& clauses]
-  `(fn [event#]
-     (when-let [stream# (some (partial split*-match event#)
-                              (partition-all 2 (list ~@clauses)))]
-       (call-rescue event# [stream#]))))
+  (let [clauses (partition-all 2 clauses)]
+    (fn stream [event]
+      (when-let [stream (some (partial split*-match event) clauses)]
+        (call-rescue event [stream])))))
 
 (defmacro split
-  "Behave as for split*, expecting predicates to be
-  expressions - as for where - instead of functions"
+  "Behave as for split*, expecting predicates to be (where) expressions instead
+  of functions. Example:
+  
+  (split
+    (< 0.9  metric) (with :state \"critical\" index)
+    (< 0.75 metric) (with :state \"warning\" index)
+    (with :state \"ok\" index))"
   [& clauses]
-  (let [clauses (for [[pred stream] (partition-all 2 clauses)]
-                  (if (nil? stream)
-                    [pred]
-                    [(where-rewrite pred) stream]))]
-    ;; I have to do the horrible assignment to event here
-    ;; This is necessary so config functions can refer
-    ;; to event implicitely
-    `(fn [~'event]
-       (when-let [stream# (some split-match (list ~@clauses))]
-         (call-rescue ~'event [stream#])))))
+  (let [clauses (mapcat (fn [clause]
+                          (if (nil? (second clause))
+                            clause
+                            [`(where ~(first clause)) (second clause)]))
+                            (partition-all 2 clauses))]
+    `(split* ~@clauses)))
 
 (defmacro splitp
-  "Takes a binary predicate, an expression and a set of
-   clauses.
+  "Takes a binary predicate, an expression and a set of clauses. Each clause
+  takes the form
 
-   For each clause, (pred test-expr expr) is evaluated, note
-   the order change from condp.
+  test-expr stream
 
-   If a binary clause matches, its associated stream will be
-   executed."
+  splitp returns a stream which accepts an event. Expr is a (where) expression,
+  which will be evaluated against the event to obtain a value for selecting a
+  clause. For each clause, evaluates (pred test-expr value). If the result is
+  logical true, evaluates (stream event) and returns that value. 
+  
+  A single default stream can follow the clauses, and its value will be
+  returned if no clause matches. If no default stream is provided and no clause
+  matches, an IllegalArgumentException is thrown.
+  
+  Splitp evaluates streams once at invocation time.
+  
+  Example:
+  
+  (splitp < metric
+    0.9  (with :state \"critical\" index)
+    0.75 (with :state \"warning\" index)
+         (with :state \"ok\" index))"
   [pred expr & clauses]
-  (let [clauses (for [[test-expr stream] (partition-all 2 clauses)]
-                  (if (nil? stream)
-                    [test-expr]
-                    [(where-rewrite (list pred test-expr expr)) stream]))]
-    `(fn [~'event]
-       (when-let [stream# (some split-match (list ~@clauses))]
-         (call-rescue ~'event [stream#])))))
+  (let [; Split up clauses into [stream test-expr] pairs
+        clauses (map (fn [[a b :as clause]]
+                       (case (count clause)
+                         1 [a]
+                         2 [b a]))
+                     (partition-all 2 clauses))
 
-(defn update-index
-  "Updates the given index with all events received."
-  [index]
-  (fn [event]
-    (index/update index event)))
+        ; Symbol for an event
+        event-sym (gensym "event__")
 
-(defn delete-from-index
-  "Deletes any events that pass through from the index"
-  [index]
-  (fn [event]
-    (index/delete index event)))
+        ; Symbols to store streams
+        stream-syms (repeatedly (count clauses) #(gensym "stream__"))
+
+        ; Binding symbols to stream expressions
+        stream-bindings (mapcat (fn [stream-sym [stream test-expr]]
+                                  [stream-sym stream])
+                                stream-syms
+                                clauses)
+
+        ; Transform clauses into a form for condp
+        condp-clauses (mapcat (fn [stream-sym [stream test-expr :as clause]]
+                                (if (= 1 (count clause))
+                                  [`(~stream-sym ~event-sym)]
+                                  [test-expr `(~stream-sym ~event-sym)]))
+                              stream-syms
+                              clauses)]
+
+    `(let [; A function which extracts a value from an event
+           valuefn# (where ~expr)
+           ; Bind streams to symbols
+           ~@stream-bindings]
+       ; Return a stream function
+       (fn splitp-stream# [~event-sym]
+         ; Which extracts a value from the event and calls condp
+         (condp ~pred (valuefn# ~event-sym)
+           ~@condp-clauses)))))
+
+(defn project*
+  "Like project, but takes predicate *functions* instead of where expressions."
+  [predicates & children]
+  (let [n          (count predicates)
+                   ; A vector of the current state and the *returned* state
+                   ; which allows us to submit expired events exactly once.
+        state      (atom [(vec (repeat n nil)) nil])
+        ; Returns a vector of two states: one with expired events replaced
+        ; by nil, and one with expired events replaced with (expire event).
+        clean-expire (fn clean-expire [state]
+                       (loop [i 0
+                              clean state
+                              expired state]
+                         (if (<= n i)
+                           [clean expired]
+                           (if (expired? (state i))
+                             (recur (inc i) 
+                                    (assoc clean i nil)
+                                    (assoc expired i (expire (state i))))
+                             (recur (inc i) clean expired)))))
+        ; Updates the state vector with a new event at specific indices
+        update (fn update [[state _] indices event]
+                 (clean-expire (reduce (fn r [state index]
+                                   (assoc state index event))
+                                 state
+                                 indices)))]
+    (fn stream [event]
+      ; Find matching predicates
+      (let [indices (loop [i       0
+                           indices (list)]
+                      (if (<= n i)
+                        indices
+                        (recur (inc i)
+                               (if ((predicates i) event)
+                                 (conj indices i)
+                                 indices))))]
+        ; Apply changes atomically and call
+        (when (not (empty? indices))
+          (let [[_ events] (swap! state update indices event)]
+            (call-rescue events children)))))))
+  
+(defmacro project
+  "Projects an event stream into a specific basis--like (coalesce), but where
+  you only want to compare two or three specific events. Takes a vector of
+  predicate expressions, like those used in (where). Project maintains a vector
+  of the most recent event for each predicate. An incoming event is compared
+  against each predicate; if it matches, the event replaces any previous event
+  in that position and the entire vector of events is forwarded to all child
+  streams. Expired events are included in the emitted vector of events *once*,
+  and removed from the state vector thereafter.
+
+  Use project when you want to compare a small number of distinct states over
+  time. For instance, to find the ratio of enqueues to dequeues:
+
+  (project [(service \"enqueues\")
+            (service \"dequeues\")]
+    (fn [[enq deq]]
+      (prn (/ (:metric enq)
+              (:metric deq)))))"
+  [basis & children]
+  (let [wrapped (mapv (fn [expr] `(where ~expr)) basis)]
+    `(project* ~wrapped ~@children)))

@@ -20,7 +20,8 @@
      (deref out#)))
 
 (defmacro run-stream-intervals
-  "Applies a seq of alternating events and intervals (in seconds) between them to stream, returning outputs."
+  "Applies a seq of alternating events and intervals (in seconds) between them
+  to stream, returning outputs."
   [stream inputs-and-intervals]
   `(let [out# (ref [])
          stream# (~@stream (append out#))
@@ -42,7 +43,8 @@
   `(is (= (run-stream ~stream ~inputs) ~outputs)))
 
 (defmacro test-stream-intervals
-  "Verifies that run-stream-intervals, taking inputs/intervals, forwards outputs to chldren."
+  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
+  outputs to chldren."
   [stream inputs-and-intervals outputs]
   `(is (= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
@@ -81,12 +83,12 @@
 (deftest smap-test
   (test-stream (smap inc) [6 3 -1] [7 4 0]))
 
-(deftest stream-test
+(deftest sdo-test
   (let [vals1   (atom [])
         vals2   (atom [])
         add1    #(swap! vals1 conj %)
         add2    #(swap! vals2 conj %)]
-    (run-stream (stream add1 add2) [1 2 3])
+    (run-stream (sdo add1 add2) [1 2 3])
     (is (= @vals1 [1 2 3]))
     (is (= @vals2 [1 2 3]))))
 
@@ -98,22 +100,28 @@
                   (test-stream (sreduce +) [1 2 3 4] [3 6 10])))
 
 (deftest counter-test
-         (let [r      (ref [])
-               s      (counter (append r))
-               events [{:metric 2}
-                       {}
-                       {:metric 1}
-                       {:metric 5}
-                       {:tags ["reset"] :metric -1}
-                       {:metric 2}]]
-           (doseq [e events] (s e))
-           
-           (is (= (deref r)
-                  [{:metric 2}
-                   {:metric 3}
-                   {:metric 8}
-                   {:tags ["reset"] :metric -1}
-                   {:metric 1}]))))
+         (testing "passes through events without metrics"
+                  (test-stream (counter)
+                               [{} {:state "expired"} {:service "foo"}]
+                               [{} {:state "expired"} {:service "foo"}]))
+
+         (testing "counts"
+                  (test-stream (counter)
+                               [{:metric 2} {} {:metric 3}]
+                               [{:metric 2} {} {:metric 5}])
+
+                  (test-stream (counter 100)
+                               [{:metric 2} {} {:metric 3}]
+                               [{:metric 102} {} {:metric 105}]))
+
+         (testing "resets"
+                  (test-stream (counter 100)
+                               [{:metric 1} 
+                                {:metric 200 :tags ["reset"]}
+                                {:metric 5}]
+                               [{:metric 101} 
+                                {:metric 200 :tags ["reset"]}
+                                {:metric 205}])))
 
 (deftest match-test
          ; Regular strings.
@@ -142,6 +150,25 @@
                       [1 2 3]
                       [2]))
 
+(deftest tag-test
+         ; Single tag
+         (test-stream (tag "foo")
+                      [{}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["bar" "baz"]}]
+                      [{:tags ["foo"]}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["foo" "bar" "baz"]}])
+
+         ; Multiple tags
+         (test-stream (tag ["foo" "bar"])
+                      [{}
+                       {:service :a :tags ["foo"]}
+                       {:service :b :tags ["foo" "baz"]}]
+                      [{:tags ["foo" "bar"]}
+                       {:service :a :tags ["foo" "bar"]}
+                       {:service :b :tags ["foo" "bar" "baz"]}]))
+
 (deftest tagged-all-test
          (test-stream (tagged-all ["kitten" "cat"])
                       [{:tags ["kitten" "cat"]}
@@ -159,7 +186,13 @@
                        {:tags ["bark"]}
                        {}]
                       [{:tags ["meow" "bark"]}
-                       {:tags ["meow"]}]))
+                       {:tags ["meow"]}])
+         
+         (testing "return values"
+                  (is (true? ((tagged-all ["meow" "bark"])
+                                {:tags ["meow" "bark" "grr"]})))
+                  (is (nil? ((tagged-all ["meow" "bar"])
+                               {:tags ["meow"]})))))
 
 (deftest tagged-any-test
          (test-stream (tagged-any ["kitten" "cat"])
@@ -173,75 +206,127 @@
                        {:tags ["cat", "dog"]}
                        {:tags ["kitten"]}])
 
-         (test-stream (tagged-all "meow")
+         (test-stream (tagged-any "meow")
                       [{:tags ["meow" "bark"]}
                        {:tags ["meow"]}
                        {:tags ["bark"]}
                        {}]
                       [{:tags ["meow" "bark"]}
-                       {:tags ["meow"]}]))
+                       {:tags ["meow"]}])
+
+         (testing "return values"
+                  (is (true? ((tagged-any ["meow" "bark"])
+                                {:tags ["meow" "moo"]})))
+                  (is (nil? ((tagged-any ["meow" "bar"])
+                               {:tags ["moo"]})))))
 
 (deftest split*-test
-  (test-stream (split* identity)
-               [true false nil 2]
-               [true 2])
+         (testing "with one branch"
+                  (test-stream (split* identity)
+                               [true false nil 2]
+                               [true 2]))
 
-  ;; dispatch with default value
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((split* (sup 10) (with :state :crit (partial swap! res conj))
-               (sup 5) (with :state :warn (partial swap! res conj))
-               (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res)))
+         (testing "with a default stream"
+                  ;; dispatch with default value
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (split* (sup 10) (with :state :critical
+                                                      (partial swap! res conj))
+                                       (sup 5) (with :state :warn 
+                                                     (partial swap! res conj))
+                                       (with :state :ok
+                                             (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
 
-  ;; dispatch with no default value
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}]]
-    (doseq [e events]
-      ((split* (sup 10) (with :state :crit (partial swap! res conj))
-               (sup 5) (with :state :warn (partial swap! res conj)))
-       e))
-    (is (= expect @res))))
+         (testing "with no default stream"
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}]
+                        stream (split* 
+                                 (sup 10) (with :state :critical
+                                                (partial swap! res conj))
+                                 (sup 5) (with :state :warn
+                                               (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res)))))
 
 (deftest split-test
-  ;; same test as above, using implicit rewrites
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((split (> metric 10) (with :state :crit (partial swap! res conj))
-              (> metric 5) (with :state :warn (partial swap! res conj))
-              (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res))))
+         ;; same test as above, using implicit rewrites
+         (testing "with a default stream"
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (split
+                                 (> metric 10) (with :state :critical
+                                                     (partial swap! res conj))
+                                 (> metric 5) (with :state :warn
+                                                    (partial swap! res conj))
+                                 (with :state :ok
+                                       (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
+         
+         (testing "evaluates streams once"
+                  (let [res (atom [])
+                        stream (split 
+                                 true
+                                 (let [state (atom 0)]
+                                   (fn [_]
+                                     (swap! res conj
+                                            (swap! state inc)))))]
+                    (stream :x)
+                    (stream :x)
+                    (stream :x)
+                    (is (= @res [1 2 3])))))
 
 (deftest splitp-test
-  ;; same test as above, using splitp
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((splitp <= metric
-               10 (with :state :crit (partial swap! res conj))
-               5  (with :state :warn (partial swap! res conj))
-              (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res))))
+         ;; same test as above, using splitp
+         (testing "basics"
+                  (let [res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :crit}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (splitp <= metric
+                                       10 (with :state :crit 
+                                                (partial swap! res conj))
+                                       5  (with :state :warn 
+                                                (partial swap! res conj))
+                                       (with :state :ok 
+                                             (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
+
+         (testing "Without a default"
+                  (is (thrown? IllegalArgumentException
+                               ((splitp = true
+                                        false :doesnt-happen)
+                                  :foo))))
+         
+         (testing "Evaluates child streams once at creation time"
+                  (let [a (atom 0)
+                        b (atom 0)
+                        s (splitp = state
+                                  :foo (do (swap! a inc) identity)
+                                       (do (swap! b inc) identity))]
+                    (is (= 1 @a))
+                    (is (= 1 @b))
+                    (s {:state :foo})
+                    (s {:state :foo})
+                    (s {:state :bar})
+                    (s {:state :baz})
+                    (is (= 1 @a))
+                    (is (= 1 @b)))))
 
 (deftest where*-test
          (test-stream (where* identity)
@@ -277,6 +362,12 @@
                   [{:service "bad" :metric 0}
                    {:metric 1}
                    {:service "bad" :metric 1}]))))
+
+(deftest where*-return-value
+         ; Where*'s return value should be whether the predicate matched.
+         (is (= true ((where* expired? (fn [e] "hi"))
+                        (expire {}))))
+         (is (= 2 ((where* (constantly 2)) :zoom))))
 
 (deftest where-field
          (let [r (ref [])
@@ -345,6 +436,23 @@
            (is (= @x 1))
            (s {:service "test"})
            (is (= @x 1))))
+
+(deftest where-return-value
+         ; Where's return value should be whether the predicate matched.
+         (is (= true  ((where (service "foo")) {:service "foo"})))
+         (is (= false ((where (service "foo")) {:service "bar"})))
+         (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
+         (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+
+         (is (= true ((where (service "foo") 
+                             (fn [event] 2)) 
+                        {:service "foo"})))
+         (is (= false ((where (service "foo")
+                              (else (fn [event] 2)))
+                         {:service "bar"})))
+         
+         (is (= 2 ((where 2) :wheeee!)))
+         (is (= nil ((where nil) :zoooom!))))
 
 (deftest default-kv
          (let [r (ref nil)
@@ -670,6 +778,18 @@
            ; All events recorded
            (is (= (/ total interval) (:metric @output)))))
 
+(deftest rate-without-input
+         (test-stream-intervals
+           (rate 1)
+           [{:metric 1 :service "foo"} 0.5
+            {:metric 1 :service "bar"} 0.5
+            {:metric 1 :service "baz" :ttl 3} 3
+            {:state "expired"}]
+           [{:time 1 :metric 2 :service "bar"}
+            {:time 2 :metric 1 :service "baz" :ttl 3}
+            {:time 3 :metric 0 :service "baz" :ttl 2}
+            {:time 4 :metric 0 :service "baz" :ttl 1}]))
+
 (deftest fold-interval-test
          (test-stream-intervals 
            (riemann.streams/fold-interval 1 :metric incanter.stats/sd)
@@ -791,28 +911,6 @@
            (doseq [m metrics] (r {:metric m}))
            (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
 
-(deftest update-test
-         (let [i (index/index)
-               s (update-index i)
-               states [{:host 1 :state "ok"} 
-                       {:host 2 :state "ok"} 
-                       {:host 1 :state "bad"}]]
-           (doseq [state states] (s state))
-           (is (= (set i)
-                  #{{:host 1 :state "bad"}
-                    {:host 2 :state "ok"}}))))
-
-(deftest delete-from-index-test
-         (let [i (index/index)
-               s (update-index i)
-               d (delete-from-index i)
-               states [{:host 1 :state "ok"} 
-                       {:host 2 :state "ok"} 
-                       {:host 1 :state "bad"}]]
-           (doseq [state states] (s state))
-           (doseq [state states] (d state))
-           (is (= (vec (seq i)) []))))
-
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)
                       (em 1 10 20 -100 4)
@@ -823,6 +921,63 @@
          (test-stream (ewma-timeless 1/2)
                       (em 1   1   1   1     1    )
                       (em 1/2 3/4 7/8 15/16 31/32)))
+
+(deftest top-test
+         (let [e (fn [s m] {:service s :metric m})
+               a (fn [m] (e :a m))
+               b (fn [m] (e :b m))
+               c (fn [m] (e :c m))
+               d (fn [m] (e :d m))]
+
+           ; A single event
+           (test-stream (top 1 :metric)
+                        [(a 1)]
+                        [(a 1)])
+
+           ; Repeating the same service
+           (test-stream (top 1 :metric)
+                        [(a 1) (a 2) (a 1) (a 3)]
+                        [(a 1) (a 2) (a 1) (a 3)])
+
+           ; Displacing a smaller event
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3) (a 1)          (b 2)]
+                        [(a 1) (b 2) (c 3) (expire (a 1)) (b 2)])
+         
+           ; Allowing in a smaller event when there's room
+           (test-stream (top 2 :metric)
+                        [(a 2) (b 2) (c 1)          (a 5) (c 1)          (a 0) (c 1)]
+                        [(a 2) (b 2) (expire (c 1)) (a 5) (expire (c 1)) (a 0) (c 1)])
+
+           ; Ignoring smaller events
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3)         (d 1)          (a 2)          (b nil) (d 2)]
+                        [(a 1) (b 2) (c 3) (expire (d 1)) (expire (a 2)) (expire (b nil)) (d 2)])
+
+           ; Events without metrics
+           (test-stream (top 1 :metric)
+                        [(a nil)          (b 1) (a nil)]
+                        [(expire (a nil)) (b 1) (expire (a nil))])
+
+           ; Events without metrics displace previous events
+           (test-stream (top 1 :metric)
+                        [(b 2) (b nil)          (a 1)]
+                        [(b 2) (expire (b nil)) (a 1)])
+
+           ; Expiring a nonexistent event
+           (test-stream (top 2 :metric)
+                        [(expire (a 2))]
+                        [(expire (a 2))])
+
+           ; Expiring an existing event
+           (test-stream (top 1 :metric)
+                        [(a 2) (expire (a 1)) (b 1)]
+                        [(a 2) (expire (a 1)) (b 1)])
+
+           ; Ring
+           (test-stream (top 2 :metric)
+                        [(a 1) (b 2) (c 3) (d 4)         (a 2)          (b 3)  (c 4) (d 5)]
+                        [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])))
 
 (deftest throttle-test
          (let [out (ref [])
@@ -844,57 +999,118 @@
              (is (zero? (mod count 5))))))
 
 (deftest rollup-test
-         (let [out (ref [])
-               quantum 0.1
-               stream (rollup 2 quantum (append out))
-               t1 (unix-time)]
-          
-           (stream 1)
-           (is (= (deref out) [[1]]))
-           (stream 2)
-           (is (= (deref out) [[1] [2]]))
-           (stream 3)
-           (is (= (deref out) [[1] [2]]))
+         (testing "basic rollups"
+                  (test-stream-intervals 
+                    (rollup 2 1)
+                    [ 1 0 2 0 3 1   4 0 5 0 6 0 7 1       :foo 10]
+                    [[1] [2]   [3] [4]           [5 6 7] [:foo]  ]))
 
-           (advance! (* 1 quantum))
-           (is (= (deref out) [[1] [2] [3]]))
+         (testing "expired events"
+                  (reset-time!)
+                  (test-stream-intervals
+                    (rollup 2 3)
+                    [ 1 0 {:state "expired"} 0 :a 1 :b 1 :c 1 ]
+                    [[1] [{:state "expired"}]              [:a :b :c]])
 
-           (stream 4)
-           (is (= (deref out) [[1] [2] [3] [4]]))
-           (stream 5)
-           (stream 6)
-           (stream 7)
-           (is (= (deref out) [[1] [2] [3] [4]]))
-
-           (advance! (* 2 quantum))
-           (is (= (deref out) [[1] [2] [3] [4] [5 6 7]]))))
+                  (reset-time!)
+                  (let [e {:state "expired"}]
+                    (test-stream-intervals
+                      (rollup 2 2)
+                      [ e 0 e 0 e 1 e 1]
+                      [[e] [e]       [e e]]))))
 
 (deftest coalesce-test
-         (let [out (ref [])
-               s (coalesce (register out))
-               a {:service 1 :state "ok" :time (unix-time)}
-               b {:service 2 :state "ok" :time (unix-time)}
-               c {:service 1 :state "bad" :time (unix-time)}
-               d {:service 1 :state "ok" :time (unix-time) :ttl 0.01}
-               e {:service 3 :state "ok" :time (unix-time)}]
+         (let [out (atom [])
+               s (coalesce #(reset! out %))
+               a1 {:service :a :state "one" :time 0}
+               b1 {:service :b :state "one" :time 0}
+               a2 {:service :a :state "two" :time 0 :ttl 1}
+               c1 {:service :c :state "one" :time 0}
+               b2 {:service :b :state "two" :time 0}]
 
-           (s a)
-           (is (= (set (deref out)) #{a}))
+           (s a1)
+           (is (= (set @out) #{a1}))
 
-           (s b)
-           (is (= (set (deref out)) #{a b}))
+           (s b1)
+           (is (= (set @out) #{a1 b1}))
 
-           (s c)
-           (is (= (set (deref out)) #{b c}))
+           (s a2)
+           (is (= (set @out) #{a2 b1}))
 
-           (s d)
-           (is (= (set (deref out)) #{b d}))
+           ; Wait for ttl expiry of a2
+           (advance! 2)
 
-           ; Wait for ttl expiry of d
-           (advance! 0.02)
+           ; Should receive expired a2 once
+           (s c1)
+           (is (= (set @out) #{a2 b1 c1}))
+           
+           (s b2)
+           (is (= (set @out) #{b2 c1}))))
 
-           (s e)
-           (is (= (set (deref out)) #{b e}))))
+(deftest project-test
+         ; Empty -> empty
+         (test-stream (project [(service :foo) (service :bar)])
+                      []
+                      [])
+
+         ; Without anything to project to, does nothing
+         (test-stream (project [])
+                      [1 2 3]
+                      [])
+
+         ; Basic test: ignores non-matching events, updates state properly
+         (test-stream (project [(service "foo") (service "bar")])
+                      [{:service "cat"}
+                       {:service "foo" :a 1}
+                       {:service "foo" :a 2}
+                       {:service "meow"}
+                       {:service "bar" :b 3}
+                       {:service "foo" :b 4}]
+                      [[{:service "foo" :a 1} nil]
+                       [{:service "foo" :a 2} nil]
+                       [{:service "foo" :a 2} {:service "bar" :b 3}]
+                       [{:service "foo" :b 4} {:service "bar" :b 3}]])
+
+         ; Passes on initially expired events correctly
+         (test-stream
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "expired"}
+            {:service "foo" :state "expired"}
+            {:service "cat"}]
+           [[{:service "foo" :time 0 :state "expired"} nil]
+            [{:service "foo" :time 0 :state "expired"} nil]])
+
+         ; Expires existing events
+         (test-stream
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "ok"}
+            {:service "bar" :state "ok"}
+            {:service "bar" :state "expired"}
+            {:service "foo" :state "expired"}
+            {:service "bar" :state "expired"}]
+           [[{:service "foo" :state "ok"}
+             nil]
+            [{:service "foo" :state "ok"} 
+             {:service "bar" :state "ok"}]
+            [{:service "foo" :state "ok"} 
+             {:service "bar" :state "expired" :time 0}]
+            [{:service "foo" :state "expired" :time 0}
+             nil]
+            [nil 
+             {:service "bar" :state "expired" :time 0}]])
+
+         ; Expiration test: expires own events when the time comes.
+         (test-stream-intervals
+           (project [(service "foo") (service "bar")])
+           [{:service "foo" :state "ok" :time 0 :ttl 1}
+            2
+            {:service "bar" :state "ok"}
+            1
+            {:service "bar" :state "ok2"}]
+           [[{:service "foo" :state "ok" :time 0 :ttl 1} nil]
+            [{:service "foo" :state "expired" :time 2}
+             {:service "bar" :state "ok"}]
+            [nil {:service "bar" :state "ok2"}]]))
 
 (deftest adjust-test
   (let [out (ref nil)

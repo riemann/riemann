@@ -15,6 +15,7 @@ build
 .lein-failures
 protosrc/
 reimann-*.zip
+/site
 site/**
 bench/**
 target/**

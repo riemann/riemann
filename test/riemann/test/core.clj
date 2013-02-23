@@ -4,7 +4,7 @@
             [riemann.logging :as logging])
   (:use riemann.client
         riemann.common
-        riemann.index
+        [riemann.index :only [index]]
         riemann.time.controlled
         riemann.core
         clojure.test
@@ -183,9 +183,27 @@
            ; Check that expired-stream received them.
            (is (= @res
                   {:service 1
-                   :host nil
                    :time 0.011
                    :state "expired"}))))
+
+(deftest reaper-keep-keys
+         (let [index (index)
+               res (atom nil)
+               expired-stream (riemann.streams/expired
+                                (partial reset! res))
+               reaper (reaper 0.001 {:keep-keys [:tags]})
+               core (logging/suppress
+                      ["riemann.core" "riemann.transport.tcp"]
+                      (transition! (core) {:services [reaper]
+                                           :streams [expired-stream]
+                                           :index index}))]
+
+           (update-index core {:service 1 :ttl 0.01 :time 0 :tags ["hi"]})
+           (advance! 2)
+           (Thread/sleep 100)
+           (is (= @res {:tags ["hi"] 
+                        :time 2
+                        :state "expired"}))))
 
 (deftest percentiles
          (let [out (ref [])
