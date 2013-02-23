@@ -221,50 +221,60 @@
                                {:tags ["moo"]})))))
 
 (deftest split*-test
-  (test-stream (split* identity)
-               [true false nil 2]
-               [true 2])
+         (testing "with one branch"
+                  (test-stream (split* identity)
+                               [true false nil 2]
+                               [true 2]))
 
-  ;; dispatch with default value
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((split* (sup 10) (with :state :crit (partial swap! res conj))
-               (sup 5) (with :state :warn (partial swap! res conj))
-               (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res)))
+         (testing "with a default stream"
+                  ;; dispatch with default value
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (split* (sup 10) (with :state :critical
+                                                      (partial swap! res conj))
+                                       (sup 5) (with :state :warn 
+                                                     (partial swap! res conj))
+                                       (with :state :ok
+                                             (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
 
-  ;; dispatch with no default value
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}]]
-    (doseq [e events]
-      ((split* (sup 10) (with :state :crit (partial swap! res conj))
-               (sup 5) (with :state :warn (partial swap! res conj)))
-       e))
-    (is (= expect @res))))
+         (testing "with no default stream"
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}]
+                        stream (split* 
+                                 (sup 10) (with :state :critical
+                                                (partial swap! res conj))
+                                 (sup 5) (with :state :warn
+                                               (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res)))))
 
 (deftest split-test
-  ;; same test as above, using implicit rewrites
-  (let [sup    (fn [threshold] (fn [{:keys [metric]}] (> metric threshold)))
-        res    (atom [])
-        events [{:metric 15} {:metric 8} {:metric 2}]
-        expect [{:metric 15 :state :crit}
-                {:metric 8 :state :warn}
-                {:metric 2 :state :ok}]]
-    (doseq [e events]
-      ((split (> metric 10) (with :state :crit (partial swap! res conj))
-              (> metric 5) (with :state :warn (partial swap! res conj))
-              (with :state :ok (partial swap! res conj)))
-       e))
-    (is (= expect @res)))
+         ;; same test as above, using implicit rewrites
+         (testing "with a default stream"
+                  (let [sup    (fn [threshold] #(< threshold (:metric %)))
+                        res    (atom [])
+                        events [{:metric 15} {:metric 8} {:metric 2}]
+                        expect [{:metric 15 :state :critical}
+                                {:metric 8 :state :warn}
+                                {:metric 2 :state :ok}]
+                        stream (split
+                                 (> metric 10) (with :state :critical
+                                                     (partial swap! res conj))
+                                 (> metric 5) (with :state :warn
+                                                    (partial swap! res conj))
+                                 (with :state :ok
+                                       (partial swap! res conj)))]
+                    (dorun (map stream events))
+                    (is (= expect @res))))
          
          (testing "evaluates streams once"
                   (let [res (atom [])

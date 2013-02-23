@@ -1271,12 +1271,6 @@
     (if (or (= stream pred) (pred event))
       stream)))
 
-(defn split-match
-  [[pred stream]]
-  (let [stream (or stream pred)]
-    (if (or (= stream pred) pred)
-      stream)))
-
 (defn split*
   "Given a list of function and stream pairs, passes the current event onto the
   stream associated with the first passing condition.
@@ -1285,8 +1279,8 @@
   the last form the default stream. For example:
 
    (split*
-     (fn [e] (< 0.75 (:metric e))) (with :state \"warning\" index)
      (fn [e] (< 0.9  (:metric e))) (with :state \"critical\" index)
+     (fn [e] (< 0.75 (:metric e))) (with :state \"warning\" index)
      (with :state \"ok\" index))"
   [& clauses]
   (let [clauses (partition-all 2 clauses)]
@@ -1299,8 +1293,9 @@
   of functions. Example:
   
   (split
+    (< 0.9  metric) (with :state \"critical\" index)
     (< 0.75 metric) (with :state \"warning\" index)
-    (< 0.9  metric) (with :state \"critical\" index))"
+    (with :state \"ok\" index))"
   [& clauses]
   (let [clauses (mapcat (fn [clause]
                           (if (nil? (second clause))
