@@ -690,34 +690,47 @@
                        {:metric -3 :time 4}]))
 
 (deftest ddt-interval-test
-         ; Quick burst without crossing interval
-         (is (= (map :metric (run-stream-intervals 
-                               (ddt 0.1)
-                               [{:metric 1} nil {:metric 2} nil {:metric 3}]))
-                []))
+         (testing "Quick burst without crossing interval"
+                  (reset-time!)
+                  (is (= (map :metric (run-stream-intervals 
+                                        (ddt 0.1)
+                                        [{:metric 1} nil
+                                         {:metric 2} nil 
+                                         {:metric 3}]))
+                         [])))
 
-         ; 1 event per interval
-         (let [t0 (unix-time)]
-           (is (= (map :metric (run-stream-intervals
-                                 (ddt 0.1)
-                                 [{:metric -1 :time t0} 0.1
-                                  {:metric 0 :time (+ 1/10 t0)} 0.1
-                                  {:metric -5 :time (+ 2/10 t0)} 0.1]))
-                  [10 -50])))
+         (testing "1 event per interval"
+                  (reset-time!)
+                  (test-stream-intervals
+                    (ddt 1)
+                    ; Note that the swap occurs just prior to events at time 1.
+                    [{:time 0 :metric -1} 99/100
+                     {:time 1 :metric 0} 1
+                     {:time 2 :metric -5} 1]
+                    [{:time 1 :metric 1}
+                     {:time 2 :metric -5}]))
         
-         (reset-time!)
+         (testing "n events per interval"
+                  (reset-time!)
+                  (test-stream-intervals 
+                    (ddt 1)
+                    [{:time 0 :metric -1} 1/100
+                     {:time 1/2 :metric 100} 1/2 ; Ignored
+                     {:time 2/2 :metric 1} 1/2
+                     {:time 3/2 :metric nil} 1/2 ; Ignored
+                     {:time 4/2 :metric -3} 1/2]
+                    [{:time 2/2 :metric 2}
+                     {:time 4/2 :metric -4}]))
 
-         ; n events per interval
-         (let [t0 (unix-time)]
-           (is (= (map :metric (run-stream-intervals
-                                 (ddt 0.1)
-                                 [{:metric -1 :time t0} 0.01 ; counts
-                                  {:metric 100 :time (+ 1/20 t0)} 0.05
-                                  {:metric 1 :time (+ 2/20 t0)} 0.05
-                                  {:metric nil :time (+ 3/20 t0)} 0.05
-                                  {:metric -3 :time (+ 4/20 t0)} 0.05]))
-                  [20 -40])))
-         )
+         (testing "emits zeroes when no events arrive in an interval"
+                  (reset-time!)
+                  (test-stream-intervals (ddt 2)
+                                         [{:time 0 :metric 0} 1
+                                          {:time 1 :metric 1} 2
+                                          {:time 3 :metric 2} 3]
+                                         [{:time 2 :metric 1}
+                                          {:time 4 :metric 1/2}
+                                          {:time 6 :metric 0}])))
 
 (deftest rate-slow-even
          (let [output (ref [])

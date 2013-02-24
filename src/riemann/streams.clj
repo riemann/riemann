@@ -501,6 +501,56 @@
             (ref-set state nil))
           ))))
 
+(defn ddt-real
+  "(ddt) in real time."
+  [n & children]
+  (let [state (atom (list nil))  ; Events at t3, t2, and t1.
+        swap (fn swap []
+               (let [[_ e2 e1] (swap! state
+                                      (fn [[e3 e2 e1 :as state]]
+                                        ; If no events have come in this
+                                        ; interval, we preserve the last event
+                                        ; in both places, which means we emit
+                                        ; zeroes.
+                                        (if e3
+                                          (list nil e3 e2)
+                                          (list nil e2 e2))))]
+                 (when (and e1 e2)
+                   (let [dt (- (:time e2) (:time e1))
+                         out (merge e2
+                                    (if (zero? dt)
+                                      {:time (unix-time)
+                                       :metric 0}
+                                      (let [diff (/ (- (:metric e2)
+                                                       (:metric e1))
+                                                    dt)]
+                                        {:time (unix-time)
+                                         :metric diff})))]
+                     (call-rescue out children)))))
+        poller (periodically-until-expired n swap)]
+
+    (fn stream [event]
+      (when (:metric event)
+        (swap! state (fn [[most-recent & more]] (cons event more))))
+      (poller event))))
+
+(defn ddt-events
+  "(ddt) between each pair of events."
+  [& children]
+  (let [prev (ref nil)]
+    (fn stream [event]
+      (when-let [m (:metric event)]
+        (let [prev-event (dosync
+                           (let [prev-event (deref prev)]
+                             (ref-set prev event)
+                             prev-event))]
+          (when prev-event
+            (let [dt (- (:time event) (:time prev-event))]
+              (when-not (zero? dt)
+                (let [diff (/ (- m (:metric prev-event)) dt)]
+                  (call-rescue (assoc event :metric diff) children))))))))))
+  
+
 (defn ddt
   "Differentiate metrics with respect to time. With no args, emits an event for
   each one received, but with metric equal to the difference between the
@@ -509,43 +559,8 @@
   seconds instead, until expired. Skips events without metrics."
   [& args]
   (if (number? (first args))
-    ; Emit a differential every n seconds
-    (do
-      (let [[n & children] args
-            prev (ref nil)
-            most-recent (ref nil)
-            swap (fn []
-                   (let [[a b] (dosync
-                                 (let [prev-event (deref prev)
-                                       last-event (deref most-recent)]
-                                   (ref-set prev last-event)
-                                   [prev-event last-event]))]
-                     (when (and a b)
-                       (let [dt (- (:time b) (:time a))]
-                         (when-not (zero? dt)
-                           (let [diff (/ (- (:metric b) (:metric a))
-                                         dt)]
-                             (call-rescue (assoc b :metric diff) children)))))))
-            poller (periodically-until-expired n swap)]
-        (fn [event]
-          (when (:metric event)
-            (dosync (ref-set most-recent event)))
-          (poller event))))
-
-    ; Emit a differential for every event
-    (do
-      (let [prev (ref nil)]
-        (fn [event]
-          (when-let [m (:metric event)]
-            (let [prev-event (dosync
-                         (let [prev-event (deref prev)]
-                           (ref-set prev event)
-                           prev-event))]
-              (when prev-event
-                (let [dt (- (:time event) (:time prev-event))]
-                  (when-not (zero? dt)
-                    (let [diff (/ (- m (:metric prev-event)) dt)]
-                      (call-rescue (assoc event :metric diff) args))))))))))))
+    (apply ddt-real args)
+    (apply ddt-events args)))
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
