@@ -80,8 +80,20 @@
            (median events)
            (is (= (deref r) {:metric 0}))))
 
+(deftest smap*-test
+         (testing "passes nil values"
+                  (test-stream (smap* identity)
+                               [1 nil false 3]
+                               [1 nil false 3])))
+
 (deftest smap-test
-  (test-stream (smap inc) [6 3 -1] [7 4 0]))
+         (testing "increment"
+                  (test-stream (smap inc) [6 3 -1] [7 4 0]))
+         
+         (testing "ignores nil values"
+                  (test-stream (smap identity)
+                               [1 nil false 3]
+                               [1 false 3])))
 
 (deftest sdo-test
   (let [vals1   (atom [])

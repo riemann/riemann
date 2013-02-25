@@ -78,15 +78,26 @@
   (fn [events]
     (call-rescue (f events) children)))
 
+(defn smap*
+  "Streaming map: less magic. Calls children with (f event). Unlike smap,
+  passes on nil results to children. Example:
+
+  (smap folds/maximum prn) ; Prints the maximum of lists of events."
+  [f & children]
+  (fn stream [event]
+    (call-rescue (f event) children)))
+
 (defn smap
-  "Streaming map. Calls children with (f event). Prefer this to (adjust f).
-  Example:
+  "Streaming map. Calls children with (f event), whenever (f event) is non-nil.
+  Prefer this to (adjust f) and (combine f). Example:
 
   (smap :metric prn) ; prints the metric of each event.
   (smap #(assoc % :state \"ok\") index) ; Indexes each event with state \"ok\""
   [f & children]
-  (fn [event]
-    (call-rescue (f event) children)))
+  (fn stream [event]
+    (let [value (f event)]
+      (when-not (nil? value)
+        (call-rescue value children)))))
 
 (defn sreduce
   "Streaming reduce. Two forms:
