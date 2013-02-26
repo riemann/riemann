@@ -381,90 +381,110 @@
                         (expire {}))))
          (is (= 2 ((where* (constantly 2)) :zoom))))
 
-(deftest where-field
-         (let [r (ref [])
-               s (where (or (state "ok" "good")
-                            (= "weird" state))
-                        (fn [e] (dosync (alter r conj e))))
-               events [{:state "ok"}
-                       {:state "good"}
-                       {:state "weird"}
-                       {:state "error"}]
-               expect [{:state "ok"}
-                       {:state "good"}
-                       {:state "weird"}]]
-           (doseq [e events] (s e))
-           (is (= expect (deref r)))))
+(deftest where-test
+         (testing "field"
+                  (let [r (ref [])
+                        s (where (or (state "ok" "good")
+                                     (= "weird" state))
+                                 (fn [e] (dosync (alter r conj e))))
+                        events [{:state "ok"}
+                                {:state "good"}
+                                {:state "weird"}
+                                {:state "error"}]
+                        expect [{:state "ok"}
+                                {:state "good"}
+                                {:state "weird"}]]
+                    (doseq [e events] (s e))
+                    (is (= expect (deref r)))))
 
-(deftest where-regex
-         (test-stream (where (service #"^foo"))
-                      [{}
-                       {:service "foo"}
-                       {:service "food"}]
-                      [{:service "foo"}
-                       {:service "food"}]))
+         (testing "regex"
+                  (test-stream (where (service #"^foo"))
+                               [{}
+                                {:service "foo"}
+                                {:service "food"}]
+                               [{:service "foo"}
+                                {:service "food"}]))
+        
+         (testing "functions"
+                  (test-stream (where (and metric (even? metric)))
+                               [{}
+                                {:metric 1}
+                                {:metric 2}]
+                               [{:metric 2}]))
 
-(deftest where-variable
-         ; Verify that the macro allows variables to be used in predicates.
-         (let [regex #"cat"]
-           (test-stream (where (service regex))
-                        [{:service "kitten"}
-                         {:service "cats"}]
-                        [{:service "cats"}])))
+         (testing "functions as values"
+                  ; May not support this later. I don't think it's all that
+                  ; useful given you can just use (even? metric).
+                  (test-stream (where (and metric (metric even?)))
+                               [{}
+                                {:metric 1}
+                                {:metric 2}]
+                               [{:metric 2}]))
 
-(deftest where-tagged
-         (let [r (ref [])
-               s (where (tagged "foo") (append r))
-               events [{}
-                       {:tags []}
-                       {:tags ["blah"]}
-                       {:tags ["foo"]}
-                       {:tags ["foo" "bar"]}]]
-           (doseq [e events] (s e))
-           (is (= (deref r)
-                  [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+         (testing "variable"
+                  ; Verify that the macro allows variables to be used in
+                  ; predicates.
+                  (let [regex #"cat"]
+                    (test-stream (where (service regex))
+                                 [{:service "kitten"}
+                                  {:service "cats"}]
+                                 [{:service "cats"}])))
 
-(deftest where-else
-         ; Where should take an else clause.
-         (let [a (atom [])
-               b (atom [])]
-           (run-stream
-             (where (service #"a")
-                    #(swap! a conj (:service %))
-                    (else #(swap! b conj (:service %))))
-             [{:service "cat"}
-              {:service "dog"}
-              {:service nil}
-              {:service "badger"}])
-           (is (= @a ["cat" "badger"]))
-           (is (= @b ["dog" nil]))))
 
-(deftest where-child-evaluated-once
-         ; Where should evaluate its children exactly once.
-         (let [x (atom 0)
-               s (where true (do (swap! x inc) identity))]
-           (is (= @x 1))
-           (s {:service "test"})
-           (is (= @x 1))
-           (s {:service "test"})
-           (is (= @x 1))))
+         (testing "tagged"
+                  (let [r (ref [])
+                        s (where (tagged "foo") (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
-(deftest where-return-value
-         ; Where's return value should be whether the predicate matched.
-         (is (= true  ((where (service "foo")) {:service "foo"})))
-         (is (= false ((where (service "foo")) {:service "bar"})))
-         (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
-         (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+         (testing "else"
+                  ; Where should take an else clause.
+                  (let [a (atom [])
+                        b (atom [])]
+                    (run-stream
+                      (where (service #"a")
+                             #(swap! a conj (:service %))
+                             (else #(swap! b conj (:service %))))
+                      [{:service "cat"}
+                       {:service "dog"}
+                       {:service nil}
+                       {:service "badger"}])
+                    (is (= @a ["cat" "badger"]))
+                    (is (= @b ["dog" nil]))))
 
-         (is (= true ((where (service "foo") 
-                             (fn [event] 2)) 
-                        {:service "foo"})))
-         (is (= false ((where (service "foo")
-                              (else (fn [event] 2)))
-                         {:service "bar"})))
-         
-         (is (= 2 ((where 2) :wheeee!)))
-         (is (= nil ((where nil) :zoooom!))))
+         (testing "evaluates children once"
+                  ; Where should evaluate its children exactly once.
+                  (let [x (atom 0)
+                        s (where true (do (swap! x inc) identity))]
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1))))
+
+         (testing "return value"
+                  ; Where's return value should be whether the predicate
+                  ; matched.
+                  (is (= true  ((where (service "foo")) {:service "foo"})))
+                  (is (= false ((where (service "foo")) {:service "bar"})))
+                  (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
+                  (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+
+                  (is (= true ((where (service "foo") 
+                                      (fn [event] 2)) 
+                                 {:service "foo"})))
+                  (is (= false ((where (service "foo")
+                                       (else (fn [event] 2)))
+                                  {:service "bar"})))
+
+                  (is (= 2 ((where 2) :wheeee!)))
+                  (is (= nil ((where nil) :zoooom!)))))
 
 (deftest default-kv
          (let [r (ref nil)
