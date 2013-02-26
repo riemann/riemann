@@ -174,6 +174,14 @@
                 (.getParent))]
       (str (file dir path)))))
 
+(defn validate-config
+  "Check that a config file has valid syntax."
+  [file]
+  (try
+    (read-strings (slurp file))
+    (catch clojure.lang.LispReader$ReaderException e
+      (throw (logging/nice-syntax-error e file)))))
+
 (defn include
   "Include another config file.
 
