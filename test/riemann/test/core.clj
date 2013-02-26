@@ -90,6 +90,72 @@
                (is (= nil   @same-2-core))
                (is (= final @new-core))))))
 
+(deftest transition-index
+         (logging/suppress 
+           "riemann.core"
+           (testing "Different indexes"
+                    (let [old-running (atom nil)
+                          old-core    (atom nil)
+                          new-running (atom nil)
+                          new-core    (atom nil)
+                          old-index (TestService. :old old-running old-core)
+                          new-index (TestService. :new new-running new-core)
+                          old {:index old-index}
+                          new {:index new-index}]
+
+                      (start! old)
+                      (is @old-running)
+                      (is (not @new-running))
+                      (is (= old @old-core))
+                      (is (= nil @new-core))
+
+                      (let [final (transition! old new)]
+                        (is (not= new final))
+                        (is (= new-index (:index final)))
+                        (is (not     @old-running))
+                        (is          @new-running)
+                        (is (= final @new-core))
+                        (is (= old   @old-core))
+
+                        (stop! final)
+                        (is (= new-index (:index final)))
+                        (is (= old-index (:index old)))
+                        (is (not @old-running))
+                        (is (not @new-running))
+                        (is (= final @new-core))
+                        (is (= old   @old-core)))))
+
+           (testing "The same index"
+                    (let [old-running (atom nil)
+                          old-core    (atom nil)
+                          new-running (atom nil)
+                          new-core    (atom nil)
+                          old-index (TestService. :same old-running old-core)
+                          new-index (TestService. :same new-running new-core)
+                          old {:index old-index}
+                          new {:index new-index}]
+
+                      (start! old)
+                      (is @old-running)
+                      (is (not @new-running))
+                      (is (= old @old-core))
+                      (is (= nil @new-core))
+
+                      (let [final (transition! old new)]
+                        (is (not= new final))
+                        (is (= old-index (:index final)))
+                        (is          @old-running)
+                        (is (not     @new-running))
+                        (is (= final @old-core))
+                        (is (nil?    @new-core))
+
+                        (stop! final)
+                        (is (= old-index (:index final)))
+                        (is (not @old-running))
+                        (is (not @new-running))
+                        (is (= nil   @new-core))
+                        (is (= final @old-core)))))))
+
 (deftest serialization
          (let [out (ref [])
                server (riemann.transport.tcp/tcp-server)
