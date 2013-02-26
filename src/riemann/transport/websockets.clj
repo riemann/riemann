@@ -95,6 +95,9 @@
 
   Options:
   :host   The address to listen on (default 127.0.0.1)
+          Currently does nothing; this option depends on an incomplete
+          feature in Aleph, the underlying networking library. Aleph will
+          currently bind to all interfaces, regardless of this value.
   :post   The port to listen on (default 5556)"
   ([] (ws-server {}))
   ([opts]
