@@ -73,9 +73,11 @@
       (seq [this]
            (seq (.values hm)))
 
+      ServiceEquiv
+      (equiv? [this other] (= (class this) (class other)))
+
       Service
       (reload! [this new-core])
-      (equiv? [this other] (= (class this) (class other)))
       (start! [this])
       (stop! [this]))))
 

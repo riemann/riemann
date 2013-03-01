@@ -1,6 +1,13 @@
 (ns riemann.test.service
   (:import (java.util.concurrent TimeUnit
-                                 LinkedBlockingQueue))
+                                 AbstractExecutorService
+                                 Executor
+                                 ExecutorService
+                                 RejectedExecutionException
+                                 LinkedBlockingQueue
+                                 ArrayBlockingQueue
+                                 SynchronousQueue
+                                 ThreadPoolExecutor))
   (:use riemann.service
         clojure.test))
 
@@ -76,3 +83,90 @@
            (reload! s :core-2)
            (start! s)
            (is (= [:restarted :core-2] (send :restarted)))))
+
+(deftest threadpool-executor-equiv-test
+   (are [f] (equiv? (f) (f))
+        (fn [] true)
+        (fn [] 1)
+        #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS 
+                              (ArrayBlockingQueue. 10))
+        #(ThreadPoolExecutor. 1 10 20 TimeUnit/MILLISECONDS
+                              (LinkedBlockingQueue.))
+        #(threadpool-executor-service :treat
+           (ThreadPoolExecutor. 1 2 3 TimeUnit/NANOSECONDS
+                               (SynchronousQueue.))))
+
+   (are [a b] (let [x (not (equiv? a b))]
+                (try (stop! a) (catch Throwable e))
+                (try (stop! b) (catch Throwable e))
+                x)
+
+        1 2
+
+        true false
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 2))
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (LinkedBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (LinkedBlockingQueue. 2))
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/MICROSECONDS 
+                             (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/MILLISECONDS 
+                             (ArrayBlockingQueue. 1))
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 1 21 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 2 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+
+        (ThreadPoolExecutor. 1 2 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 2 2 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
+        (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (LinkedBlockingQueue. 1))
+
+        (doto (threadpool-executor-service 
+                :mouse
+                #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
+                                      (ArrayBlockingQueue. 1)))
+          (start!))
+        (doto (threadpool-executor-service 
+                :cat
+                #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
+                                      (ArrayBlockingQueue. 1)))
+          (start!))
+
+        (doto (threadpool-executor-service 
+                :cat
+                #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
+                                      (ArrayBlockingQueue. 1)))
+          (start!))
+        (doto (threadpool-executor-service 
+                :cat
+                #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
+                                      (ArrayBlockingQueue. 2)))
+          (start!))))
+
+(deftest threadpool-executor-service-test
+         (let [s (threadpool-executor-service
+                   :cat
+                   #(ThreadPoolExecutor. 1 2 20 TimeUnit/MILLISECONDS
+                                         (LinkedBlockingQueue. 5)))
+               x (atom 0)
+               run (fn []
+                     (let [p (promise)]
+                       (.execute s #(deliver p (swap! x inc)))
+                       @p))]
+           (is (thrown? RejectedExecutionException (run)))
+           (is (= 0 @x))
+
+           (.start! s)
+           (is (= 1 (run)))
+           (is (= 2 (run)))
+
+           (.stop! s)
+           (is (thrown? RejectedExecutionException (run)))
+           (is (= 2 @x))))

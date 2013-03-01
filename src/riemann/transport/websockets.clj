@@ -5,7 +5,7 @@
             [riemann.index    :as index]
             [riemann.pubsub   :as p])
   (:use [riemann.common        :only [event-to-json]]
-        [riemann.service       :only [Service]]
+        [riemann.service       :only [Service ServiceEquiv]]
         [aleph.http            :only [start-http-server]]
         [lamina.core           :only [receive-all close enqueue]]
         [clojure.tools.logging :only [info warn]]
@@ -66,12 +66,13 @@
               (close ch)))))
 
 (defrecord WebsocketServer [host port core server]
-  Service
+  ServiceEquiv
   (equiv? [this other]
           (and (instance? WebsocketServer other)
                (= host (:host other))
                (= port (:port other))))
 
+  Service
   (reload! [this new-core]
            (reset! core new-core))
 

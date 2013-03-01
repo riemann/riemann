@@ -5,6 +5,7 @@
   (:require [riemann.core :as core]
             [riemann.pubsub :as pubsub]
             [riemann.logging :as logging]
+            [riemann.service :as service]
             [riemann.streams :as streams]))
 
 (defn reset-core! [f]
@@ -31,6 +32,34 @@
            (apply!)
            (is (= old-next-core @core))
            (is (not= @core @next-core))))
+
+(deftest service-test
+         (let [sleep (fn [_] (Thread/sleep 1))]
+           (testing "Adds an equivalent service to a core."
+                    (let [s1 (service! (service/thread-service :foo sleep))]
+                      (is s1)
+                      (apply!)
+                      (is (= (:services @core) [s1]))
+                      (let [s (service/thread-service :foo sleep)
+                            s2 (service! s)]
+                        (is (= s1 s2))
+                        (is (not= s s2))
+                        (apply!)
+                        (is (deref (:running s1)))
+                        (is (not (deref (:running s))))
+                        (is (= (:services @core) [s1])))))
+
+           (testing "Adds a distinct service to a core."
+                    (let [s1 (service! (service/thread-service :foo sleep))]
+                      (is s1)
+                      (apply!)
+                      (is (= (:services @core) [s1]))
+                      (let [s2 (service! (service/thread-service :bar sleep))]
+                        (is (not= s1 s2))
+                        (apply!)
+                        (is (not (deref (:running s1))))
+                        (is (deref (:running s2)))
+                        (is (= (:services @core) [s2])))))))
 
 (deftest tcp-server-test
          (tcp-server :host "a")
@@ -114,3 +143,4 @@
            ; Send outside streams
            (pubsub/publish (:pubsub @core) :test "hi")
            (is (= "hi" @received))))
+

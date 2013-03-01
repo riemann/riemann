@@ -154,6 +154,13 @@
   (deprecated "riemann.streams/stream is now streams/sdo."
               (apply sdo args)))
 
+(defn queue
+  "A stream which applies events to child streams asynchronously by pushing
+  them through an ExecutorService. Returns a function which accepts an
+  event and schedules it for eventual execution, returning the event if it was
+  successful, or throwing an exception if the queue is full."
+  [])
+
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
   children with a vector of the last n events, from oldest to newest. Ignores

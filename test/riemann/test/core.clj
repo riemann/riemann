@@ -9,7 +9,7 @@
         riemann.core
         clojure.test
         [clojure.algo.generic.functor :only [fmap]]
-        [riemann.service :only [Service]]
+        [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]))
 
 (logging/init)
@@ -35,6 +35,7 @@
   (start!  [_]   (reset! running true))
   (stop!   [_]   (reset! running false))
   (reload! [_ c] (reset! core c))
+  ServiceEquiv
   (equiv?  [a b] (= (:id a) (:id b))))
 
 (deftest start-transition-stop
