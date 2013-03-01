@@ -92,7 +92,7 @@
                               (ArrayBlockingQueue. 10))
         #(ThreadPoolExecutor. 1 10 20 TimeUnit/MILLISECONDS
                               (LinkedBlockingQueue.))
-        #(threadpool-executor-service :treat
+        #(executor-service :treat
            (ThreadPoolExecutor. 1 2 3 TimeUnit/NANOSECONDS
                                (SynchronousQueue.))))
 
@@ -128,30 +128,30 @@
         (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1))
         (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (LinkedBlockingQueue. 1))
 
-        (doto (threadpool-executor-service 
+        (doto (executor-service 
                 :mouse
                 #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
                                       (ArrayBlockingQueue. 1)))
           (start!))
-        (doto (threadpool-executor-service 
+        (doto (executor-service 
                 :cat
                 #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
                                       (ArrayBlockingQueue. 1)))
           (start!))
 
-        (doto (threadpool-executor-service 
+        (doto (executor-service 
                 :cat
                 #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
                                       (ArrayBlockingQueue. 1)))
           (start!))
-        (doto (threadpool-executor-service 
+        (doto (executor-service 
                 :cat
                 #(ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
                                       (ArrayBlockingQueue. 2)))
           (start!))))
 
-(deftest threadpool-executor-service-test
-         (let [s (threadpool-executor-service
+(deftest executor-service-test
+         (let [s (executor-service
                    :cat
                    #(ThreadPoolExecutor. 1 2 20 TimeUnit/MILLISECONDS
                                          (LinkedBlockingQueue. 5)))

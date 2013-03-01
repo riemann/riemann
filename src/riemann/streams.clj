@@ -18,7 +18,8 @@
             [riemann.index :as index]
             riemann.client
             riemann.logging
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (java.util.concurrent Executor)))
 
 (def  infinity (/  1.0 0))
 (def -infinity (/ -1.0 0))
@@ -154,13 +155,25 @@
   (deprecated "riemann.streams/stream is now streams/sdo."
               (apply sdo args)))
 
-(defn queue
-  "A stream which applies events to child streams asynchronously by pushing
-  them through an ExecutorService. Returns a function which accepts an
-  event and schedules it for eventual execution, returning the event if it was
-  successful, or throwing an exception if the queue is full."
-  [])
-
+(defn execute-on
+  "Returns a stream which accepts events and executes them using a
+  java.util.concurrent.Executor. Returns immediately. May throw
+  RejectedExecutionException if the underlying executor will not accept the
+  event; e.g. if its queue is full. Use together with
+  riemann.service/executor-service for reloadable asynchronous execution of
+  streams.
+  
+  (let [io-pool (service!
+                  (executor-service
+                    #(ThreadPoolExecutor. 1 10 ...)))
+        graph (execute-on io-pool (graphite {:host ...}))]
+    ...
+    (tagged \"graph\"
+      graph))"
+  [^Executor executor & children]
+  (fn stream [event]
+    (.execute executor #(call-rescue event children))))
+    
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
   children with a vector of the last n events, from oldest to newest. Ignores

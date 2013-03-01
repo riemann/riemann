@@ -171,7 +171,8 @@
 
   (start! [this]
           (locking this
-            (set! executor (f))))
+            (when-not executor
+              (set! executor (f)))))
 
   (stop! [this]
          (locking this
@@ -188,7 +189,7 @@
                            " isn't running."))))))
              
 
-(defn threadpool-executor-service
+(defn executor-service
   "Creates a new threadpool executor service ... service! Takes a function
   which generates an ExecutorService. Returns an ExecutorServiceService which
   provides start/stop/reload/equiv? lifecycle management of that service."

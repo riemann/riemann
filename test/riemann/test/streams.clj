@@ -6,7 +6,9 @@
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
-            incanter.stats))
+            incanter.stats)
+  (:import (java.util.concurrent Executor
+                                 CountDownLatch)))
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
@@ -103,6 +105,27 @@
     (run-stream (sdo add1 add2) [1 2 3])
     (is (= @vals1 [1 2 3]))
     (is (= @vals2 [1 2 3]))))
+
+(deftest execute-on-test
+         (let [output (atom [])
+               n      100
+               events (range n)
+               latch  (CountDownLatch. n)
+               stream (execute-on
+                        (reify Executor
+                          (execute [this task]
+                                   (future
+                                     (task)
+                                     (.countDown latch))))
+                        (fn [event]
+                          (swap! output conj event)))]
+
+           ; Run streams against events.
+           (dorun (map stream events))
+
+           ; Check that our event was applied to the conj stream.
+           (.await latch)
+           (is (= (set @output) (set events)))))
 
 (deftest sreduce-test
          (testing "explicit value"
