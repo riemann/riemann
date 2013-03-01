@@ -10,11 +10,12 @@
   (:import (java.util.concurrent RejectedExecutionException)))
 
 (defn reset-core! [f]
-  (logging/suppress "riemann.core"
+  (logging/suppress ["riemann.core" "riemann.service"]
                     (clear!)
                     (core/stop! @core)
                     (reset! core (core/core))
                     (f)
+                    (core/stop! @core)
                     (clear!)
                     (reset! core (core/core))
                     (core/stop! @core)))

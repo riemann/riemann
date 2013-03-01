@@ -74,7 +74,7 @@
   ([name equiv-key f]
    (ThreadService. name equiv-key f (atom nil) (atom false) (atom nil))))
 
-(defmacro all-equiv?
+(defmacro all-equal?
   "Takes two objects to compare and a list of forms to compare them by.
 
   (all-equiv? foo bar
@@ -95,77 +95,25 @@
   `(let [~asym ~a
          ~bsym ~b]
      (and ~@(map (fn [[fun & args]]
-                  `(equiv? (~fun ~asym ~@args) (~fun ~bsym ~@args)))
+                  `(= (~fun ~asym ~@args) (~fun ~bsym ~@args)))
                 forms)))))
-
-; I'm doing my best to cover the reasonable equivalence classes required to
-; compare ThreadPoolExecutor dynamics with common classes, but I've taken some
-; shortcuts. If you mess around with ThreadFactories or deep internals, these
-; may not compare correctly.
-(extend-protocol ServiceEquiv
-  nil
-  (equiv? [a b] (nil? b))
-
-  Object
-  (equiv? [a b] (= a b))
-
-  ThreadFactory
-  (equiv? [a b] (= (class a) (class b))) ; punt!
-
-  BlockingQueue
-  (equiv? [a b] false) ; punt!
-
-  SynchronousQueue
-  (equiv? [a b] (= (class a) (class b)))
-
-  LinkedBlockingQueue
-  (equiv? [a b] 
-          (all-equiv? a b
-                      (class)
-                      (->> (wall.hack/field LinkedBlockingQueue :capacity))))
-
-  ArrayBlockingQueue
-  (equiv? [a b] (all-equiv? a b
-                            (class)
-                            (->> 
-                              ^objects (wall.hack/field 
-                                         ArrayBlockingQueue :items)
-                              (alength))))
-
-  ExecutorService
-  (equiv? [a b] false) ; punt!
-
-  ThreadPoolExecutor
-  (equiv? [a ^ThreadPoolExecutor b]
-          (and
-            (all-equiv? a b
-                          (class)
-                          (.getCorePoolSize)
-                          (.getMaximumPoolSize)
-                          (.getKeepAliveTime TimeUnit/NANOSECONDS)
-                          (.getRejectedExecutionHandler)
-                          (.getThreadFactory))
-               (equiv? (.getQueue a)
-                       (.getQueue b)))))
 
 ; Wraps an ExecutorService with a start/stop lifecycle
 (defprotocol IExecutorServiceService
   (getExecutor [this]))
 
 (deftype ExecutorServiceService
-  [name f ^:volatile-mutable ^ExecutorService executor]
+  [name equiv-key f ^:volatile-mutable ^ExecutorService executor]
 
   IExecutorServiceService
   (getExecutor [this] executor)
   
   ServiceEquiv
   (equiv? [a b]
-          (and 
-            (all-equiv? a ^ExecutorServiceService b
-                        (class)
-                        (.name))
-            (equiv? (getExecutor a)
-                    (getExecutor b))))
+          (all-equal? a ^ExecutorServiceService b
+                      (class)
+                      (.name)
+                      (.equiv-key)))
 
   Service
   (reload! [this new-core])
@@ -194,9 +142,33 @@
 (defn executor-service
   "Creates a new threadpool executor service ... service! Takes a function
   which generates an ExecutorService. Returns an ExecutorServiceService which
-  provides start/stop/reload/equiv? lifecycle management of that service."
-  [name f]
-  (ExecutorServiceService. name f nil))
+  provides start/stop/reload/equiv? lifecycle management of that service.
+  
+  Equivalence-key controls how services are compared to tell if they are
+  equivalent. Services with a nil equivalence key are *never* equivalent.
+  Otherwise, services are equivalent when their class, name, and equiv-key are
+  equal.
+  
+  (executor-service* :graphite {foo: 4}
+    #(ThreadPoolExecutor. 2 ...))"
+  ([name f] (executor-service name nil f)) 
+  ([name equiv-key f]
+   (ExecutorServiceService. name equiv-key f nil)))
+
+(defmacro literal-executor-service
+  "Like executor-service, but captures the *expression* passed to it as the
+  equivalence key. This only works if the expression is literal; if there are
+  any variables or function calls, they will be compared as code, not as
+  their evaluated values.
+  
+  OK:  (literal-executor-service :io (ThreadPoolExecutor. 2 ...))
+  OK:  (literal-executor-service :io (ThreadPoolExecutor. (inc 1) ...))
+  BAD: (literal-executor-service :io (ThreadPoolExecutor. x ...))"
+  [name executor-service-expr]
+  `(executor-service
+     ~name
+     (quote ~executor-service-expr)
+     (fn [] ~executor-service-expr)))
 
 (defn threadpool-service
   "An ExecutorServiceService based on a ThreadPoolExecutor with core and
@@ -206,16 +178,25 @@
   :max-pool-size              Default 4
   :keep-alive-time            Default 5
   :keep-alive-unit            Default SECONDS
-  :queue                      Defaults to a LinkedBlockingQueue with options:
-    :queue-size               Default 1000"
+  :queue-size                 Default 1000"
   ([name] (threadpool-service name {}))
-  ([name opts]
+  ([name {:keys [core-pool-size
+                 max-pool-size
+                 keep-alive-time
+                 keep-alive-unit
+                 queue-size]
+          :as opts
+          :or {core-pool-size 0
+               max-pool-size 4
+               keep-alive-time 5
+               keep-alive-unit TimeUnit/SECONDS
+               queue-size 1000}}]
    (executor-service
      name
+     (merge opts {:type `threadpool-service})
      #(ThreadPoolExecutor.
-        (get opts :core-pool-size 0)
-        (get opts :max-pool-size 4)
-        (get opts :keep-alive-time 5)
-        (get opts :keep-alive-unit TimeUnit/SECONDS)
-        (get opts :queue
-             (LinkedBlockingQueue. (get opts :queue-size 1000)))))))
+        core-pool-size
+        max-pool-size
+        keep-alive-time
+        keep-alive-unit
+        (LinkedBlockingQueue. queue-size)))))
