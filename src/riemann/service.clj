@@ -1,6 +1,7 @@
 (ns riemann.service
   "Lifecycle protocol for stateful services bound to a core."
   (:require wall.hack)
+  (:use clojure.tools.logging)
   (:import (java.util.concurrent TimeUnit
                                  ThreadFactory
                                  AbstractExecutorService
@@ -172,11 +173,13 @@
   (start! [this]
           (locking this
             (when-not executor
+              (info "Executor Service" name "starting")
               (set! executor (f)))))
 
   (stop! [this]
          (locking this
            (when executor
+             (info "Executor Service" name "stopping")
              (.shutdown executor)
              (set! executor nil))))
 
@@ -185,9 +188,8 @@
            (if-let [x executor]
              (.execute x runnable)
              (throw (RejectedExecutionException.
-                      (str "ExecutorServiceService "
+                      (str "ExecutorServiceService " name
                            " isn't running."))))))
-             
 
 (defn executor-service
   "Creates a new threadpool executor service ... service! Takes a function
@@ -195,3 +197,25 @@
   provides start/stop/reload/equiv? lifecycle management of that service."
   [name f]
   (ExecutorServiceService. name f nil))
+
+(defn threadpool-service
+  "An ExecutorServiceService based on a ThreadPoolExecutor with core and
+  maximum threadpool sizes, and a LinkedBlockingQueue of a given size. Options:
+  
+  :core-pool-size             Default 0
+  :max-pool-size              Default 4
+  :keep-alive-time            Default 5
+  :keep-alive-unit            Default SECONDS
+  :queue                      Defaults to a LinkedBlockingQueue with options:
+    :queue-size               Default 1000"
+  ([name] (threadpool-service name {}))
+  ([name opts]
+   (executor-service
+     name
+     #(ThreadPoolExecutor.
+        (get opts :core-pool-size 0)
+        (get opts :max-pool-size 4)
+        (get opts :keep-alive-time 5)
+        (get opts :keep-alive-unit TimeUnit/SECONDS)
+        (get opts :queue
+             (LinkedBlockingQueue. (get opts :queue-size 1000)))))))

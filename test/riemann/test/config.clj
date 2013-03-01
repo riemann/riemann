@@ -6,7 +6,8 @@
             [riemann.pubsub :as pubsub]
             [riemann.logging :as logging]
             [riemann.service :as service]
-            [riemann.streams :as streams]))
+            [riemann.streams :as streams])
+  (:import (java.util.concurrent RejectedExecutionException)))
 
 (defn reset-core! [f]
   (logging/suppress "riemann.core"
@@ -123,6 +124,20 @@
            (delete {:host 2 :state "bar"})
            (is (= (seq i) [{:host 1 :state "foo"}]))))
 
+(deftest async-queue-test
+         (let [out    (atom [])
+               p      (promise)
+               stream (async-queue! :test {}
+                                    (fn [event]
+                                      (swap! out conj event)
+                                      (deliver p nil)))]
+           (is (thrown? RejectedExecutionException
+                        (stream :foo)))
+           (apply!)
+           (stream :bar)
+           (deref p)
+           (is (= [:bar] @out))))
+
 (deftest subscribe-in-stream-test
          (let [received (promise)]
            (streams
@@ -143,4 +158,3 @@
            ; Send outside streams
            (pubsub/publish (:pubsub @core) :test "hi")
            (is (= "hi" @received))))
-

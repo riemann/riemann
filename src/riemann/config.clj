@@ -138,6 +138,27 @@
   ([& args]
    (service! (apply core/reaper args))))
 
+(defn async-queue!
+  "A stream which registers (using service!) a new threadpool-service with the
+  next core, and returns a stream which accepts events and applies those events
+  to child streams via the threadpool service.
+
+  WARNING: this function is not intended for dynamic use. It creates a new
+  executor service for *every* invocation. It will not start the executor
+  service until the current configuration is applied. Use sparingly and only at
+  configuration time--preferably once for each distinct IO-bound asynchronous
+  service.
+
+  Example:
+
+  (let [graph (async-queue! :graphite {:queue-size 100}
+                            (graphite {:host ...}))]
+    (streams
+      (where ... graph)))"
+  [name threadpool-service-opts & children]
+  (let [s (service! (service/threadpool-service name threadpool-service-opts))]
+    (apply execute-on s children)))
+
 (defn publish
   "Returns a stream which publishes events to the given channel. Uses this
   core's pubsub registry."
