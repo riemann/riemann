@@ -11,7 +11,14 @@
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
   (:use [riemann.common :exclude [match]]
-        [riemann.time :only [unix-time linear-time every! once! after! next-tick defer cancel]]
+        [riemann.time :only [unix-time
+                             linear-time
+                             every!
+                             once!
+                             after!
+                             next-tick
+                             defer
+                             cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
@@ -121,7 +128,7 @@ OA
   "Returns a function which takes a seq of events. Combines events with f, then
   forwards the result to children."
   [f & children]
-  (fn [events]
+  (fn stream [events]
     (call-rescue (f events) children)))
 
 (defn smap*
@@ -168,7 +175,7 @@ OA
     (let [children   opts
           first-time (ref true)
           acc        (ref nil)]
-      (fn [event]
+      (fn stream [event]
         (let [[first-time value] (dosync
                                    (if @first-time
                                      (do
@@ -182,7 +189,7 @@ OA
     ; Value provided
     (let [acc      (atom (first opts))
           children (rest opts)]
-      (fn [event]
+      (fn stream [event]
         (call-rescue (swap! acc f event) children)))))
 
 (defn sdo
@@ -192,7 +199,7 @@ OA
   
   (sdo prn (rate 5 index))"
   [& children]
-  (fn [event]
+  (fn stream [event]
     (call-rescue event children)))
 
 (defn stream
@@ -229,8 +236,8 @@ OA
   (moving-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
-    (fn [event]
-      (let [w (swap! window (fn [w]
+    (fn stream [event]
+      (let [w (swap! window (fn swap [w]
                               (vec (take-last n (conj w event)))))]
         (call-rescue w children)))))
 
@@ -242,8 +249,8 @@ OA
   (fixed-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [buffer (atom [])]
-    (fn [event]
-      (let [events (swap! buffer (fn [events]
+    (fn stream [event]
+      (let [events (swap! buffer (fn swap [events]
                               (let [events (conj events event)]
                                 (if (< n (count events))
                                   [event]
@@ -261,7 +268,7 @@ OA
   [n & children]
   (let [cutoff (ref 0)
         buffer (ref [])]
-    (fn [event]
+    (fn stream [event]
       (let [events (dosync
                      ; Compute minimum allowed time
                      (let [cutoff (alter cutoff max (- (get event :time 0) n))]
@@ -271,7 +278,7 @@ OA
                          ; have changed.
                          (alter buffer conj event)
                          (alter buffer
-                                (fn [events]
+                                (fn alter [events]
                                   (vec (filter
                                          (fn [e] (or (nil? (:time e))
                                                      (< cutoff (:time e))))
@@ -295,7 +302,7 @@ OA
 
   (let [start-time (ref nil)
         buffer     (ref [])]
-    (fn [event]
+    (fn stream [event]
       (let [windows (dosync
                       (cond
                         ; No time
@@ -362,8 +369,8 @@ OA
         ; A list of all bins we're tracking.
         bins (ref {})
         ; Eventually finish a bin.
-        finish-eventually (fn [bin start]
-          (.start (new Thread (fn []
+        finish-eventually (fn finish-eventually [bin start]
+          (.start (new Thread (bound-fn thread []
                          (let [end (+ start interval)]
                            ; Sleep until this bin is past
                            (Thread/sleep (max 0 (* 1000 (- end (unix-time)))))
@@ -376,7 +383,7 @@ OA
                            (finish bin start end))))))
 
         ; Add event to the bin for a time
-        bin (fn [event t]
+        bin (fn bin [event t]
               (let [start (quot t interval)]
                 (dosync
                   (when (<= (deref watermark) start)
@@ -392,7 +399,7 @@ OA
                           (alter bins assoc start bin)
                           (finish-eventually bin start))))))))]
 
-    (fn [event]
+    (fn stream [event]
       (let [; What time did this event happen at?
             t (or (:time event) (unix-time))]
         (bin event t)))))
@@ -480,12 +487,12 @@ OA
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn [] (ref []))
-      (fn [r event]
+      (fn create [] (ref []))
+      (fn add [r event]
         (dosync
           (if-let [ek (event-key event)]
             (alter r conj event))))
-      (fn [r start end]
+      (fn finish [r start end]
         (let [stat (dosync
                     (folder (map event-key @r)))
               event (assoc (last @r) event-key stat)]
@@ -500,11 +507,11 @@ OA
   ([interval default-event & children]
    (let [fill (bound-fn fill []
                 (call-rescue (assoc default-event :time (unix-time)) children))
-         new-deferrable (fn [] (every! interval
-                                       interval
-                                       fill))
+         new-deferrable (fn new-deferrable [] (every! interval
+                                                      interval
+                                                      fill))
          deferrable (ref (new-deferrable))]
-    (fn [event]
+    (fn stream [event]
       (let [d (deref deferrable)]
         (if d
           ; We have an active deferrable
@@ -531,9 +538,10 @@ OA
    (let [last-event (ref nil)
          fill (bound-fn fill []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
-         new-deferrable (fn [] (every! interval interval fill))
+         new-deferrable (fn new-deferrable []
+                          (every! interval interval fill))
          deferrable (ref nil)]
-     (fn [event]
+     (fn stream [event]
        ; Record last event
        (dosync (ref-set last-event event))
 
@@ -567,7 +575,7 @@ OA
                        (assoc (deref state) :time (unix-time))
                        children))
           peri (periodically-until-expired interval emit-dup)]
-      (fn [event]
+      (fn stream [event]
         (dosync
           (ref-set state event))
 
@@ -585,7 +593,7 @@ OA
   (let [state (atom (list nil))  ; Events at t3, t2, and t1.
         swap (bound-fn swap []
                (let [[_ e2 e1] (swap! state
-                                      (fn [[e3 e2 e1 :as state]]
+                                      (fn swap [[e3 e2 e1 :as state]]
                                         ; If no events have come in this
                                         ; interval, we preserve the last event
                                         ; in both places, which means we emit
@@ -609,7 +617,7 @@ OA
 
     (fn stream [event]
       (when (:metric event)
-        (swap! state (fn [[most-recent & more]] (cons event more))))
+        (swap! state (fn swap [[most-recent & more]] (cons event more))))
       (poller event))))
 
 (defn ddt-events
@@ -693,9 +701,9 @@ OA
   time .95'."
   [interval points & children]
   (part-time-fast interval
-                (fn [] (ref []))
-                (fn [r event] (dosync (alter r conj event)))
-                (fn [r start end]
+                (fn setup [] (ref []))
+                (fn add [r event] (dosync (alter r conj event)))
+                (fn finish [r start end]
                   (let [samples (dosync
                                   (folds/sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
@@ -738,7 +746,7 @@ OA
   [& children]
   (deprecated "Use streams/counter"
               (let [sum (ref 0)]
-                (fn [event]
+                (fn stream [event]
                   (let [s (dosync
                             (when-let [m (:metric event)]
                               (commute sum + (:metric event))))
@@ -751,7 +759,7 @@ OA
   [children]
   (let [sum (ref nil)
         total (ref 0)]
-    (fn [event]
+    (fn stream [event]
       (let [m (dosync
                 (let [t (commute total inc)
                       s (commute sum + (:metric event))]
@@ -767,7 +775,7 @@ OA
   (let [m (ref 0)
         c-existing (- 1 r)
         c-new r]
-    (fn [event]
+    (fn stream [event]
       ; Compute new ewma
       (let [m (when-let [metric-new (:metric event)]
                 (dosync
@@ -858,11 +866,11 @@ OA
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
   (part-time-fast m
-    (fn [] (ref 0))
-    (fn [sent event]
+    (fn setup [] (ref 0))
+    (fn add [sent event]
       (when-not (dosync (< n (alter sent inc)))
         (call-rescue event children)))
-    (fn [sent start end])))
+    (fn finish [sent start end])))
 
 (defn rollup
   "Invokes children with events at most n times per dt second interval. Passes
@@ -952,20 +960,20 @@ OA
 (defn append
   "Conj events onto the given reference"
   [reference]
-  (fn [event]
+  (fn stream [event]
     (dosync
       (alter reference conj event))))
 
 (defn register
   "Set reference to the most recent event that passes through."
   [reference]
-  (fn [event]
+  (fn stream [event]
     (dosync (ref-set reference event))))
 
 (defn forward
   "Sends an event through a client"
   [client]
-  (fn [event]
+  (fn stream [event]
     (riemann.client/send-event client event)))
 
 (defn match
@@ -982,7 +990,7 @@ OA
   For cases where you only care about whether (f event) is truthy, use (where
   some-fn) instead of (match some-fn true)."
   [f value & children]
-  (fn [event]
+  (fn stream [event]
     (when (riemann.common/match value (f event))
       (call-rescue event children)
       true)))
@@ -995,12 +1003,12 @@ OA
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
   (if (coll? tags)
-    (fn [event]
+    (fn stream [event]
       (when (set/subset? (set tags) (set (:tags event)))
         (call-rescue event children)
         true))
 
-    (fn [event]
+    (fn stream [event]
       (when (member? tags (:tags event))
         (call-rescue event children)
         true))))
@@ -1014,12 +1022,12 @@ OA
   [tags & children]
   (if (coll? tags)
     (let [required (set tags)]
-      (fn [event]
+      (fn stream [event]
         (when (some required (:tags event))
           (call-rescue event children)
           true)))
 
-    (fn [event]
+    (fn stream [event]
       (when (member? tags (:tags event))
         (call-rescue event children)
         true))))
@@ -1041,7 +1049,7 @@ OA
   (if (map? (first args))
     ; Merge in a map of new values.
     (let [[m & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    Merge on protobufs is broken; nil values aren't applied.
         ;    (let [e (merge event m)]
         (let [e (reduce (fn [m, [k, v]]
@@ -1051,7 +1059,7 @@ OA
 
     ; Change a particular key.
     (let [[k v & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    (let [e (assoc event k v)]
         (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
           (call-rescue e children))))))
@@ -1066,7 +1074,7 @@ OA
   (if (map? (first args))
     ; Merge in a map of new values.
     (let [[defaults & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    Merge on protobufs is broken; nil values aren't applied.
         (let [e (reduce (fn [m [k v]]
                           (if (nil? (get m k)) (assoc m k v) m))
@@ -1075,7 +1083,7 @@ OA
 
     ; Change a particular key.
     (let [[k v & children] args]
-      (fn [event]
+      (fn stream [event]
         (let [e (if (nil? (k event)) (assoc event k v) event)]
           (call-rescue e children))))))
 
@@ -1104,7 +1112,7 @@ OA
   (if (vector? (first args))
     ; Adjust a particular field in the event.
     (let [[[field f & args] & children] args]
-      (fn [event]
+      (fn stream [event]
         (let [value (apply f (field event) args)
               event (assoc event field value)]
           (call-rescue event children))))
@@ -1159,7 +1167,7 @@ OA
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
         table (ref {})]
-     (fn [event]
+     (fn stream [event]
        (let [fork-name (f event)
              fork (dosync
                     (or ((deref table) fork-name)
@@ -1190,7 +1198,7 @@ OA
         children (if (map? options)
                    (rest children)
                    children)]
-    (fn [event]
+    (fn stream [event]
       (when
         (dosync
           (let [cur (pred event)
@@ -1212,7 +1220,7 @@ OA
 
   (within [0 1] (fn [event] do-something))"
   [r & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (<= (first r) m (last r))
         (call-rescue event children)))))
@@ -1221,7 +1229,7 @@ OA
   "Passes on events only when their metric falls outside the given (inclusive)
   range."
   [r & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when-not (<= (first r) m (last r))
         (call-rescue event children)))))
@@ -1229,7 +1237,7 @@ OA
 (defn over
   "Passes on events only when their metric is greater than x"
   [x & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (< x m)
         (call-rescue event children)))))
@@ -1237,7 +1245,7 @@ OA
 (defn under
   "Passes on events only when their metric is smaller than x"
   [x & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (> x m)
         (call-rescue event children)))))
@@ -1314,7 +1322,7 @@ OA
       (partial prn \"Not expired!\")))"
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
-    `(fn [event#]
+    `(fn stream# [event#]
        (let [value# (~f event#)]
          (if value#
            (call-rescue event# ~true-kids)
