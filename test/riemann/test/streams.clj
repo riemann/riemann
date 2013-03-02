@@ -6,9 +6,12 @@
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
+            [riemann.logging :as logging]
             incanter.stats)
   (:import (java.util.concurrent Executor
                                  CountDownLatch)))
+
+(logging/init)
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
@@ -106,6 +109,44 @@
     (is (= @vals1 [1 2 3]))
     (is (= @vals2 [1 2 3]))))
 
+(deftest exception-stream-test
+         (testing "direct fn"
+                  (logging/suppress 
+                    ["riemann.streams" "riemann.test.streams"]
+
+                    (let [out        (atom [])
+                          exceptions (atom [])
+                          stream (exception-stream
+                                   #(swap! exceptions conj %)
+                                   (fn [e]
+                                     (swap! out conj e)
+                                     (throw 
+                                       (RuntimeException. "foo"))))]
+                      (stream :hi)
+
+                      (is (= @out [:hi]))
+                      (is (= 1 (count @exceptions)))
+                      (let [e (first @exceptions)]
+                        (is (= (:service e) "riemann exception"))
+                        (is (= (:state e)   "error"))
+                        (is (= (:time e)    0))
+                        (is (re-find #".*RuntimeException.*" (:description e)))
+                        (is (= #{"exception" "java.lang.RuntimeException"} 
+                               (set (:tags e))))))))
+
+         (testing "scheduled fn"
+                  (logging/suppress 
+                    "riemann.streams"
+                    (reset-time!)
+                    (let [e     (atom nil)
+                          s (exception-stream #(reset! e %)
+                                              (rate 1
+                                                    (fn [e] (/ 1 0))))]
+                      (s {:metric 2})
+                      (is (nil? @e))
+                      (advance! 1)
+                      (is (= "error" (:state @e)))))))
+
 (deftest execute-on-test
          (let [output (atom [])
                n      100
@@ -130,7 +171,7 @@
 (deftest sreduce-test
          (testing "explicit value"
                   (test-stream (sreduce + 1) [1 2 3] [2 4 7]))
-         
+
          (testing "implicit value"
                   (test-stream (sreduce +) [1 2 3 4] [3 6 10])))
 

@@ -10,7 +10,7 @@
             clojure.set
             [cheshire.core :as json]
             [clojure.java.io :as io])
-  (:use [clojure.string :only [split]]
+  (:use [clojure.string :only [split join]]
         [riemann.time :only [unix-time]]
         clojure.tools.logging
         riemann.codec
@@ -89,6 +89,16 @@
   (let [t (long (round (or (opts :time)
                            (unix-time))))]
     (map->Event (merge opts {:time t}))))
+
+(defn exception->event
+  "Creates an event from an Exception."
+  [e]
+  (map->Event {:time (unix-time)
+               :service "riemann exception"
+               :state "error"
+               :tags ["exception" (.getName (class e))]
+               :description (str e "\n\n"
+                                 (join "\n" (.getStackTrace e)))}))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of

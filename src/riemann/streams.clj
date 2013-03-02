@@ -24,6 +24,11 @@
 (def  infinity (/  1.0 0))
 (def -infinity (/ -1.0 0))
 
+(def ^:dynamic *exception-stream*
+  "When a stream catches an exception, it's converted to an event and send
+  here."
+  nil)
+
 (defn expired?
   "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
   [event]
@@ -41,8 +46,48 @@
        (try
          (child# ~event)
          (catch Exception e#
-           (warn e# (str child# " threw")))))
+           (warn e# (str child# " threw"))
+           (if-let [ex-stream# *exception-stream*]
+             (ex-stream# (exception->event e#))))))
      true))
+
+(defmacro exception-stream
+  "Catches exceptions, converts them to events, and sends those events to a
+  special exception stream.
+  
+  (exceptions-to (email \"polito@vonbraun.com\")
+    (execute-on io-pool
+      graph))
+
+  Streams often take multiple children and send an event to each using
+  call-rescue. Call-rescue will rescue any exception thrown by a child stream,
+  log it, and move on to the next child stream, so that a failure in one child
+  won't prevent others from executing.
+
+  Exceptions binds a dynamically scoped thread-local variable
+  *exception-stream*. When call-rescue encounters an exception, it will *also*
+  route the error to this exception stream. When switching threads (e.g. when
+  using an executor or Thread), you
+  must use (bound-fn) to preserve this binding.
+
+  This is a little more complex than you might think, because we *not only*
+  need to bind this variable during the runtime execution of child streams, but
+  *also* during the evaluation of the child streams themselves, e.g. at the
+  invocation time of exceptions itself. If we write
+OA
+  (exceptions (email ...)
+    (rate 5 index))
+
+  then (rate), when invoked, might need access to this variable immediately.
+  Therefore, this macro binds *exception-stream* twice: one when evaluating
+  children, and again, every time the returned stream is invoked."
+  [exception-stream & children]
+  `(let [ex-stream# ~exception-stream
+         children#  (binding [*exception-stream* ex-stream#]
+                      (list ~@children))]
+     (fn stream# [event#]
+       (binding [*exception-stream* ex-stream#]
+         (call-rescue event# children#)))))
 
 (defn bit-bucket
   "Discards arguments."
@@ -172,7 +217,9 @@
       graph))"
   [^Executor executor & children]
   (fn stream [event]
-    (.execute executor #(call-rescue event children))))
+    (.execute executor
+             (bound-fn runner []
+               (call-rescue event children)))))
     
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
@@ -357,7 +404,7 @@
   ([interval f] (periodically-until-expired interval 0 f))
   ([interval delay f]
    (let [task (atom nil)]
-     (fn [event]
+     (fn stream [event]
        (if (expired? event)
          ; Stop periodic.
          (when-let [t @task]
@@ -396,7 +443,7 @@
                                     :current (create)})))
 
         ; Switch to the next bin, finishing the current one.
-        switch (fn part-time-fast-switch []
+        switch (bound-fn switch []
                  (apply finish
                         (locking state
                           (when-let [s @state]
@@ -451,7 +498,7 @@
   event, wherever interval seconds pass without an event arriving. Inserted
   events have current time. Stops inserting when expired. Uses local times."
   ([interval default-event & children]
-   (let [fill (fn []
+   (let [fill (bound-fn fill []
                 (call-rescue (assoc default-event :time (unix-time)) children))
          new-deferrable (fn [] (every! interval
                                        interval
@@ -482,7 +529,7 @@
   expired. Uses local times."
   ([interval update & children]
    (let [last-event (ref nil)
-         fill (fn []
+         fill (bound-fn fill []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
          new-deferrable (fn [] (every! interval interval fill))
          deferrable (ref nil)]
@@ -515,7 +562,7 @@
   Note: ignores event times currently--will change later."
   [interval & children]
     (let [state (ref nil)
-          emit-dup (fn []
+          emit-dup (bound-fn emit-dup []
                      (call-rescue
                        (assoc (deref state) :time (unix-time))
                        children))
@@ -536,7 +583,7 @@
   "(ddt) in real time."
   [n & children]
   (let [state (atom (list nil))  ; Events at t3, t2, and t1.
-        swap (fn swap []
+        swap (bound-fn swap []
                (let [[_ e2 e1] (swap! state
                                       (fn [[e3 e2 e1 :as state]]
                                         ; If no events have come in this
@@ -616,7 +663,7 @@
                          (assoc e :ttl (- ttl interval))
                          e)))
 
-        tick (fn tick []
+        tick (bound-fn tick []
                ; Get last metric
                (let [sum (second (swap! sum swap-sum))
                      event (swap! last-event swap-event sum)]
@@ -846,7 +893,7 @@
                                 :flushed (:buffer state)})))
 
         ; Tick function; flushes buffer and invokes children.
-        tick (fn tick []
+        tick (bound-fn tick []
                (let [state (swap! state flush)]
                  ; Reschedule another tick if necessary
                  (when (= 1 (:sent state))
