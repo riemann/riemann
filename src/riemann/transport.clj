@@ -94,10 +94,13 @@
   "Handles a msg with the given core."
   [core msg]
   (try+
-   ;; Send each event/state to each stream
-   (doseq [event  (concat (:events msg) (:states msg))
-           stream (:streams core)]
-     (stream event))
+    ;; Send each event/state to each stream
+    (doseq [event  (:states msg)
+            stream (:streams core)]
+      (stream event))
+    (doseq [event (:events msg)
+            stream (:streams core)]
+      (stream event))
 
    (if (:query msg)
      ;; Handle query
@@ -106,6 +109,7 @@
          {:ok true :events (search i ast)}
          {:ok false :error "no index"}))
 
+      ; Otherwise just return an ack
       {:ok true})
 
    ;; Some kind of error happened
