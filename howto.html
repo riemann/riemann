@@ -504,18 +504,14 @@ command line.
 </p>
 
 <p>In this case, the above health check will include two extra tags "prod" and
-"webserver". On the dashboard side, you can create a grid view contains the
-following query:
-</p>
+"webserver". On the dashboard side, you can create a grid view which contains
+the following query: </p>
 
-<p><code>'(tagged "prod" and tagged "webserver")'</code></p>
+<p><code>(tagged "prod" and tagged "webserver")</code></p>
 
-<img src="https://a248.e.akamai.net/camo.github.com/9b4831e731adaaf5221f099a01912d7b859bbac1/687474703a2f2f636c2e6c792f696d6167652f3243306932413254335a31462f53637265656e73686f74253230313a32303a313325323031313a3333253230504d2e706e67"/>
-
-<p>
-tagged keyword in the query will search for all tags of an event. The query
-above will return only "prod" and "webservers" hosts.
-</p>
+<p>The tagged keyword in the query ensures that the given tag is present in the
+list of tags for a given event. This query will return only "prod" and
+"webservers" hosts.</p>
 
 <h3>Count total number of hosts</h3>
 
@@ -524,8 +520,7 @@ This is especially useful in cloud environments where nodes are constantly
 scaling up and down.</p>
 
 <p>We'll create a new stream that will keep track of unique hosts and index it
-as a new service so the Riemann dashboard can query it. In riemann.config you
-should have something that looks like below:</p>
+as a new service so the Riemann dashboard can query it.</p>
 
 {% highlight clj %}
 (let [index (default :ttl 300 (update-index (index)))]
@@ -549,18 +544,15 @@ an anonymous function to <code>(streams)</code> that will store a set of hosts.<
 
 <p>On the dashboard you can create a gauge view with the following query:</p>
 
-<p><code>'(service = "unique hosts")'</code></p>
+<p><code>(service = "unique hosts")</code></p>
 
-<img src="https://a248.e.akamai.net/camo.github.com/cfc22f7f9d6d19190409daeaf2e5fb02f72b2faf/687474703a2f2f636c2e6c792f696d6167652f3062316a314b306e316730782f53637265656e73686f74253230313a32303a313325323031313a3138253230504d2e706e67">
-
-<p>If you created the query correctly, you should see something like below:</p>
-
-<img src="https://a248.e.akamai.net/camo.github.com/2722f6e795bedf43fcba78c4ba7e006153ab2187/687474703a2f2f636c2e6c792f696d6167652f337a3232326e3352326834342f53637265656e73686f74253230313a32303a313325323031313a3134253230504d2e706e67">
+<p>If you created the query correctly, you should see a "Total Count" gauge.</p>
 
 <h3>Count number of hosts by application group</h3>
 
-<p>Let's say events from each host come with a particular tag, like "production" or "staging".
-You'd like to know how many hosts have a certain tag. In riemann.config, try this stream:</p>
+<p>Let's say events from each host come with a particular tag, like
+"production" or "staging".  You'd like to know how many hosts have a certain
+tag. In riemann.config, try this stream:</p>
 
 {% highlight clj %}
 (let [hosts (atom {}) host (atom #{})]
@@ -578,16 +570,10 @@ appended to the end. For example, if you have "webserver" and "prod" tags, the
 new service that will count unique hosts will be named "webserver-prod-count".
 In your dashboard you can query it like below:</p>
 
-<p><code>'(service = "webserver-prod-count")'</code></p>
+<p><code>(service = "webserver-prod-count")</code></p>
 
-<img src="https://a248.e.akamai.net/camo.github.com/62ec7bafdf2e7d4a54ca29907c0d95f2ab4d8427/687474703a2f2f636c2e6c792f696d6167652f33713142336c3032326a31692f53637265656e73686f74253230313a32303a313325323031313a3239253230504d2e706e67">
-
-<p>
-If you create a new gauge view with that query, you will get the current
-count of all your production web servers.
-</p>
-
-<img src="https://a248.e.akamai.net/camo.github.com/9537ab09bbd5378942b16482669e932ed9bad8f9/687474703a2f2f636c2e6c792f696d6167652f3077324231473031335a31452f53637265656e73686f74253230313a32303a313325323031313a3332253230504d2e706e67">
+<p> If you create a new gauge view with that query, you will get the current
+count of all your production web servers.  </p>
 
 <h2>Integrating with other systems</h2>
 
@@ -603,7 +589,7 @@ count of all your production web servers.
     (email "shodan@tauceti.five")))
 {% endhighlight %}
 
-<p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:
+<p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:</p>
 
 {% highlight clj %}
 (mailer {:from "riemann@trioptimum.com"
