@@ -10,7 +10,9 @@
   (:import (java.util.concurrent RejectedExecutionException)))
 
 (defn reset-core! [f]
-  (logging/suppress ["riemann.core" "riemann.service"]
+  (logging/suppress ["riemann.core"
+                     "riemann.service"
+                     "riemann.pubsub"]
                     (clear!)
                     (core/stop! @core)
                     (reset! core (core/core))
@@ -32,7 +34,10 @@
          (is (not= @core @next-core))
          (let [old-next-core @next-core]
            (apply!)
-           (is (= old-next-core @core))
+           ; Pubsub will be replaced by the old core's pubsub, but otherwise
+           ; we should be the same.
+           (is (= (dissoc old-next-core :pubsub)
+                  (dissoc @core :pubsub)))
            (is (not= @core @next-core))))
 
 (deftest service-test
@@ -157,5 +162,5 @@
            (apply!)
 
            ; Send outside streams
-           (pubsub/publish (:pubsub @core) :test "hi")
+           (pubsub/publish! (:pubsub @core) :test "hi")
            (is (= "hi" @received))))

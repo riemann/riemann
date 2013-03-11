@@ -25,10 +25,12 @@
         params (http-query-map (:query-string hs))
         query  (params "query")
         pred   (query/fun (query/ast query))
-        sub    (p/subscribe (:pubsub core) topic
+        ; Subscribe persistently.
+        sub    (p/subscribe! (:pubsub core) topic
                             (fn [event]
                               (when (pred event)
-                                (enqueue ch (event-to-json event)))))]
+                                (enqueue ch (event-to-json event))))
+                             true)]
     (info "New websocket subscription to" topic ":" query)
     (receive-all ch (fn [msg]
                       (when-not msg
@@ -36,7 +38,7 @@
                         (info "Closing websocket "
                               (:remote-addr hs) topic query)
                         (close ch)
-                        (p/unsubscribe (:pubsub core) sub))))))
+                        (p/unsubscribe! (:pubsub core) sub))))))
 
 (defn ws-index-handler
   "Queries the index for events and streams them to the client. If subscribe is

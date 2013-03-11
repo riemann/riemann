@@ -2,7 +2,8 @@
   "Main function."
   (:require riemann.config
             riemann.logging
-            riemann.time)
+            riemann.time
+            riemann.pubsub)
   (:use clojure.tools.logging)
   (:gen-class))
 
@@ -18,6 +19,7 @@
     (riemann.config/validate-config @config-file)
     (riemann.time/reset-tasks!)
     (riemann.config/clear!)
+    (riemann.pubsub/sweep! (:pubsub @riemann.config/core))
     (riemann.config/include @config-file)
     (riemann.config/apply!)
     :reloaded

@@ -21,7 +21,8 @@
   index."
   [core]
   (remove nil?
-          (cons (:index core)
+          (concat [(:index core)
+                   (:pubsub core)]
                 (:services core))))
 
 (defn merge-cores
@@ -39,6 +40,11 @@
                                                      (:index old-core))
                                    (:index old-core)
                                    (:index new-core))))
+                 (assoc :pubsub (when (:pubsub new-core)
+                                  (if (service/equiv? (:pubsub new-core)
+                                                      (:pubsub old-core))
+                                    (:pubsub old-core)
+                                    (:pubsub new-core))))
                  (assoc :services merged-services))]
     merged))
 
@@ -123,7 +129,7 @@
                            (merge {:state "expired"
                                    :time (unix-time)}))]
                    (when-let [registry (:pubsub core)]
-                     (ps/publish registry "index" e))
+                     (ps/publish! registry "index" e))
                    (doseq [stream streams]
                      (stream e)))
                  (catch Exception e
@@ -135,7 +141,7 @@
   [core event]
   (when (index/update (:index core) event)
     (when-let [registry (:pubsub core)]
-      (ps/publish registry "index" event))))
+      (ps/publish! registry "index" event))))
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the

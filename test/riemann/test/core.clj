@@ -40,7 +40,8 @@
 
 (deftest start-transition-stop
          (logging/suppress 
-           "riemann.core"
+           ["riemann.core"
+            "riemann.pubsub"]
            (let [old-running    (atom nil)
                  old-core       (atom nil)
                  same-1-running (atom nil)
@@ -93,7 +94,7 @@
 
 (deftest transition-index
          (logging/suppress 
-           "riemann.core"
+           ["riemann.core" "riemann.pubsub"]
            (testing "Different indexes"
                     (let [old-running (atom nil)
                           old-core    (atom nil)
@@ -162,7 +163,8 @@
                server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/append out)
                core   (logging/suppress ["riemann.transport.tcp"
-                                         "riemann.core"]
+                                         "riemann.core"
+                                         "riemann.pubsub"]
                                         (transition! (core)
                                                      {:services [server]
                                                       :streams [stream]}))
@@ -187,14 +189,17 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.transport.tcp"] 
+               (logging/suppress ["riemann.core"
+                                  "riemann.transport.tcp"
+                                  "riemann.pubsub"] 
                                  (stop! core))))))
 
 (deftest query-test
          (let [index  (index)
                server (riemann.transport.tcp/tcp-server)
                core   (logging/suppress ["riemann.core"
-                                         "riemann.transport.tcp"]
+                                         "riemann.transport.tcp"
+                                         "riemann.pubsub"]
                                         (transition! (core)
                                                      {:services [server]
                                                       :index index}))
@@ -216,7 +221,9 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.transport.tcp"]
+               (logging/suppress ["riemann.core"
+                                  "riemann.transport.tcp"
+                                  "riemann.pubsub"]
                  (stop! core))))))
 
 (deftest expires
@@ -226,7 +233,9 @@
                                 (fn [e] (reset! res e)))
                reaper (reaper 0.001)
                core (logging/suppress 
-                      ["riemann.core" "riemann.transport.tcp"]
+                      ["riemann.core"
+                       "riemann.transport.tcp"
+                       "riemann.pubsub"]
                       (transition! (core) {:services [reaper]
                                            :streams [expired-stream]
                                            :index index}))]
@@ -241,7 +250,7 @@
            (Thread/sleep 100)
 
            ; Kill reaper
-           (logging/suppress "riemann.core"
+           (logging/suppress ["riemann.core" "riemann.pubsub"]
                              (stop! core))
            
            ; Check that index does not contain these states
@@ -260,7 +269,9 @@
                                 (partial reset! res))
                reaper (reaper 0.001 {:keep-keys [:tags]})
                core (logging/suppress
-                      ["riemann.core" "riemann.transport.tcp"]
+                      ["riemann.core"
+                       "riemann.transport.tcp"
+                       "riemann.pubsub"]
                       (transition! (core) {:services [reaper]
                                            :streams [expired-stream]
                                            :index index}))]
@@ -278,7 +289,9 @@
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
                core   (logging/suppress 
-                        ["riemann.core" "riemann.transport.tcp"]
+                        ["riemann.core"
+                         "riemann.transport.tcp"
+                         "riemann.pubsub"]
                         (transition! (core) {:services [server]
                                              :streams [stream]}))
                client (riemann.client/tcp-client)]
@@ -302,5 +315,7 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.transport.tcp" "riemann.core"]
+               (logging/suppress ["riemann.transport.tcp"
+                                  "riemann.core"
+                                  "riemann.pubsub"]
                                  (stop! core))))))

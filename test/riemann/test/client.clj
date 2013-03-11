@@ -10,7 +10,7 @@
 (riemann.logging/init)
 
 (deftest reconnect
-         (suppress ["riemann.transport.tcp" "riemann.core"]
+         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
                    (let [server (tcp-server)
                          core   (transition! (core) {:services [server]})
                          client (tcp-client)]
@@ -40,7 +40,7 @@
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress ["riemann.transport.tcp" "riemann.core"]
+         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
            (let [index (index)
                  server (tcp-server core)
                  core   (transition! (core) {:services [server]

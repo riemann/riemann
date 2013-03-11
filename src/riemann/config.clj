@@ -164,13 +164,14 @@
   core's pubsub registry."
   [channel]
   (fn [event]
-    (pubsub/publish (:pubsub @core) channel event)))
+    (pubsub/publish! (:pubsub @core) channel event)))
 
 (defn subscribe
-  "Subscribes to the given channel with f, which will receive events. Uses this
-  core's pubsub registry."
+  "Subscribes to the given channel with f, which will receive events. Uses the
+  current core's pubsub registry always, because the next core's registry will
+  be discarded by core/transition."
   [channel f]
-  (pubsub/subscribe (:pubsub @next-core) channel f))
+  (pubsub/subscribe! (:pubsub @core) channel f))
 
 (defn clear!
   "Resets the next core."
