@@ -15,17 +15,18 @@
   "Reloads the given configuration file by clearing the task scheduler, shutting
   down the current core, and loading a new one."
   []
-  (try
-    (riemann.config/validate-config @config-file)
-    (riemann.time/reset-tasks!)
-    (riemann.config/clear!)
-    (riemann.pubsub/sweep! (:pubsub @riemann.config/core))
-    (riemann.config/include @config-file)
-    (riemann.config/apply!)
-    :reloaded
-    (catch Exception e
-      (error e "Couldn't reload:")
-      e)))
+  (locking riemann.bin
+    (try
+      (riemann.config/validate-config @config-file)
+      (riemann.time/reset-tasks!)
+      (riemann.config/clear!)
+      (riemann.pubsub/sweep! (:pubsub @riemann.config/core))
+      (riemann.config/include @config-file)
+      (riemann.config/apply!)
+      :reloaded
+      (catch Exception e
+        (error e "Couldn't reload:")
+        e))))
 
 (defn handle-signals
   "Sets up POSIX signal handlers."
