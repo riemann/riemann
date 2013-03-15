@@ -2,50 +2,21 @@
   "Send email about events. Create a mailer with (mailer opts), then create
   streams which send email with (your-mailer \"shodan@tau.ceti.five\"). Or
   simply call email-event directly."
-  (:use riemann.common)
+  (:use [riemann.common :only [deprecated]])
   (:use postal.core)
   (:use [clojure.string :only [join]]))
 
-(defn- human-uniq
-  "Returns a human-readable string describing things, e.g.
+(defn- human-uniq [things, type]
+  (deprecated "moved to riemann.common/human-uniq"
+              (riemann.common/human-uniq things type)))
 
-  importer
-  api1, api2, api4
-  23 services"
-  [things, type]
-  (let [things (distinct things)]
-    (case (count things)
-      0 nil
-      1 (first things)
-      2 (str (first things) " and " (nth things 1))
-      3 (join ", " things)
-      4 (join ", " things)
-      (str (count things) " " type))))
+(defn- subject [events]
+  (deprecated "moved to riemann.common/subject"
+              (riemann.common/subject events)))
 
-(defn- subject
-  "Constructs a subject line for a set of events."
-  [events]
-  (join " " (keep identity
-        [(human-uniq (map :host events) "hosts")
-         (human-uniq (map :service events) "services")
-         (human-uniq (map :state events) "states")])))
-
-(defn- body
-  "Constructs an email body for a set of events."
-  [events]
-  (join "\n\n\n"
-        (map
-          (fn [event]
-            (str
-              "At " (time-at (:time event)) "\n"
-              (:host event) " "
-              (:service event) " "
-              (:state event) " ("
-              (:metric event) ")\n"
-              "Tags: [" (join ", " (:tags event)) "]"
-              "\n\n"
-              (:description event)))
-          events)))
+(defn- body [events]
+  (deprecated "moved to riemann.common/body"
+              (riemann.common/body events)))
 
 (defn email-event
   "Send an event, or a sequence of events, with the given smtp and msg
