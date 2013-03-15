@@ -200,3 +200,30 @@
               "\n\n"
               (:description event)))
           events)))
+
+(defn count-string-bytes [s]
+  (count (.getBytes s)))
+
+(defn count-character-bytes [c]
+  (count-string-bytes (.toString c)))
+
+(defn truncate [s n]
+  (if (<= n 0)
+    ""
+    (if (> (count s) n)
+      (.substring s 0 n)
+      s)))
+
+(defn truncate-bytes [s n]
+  (let [summed (reduce
+                (fn [memo v]
+                  (if (> (:sum memo) n)
+                    memo
+                    {:sum (+ (:sum memo) (count-character-bytes v))
+                     :i (inc (:i memo))}))
+                {:sum 0 :i 0}
+                s)
+        cutoff (if (> (:sum summed) n)
+            (dec (:i summed))
+            (:i summed))]
+    (truncate s cutoff)))

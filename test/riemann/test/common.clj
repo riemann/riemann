@@ -77,3 +77,33 @@
                 [{:host "foo" :state "error"} {:host "bar" :state "ok"}]
                 "foo and bar error and ok"
                 )))
+
+(deftest count-string-bytes-test
+  (is (= (count-string-bytes "") 0))
+  (is (= (count-string-bytes "a") 1))
+  (is (= (count-string-bytes "é") 2))
+  (is (= (count-string-bytes "あ") 3))
+  (is (= (count-string-bytes "𠜎") 4))
+  (is (= (count-string-bytes "あいう") 9)))
+
+(deftest count-character-bytes-test
+  (is (= (count-character-bytes 'a) 1))
+  (is (= (count-character-bytes 'é) 2))
+  (is (= (count-character-bytes 'あ) 3))
+  (is (= (count-character-bytes '𠜎) 4)))
+
+(deftest truncate-test
+  (is (= (truncate "あいう" -1) ""))
+  (is (= (truncate "あいう" 0) ""))
+  (is (= (truncate "あいう" 1) "あ"))
+  (is (= (truncate "あいう" 3) "あいう"))
+  (is (= (truncate "あいう" 4) "あいう")))
+
+(deftest truncate-bytes-test
+  (is (= (truncate-bytes "あいう" -1) ""))
+  (is (= (truncate-bytes "あいう" 0) ""))
+  (is (= (truncate-bytes "あいう" 1) ""))
+  (is (= (truncate-bytes "あいう" 3) "あ"))
+  (is (= (truncate-bytes "あいう" 4) "あ"))
+  (is (= (truncate-bytes "あいう" 9) "あいう"))
+  (is (= (truncate-bytes "あいう" 10) "あいう")))
