@@ -28,6 +28,7 @@
     [clj-wallhack "1.0"]
     [com.boundary/high-scale-lib "1.0.3"]
     [com.draines/postal "1.9.0"]
+    [clj-aws "0.0.1-SNAPSHOT"]
     [incanter/incanter-charts "1.3.0"]
     [io.netty/netty "3.6.1.Final"]
     [log4j/apache-log4j-extras "1.0"]
@@ -43,6 +44,7 @@
                                              (:bench x))))
                    :integration :integration
                    :email :email
+                   :sns :sns
                    :graphite :graphite
                    :librato :librato
                    :time :time
