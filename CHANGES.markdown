@@ -3,9 +3,7 @@
 Guess it's time we started a formal changelog. Version 0.2.0 is a fairly major
 improvement in Riemann's performance and capabilities. Many things have been
 solidified, expanded, or tuned, and there are a few completely new ideas as
-well. The key improvements are:
-
-
+well.
 
 There are a few minor API changes, mostly to internal structure--but a few
 streams are involved as well. Most functions will continue to work normally,
@@ -13,6 +11,7 @@ but log a deprecation notice when used.
 
 ## New features
 
+- Arbitrary key-value (string) pairs on events
 - Hot config reloading
 - Integrated nrepl server
 - streams/sdo: bind together multiple streams as one
@@ -58,6 +57,7 @@ but log a deprecation notice when used.
   are preserved
 - streams/smap ignores nil values for better use with folds
 - Update to aleph 0.3.0-beta15
+- Config files ship with emacs modelines, too
 
 ## Bugfixes
 
@@ -84,9 +84,15 @@ but log a deprecation notice when used.
 - Tried to clean up some duplicated functions between core, config, and streams
 - riemann.common/deprecated
 - Cleaned up riemann.streams, removing unused commented-out code
+- Lots of anonymous functions have names now, to help with profiling
 - Composing netty pipeline factories is much simpler
+- Clojure 1.5
 
-## Known bugs:
+## Known bugs
 
 - Passing :host to websocket-server does nothing: it binds to * regardless.
-
+- Folds/mean throws when it receives empty lists
+- graphite-server has no tests
+- Riemann will happily overload browsers via websockets
+- streams/rate doesn't stop its internal poller correctly when self-expiring
+- When Netty runs out of filehandles, it'll hang new connections
