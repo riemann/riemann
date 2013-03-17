@@ -15,7 +15,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.48.3.1 r9886"
-   sodipodi:docname="New document 1">
+   sodipodi:docname="icons.svg">
   <defs
      id="defs4" />
   <sodipodi:namedview
@@ -25,16 +25,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.98994949"
-     inkscape:cx="317.62593"
-     inkscape:cy="552.12377"
+     inkscape:zoom="0.49497475"
+     inkscape:cx="200.73291"
+     inkscape:cy="442.88825"
      inkscape:document-units="px"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1818"
-     inkscape:window-height="1463"
-     inkscape:window-x="704"
-     inkscape:window-y="29"
+     inkscape:window-width="1156"
+     inkscape:window-height="957"
+     inkscape:window-x="1074"
+     inkscape:window-y="489"
      inkscape:window-maximized="0">
     <inkscape:grid
        type="xygrid"
@@ -199,5 +199,67 @@
          id="tspan3795-5"
          x="276.78558"
          y="567.36218">TAR</tspan></text>
+    <use
+       style="display:inline"
+       x="0"
+       y="0"
+       xlink:href="#rect3799"
+       id="use3817-0"
+       transform="translate(224.28569,0.35712353)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/aphyr/riemann/site/images/rpm.png"
+       inkscape:export-xdpi="180"
+       inkscape:export-ydpi="180" />
+    <use
+       style="display:inline"
+       x="0"
+       y="0"
+       xlink:href="#use3809"
+       id="use3819-9"
+       transform="translate(237.28569,0.35712353)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/aphyr/riemann/site/images/rpm.png"
+       inkscape:export-xdpi="180"
+       inkscape:export-ydpi="180" />
+    <use
+       style="display:inline"
+       x="0"
+       y="0"
+       xlink:href="#use3811"
+       id="use3821-9"
+       transform="translate(224.28569,0.35712353)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/aphyr/riemann/site/images/rpm.png"
+       inkscape:export-xdpi="180"
+       inkscape:export-ydpi="180" />
+    <use
+       style="display:inline"
+       x="0"
+       y="0"
+       xlink:href="#use3813"
+       id="use3823-9"
+       transform="translate(237.28569,0.35712353)"
+       width="744.09448"
+       height="1052.3622"
+       inkscape:export-filename="/home/aphyr/riemann/site/images/rpm.png"
+       inkscape:export-xdpi="180"
+       inkscape:export-ydpi="180" />
+    <text
+       xml:space="preserve"
+       style="font-size:37.15834045px;font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;text-align:start;line-height:125%;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;display:inline;font-family:Klavika;-inkscape-font-specification:Klavika Medium"
+       x="391.07129"
+       y="567.71936"
+       id="text3793-8-4"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/aphyr/riemann/site/images/rpm.png"
+       inkscape:export-xdpi="180"
+       inkscape:export-ydpi="180"><tspan
+         sodipodi:role="line"
+         id="tspan3795-5-5"
+         x="391.07129"
+         y="567.71936">RPM</tspan></text>
   </g>
 </svg>
