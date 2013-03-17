@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html><head><link href="css/default.css" rel="stylesheet" type="text/css"><script src="js/jquery.min.js" type="text/javascript"></script><script src="js/page_effects.js" type="text/javascript"></script><title>riemann.streams documentation</title></head><body><div id="header"><h1><a href="index.html">Riemann 0.1.5 API documentation</a></h1></div><div class="sidebar" id="namespaces"><h3><span>Namespaces</span></h3><ul><li><a href="riemann.bin.html"><span>riemann.bin</span></a></li><li><a href="riemann.common.html"><span>riemann.common</span></a></li><li><a href="riemann.config.html"><span>riemann.config</span></a></li><li><a href="riemann.core.html"><span>riemann.core</span></a></li><li><a href="riemann.deps.html"><span>riemann.deps</span></a></li><li><a href="riemann.email.html"><span>riemann.email</span></a></li><li><a href="riemann.folds.html"><span>riemann.folds</span></a></li><li><a href="riemann.graphite.html"><span>riemann.graphite</span></a></li><li><a href="riemann.index.html"><span>riemann.index</span></a></li><li><a href="riemann.librato.html"><span>riemann.librato</span></a></li><li><a href="riemann.logging.html"><span>riemann.logging</span></a></li><li><a href="riemann.pagerduty.html"><span>riemann.pagerduty</span></a></li><li><a href="riemann.pool.html"><span>riemann.pool</span></a></li><li><a href="riemann.pubsub.html"><span>riemann.pubsub</span></a></li><li><a href="riemann.query.html"><span>riemann.query</span></a></li><li><a href="riemann.server.html"><span>riemann.server</span></a></li><li class="current"><a href="riemann.streams.html"><span>riemann.streams</span></a></li><li><a href="riemann.time.html"><span>riemann.time</span></a></li><li><a href="riemann.time.controlled.html"><span>riemann.time.controlled</span></a></li></ul></div><div class="sidebar" id="vars"><h3>Public Vars</h3><ul><li><a href="riemann.streams.html#var-adjust"><span>adjust</span></a></li><li><a href="riemann.streams.html#var-append"><span>append</span></a></li><li><a href="riemann.streams.html#var-by"><span>by</span></a></li><li><a href="riemann.streams.html#var-call-rescue"><span>call-rescue</span></a></li><li><a href="riemann.streams.html#var-changed"><span>changed</span></a></li><li><a href="riemann.streams.html#var-changed-state"><span>changed-state</span></a></li><li><a href="riemann.streams.html#var-coalesce"><span>coalesce</span></a></li><li><a href="riemann.streams.html#var-combine"><span>combine</span></a></li><li><a href="riemann.streams.html#var-counter"><span>counter</span></a></li><li><a href="riemann.streams.html#var-ddt"><span>ddt</span></a></li><li><a href="riemann.streams.html#var-default"><span>default</span></a></li><li><a href="riemann.streams.html#var-delete-from-index"><span>delete-from-index</span></a></li><li><a href="riemann.streams.html#var-ewma-timeless"><span>ewma-timeless</span></a></li><li><a href="riemann.streams.html#var-expired"><span>expired</span></a></li><li><a href="riemann.streams.html#var-expired%3F"><span>expired?</span></a></li><li><a href="riemann.streams.html#var-fill-in"><span>fill-in</span></a></li><li><a href="riemann.streams.html#var-fill-in-last"><span>fill-in-last</span></a></li><li><a href="riemann.streams.html#var-fixed-event-window"><span>fixed-event-window</span></a></li><li><a href="riemann.streams.html#var-fixed-time-window"><span>fixed-time-window</span></a></li><li><a href="riemann.streams.html#var-fold-interval"><span>fold-interval</span></a></li><li><a href="riemann.streams.html#var-forward"><span>forward</span></a></li><li><a href="riemann.streams.html#var-interpolate-constant"><span>interpolate-constant</span></a></li><li><a href="riemann.streams.html#var-match"><span>match</span></a></li><li><a href="riemann.streams.html#var-mean-over-time"><span>mean-over-time</span></a></li><li><a href="riemann.streams.html#var-moving-event-window"><span>moving-event-window</span></a></li><li><a href="riemann.streams.html#var-moving-time-window"><span>moving-time-window</span></a></li><li><a href="riemann.streams.html#var-over"><span>over</span></a></li><li><a href="riemann.streams.html#var-part-time-fast"><span>part-time-fast</span></a></li><li><a href="riemann.streams.html#var-percentiles"><span>percentiles</span></a></li><li><a href="riemann.streams.html#var-periodically-until-expired"><span>periodically-until-expired</span></a></li><li><a href="riemann.streams.html#var-rate"><span>rate</span></a></li><li><a href="riemann.streams.html#var-register"><span>register</span></a></li><li><a href="riemann.streams.html#var-rollup"><span>rollup</span></a></li><li><a href="riemann.streams.html#var-smap"><span>smap</span></a></li><li><a href="riemann.streams.html#var-sreduce"><span>sreduce</span></a></li><li><a href="riemann.streams.html#var-sum-over-time"><span>sum-over-time</span></a></li><li><a href="riemann.streams.html#var-tagged"><span>tagged</span></a></li><li><a href="riemann.streams.html#var-tagged-all"><span>tagged-all</span></a></li><li><a href="riemann.streams.html#var-tagged-any"><span>tagged-any</span></a></li><li><a href="riemann.streams.html#var-throttle"><span>throttle</span></a></li><li><a href="riemann.streams.html#var-under"><span>under</span></a></li><li><a href="riemann.streams.html#var-update-index"><span>update-index</span></a></li><li><a href="riemann.streams.html#var-where"><span>where</span></a></li><li><a href="riemann.streams.html#var-where*"><span>where*</span></a></li><li><a href="riemann.streams.html#var-where-partition-clauses"><span>where-partition-clauses</span></a></li><li><a href="riemann.streams.html#var-where-rewrite"><span>where-rewrite</span></a></li><li><a href="riemann.streams.html#var-window"><span>window</span></a></li><li><a href="riemann.streams.html#var-with"><span>with</span></a></li><li><a href="riemann.streams.html#var-within"><span>within</span></a></li><li><a href="riemann.streams.html#var-without"><span>without</span></a></li></ul></div><div class="namespace-docs" id="content"><h2>riemann.streams documentation</h2><pre class="doc"></pre><div class="public" id="var-adjust"><h3>adjust</h3><div class="usage"><code>(adjust &amp; args)</code></div><pre class="doc">Passes on a changed version of each event by applying a function to a
+<html><head><link href="css/default.css" rel="stylesheet" type="text/css"><script src="js/jquery.min.js" type="text/javascript"></script><script src="js/page_effects.js" type="text/javascript"></script><title>riemann.streams documentation</title></head><body><div id="header"><h1><a href="index.html">Riemann 0.2.0 API documentation</a></h1></div><div class="sidebar" id="namespaces"><h3><span>Namespaces</span></h3><ul><li><a href="riemann.bin.html"><span>riemann.bin</span></a></li><li><a href="riemann.common.html"><span>riemann.common</span></a></li><li><a href="riemann.config.html"><span>riemann.config</span></a></li><li><a href="riemann.core.html"><span>riemann.core</span></a></li><li><a href="riemann.deps.html"><span>riemann.deps</span></a></li><li><a href="riemann.email.html"><span>riemann.email</span></a></li><li><a href="riemann.folds.html"><span>riemann.folds</span></a></li><li><a href="riemann.graphite.html"><span>riemann.graphite</span></a></li><li><a href="riemann.index.html"><span>riemann.index</span></a></li><li><a href="riemann.librato.html"><span>riemann.librato</span></a></li><li><a href="riemann.logging.html"><span>riemann.logging</span></a></li><li><a href="riemann.pagerduty.html"><span>riemann.pagerduty</span></a></li><li><a href="riemann.pool.html"><span>riemann.pool</span></a></li><li><a href="riemann.pubsub.html"><span>riemann.pubsub</span></a></li><li><a href="riemann.query.html"><span>riemann.query</span></a></li><li><a href="riemann.repl.html"><span>riemann.repl</span></a></li><li><a href="riemann.service.html"><span>riemann.service</span></a></li><li class="current"><a href="riemann.streams.html"><span>riemann.streams</span></a></li><li><a href="riemann.time.html"><span>riemann.time</span></a></li><li><a href="riemann.time.controlled.html"><span>riemann.time.controlled</span></a></li><li><a href="riemann.transport.html"><span>riemann.transport</span></a></li><li><a href="riemann.transport.graphite.html"><span>riemann.transport.graphite</span></a></li><li><a href="riemann.transport.tcp.html"><span>riemann.transport.tcp</span></a></li><li><a href="riemann.transport.udp.html"><span>riemann.transport.udp</span></a></li><li><a href="riemann.transport.websockets.html"><span>riemann.transport.websockets</span></a></li></ul></div><div class="sidebar" id="vars"><h3>Public Vars</h3><ul><li><a href="riemann.streams.html#var-*exception-stream*"><span>*exception-stream*</span></a></li><li><a href="riemann.streams.html#var-adjust"><span>adjust</span></a></li><li><a href="riemann.streams.html#var-append"><span>append</span></a></li><li><a href="riemann.streams.html#var-bit-bucket"><span>bit-bucket</span></a></li><li><a href="riemann.streams.html#var-by"><span>by</span></a></li><li><a href="riemann.streams.html#var-call-rescue"><span>call-rescue</span></a></li><li><a href="riemann.streams.html#var-changed"><span>changed</span></a></li><li><a href="riemann.streams.html#var-changed-state"><span>changed-state</span></a></li><li><a href="riemann.streams.html#var-coalesce"><span>coalesce</span></a></li><li><a href="riemann.streams.html#var-combine"><span>combine</span></a></li><li><a href="riemann.streams.html#var-counter"><span>counter</span></a></li><li><a href="riemann.streams.html#var-ddt"><span>ddt</span></a></li><li><a href="riemann.streams.html#var-ddt-events"><span>ddt-events</span></a></li><li><a href="riemann.streams.html#var-ddt-real"><span>ddt-real</span></a></li><li><a href="riemann.streams.html#var-default"><span>default</span></a></li><li><a href="riemann.streams.html#var-dual"><span>dual</span></a></li><li><a href="riemann.streams.html#var-ewma-timeless"><span>ewma-timeless</span></a></li><li><a href="riemann.streams.html#var-exception-stream"><span>exception-stream</span></a></li><li><a href="riemann.streams.html#var-execute-on"><span>execute-on</span></a></li><li><a href="riemann.streams.html#var-expired"><span>expired</span></a></li><li><a href="riemann.streams.html#var-expired%3F"><span>expired?</span></a></li><li><a href="riemann.streams.html#var-fill-in"><span>fill-in</span></a></li><li><a href="riemann.streams.html#var-fill-in-last"><span>fill-in-last</span></a></li><li><a href="riemann.streams.html#var-fixed-event-window"><span>fixed-event-window</span></a></li><li><a href="riemann.streams.html#var-fixed-time-window"><span>fixed-time-window</span></a></li><li><a href="riemann.streams.html#var-fold-interval"><span>fold-interval</span></a></li><li><a href="riemann.streams.html#var-forward"><span>forward</span></a></li><li><a href="riemann.streams.html#var-interpolate-constant"><span>interpolate-constant</span></a></li><li><a href="riemann.streams.html#var-match"><span>match</span></a></li><li><a href="riemann.streams.html#var-mean-over-time"><span>mean-over-time</span></a></li><li><a href="riemann.streams.html#var-moving-event-window"><span>moving-event-window</span></a></li><li><a href="riemann.streams.html#var-moving-time-window"><span>moving-time-window</span></a></li><li><a href="riemann.streams.html#var-over"><span>over</span></a></li><li><a href="riemann.streams.html#var-part-time-fast"><span>part-time-fast</span></a></li><li><a href="riemann.streams.html#var-percentiles"><span>percentiles</span></a></li><li><a href="riemann.streams.html#var-periodically-until-expired"><span>periodically-until-expired</span></a></li><li><a href="riemann.streams.html#var-project"><span>project</span></a></li><li><a href="riemann.streams.html#var-project*"><span>project*</span></a></li><li><a href="riemann.streams.html#var-rate"><span>rate</span></a></li><li><a href="riemann.streams.html#var-register"><span>register</span></a></li><li><a href="riemann.streams.html#var-rollup"><span>rollup</span></a></li><li><a href="riemann.streams.html#var-sdo"><span>sdo</span></a></li><li><a href="riemann.streams.html#var-smap"><span>smap</span></a></li><li><a href="riemann.streams.html#var-smap*"><span>smap*</span></a></li><li><a href="riemann.streams.html#var-split"><span>split</span></a></li><li><a href="riemann.streams.html#var-split*"><span>split*</span></a></li><li><a href="riemann.streams.html#var-splitp"><span>splitp</span></a></li><li><a href="riemann.streams.html#var-sreduce"><span>sreduce</span></a></li><li><a href="riemann.streams.html#var-sum-over-time"><span>sum-over-time</span></a></li><li><a href="riemann.streams.html#var-tag"><span>tag</span></a></li><li><a href="riemann.streams.html#var-tagged"><span>tagged</span></a></li><li><a href="riemann.streams.html#var-tagged-all"><span>tagged-all</span></a></li><li><a href="riemann.streams.html#var-tagged-any"><span>tagged-any</span></a></li><li><a href="riemann.streams.html#var-throttle"><span>throttle</span></a></li><li><a href="riemann.streams.html#var-top"><span>top</span></a></li><li><a href="riemann.streams.html#var-under"><span>under</span></a></li><li><a href="riemann.streams.html#var-where"><span>where</span></a></li><li><a href="riemann.streams.html#var-where*"><span>where*</span></a></li><li><a href="riemann.streams.html#var-where-partition-clauses"><span>where-partition-clauses</span></a></li><li><a href="riemann.streams.html#var-where-rewrite"><span>where-rewrite</span></a></li><li><a href="riemann.streams.html#var-window"><span>window</span></a></li><li><a href="riemann.streams.html#var-with"><span>with</span></a></li><li><a href="riemann.streams.html#var-within"><span>within</span></a></li><li><a href="riemann.streams.html#var-without"><span>without</span></a></li></ul></div><div class="namespace-docs" id="content"><h2>riemann.streams documentation</h2><pre class="doc"></pre><div class="public" id="var-*exception-stream*"><h3>*exception-stream*</h3><div class="usage"></div><pre class="doc">When a stream catches an exception, it's converted to an event and send
+here.</pre></div><div class="public" id="var-adjust"><h3>adjust</h3><div class="usage"><code>(adjust &amp; args)</code></div><pre class="doc">Passes on a changed version of each event by applying a function to a
 particular field or to the event as a whole.
 
 Passing a vector of [field function &amp; args] to adjust will modify the given
@@ -19,6 +20,7 @@ passed along to the children. For example:
 takes {:tags [&quot;foo&quot; &quot;bar&quot;]} and emits {:tags [&quot;foo&quot; &quot;bar&quot;] :metric 2}.
 
 Prefer (smap f &amp; children) to (adjust f &amp; children) where possible.</pre></div><div class="public" id="var-append"><h3>append</h3><div class="usage"><code>(append reference)</code></div><pre class="doc">Conj events onto the given reference
+</pre></div><div class="public" id="var-bit-bucket"><h3>bit-bucket</h3><div class="usage"><code>(bit-bucket args)</code></div><pre class="doc">Discards arguments.
 </pre></div><div class="public" id="var-by"><h3>by</h3><div class="usage"><code>(by fields &amp; children)</code></div><pre class="doc">Splits stream by field.
 Every time an event arrives with a new value of field, this macro invokes
 its child forms to return a *new*, distinct set of streams for that
@@ -56,24 +58,85 @@ Note that f can be an arbitrary function:
 (changed (fn [e] (&gt; (:metric e) 2)) ...)</pre></div><div class="public" id="var-changed-state"><h3>changed-state</h3><div class="usage"><code>(changed-state &amp; children)</code></div><pre class="doc">Passes on changes in state for each distinct host and service.
 </pre></div><div class="public" id="var-coalesce"><h3>coalesce</h3><div class="usage"><code>(coalesce &amp; children)</code></div><pre class="doc">Combines events over time. Coalesce remembers the most recent event for each
 service that passes through it (limited by :ttl). Every time it receives an
-event, it passes on *all* events it remembers.
+event, it passes on *all* events it remembers. When events expire, they are
+included in the emitted sequence of events *once*, and removed from the state
+table thereafter.
 
 Use coalesce to combine states that arrive at different times--for instance,
 to average the CPU use over several hosts.</pre></div><div class="public" id="var-combine"><h3>combine</h3><div class="usage"><code>(combine f &amp; children)</code></div><pre class="doc">Returns a function which takes a seq of events. Combines events with f, then
-forwards the result to children.</pre></div><div class="public" id="var-counter"><h3>counter</h3><div class="usage"><code>(counter &amp; children)</code></div><pre class="doc">Counts things. All metrics are summed together; passes on each event with
-the summed metric. When an event has tag &quot;reset&quot;, resets the counter to
-zero and continues summing.</pre></div><div class="public" id="var-ddt"><h3>ddt</h3><div class="usage"><code>(ddt &amp; args)</code></div><pre class="doc">Differentiate metrics with respect to time. With no args, emits an event for
+forwards the result to children.</pre></div><div class="public" id="var-counter"><h3>counter</h3><div class="usage"><code>(counter &amp; children)</code></div><pre class="doc">Counts things. The first argument may be an initial counter value, which
+defaults to zero.
+
+; Starts at zero
+(counter index)
+
+; Starts at 500
+(counter 500 index)
+
+Events without metrics are passed through unchanged. Events with metrics
+increment the counter, and are passed on with their metric set to the current
+count.
+
+You can reset the counter by passing it an event with a metric, tagged
+&quot;reset&quot;; the count will be reset to that metric.</pre></div><div class="public" id="var-ddt"><h3>ddt</h3><div class="usage"><code>(ddt &amp; args)</code></div><pre class="doc">Differentiate metrics with respect to time. With no args, emits an event for
 each one received, but with metric equal to the difference between the
 current event and the previous one, divided by the difference in their times.
 If the first argument is a number n, emits a rate-of-change event every n
-seconds instead, until expired. Skips events without metrics.</pre></div><div class="public" id="var-default"><h3>default</h3><div class="usage"><code>(default &amp; args)</code></div><pre class="doc">Transforms an event by associng a set of new key:value pairs, wherever the
+seconds instead, until expired. Skips events without metrics.</pre></div><div class="public" id="var-ddt-events"><h3>ddt-events</h3><div class="usage"><code>(ddt-events &amp; children)</code></div><pre class="doc">(ddt) between each pair of events.
+</pre></div><div class="public" id="var-ddt-real"><h3>ddt-real</h3><div class="usage"><code>(ddt-real n &amp; children)</code></div><pre class="doc">(ddt) in real time.
+</pre></div><div class="public" id="var-default"><h3>default</h3><div class="usage"><code>(default &amp; args)</code></div><pre class="doc">Transforms an event by associng a set of new key:value pairs, wherever the
 event has a nil value for that key. Passes the result on to children. Use:
 
 (default :service &quot;foo&quot; prn)
-(default :service &quot;jrecursive&quot; :state &quot;chicken&quot;} prn)</pre></div><div class="public" id="var-delete-from-index"><h3>delete-from-index</h3><div class="usage"><code>(delete-from-index index)</code></div><pre class="doc">Deletes any events that pass through from the index
-</pre></div><div class="public" id="var-ewma-timeless"><h3>ewma-timeless</h3><div class="usage"><code>(ewma-timeless r &amp; children)</code></div><pre class="doc">Exponential weighted moving average. Constant space and time overhead.
+(default {:service &quot;jrecursive&quot; :state &quot;chicken&quot;} prn)</pre></div><div class="public" id="var-dual"><h3>dual</h3><div class="usage"><code>(dual pred true-stream false-stream)</code></div><pre class="doc">A stream which splits events into two mirror-images streams, based on (pred
+e). If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
+If (pred e) is false, does the opposite. Expired events are forwarded to both
+streams.
+
+(pred e) is always called once per incoming event.</pre></div><div class="public" id="var-ewma-timeless"><h3>ewma-timeless</h3><div class="usage"><code>(ewma-timeless r &amp; children)</code></div><pre class="doc">Exponential weighted moving average. Constant space and time overhead.
 Passes on each event received, but with metric adjusted to the moving
-average. Does not take the time between events into account.</pre></div><div class="public" id="var-expired"><h3>expired</h3><div class="usage"><code>(expired &amp; children)</code></div><pre class="doc">Passes on events with :state &quot;expired&quot;.
+average. Does not take the time between events into account.</pre></div><div class="public" id="var-exception-stream"><h3>exception-stream</h3><div class="usage"><code>(exception-stream exception-stream &amp; children)</code></div><pre class="doc">Catches exceptions, converts them to events, and sends those events to a
+  special exception stream.
+  
+  (exceptions-to (email &quot;polito@vonbraun.com&quot;)
+    (execute-on io-pool
+      graph))
+
+  Streams often take multiple children and send an event to each using
+  call-rescue. Call-rescue will rescue any exception thrown by a child stream,
+  log it, and move on to the next child stream, so that a failure in one child
+  won't prevent others from executing.
+
+  Exceptions binds a dynamically scoped thread-local variable
+  *exception-stream*. When call-rescue encounters an exception, it will *also*
+  route the error to this exception stream. When switching threads (e.g. when
+  using an executor or Thread), you
+  must use (bound-fn) to preserve this binding.
+
+  This is a little more complex than you might think, because we *not only*
+  need to bind this variable during the runtime execution of child streams, but
+  *also* during the evaluation of the child streams themselves, e.g. at the
+  invocation time of exceptions itself. If we write
+OA
+  (exceptions (email ...)
+    (rate 5 index))
+
+  then (rate), when invoked, might need access to this variable immediately.
+  Therefore, this macro binds *exception-stream* twice: one when evaluating
+  children, and again, every time the returned stream is invoked.</pre></div><div class="public" id="var-execute-on"><h3>execute-on</h3><div class="usage"><code>(execute-on executor &amp; children)</code></div><pre class="doc">Returns a stream which accepts events and executes them using a
+java.util.concurrent.Executor. Returns immediately. May throw
+RejectedExecutionException if the underlying executor will not accept the
+event; e.g. if its queue is full. Use together with
+riemann.service/executor-service for reloadable asynchronous execution of
+streams.
+
+(let [io-pool (service!
+                (executor-service
+                  #(ThreadPoolExecutor. 1 10 ...)))
+      graph (execute-on io-pool (graphite {:host ...}))]
+  ...
+  (tagged &quot;graph&quot;
+    graph))</pre></div><div class="public" id="var-expired"><h3>expired</h3><div class="usage"><code>(expired &amp; children)</code></div><pre class="doc">Passes on events with :state &quot;expired&quot;.
 </pre></div><div class="public" id="var-expired%3F"><h3>expired?</h3><div class="usage"><code>(expired? event)</code></div><pre class="doc">There are two ways an event can be considered expired. First, if it has state &quot;expired&quot;. Second, if its :ttl and :time indicates it has expired.
 </pre></div><div class="public" id="var-fill-in"><h3>fill-in</h3><div class="usage"><code>(fill-in interval default-event &amp; children)</code></div><pre class="doc">Passes on all events. Fills in gaps in event stream with copies of the given
 event, wherever interval seconds pass without an event arriving. Inserted
@@ -121,15 +184,42 @@ Events without times accrue in the current window.</pre></div><div class="public
 </pre></div><div class="public" id="var-part-time-fast"><h3>part-time-fast</h3><div class="usage"><code>(part-time-fast interval create add finish)</code></div><pre class="doc">Partitions events by time (fast variant). Each &lt;interval&gt; seconds, creates a
 new bin by calling (create). Applies each received event to the current bin
 with (add bin event). When the time interval is over, calls (finish bin
-start-time elapsed-time).</pre></div><div class="public" id="var-percentiles"><h3>percentiles</h3><div class="usage"><code>(percentiles interval points &amp; children)</code></div><pre class="doc">Over each period of interval seconds, aggregates events and selects one
+start-time elapsed-time).
+
+Concurrency guarantees:
+
+(create) may be called multiple times for a given time slice.
+(add)    when called, will receive exactly one distinct bucket in each time
+         slice.
+(finish) will be called *exactly once* for each time slice.</pre></div><div class="public" id="var-percentiles"><h3>percentiles</h3><div class="usage"><code>(percentiles interval points &amp; children)</code></div><pre class="doc">Over each period of interval seconds, aggregates events and selects one
 event from that period for each point. If point is 0, takes the lowest metric
 event.  If point is 1, takes the highest metric event. 0.5 is the median
 event, and so forth. Forwards each of these events to children. The service
 name has the point appended to it; e.g. 'response time' becomes 'response
 time .95'.</pre></div><div class="public" id="var-periodically-until-expired"><h3>periodically-until-expired</h3><div class="usage"><code>(periodically-until-expired f)</code><code>(periodically-until-expired interval f)</code><code>(periodically-until-expired interval delay f)</code></div><pre class="doc">When an event arrives, begins calling f every interval seconds. Starts
-after delay. Stops calling f when an expired? event arrives.</pre></div><div class="public" id="var-rate"><h3>rate</h3><div class="usage"><code>(rate interval &amp; children)</code></div><pre class="doc">Take the sum of every event over interval seconds and divide by the interval
-size.</pre></div><div class="public" id="var-register"><h3>register</h3><div class="usage"><code>(register reference)</code></div><pre class="doc">Set reference to the most recent event that passes through.
-</pre></div><div class="public" id="var-rollup"><h3>rollup</h3><div class="usage"><code>(rollup n m &amp; children)</code></div><pre class="doc">Invokes children with events at most n times per m second interval. Passes
+after delay. Stops calling f when an expired? event arrives.</pre></div><div class="public" id="var-project"><h3>project</h3><div class="usage"><code>(project basis &amp; children)</code></div><pre class="doc">Projects an event stream into a specific basis--like (coalesce), but where
+you only want to compare two or three specific events. Takes a vector of
+predicate expressions, like those used in (where). Project maintains a vector
+of the most recent event for each predicate. An incoming event is compared
+against each predicate; if it matches, the event replaces any previous event
+in that position and the entire vector of events is forwarded to all child
+streams. Expired events are included in the emitted vector of events *once*,
+and removed from the state vector thereafter.
+
+Use project when you want to compare a small number of distinct states over
+time. For instance, to find the ratio of enqueues to dequeues:
+
+(project [(service &quot;enqueues&quot;)
+          (service &quot;dequeues&quot;)]
+  (fn [[enq deq]]
+    (prn (/ (:metric enq)
+            (:metric deq)))))</pre></div><div class="public" id="var-project*"><h3>project*</h3><div class="usage"><code>(project* predicates &amp; children)</code></div><pre class="doc">Like project, but takes predicate *functions* instead of where expressions.
+</pre></div><div class="public" id="var-rate"><h3>rate</h3><div class="usage"><code>(rate interval &amp; children)</code></div><pre class="doc">Take the sum of every event over interval seconds and divide by the interval
+size. Emits one event every interval seconds. Starts as soon as an event is
+received, stops when an expired event arrives. Uses the most recently
+received event with a metric as a template. Event ttls decrease constantly if
+no new events arrive.</pre></div><div class="public" id="var-register"><h3>register</h3><div class="usage"><code>(register reference)</code></div><pre class="doc">Set reference to the most recent event that passes through.
+</pre></div><div class="public" id="var-rollup"><h3>rollup</h3><div class="usage"><code>(rollup n dt &amp; children)</code></div><pre class="doc">Invokes children with events at most n times per dt second interval. Passes
 *vectors* of events to children, not a single event at a time. For instance,
 (rollup 3 1 f) receives five events and forwards three times per second:
 
@@ -141,11 +231,54 @@ size.</pre></div><div class="public" id="var-register"><h3>register</h3><div cla
 
 ... and events 4 and 5 are rolled over into the next period:
 
-  -&gt; (f [4 5])</pre></div><div class="public" id="var-smap"><h3>smap</h3><div class="usage"><code>(smap f &amp; children)</code></div><pre class="doc">Streaming map. Calls children with (f event). Prefer this to (adjust f).
-Example:
+  -&gt; (f [4 5])</pre></div><div class="public" id="var-sdo"><h3>sdo</h3><div class="usage"><code>(sdo &amp; children)</code></div><pre class="doc">Takes a list of functions f1, f2, f3, and returns f such that (f event)
+calls (f1 event) (f2 event) (f3 event). Useful for binding several streams to
+a single variable.
+
+(sdo prn (rate 5 index))</pre></div><div class="public" id="var-smap"><h3>smap</h3><div class="usage"><code>(smap f &amp; children)</code></div><pre class="doc">Streaming map. Calls children with (f event), whenever (f event) is non-nil.
+Prefer this to (adjust f) and (combine f). Example:
 
 (smap :metric prn) ; prints the metric of each event.
-(smap #(assoc % :state &quot;ok&quot;) index) ; Indexes each event with state &quot;ok&quot;</pre></div><div class="public" id="var-sreduce"><h3>sreduce</h3><div class="usage"><code>(sreduce f &amp; opts)</code></div><pre class="doc">Streaming reduce. Two forms:
+(smap #(assoc % :state &quot;ok&quot;) index) ; Indexes each event with state &quot;ok&quot;</pre></div><div class="public" id="var-smap*"><h3>smap*</h3><div class="usage"><code>(smap* f &amp; children)</code></div><pre class="doc">Streaming map: less magic. Calls children with (f event). Unlike smap,
+passes on nil results to children. Example:
+
+(smap folds/maximum prn) ; Prints the maximum of lists of events.</pre></div><div class="public" id="var-split"><h3>split</h3><div class="usage"><code>(split &amp; clauses)</code></div><pre class="doc">Behave as for split*, expecting predicates to be (where) expressions instead
+of functions. Example:
+
+(split
+  (&lt; 0.9  metric) (with :state &quot;critical&quot; index)
+  (&lt; 0.75 metric) (with :state &quot;warning&quot; index)
+  (with :state &quot;ok&quot; index))</pre></div><div class="public" id="var-split*"><h3>split*</h3><div class="usage"><code>(split* &amp; clauses)</code></div><pre class="doc">Given a list of function and stream pairs, passes the current event onto the
+stream associated with the first passing condition.
+
+ Conditions are functions as for where*.  An odd number of forms will make
+the last form the default stream. For example:
+
+ (split*
+   (fn [e] (&lt; 0.9  (:metric e))) (with :state &quot;critical&quot; index)
+   (fn [e] (&lt; 0.75 (:metric e))) (with :state &quot;warning&quot; index)
+   (with :state &quot;ok&quot; index))</pre></div><div class="public" id="var-splitp"><h3>splitp</h3><div class="usage"><code>(splitp pred expr &amp; clauses)</code></div><pre class="doc">Takes a binary predicate, an expression and a set of clauses. Each clause
+takes the form
+
+test-expr stream
+
+splitp returns a stream which accepts an event. Expr is a (where) expression,
+which will be evaluated against the event to obtain a value for selecting a
+clause. For each clause, evaluates (pred test-expr value). If the result is
+logical true, evaluates (stream event) and returns that value. 
+
+A single default stream can follow the clauses, and its value will be
+returned if no clause matches. If no default stream is provided and no clause
+matches, an IllegalArgumentException is thrown.
+
+Splitp evaluates streams once at invocation time.
+
+Example:
+
+(splitp &lt; metric
+  0.9  (with :state &quot;critical&quot; index)
+  0.75 (with :state &quot;warning&quot; index)
+       (with :state &quot;ok&quot; index))</pre></div><div class="public" id="var-sreduce"><h3>sreduce</h3><div class="usage"><code>(sreduce f &amp; opts)</code></div><pre class="doc">Streaming reduce. Two forms:
 
 (sreduce f child1 child2 ...)
 (sreduce f val child1 child2 ...)
@@ -161,16 +294,47 @@ Passes on events, but with the *maximum* of all received metrics:
 
 Or, using riemann.folds, a simple moving average:
 (sreduce (fn [acc event] (folds/mean [acc event])) ...)</pre></div><div class="public" id="var-sum-over-time"><h3>sum-over-time</h3><div class="usage"><code>(sum-over-time &amp; children)</code></div><pre class="doc">Sums all metrics together. Emits the most recent event each time this
-stream is called, but with summed metric.</pre></div><div class="public" id="var-tagged"><h3>tagged</h3><div class="usage"></div><pre class="doc">Alias for tagged-all
-</pre></div><div class="public" id="var-tagged-all"><h3>tagged-all</h3><div class="usage"><code>(tagged-all tags &amp; children)</code></div><pre class="doc">Passes on events where all tags are present.
+stream is called, but with summed metric.</pre></div><div class="public" id="var-tag"><h3>tag</h3><div class="usage"><code>(tag tags &amp; children)</code></div><pre class="doc">Adds a new tag, or set of tags, to events which flow through.
+
+(tag &quot;foo&quot; index)
+(tag [&quot;foo&quot; &quot;bar&quot;] index)</pre></div><div class="public" id="var-tagged"><h3>tagged</h3><div class="usage"></div><pre class="doc">Alias for tagged-all
+</pre></div><div class="public" id="var-tagged-all"><h3>tagged-all</h3><div class="usage"><code>(tagged-all tags &amp; children)</code></div><pre class="doc">Passes on events where all tags are present. This stream returns true if an
+event it receives matches those tags, nil otherwise.
 
 (tagged-all &quot;foo&quot; prn)
-(tagged-all [&quot;foo&quot; &quot;bar&quot;] prn)</pre></div><div class="public" id="var-tagged-any"><h3>tagged-any</h3><div class="usage"><code>(tagged-any tags &amp; children)</code></div><pre class="doc">Passes on events where any of tags are present.
+(tagged-all [&quot;foo&quot; &quot;bar&quot;] prn)</pre></div><div class="public" id="var-tagged-any"><h3>tagged-any</h3><div class="usage"><code>(tagged-any tags &amp; children)</code></div><pre class="doc">Passes on events where any of tags are present. This stream returns true if
+an event it receives matches those tags, nil otherwise.
 
 (tagged-any &quot;foo&quot; prn)
 (tagged-all [&quot;foo&quot; &quot;bar&quot;] prn)</pre></div><div class="public" id="var-throttle"><h3>throttle</h3><div class="usage"><code>(throttle n m &amp; children)</code></div><pre class="doc">Passes on n events every m seconds. Drops events when necessary.
-</pre></div><div class="public" id="var-under"><h3>under</h3><div class="usage"><code>(under x &amp; children)</code></div><pre class="doc">Passes on events only when their metric is smaller than x
-</pre></div><div class="public" id="var-update-index"><h3>update-index</h3><div class="usage"><code>(update-index index)</code></div><pre class="doc">Updates the given index with all events received.
+</pre></div><div class="public" id="var-top"><h3>top</h3><div class="usage"><code>(top k f top-stream)</code><code>(top k f top-stream bottom-stream)</code></div><pre class="doc">Bifurcates a stream into a dual pair of streams: one for the top k events,
+and one for the bottom k events.
+
+f is a function which maps events to comparable values, e.g. numbers. If an
+incoming event e falls in the top k, the top stream receives e and the bottom
+stream receives (expire e). If the event is *not* in the top k, calls (top
+(expire e)) and (bottom e).
+
+If an inbound event is already expired, it is forwarded directly to both
+streams. In this way, both top- and bottom-stream have a consistent, dual
+view of the event space.
+
+Index the top 10 events, by metric:
+
+(top 10 :metric index)
+
+Index everything, but tag the top k events with &quot;top&quot;:
+
+(top 10 :metric
+  (adjust [:tags conj &quot;top&quot;]
+    index)
+  index)
+
+This implementation of top is lazy, in a sense. It won't proactively expire
+events which are bumped from the top-k set--you have to wait for another
+event with the same host and service to arrive before child streams will know
+it's expired. At some point I (or an enterprising committer) should fix
+that.</pre></div><div class="public" id="var-under"><h3>under</h3><div class="usage"><code>(under x &amp; children)</code></div><pre class="doc">Passes on events only when their metric is smaller than x
 </pre></div><div class="public" id="var-where"><h3>where</h3><div class="usage"><code>(where expr &amp; children)</code></div><pre class="doc">Passes on events where expr is true. Expr is rewritten using where-rewrite.
 'event is bound to the event under consideration. Examples:
 
@@ -190,7 +354,11 @@ false. For instance:
 (where (service &quot;www&quot;)
   (notify-www-team)
   (else
-    (notify-misc-team)))</pre></div><div class="public" id="var-where*"><h3>where*</h3><div class="usage"><code>(where* f &amp; children)</code></div><pre class="doc">A simpler, less magical variant of (where). Instead of binding symbols in
+    (notify-misc-team)))
+
+The streams generated by (where) return the value of expr: truthy if expr
+matched the given event, and falsey otherwise. This means (where (metric 5))
+tests events and returns true if their metric is five.</pre></div><div class="public" id="var-where*"><h3>where*</h3><div class="usage"><code>(where* f &amp; children)</code></div><pre class="doc">A simpler, less magical variant of (where). Instead of binding symbols in
 the context of an expression, where* takes a function which takes an event.
 When (f event) is truthy, passes event to children--and otherwise, passes
 event to (else ...) children. For example:
