@@ -57,7 +57,7 @@ but log a deprecation notice when used.
 - core/reaper takes a :keep-keys option to specify which fields on an event
   are preserved
 - streams/smap ignores nil values for better use with folds
-- Update to lamina
+- Update to aleph 0.3.0-beta15
 
 ## Bugfixes
 
