@@ -11,17 +11,30 @@
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
   (:use [riemann.common :exclude [match]]
-        [riemann.time :only [unix-time linear-time every! once! after! next-tick defer cancel]]
+        [riemann.time :only [unix-time
+                             linear-time
+                             every!
+                             once!
+                             after!
+                             next-tick
+                             defer
+                             cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
             [riemann.index :as index]
             riemann.client
             riemann.logging
-            [clojure.set :as set]))
+            [clojure.set :as set])
+  (:import (java.util.concurrent Executor)))
 
 (def  infinity (/  1.0 0))
 (def -infinity (/ -1.0 0))
+
+(def ^:dynamic *exception-stream*
+  "When a stream catches an exception, it's converted to an event and send
+  here."
+  nil)
 
 (defn expired?
   "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
@@ -40,8 +53,48 @@
        (try
          (child# ~event)
          (catch Exception e#
-           (warn e# (str child# " threw")))))
+           (warn e# (str child# " threw"))
+           (if-let [ex-stream# *exception-stream*]
+             (ex-stream# (exception->event e#))))))
      true))
+
+(defmacro exception-stream
+  "Catches exceptions, converts them to events, and sends those events to a
+  special exception stream.
+  
+  (exceptions-to (email \"polito@vonbraun.com\")
+    (execute-on io-pool
+      graph))
+
+  Streams often take multiple children and send an event to each using
+  call-rescue. Call-rescue will rescue any exception thrown by a child stream,
+  log it, and move on to the next child stream, so that a failure in one child
+  won't prevent others from executing.
+
+  Exceptions binds a dynamically scoped thread-local variable
+  *exception-stream*. When call-rescue encounters an exception, it will *also*
+  route the error to this exception stream. When switching threads (e.g. when
+  using an executor or Thread), you
+  must use (bound-fn) to preserve this binding.
+
+  This is a little more complex than you might think, because we *not only*
+  need to bind this variable during the runtime execution of child streams, but
+  *also* during the evaluation of the child streams themselves, e.g. at the
+  invocation time of exceptions itself. If we write
+OA
+  (exceptions (email ...)
+    (rate 5 index))
+
+  then (rate), when invoked, might need access to this variable immediately.
+  Therefore, this macro binds *exception-stream* twice: one when evaluating
+  children, and again, every time the returned stream is invoked."
+  [exception-stream & children]
+  `(let [ex-stream# ~exception-stream
+         children#  (binding [*exception-stream* ex-stream#]
+                      (list ~@children))]
+     (fn stream# [event#]
+       (binding [*exception-stream* ex-stream#]
+         (call-rescue event# children#)))))
 
 (defn bit-bucket
   "Discards arguments."
@@ -75,18 +128,29 @@
   "Returns a function which takes a seq of events. Combines events with f, then
   forwards the result to children."
   [f & children]
-  (fn [events]
+  (fn stream [events]
     (call-rescue (f events) children)))
 
+(defn smap*
+  "Streaming map: less magic. Calls children with (f event). Unlike smap,
+  passes on nil results to children. Example:
+
+  (smap folds/maximum prn) ; Prints the maximum of lists of events."
+  [f & children]
+  (fn stream [event]
+    (call-rescue (f event) children)))
+
 (defn smap
-  "Streaming map. Calls children with (f event). Prefer this to (adjust f).
-  Example:
+  "Streaming map. Calls children with (f event), whenever (f event) is non-nil.
+  Prefer this to (adjust f) and (combine f). Example:
 
   (smap :metric prn) ; prints the metric of each event.
   (smap #(assoc % :state \"ok\") index) ; Indexes each event with state \"ok\""
   [f & children]
-  (fn [event]
-    (call-rescue (f event) children)))
+  (fn stream [event]
+    (let [value (f event)]
+      (when-not (nil? value)
+        (call-rescue value children)))))
 
 (defn sreduce
   "Streaming reduce. Two forms:
@@ -111,7 +175,7 @@
     (let [children   opts
           first-time (ref true)
           acc        (ref nil)]
-      (fn [event]
+      (fn stream [event]
         (let [[first-time value] (dosync
                                    (if @first-time
                                      (do
@@ -125,7 +189,7 @@
     ; Value provided
     (let [acc      (atom (first opts))
           children (rest opts)]
-      (fn [event]
+      (fn stream [event]
         (call-rescue (swap! acc f event) children)))))
 
 (defn sdo
@@ -135,7 +199,7 @@
   
   (sdo prn (rate 5 index))"
   [& children]
-  (fn [event]
+  (fn stream [event]
     (call-rescue event children)))
 
 (defn stream
@@ -143,6 +207,27 @@
   (deprecated "riemann.streams/stream is now streams/sdo."
               (apply sdo args)))
 
+(defn execute-on
+  "Returns a stream which accepts events and executes them using a
+  java.util.concurrent.Executor. Returns immediately. May throw
+  RejectedExecutionException if the underlying executor will not accept the
+  event; e.g. if its queue is full. Use together with
+  riemann.service/executor-service for reloadable asynchronous execution of
+  streams.
+  
+  (let [io-pool (service!
+                  (executor-service
+                    #(ThreadPoolExecutor. 1 10 ...)))
+        graph (execute-on io-pool (graphite {:host ...}))]
+    ...
+    (tagged \"graph\"
+      graph))"
+  [^Executor executor & children]
+  (fn stream [event]
+    (.execute executor
+             (bound-fn runner []
+               (call-rescue event children)))))
+    
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
   children with a vector of the last n events, from oldest to newest. Ignores
@@ -151,8 +236,8 @@
   (moving-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
-    (fn [event]
-      (let [w (swap! window (fn [w]
+    (fn stream [event]
+      (let [w (swap! window (fn swap [w]
                               (vec (take-last n (conj w event)))))]
         (call-rescue w children)))))
 
@@ -164,8 +249,8 @@
   (fixed-event-window 5 (combine folds/mean index))"
   [n & children]
   (let [buffer (atom [])]
-    (fn [event]
-      (let [events (swap! buffer (fn [events]
+    (fn stream [event]
+      (let [events (swap! buffer (fn swap [events]
                               (let [events (conj events event)]
                                 (if (< n (count events))
                                   [event]
@@ -183,7 +268,7 @@
   [n & children]
   (let [cutoff (ref 0)
         buffer (ref [])]
-    (fn [event]
+    (fn stream [event]
       (let [events (dosync
                      ; Compute minimum allowed time
                      (let [cutoff (alter cutoff max (- (get event :time 0) n))]
@@ -193,7 +278,7 @@
                          ; have changed.
                          (alter buffer conj event)
                          (alter buffer
-                                (fn [events]
+                                (fn alter [events]
                                   (vec (filter
                                          (fn [e] (or (nil? (:time e))
                                                      (< cutoff (:time e))))
@@ -217,7 +302,7 @@
 
   (let [start-time (ref nil)
         buffer     (ref [])]
-    (fn [event]
+    (fn stream [event]
       (let [windows (dosync
                       (cond
                         ; No time
@@ -284,8 +369,8 @@
         ; A list of all bins we're tracking.
         bins (ref {})
         ; Eventually finish a bin.
-        finish-eventually (fn [bin start]
-          (.start (new Thread (fn []
+        finish-eventually (fn finish-eventually [bin start]
+          (.start (new Thread (bound-fn thread []
                          (let [end (+ start interval)]
                            ; Sleep until this bin is past
                            (Thread/sleep (max 0 (* 1000 (- end (unix-time)))))
@@ -298,7 +383,7 @@
                            (finish bin start end))))))
 
         ; Add event to the bin for a time
-        bin (fn [event t]
+        bin (fn bin [event t]
               (let [start (quot t interval)]
                 (dosync
                   (when (<= (deref watermark) start)
@@ -314,7 +399,7 @@
                           (alter bins assoc start bin)
                           (finish-eventually bin start))))))))]
 
-    (fn [event]
+    (fn stream [event]
       (let [; What time did this event happen at?
             t (or (:time event) (unix-time))]
         (bin event t)))))
@@ -326,7 +411,7 @@
   ([interval f] (periodically-until-expired interval 0 f))
   ([interval delay f]
    (let [task (atom nil)]
-     (fn [event]
+     (fn stream [event]
        (if (expired? event)
          ; Stop periodic.
          (when-let [t @task]
@@ -365,7 +450,7 @@
                                     :current (create)})))
 
         ; Switch to the next bin, finishing the current one.
-        switch (fn part-time-fast-switch []
+        switch (bound-fn switch []
                  (apply finish
                         (locking state
                           (when-let [s @state]
@@ -402,12 +487,12 @@
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn [] (ref []))
-      (fn [r event]
+      (fn create [] (ref []))
+      (fn add [r event]
         (dosync
           (if-let [ek (event-key event)]
             (alter r conj event))))
-      (fn [r start end]
+      (fn finish [r start end]
         (let [stat (dosync
                     (folder (map event-key @r)))
               event (assoc (last @r) event-key stat)]
@@ -420,13 +505,13 @@
   event, wherever interval seconds pass without an event arriving. Inserted
   events have current time. Stops inserting when expired. Uses local times."
   ([interval default-event & children]
-   (let [fill (fn []
+   (let [fill (bound-fn fill []
                 (call-rescue (assoc default-event :time (unix-time)) children))
-         new-deferrable (fn [] (every! interval
-                                       interval
-                                       fill))
+         new-deferrable (fn new-deferrable [] (every! interval
+                                                      interval
+                                                      fill))
          deferrable (ref (new-deferrable))]
-    (fn [event]
+    (fn stream [event]
       (let [d (deref deferrable)]
         (if d
           ; We have an active deferrable
@@ -451,11 +536,12 @@
   expired. Uses local times."
   ([interval update & children]
    (let [last-event (ref nil)
-         fill (fn []
+         fill (bound-fn fill []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
-         new-deferrable (fn [] (every! interval interval fill))
+         new-deferrable (fn new-deferrable []
+                          (every! interval interval fill))
          deferrable (ref nil)]
-     (fn [event]
+     (fn stream [event]
        ; Record last event
        (dosync (ref-set last-event event))
 
@@ -484,12 +570,12 @@
   Note: ignores event times currently--will change later."
   [interval & children]
     (let [state (ref nil)
-          emit-dup (fn []
+          emit-dup (bound-fn emit-dup []
                      (call-rescue
                        (assoc (deref state) :time (unix-time))
                        children))
           peri (periodically-until-expired interval emit-dup)]
-      (fn [event]
+      (fn stream [event]
         (dosync
           (ref-set state event))
 
@@ -501,6 +587,56 @@
             (ref-set state nil))
           ))))
 
+(defn ddt-real
+  "(ddt) in real time."
+  [n & children]
+  (let [state (atom (list nil))  ; Events at t3, t2, and t1.
+        swap (bound-fn swap []
+               (let [[_ e2 e1] (swap! state
+                                      (fn swap [[e3 e2 e1 :as state]]
+                                        ; If no events have come in this
+                                        ; interval, we preserve the last event
+                                        ; in both places, which means we emit
+                                        ; zeroes.
+                                        (if e3
+                                          (list nil e3 e2)
+                                          (list nil e2 e2))))]
+                 (when (and e1 e2)
+                   (let [dt (- (:time e2) (:time e1))
+                         out (merge e2
+                                    (if (zero? dt)
+                                      {:time (unix-time)
+                                       :metric 0}
+                                      (let [diff (/ (- (:metric e2)
+                                                       (:metric e1))
+                                                    dt)]
+                                        {:time (unix-time)
+                                         :metric diff})))]
+                     (call-rescue out children)))))
+        poller (periodically-until-expired n swap)]
+
+    (fn stream [event]
+      (when (:metric event)
+        (swap! state (fn swap [[most-recent & more]] (cons event more))))
+      (poller event))))
+
+(defn ddt-events
+  "(ddt) between each pair of events."
+  [& children]
+  (let [prev (ref nil)]
+    (fn stream [event]
+      (when-let [m (:metric event)]
+        (let [prev-event (dosync
+                           (let [prev-event (deref prev)]
+                             (ref-set prev event)
+                             prev-event))]
+          (when prev-event
+            (let [dt (- (:time event) (:time prev-event))]
+              (when-not (zero? dt)
+                (let [diff (/ (- m (:metric prev-event)) dt)]
+                  (call-rescue (assoc event :metric diff) children))))))))))
+  
+
 (defn ddt
   "Differentiate metrics with respect to time. With no args, emits an event for
   each one received, but with metric equal to the difference between the
@@ -509,43 +645,8 @@
   seconds instead, until expired. Skips events without metrics."
   [& args]
   (if (number? (first args))
-    ; Emit a differential every n seconds
-    (do
-      (let [[n & children] args
-            prev (ref nil)
-            most-recent (ref nil)
-            swap (fn []
-                   (let [[a b] (dosync
-                                 (let [prev-event (deref prev)
-                                       last-event (deref most-recent)]
-                                   (ref-set prev last-event)
-                                   [prev-event last-event]))]
-                     (when (and a b)
-                       (let [dt (- (:time b) (:time a))]
-                         (when-not (zero? dt)
-                           (let [diff (/ (- (:metric b) (:metric a))
-                                         dt)]
-                             (call-rescue (assoc b :metric diff) children)))))))
-            poller (periodically-until-expired n swap)]
-        (fn [event]
-          (when (:metric event)
-            (dosync (ref-set most-recent event)))
-          (poller event))))
-
-    ; Emit a differential for every event
-    (do
-      (let [prev (ref nil)]
-        (fn [event]
-          (when-let [m (:metric event)]
-            (let [prev-event (dosync
-                         (let [prev-event (deref prev)]
-                           (ref-set prev event)
-                           prev-event))]
-              (when prev-event
-                (let [dt (- (:time event) (:time prev-event))]
-                  (when-not (zero? dt)
-                    (let [diff (/ (- m (:metric prev-event)) dt)]
-                      (call-rescue (assoc event :metric diff) args))))))))))))
+    (apply ddt-real args)
+    (apply ddt-events args)))
 
 (defn rate
   "Take the sum of every event over interval seconds and divide by the interval
@@ -570,7 +671,7 @@
                          (assoc e :ttl (- ttl interval))
                          e)))
 
-        tick (fn tick []
+        tick (bound-fn tick []
                ; Get last metric
                (let [sum (second (swap! sum swap-sum))
                      event (swap! last-event swap-event sum)]
@@ -600,9 +701,9 @@
   time .95'."
   [interval points & children]
   (part-time-fast interval
-                (fn [] (ref []))
-                (fn [r event] (dosync (alter r conj event)))
-                (fn [r start end]
+                (fn setup [] (ref []))
+                (fn add [r event] (dosync (alter r conj event)))
+                (fn finish [r start end]
                   (let [samples (dosync
                                   (folds/sorted-sample (deref r) points))]
                     (doseq [event samples] (call-rescue event children))))))
@@ -645,7 +746,7 @@
   [& children]
   (deprecated "Use streams/counter"
               (let [sum (ref 0)]
-                (fn [event]
+                (fn stream [event]
                   (let [s (dosync
                             (when-let [m (:metric event)]
                               (commute sum + (:metric event))))
@@ -658,7 +759,7 @@
   [children]
   (let [sum (ref nil)
         total (ref 0)]
-    (fn [event]
+    (fn stream [event]
       (let [m (dosync
                 (let [t (commute total inc)
                       s (commute sum + (:metric event))]
@@ -674,7 +775,7 @@
   (let [m (ref 0)
         c-existing (- 1 r)
         c-new r]
-    (fn [event]
+    (fn stream [event]
       ; Compute new ewma
       (let [m (when-let [metric-new (:metric event)]
                 (dosync
@@ -765,11 +866,11 @@
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
   (part-time-fast m
-    (fn [] (ref 0))
-    (fn [sent event]
+    (fn setup [] (ref 0))
+    (fn add [sent event]
       (when-not (dosync (< n (alter sent inc)))
         (call-rescue event children)))
-    (fn [sent start end])))
+    (fn finish [sent start end])))
 
 (defn rollup
   "Invokes children with events at most n times per dt second interval. Passes
@@ -800,7 +901,7 @@
                                 :flushed (:buffer state)})))
 
         ; Tick function; flushes buffer and invokes children.
-        tick (fn tick []
+        tick (bound-fn tick []
                (let [state (swap! state flush)]
                  ; Reschedule another tick if necessary
                  (when (= 1 (:sent state))
@@ -859,20 +960,20 @@
 (defn append
   "Conj events onto the given reference"
   [reference]
-  (fn [event]
+  (fn stream [event]
     (dosync
       (alter reference conj event))))
 
 (defn register
   "Set reference to the most recent event that passes through."
   [reference]
-  (fn [event]
+  (fn stream [event]
     (dosync (ref-set reference event))))
 
 (defn forward
   "Sends an event through a client"
   [client]
-  (fn [event]
+  (fn stream [event]
     (riemann.client/send-event client event)))
 
 (defn match
@@ -889,7 +990,7 @@
   For cases where you only care about whether (f event) is truthy, use (where
   some-fn) instead of (match some-fn true)."
   [f value & children]
-  (fn [event]
+  (fn stream [event]
     (when (riemann.common/match value (f event))
       (call-rescue event children)
       true)))
@@ -902,12 +1003,12 @@
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
   (if (coll? tags)
-    (fn [event]
+    (fn stream [event]
       (when (set/subset? (set tags) (set (:tags event)))
         (call-rescue event children)
         true))
 
-    (fn [event]
+    (fn stream [event]
       (when (member? tags (:tags event))
         (call-rescue event children)
         true))))
@@ -921,12 +1022,12 @@
   [tags & children]
   (if (coll? tags)
     (let [required (set tags)]
-      (fn [event]
+      (fn stream [event]
         (when (some required (:tags event))
           (call-rescue event children)
           true)))
 
-    (fn [event]
+    (fn stream [event]
       (when (member? tags (:tags event))
         (call-rescue event children)
         true))))
@@ -948,7 +1049,7 @@
   (if (map? (first args))
     ; Merge in a map of new values.
     (let [[m & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    Merge on protobufs is broken; nil values aren't applied.
         ;    (let [e (merge event m)]
         (let [e (reduce (fn [m, [k, v]]
@@ -958,7 +1059,7 @@
 
     ; Change a particular key.
     (let [[k v & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    (let [e (assoc event k v)]
         (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
           (call-rescue e children))))))
@@ -973,7 +1074,7 @@
   (if (map? (first args))
     ; Merge in a map of new values.
     (let [[defaults & children] args]
-      (fn [event]
+      (fn stream [event]
         ;    Merge on protobufs is broken; nil values aren't applied.
         (let [e (reduce (fn [m [k v]]
                           (if (nil? (get m k)) (assoc m k v) m))
@@ -982,7 +1083,7 @@
 
     ; Change a particular key.
     (let [[k v & children] args]
-      (fn [event]
+      (fn stream [event]
         (let [e (if (nil? (k event)) (assoc event k v) event)]
           (call-rescue e children))))))
 
@@ -1011,7 +1112,7 @@
   (if (vector? (first args))
     ; Adjust a particular field in the event.
     (let [[[field f & args] & children] args]
-      (fn [event]
+      (fn stream [event]
         (let [value (apply f (field event) args)
               event (assoc event field value)]
           (call-rescue event children))))
@@ -1066,7 +1167,7 @@
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
         table (ref {})]
-     (fn [event]
+     (fn stream [event]
        (let [fork-name (f event)
              fork (dosync
                     (or ((deref table) fork-name)
@@ -1097,7 +1198,7 @@
         children (if (map? options)
                    (rest children)
                    children)]
-    (fn [event]
+    (fn stream [event]
       (when
         (dosync
           (let [cur (pred event)
@@ -1119,7 +1220,7 @@
 
   (within [0 1] (fn [event] do-something))"
   [r & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (<= (first r) m (last r))
         (call-rescue event children)))))
@@ -1128,7 +1229,7 @@
   "Passes on events only when their metric falls outside the given (inclusive)
   range."
   [r & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when-not (<= (first r) m (last r))
         (call-rescue event children)))))
@@ -1136,7 +1237,7 @@
 (defn over
   "Passes on events only when their metric is greater than x"
   [x & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (< x m)
         (call-rescue event children)))))
@@ -1144,7 +1245,7 @@
 (defn under
   "Passes on events only when their metric is smaller than x"
   [x & children]
-  (fn [event]
+  (fn stream [event]
     (when-let [m (:metric event)]
       (when (> x m)
         (call-rescue event children)))))
@@ -1221,7 +1322,7 @@
       (partial prn \"Not expired!\")))"
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
-    `(fn [event#]
+    `(fn stream# [event#]
        (let [value# (~f event#)]
          (if value#
            (call-rescue event# ~true-kids)

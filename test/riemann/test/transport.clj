@@ -14,7 +14,9 @@
 (riemann.logging/init)
 
 (deftest udp
-         (riemann.logging/suppress ["riemann.transport" "riemann.core"]
+         (riemann.logging/suppress ["riemann.transport"
+                                    "riemann.core"
+                                    "riemann.pubsub"]
            (let [server (udp-server)
                  core   (transition! (core) {:services [server]})
                  client (wait-for-result (udp-socket {}))
@@ -31,7 +33,9 @@
                  (stop! core))))))
 
 (deftest ignores-garbage
-         (riemann.logging/suppress ["riemann.transport" "riemann.core"]
+         (riemann.logging/suppress ["riemann.transport"
+                                    "riemann.core"
+                                    "riemann.pubsub"]
             (let [server (tcp-server)
                   core   (transition! (core) {:services [server]})
                   client (wait-for-result 
@@ -44,7 +48,8 @@
                 (enqueue client 
                          (java.nio.ByteBuffer/wrap 
                            (byte-array (map byte [0 1 2]))))
-                (is nil? (wait-for-message client))
+                (is (thrown? java.lang.IllegalStateException
+                             (wait-for-message client)))
                 (is (closed? client))
                 (finally
                   (close client)

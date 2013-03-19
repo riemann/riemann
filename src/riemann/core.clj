@@ -5,10 +5,95 @@
   (:require riemann.streams
             [riemann.service :as service]
             [riemann.index :as index]
-            [riemann.pubsub :as ps]))
+            [riemann.pubsub :as ps]
+            clojure.set))
 
 (defrecord Core
   [streams services index pubsub])
+
+(defn core
+  "Create a new core."
+  []
+  (Core. [] [] nil (ps/pubsub-registry)))
+
+(defn core-services
+  "All services in a core--both the :services list and named services like the
+  index."
+  [core]
+  (remove nil?
+          (concat [(:index core)
+                   (:pubsub core)]
+                (:services core))))
+
+(defn merge-cores
+  "Merge cores old-core and new-core into a new core comprised of services from
+  :new-core or their equivalents from :old-core where possible."
+  [old-core new-core]
+  (let [merged-services (map (fn [svc]
+                               (or (first (filter #(service/equiv? % svc)
+                                                  (:services old-core)))
+                                   svc))
+                             (:services new-core))
+        merged (-> new-core
+                 (assoc :index (when (:index new-core)
+                                 (if (service/equiv? (:index new-core)
+                                                     (:index old-core))
+                                   (:index old-core)
+                                   (:index new-core))))
+                 (assoc :pubsub (when (:pubsub new-core)
+                                  (if (service/equiv? (:pubsub new-core)
+                                                      (:pubsub old-core))
+                                    (:pubsub old-core)
+                                    (:pubsub new-core))))
+                 (assoc :services merged-services))]
+    merged))
+
+(defn transition!
+  "A core transition \"merges\" one core into another. Cores are immutable,
+  but the stateful resources associated with them aren't. When you call
+  (transition! old-core new-core), we:
+
+  1. Stop old core services without an equivalent in the new core.
+
+  2. Merge the new core's services with equivalents from the old core.
+
+  3. Reload all services with the merged core.
+
+  4. Start all services in the merged core.
+
+  Finally, we return the merged core. old-core and new-core can be discarded."
+  [old-core new-core]
+  (let [merged (merge-cores old-core new-core)
+        old-services (set (core-services old-core))
+        merged-services (set (core-services merged))]
+
+    ; Stop old services
+    (dorun (pmap service/stop!
+                 (clojure.set/difference old-services merged-services)))
+
+    ; Reload merged services
+    (dorun (pmap #(service/reload! % merged) merged-services)) 
+
+    ; Start merged services
+    (dorun (pmap service/start! merged-services))
+
+    (info "Hyperspace core online")
+    merged))
+
+(defn start!
+  "Start the given core. Reloads and starts all services."
+  [core]
+  (let [services (core-services core)]
+    (dorun (pmap #(service/reload! % core) services))
+    (dorun (pmap service/start!            services)))
+  (info "Hyperspace core online"))
+
+(defn stop!
+  "Stops the given core and all services."
+  [core]
+  (info "Core stopping")
+  (dorun (pmap service/stop! (core-services core)))
+  (info "Hyperspace core shut down"))
 
 (defn reaper
   "Returns a service which expires states from its core's index every interval
@@ -44,66 +129,11 @@
                            (merge {:state "expired"
                                    :time (unix-time)}))]
                    (when-let [registry (:pubsub core)]
-                     (ps/publish registry "index" e))
+                     (ps/publish! registry "index" e))
                    (doseq [stream streams]
                      (stream e)))
                  (catch Exception e
                    (warn e "Caught exception while processing expired events")))))))))))
-
-(defn core
-  "Create a new core."
-  []
-  (Core. [] [] nil (ps/pubsub-registry)))
-
-(defn transition!
-  "A core transition \"merges\" one core into another. Cores are immutable,
-  but the stateful resources associated with them aren't. When you call
-  (transition! old-core new-core), we:
-  
-  1. Stop old core services without an equivalent in the new core.
-
-  2. Merge the new core's services with equivalents from the old core.
-
-  3. Reload all services with the merged core.
-  
-  4. Start all services in the merged core.
-
-  Finally, we return the merged core. old-core and new-core can be discarded."
-  [old-core new-core]
-  (let [merged-services (map (fn [svc]
-                               (or (first (filter #(service/equiv? % svc)
-                                                  (:services old-core)))
-                                   svc))
-                             (:services new-core))
-        merged (assoc new-core :services merged-services)]
-
-    ; Stop old services
-    (dorun (pmap service/stop! 
-                 (remove (set merged-services) (:services old-core))))
-
-
-    ; Reload merged services
-    (dorun (pmap #(service/reload! % merged) merged-services))
-
-    ; Start merged services
-    (dorun (pmap service/start! merged-services))
-
-    (info "Hyperspace core online")
-    merged))
-
-(defn start!
-  "Start the given core. Reloads and starts all services."
-  [core]
-  (dorun (pmap #(service/reload! % core) (:services core)))
-  (dorun (pmap service/start!            (:services core)))
-  (info "Hyperspace core online"))
-
-(defn stop!
-  "Stops the given core and all services."
-  [core]
-  (info "Core stopping")
-  (dorun (pmap service/stop! (:services core)))
-  (info "Hyperspace core shut down"))
 
 (defn update-index
   "Updates this core's index with an event. Also publishes to the index pubsub
@@ -111,7 +141,7 @@
   [core event]
   (when (index/update (:index core) event)
     (when-let [registry (:pubsub core)]
-      (ps/publish registry "index" event))))
+      (ps/publish! registry "index" event))))
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the

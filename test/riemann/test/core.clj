@@ -9,7 +9,7 @@
         riemann.core
         clojure.test
         [clojure.algo.generic.functor :only [fmap]]
-        [riemann.service :only [Service]]
+        [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]))
 
 (logging/init)
@@ -35,11 +35,13 @@
   (start!  [_]   (reset! running true))
   (stop!   [_]   (reset! running false))
   (reload! [_ c] (reset! core c))
+  ServiceEquiv
   (equiv?  [a b] (= (:id a) (:id b))))
 
 (deftest start-transition-stop
          (logging/suppress 
-           "riemann.core"
+           ["riemann.core"
+            "riemann.pubsub"]
            (let [old-running    (atom nil)
                  old-core       (atom nil)
                  same-1-running (atom nil)
@@ -90,12 +92,79 @@
                (is (= nil   @same-2-core))
                (is (= final @new-core))))))
 
+(deftest transition-index
+         (logging/suppress 
+           ["riemann.core" "riemann.pubsub"]
+           (testing "Different indexes"
+                    (let [old-running (atom nil)
+                          old-core    (atom nil)
+                          new-running (atom nil)
+                          new-core    (atom nil)
+                          old-index (TestService. :old old-running old-core)
+                          new-index (TestService. :new new-running new-core)
+                          old {:index old-index}
+                          new {:index new-index}]
+
+                      (start! old)
+                      (is @old-running)
+                      (is (not @new-running))
+                      (is (= old @old-core))
+                      (is (= nil @new-core))
+
+                      (let [final (transition! old new)]
+                        (is (not= new final))
+                        (is (= new-index (:index final)))
+                        (is (not     @old-running))
+                        (is          @new-running)
+                        (is (= final @new-core))
+                        (is (= old   @old-core))
+
+                        (stop! final)
+                        (is (= new-index (:index final)))
+                        (is (= old-index (:index old)))
+                        (is (not @old-running))
+                        (is (not @new-running))
+                        (is (= final @new-core))
+                        (is (= old   @old-core)))))
+
+           (testing "The same index"
+                    (let [old-running (atom nil)
+                          old-core    (atom nil)
+                          new-running (atom nil)
+                          new-core    (atom nil)
+                          old-index (TestService. :same old-running old-core)
+                          new-index (TestService. :same new-running new-core)
+                          old {:index old-index}
+                          new {:index new-index}]
+
+                      (start! old)
+                      (is @old-running)
+                      (is (not @new-running))
+                      (is (= old @old-core))
+                      (is (= nil @new-core))
+
+                      (let [final (transition! old new)]
+                        (is (not= new final))
+                        (is (= old-index (:index final)))
+                        (is          @old-running)
+                        (is (not     @new-running))
+                        (is (= final @old-core))
+                        (is (nil?    @new-core))
+
+                        (stop! final)
+                        (is (= old-index (:index final)))
+                        (is (not @old-running))
+                        (is (not @new-running))
+                        (is (= nil   @new-core))
+                        (is (= final @old-core)))))))
+
 (deftest serialization
          (let [out (ref [])
                server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/append out)
                core   (logging/suppress ["riemann.transport.tcp"
-                                         "riemann.core"]
+                                         "riemann.core"
+                                         "riemann.pubsub"]
                                         (transition! (core)
                                                      {:services [server]
                                                       :streams [stream]}))
@@ -120,14 +189,17 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.transport.tcp"] 
+               (logging/suppress ["riemann.core"
+                                  "riemann.transport.tcp"
+                                  "riemann.pubsub"] 
                                  (stop! core))))))
 
 (deftest query-test
          (let [index  (index)
                server (riemann.transport.tcp/tcp-server)
                core   (logging/suppress ["riemann.core"
-                                         "riemann.transport.tcp"]
+                                         "riemann.transport.tcp"
+                                         "riemann.pubsub"]
                                         (transition! (core)
                                                      {:services [server]
                                                       :index index}))
@@ -149,7 +221,9 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.core" "riemann.transport.tcp"]
+               (logging/suppress ["riemann.core"
+                                  "riemann.transport.tcp"
+                                  "riemann.pubsub"]
                  (stop! core))))))
 
 (deftest expires
@@ -159,7 +233,9 @@
                                 (fn [e] (reset! res e)))
                reaper (reaper 0.001)
                core (logging/suppress 
-                      ["riemann.core" "riemann.transport.tcp"]
+                      ["riemann.core"
+                       "riemann.transport.tcp"
+                       "riemann.pubsub"]
                       (transition! (core) {:services [reaper]
                                            :streams [expired-stream]
                                            :index index}))]
@@ -174,7 +250,7 @@
            (Thread/sleep 100)
 
            ; Kill reaper
-           (logging/suppress "riemann.core"
+           (logging/suppress ["riemann.core" "riemann.pubsub"]
                              (stop! core))
            
            ; Check that index does not contain these states
@@ -193,7 +269,9 @@
                                 (partial reset! res))
                reaper (reaper 0.001 {:keep-keys [:tags]})
                core (logging/suppress
-                      ["riemann.core" "riemann.transport.tcp"]
+                      ["riemann.core"
+                       "riemann.transport.tcp"
+                       "riemann.pubsub"]
                       (transition! (core) {:services [reaper]
                                            :streams [expired-stream]
                                            :index index}))]
@@ -211,7 +289,9 @@
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
                                                  (riemann.streams/append out))
                core   (logging/suppress 
-                        ["riemann.core" "riemann.transport.tcp"]
+                        ["riemann.core"
+                         "riemann.transport.tcp"
+                         "riemann.pubsub"]
                         (transition! (core) {:services [server]
                                              :streams [stream]}))
                client (riemann.client/tcp-client)]
@@ -235,5 +315,7 @@
 
              (finally
                (close-client client)
-               (logging/suppress ["riemann.transport.tcp" "riemann.core"]
+               (logging/suppress ["riemann.transport.tcp"
+                                  "riemann.core"
+                                  "riemann.pubsub"]
                                  (stop! core))))))

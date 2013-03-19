@@ -1,6 +1,14 @@
 (ns riemann.test.service
   (:import (java.util.concurrent TimeUnit
-                                 LinkedBlockingQueue))
+                                 AbstractExecutorService
+                                 Executor
+                                 ExecutorService
+                                 RejectedExecutionException
+                                 LinkedBlockingQueue
+                                 ArrayBlockingQueue
+                                 SynchronousQueue
+                                 ThreadPoolExecutor))
+  (:require [riemann.logging :as logging])
   (:use riemann.service
         clojure.test))
 
@@ -76,3 +84,55 @@
            (reload! s :core-2)
            (start! s)
            (is (= [:restarted :core-2] (send :restarted)))))
+
+(deftest literal-executor-service-equiv-test
+         (are [f] (equiv? (f) (f))
+              #(literal-executor-service
+                 :cat
+                 (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS 
+                                      (ArrayBlockingQueue. 10)))
+
+              #(literal-executor-service
+                 :mouse
+                 (ThreadPoolExecutor. 1 10 20 TimeUnit/MILLISECONDS
+                                      (LinkedBlockingQueue.))))
+
+   (are [a b] (not (equiv? a b))
+        (literal-executor-service
+          :cat
+          (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
+        (literal-executor-service
+          :dog
+          (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
+       
+        (literal-executor-service
+          :cat
+          (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
+        (literal-executor-service
+          :cat
+          (ThreadPoolExecutor. 1 2 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
+        
+        (literal-executor-service
+          :cat
+          (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
+        (literal-executor-service
+          :cat
+          (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 2)))))
+
+(deftest threadpool-service-test
+         (let [s (threadpool-service :cat {:queue-size 2})
+               x (atom 0)
+               run (fn []
+                     (let [p (promise)]
+                       (.execute s #(deliver p (swap! x inc)))
+                       @p))]
+           (is (thrown? RejectedExecutionException (run)))
+           (is (= 0 @x))
+
+           (logging/suppress "riemann.service" (.start! s))
+           (is (= 1 (run)))
+           (is (= 2 (run)))
+
+           (logging/suppress "riemann.service" (.stop! s))
+           (is (thrown? RejectedExecutionException (run)))
+           (is (= 2 @x))))

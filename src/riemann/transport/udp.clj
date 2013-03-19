@@ -14,7 +14,7 @@
            [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
-        [riemann.service       :only [Service]]
+        [riemann.service       :only [Service ServiceEquiv]]
         [riemann.transport     :only [handle
                                       channel-group
                                       protobuf-decoder
@@ -40,13 +40,14 @@
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
   
-  Service
+  ServiceEquiv
   ; TODO compare pipeline-factory!
   (equiv? [this other]
           (and (instance? UDPServer other)
                (= host (:host other))
                (= port (:port other))))
 
+  Service
   (reload! [this new-core]
            (reset! core new-core))
 

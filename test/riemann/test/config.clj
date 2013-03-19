@@ -5,14 +5,19 @@
   (:require [riemann.core :as core]
             [riemann.pubsub :as pubsub]
             [riemann.logging :as logging]
-            [riemann.streams :as streams]))
+            [riemann.service :as service]
+            [riemann.streams :as streams])
+  (:import (java.util.concurrent RejectedExecutionException)))
 
 (defn reset-core! [f]
-  (logging/suppress "riemann.core"
+  (logging/suppress ["riemann.core"
+                     "riemann.service"
+                     "riemann.pubsub"]
                     (clear!)
                     (core/stop! @core)
                     (reset! core (core/core))
                     (f)
+                    (core/stop! @core)
                     (clear!)
                     (reset! core (core/core))
                     (core/stop! @core)))
@@ -29,8 +34,39 @@
          (is (not= @core @next-core))
          (let [old-next-core @next-core]
            (apply!)
-           (is (= old-next-core @core))
+           ; Pubsub will be replaced by the old core's pubsub, but otherwise
+           ; we should be the same.
+           (is (= (dissoc old-next-core :pubsub)
+                  (dissoc @core :pubsub)))
            (is (not= @core @next-core))))
+
+(deftest service-test
+         (let [sleep (fn [_] (Thread/sleep 1))]
+           (testing "Adds an equivalent service to a core."
+                    (let [s1 (service! (service/thread-service :foo sleep))]
+                      (is s1)
+                      (apply!)
+                      (is (= (:services @core) [s1]))
+                      (let [s (service/thread-service :foo sleep)
+                            s2 (service! s)]
+                        (is (= s1 s2))
+                        (is (not= s s2))
+                        (apply!)
+                        (is (deref (:running s1)))
+                        (is (not (deref (:running s))))
+                        (is (= (:services @core) [s1])))))
+
+           (testing "Adds a distinct service to a core."
+                    (let [s1 (service! (service/thread-service :foo sleep))]
+                      (is s1)
+                      (apply!)
+                      (is (= (:services @core) [s1]))
+                      (let [s2 (service! (service/thread-service :bar sleep))]
+                        (is (not= s1 s2))
+                        (apply!)
+                        (is (not (deref (:running s1))))
+                        (is (deref (:running s2)))
+                        (is (= (:services @core) [s2])))))))
 
 (deftest tcp-server-test
          (tcp-server :host "a")
@@ -94,6 +130,20 @@
            (delete {:host 2 :state "bar"})
            (is (= (seq i) [{:host 1 :state "foo"}]))))
 
+(deftest async-queue-test
+         (let [out    (atom [])
+               p      (promise)
+               stream (async-queue! :test {}
+                                    (fn [event]
+                                      (swap! out conj event)
+                                      (deliver p nil)))]
+           (is (thrown? RejectedExecutionException
+                        (stream :foo)))
+           (apply!)
+           (stream :bar)
+           (deref p)
+           (is (= [:bar] @out))))
+
 (deftest subscribe-in-stream-test
          (let [received (promise)]
            (streams
@@ -112,5 +162,5 @@
            (apply!)
 
            ; Send outside streams
-           (pubsub/publish (:pubsub @core) :test "hi")
+           (pubsub/publish! (:pubsub @core) :test "hi")
            (is (= "hi" @received))))

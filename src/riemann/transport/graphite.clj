@@ -40,10 +40,9 @@
   "A closure which yields a graphite frame-decoder. Taking an argument
    which will be given to decode-graphite-line (hence the closure)"
   [parser-fn]
-  (fn []
-    (proxy [OneToOneDecoder] []
-      (decode [context channel message]
-        (decode-graphite-line message parser-fn)))))
+  (proxy [OneToOneDecoder] []
+    (decode [context channel message]
+      (decode-graphite-line message parser-fn))))
 
 (defn graphite-handler
   "Given a core and a MessageEvent, applies the message to core."

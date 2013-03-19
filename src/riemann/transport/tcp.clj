@@ -29,7 +29,7 @@
                                   shared-execution-handler
                                   channel-group
                                   channel-pipeline-factory]]
-        [riemann.service :only [Service]]
+        [riemann.service :only [Service ServiceEquiv]]
         [clojure.tools.logging :only [info warn]]
         [riemann.transport :only [handle]]))
 
@@ -74,13 +74,14 @@
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
-  Service
   ; TODO compare pipeline-factory!
+  ServiceEquiv
   (equiv? [this other]
           (and (instance? TCPServer other)
                (= host (:host other))
                (= port (:port other))))
   
+  Service
   (reload! [this new-core]
            (reset! core new-core))
 

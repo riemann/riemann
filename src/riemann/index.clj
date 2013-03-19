@@ -3,9 +3,16 @@
   to return the most recent indexed events matching some expression. Can expire
   events which have exceeded their TTL. Presently the only implementation of
   the index protocol is backed by a nonblockinghashmap, but I plan to add an
-  HSQLDB backend as well."
+  HSQLDB backend as well.
+  
+  Indexes must extend three protocols:
+  
+  Index: indexing and querying events
+  Seqable: returning a list of events
+  Service: lifecycle management"
   (:require [riemann.query :as query])
-  (:use [riemann.time :only [unix-time]])
+  (:use [riemann.time :only [unix-time]]
+         riemann.service)
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
 
 (defprotocol Index
@@ -32,7 +39,8 @@
   "Create a new nonblockinghashmap backed index"
   []
   (let [hm (NonBlockingHashMap.)]
-    (reify Index
+    (reify
+      Index
       (clear [this]
              (.clear hm))
 
@@ -63,7 +71,15 @@
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (.values hm))))))
+           (seq (.values hm)))
+
+      ServiceEquiv
+      (equiv? [this other] (= (class this) (class other)))
+
+      Service
+      (reload! [this new-core])
+      (start! [this])
+      (stop! [this]))))
 
 (defn index
   "Create a new index (currently: an nhbm index)"

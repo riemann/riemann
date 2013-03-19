@@ -5,7 +5,7 @@
             [riemann.index    :as index]
             [riemann.pubsub   :as p])
   (:use [riemann.common        :only [event-to-json]]
-        [riemann.service       :only [Service]]
+        [riemann.service       :only [Service ServiceEquiv]]
         [aleph.http            :only [start-http-server]]
         [lamina.core           :only [receive-all close enqueue]]
         [clojure.tools.logging :only [info warn]]
@@ -25,10 +25,12 @@
         params (http-query-map (:query-string hs))
         query  (params "query")
         pred   (query/fun (query/ast query))
-        sub    (p/subscribe (:pubsub core) topic
+        ; Subscribe persistently.
+        sub    (p/subscribe! (:pubsub core) topic
                             (fn [event]
                               (when (pred event)
-                                (enqueue ch (event-to-json event)))))]
+                                (enqueue ch (event-to-json event))))
+                             true)]
     (info "New websocket subscription to" topic ":" query)
     (receive-all ch (fn [msg]
                       (when-not msg
@@ -36,7 +38,7 @@
                         (info "Closing websocket "
                               (:remote-addr hs) topic query)
                         (close ch)
-                        (p/unsubscribe (:pubsub core) sub))))))
+                        (p/unsubscribe! (:pubsub core) sub))))))
 
 (defn ws-index-handler
   "Queries the index for events and streams them to the client. If subscribe is
@@ -66,12 +68,13 @@
               (close ch)))))
 
 (defrecord WebsocketServer [host port core server]
-  Service
+  ServiceEquiv
   (equiv? [this other]
           (and (instance? WebsocketServer other)
                (= host (:host other))
                (= port (:port other))))
 
+  Service
   (reload! [this new-core]
            (reset! core new-core))
 
@@ -95,6 +98,9 @@
 
   Options:
   :host   The address to listen on (default 127.0.0.1)
+          Currently does nothing; this option depends on an incomplete
+          feature in Aleph, the underlying networking library. Aleph will
+          currently bind to all interfaces, regardless of this value.
   :post   The port to listen on (default 5556)"
   ([] (ws-server {}))
   ([opts]

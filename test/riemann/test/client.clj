@@ -10,22 +10,25 @@
 (riemann.logging/init)
 
 (deftest reconnect
-         (suppress ["riemann.transport.tcp" "riemann.core"]
+         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
                    (let [server (tcp-server)
                          core   (transition! (core) {:services [server]})
                          client (tcp-client)]
+                     (-> client .transport .transport .reconnectDelay (.set 0))
                      (try
                        ; Initial connection works
                        (is (send-event client {:service "test"}))
 
                        ; Kill server; should fail.
                        (stop! core)
-                       (.setMinimumReconnectInterval client 0)
-                       (is (thrown? java.net.SocketException
+                       (is (thrown? java.io.IOException
                                     (send-event client {:service "test"})))
+                       
 
                        ; Restart server; should work
                        (start! core)
+                       (Thread/sleep 200)
+
                        (try
                          (send-event client {:service "test"})
                          (finally
@@ -37,7 +40,7 @@
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress ["riemann.transport.tcp" "riemann.core"]
+         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
            (let [index (index)
                  server (tcp-server core)
                  core   (transition! (core) {:services [server]
@@ -51,7 +54,6 @@
                (let [e (try (query client "invalid!")
                       (catch com.aphyr.riemann.client.ServerError e e))]
                  (is (= "parse error: invalid term \"invalid\"" (.getMessage e))))
-                 
                
                (finally
                  (close-client client)

@@ -6,7 +6,12 @@
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
-            incanter.stats))
+            [riemann.logging :as logging]
+            incanter.stats)
+  (:import (java.util.concurrent Executor
+                                 CountDownLatch)))
+
+(logging/init)
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
@@ -80,8 +85,20 @@
            (median events)
            (is (= (deref r) {:metric 0}))))
 
+(deftest smap*-test
+         (testing "passes nil values"
+                  (test-stream (smap* identity)
+                               [1 nil false 3]
+                               [1 nil false 3])))
+
 (deftest smap-test
-  (test-stream (smap inc) [6 3 -1] [7 4 0]))
+         (testing "increment"
+                  (test-stream (smap inc) [6 3 -1] [7 4 0]))
+         
+         (testing "ignores nil values"
+                  (test-stream (smap identity)
+                               [1 nil false 3]
+                               [1 false 3])))
 
 (deftest sdo-test
   (let [vals1   (atom [])
@@ -92,10 +109,69 @@
     (is (= @vals1 [1 2 3]))
     (is (= @vals2 [1 2 3]))))
 
+(deftest exception-stream-test
+         (testing "direct fn"
+                  (logging/suppress 
+                    ["riemann.streams" "riemann.test.streams"]
+
+                    (let [out        (atom [])
+                          exceptions (atom [])
+                          stream (exception-stream
+                                   #(swap! exceptions conj %)
+                                   (fn [e]
+                                     (swap! out conj e)
+                                     (throw 
+                                       (RuntimeException. "foo"))))]
+                      (stream :hi)
+
+                      (is (= @out [:hi]))
+                      (is (= 1 (count @exceptions)))
+                      (let [e (first @exceptions)]
+                        (is (= (:service e) "riemann exception"))
+                        (is (= (:state e)   "error"))
+                        (is (= (:time e)    0))
+                        (is (re-find #".*RuntimeException.*" (:description e)))
+                        (is (= #{"exception" "java.lang.RuntimeException"} 
+                               (set (:tags e))))))))
+
+         (testing "scheduled fn"
+                  (logging/suppress 
+                    "riemann.streams"
+                    (reset-time!)
+                    (let [e     (atom nil)
+                          s (exception-stream #(reset! e %)
+                                              (rate 1
+                                                    (fn [e] (/ 1 0))))]
+                      (s {:metric 2})
+                      (is (nil? @e))
+                      (advance! 1)
+                      (is (= "error" (:state @e)))))))
+
+(deftest execute-on-test
+         (let [output (atom [])
+               n      100
+               events (range n)
+               latch  (CountDownLatch. n)
+               stream (execute-on
+                        (reify Executor
+                          (execute [this task]
+                                   (future
+                                     (task)
+                                     (.countDown latch))))
+                        (fn [event]
+                          (swap! output conj event)))]
+
+           ; Run streams against events.
+           (dorun (map stream events))
+
+           ; Check that our event was applied to the conj stream.
+           (.await latch)
+           (is (= (set @output) (set events)))))
+
 (deftest sreduce-test
          (testing "explicit value"
                   (test-stream (sreduce + 1) [1 2 3] [2 4 7]))
-         
+
          (testing "implicit value"
                   (test-stream (sreduce +) [1 2 3 4] [3 6 10])))
 
@@ -369,90 +445,110 @@
                         (expire {}))))
          (is (= 2 ((where* (constantly 2)) :zoom))))
 
-(deftest where-field
-         (let [r (ref [])
-               s (where (or (state "ok" "good")
-                            (= "weird" state))
-                        (fn [e] (dosync (alter r conj e))))
-               events [{:state "ok"}
-                       {:state "good"}
-                       {:state "weird"}
-                       {:state "error"}]
-               expect [{:state "ok"}
-                       {:state "good"}
-                       {:state "weird"}]]
-           (doseq [e events] (s e))
-           (is (= expect (deref r)))))
+(deftest where-test
+         (testing "field"
+                  (let [r (ref [])
+                        s (where (or (state "ok" "good")
+                                     (= "weird" state))
+                                 (fn [e] (dosync (alter r conj e))))
+                        events [{:state "ok"}
+                                {:state "good"}
+                                {:state "weird"}
+                                {:state "error"}]
+                        expect [{:state "ok"}
+                                {:state "good"}
+                                {:state "weird"}]]
+                    (doseq [e events] (s e))
+                    (is (= expect (deref r)))))
 
-(deftest where-regex
-         (test-stream (where (service #"^foo"))
-                      [{}
-                       {:service "foo"}
-                       {:service "food"}]
-                      [{:service "foo"}
-                       {:service "food"}]))
+         (testing "regex"
+                  (test-stream (where (service #"^foo"))
+                               [{}
+                                {:service "foo"}
+                                {:service "food"}]
+                               [{:service "foo"}
+                                {:service "food"}]))
+        
+         (testing "functions"
+                  (test-stream (where (and metric (even? metric)))
+                               [{}
+                                {:metric 1}
+                                {:metric 2}]
+                               [{:metric 2}]))
 
-(deftest where-variable
-         ; Verify that the macro allows variables to be used in predicates.
-         (let [regex #"cat"]
-           (test-stream (where (service regex))
-                        [{:service "kitten"}
-                         {:service "cats"}]
-                        [{:service "cats"}])))
+         (testing "functions as values"
+                  ; May not support this later. I don't think it's all that
+                  ; useful given you can just use (even? metric).
+                  (test-stream (where (and metric (metric even?)))
+                               [{}
+                                {:metric 1}
+                                {:metric 2}]
+                               [{:metric 2}]))
 
-(deftest where-tagged
-         (let [r (ref [])
-               s (where (tagged "foo") (append r))
-               events [{}
-                       {:tags []}
-                       {:tags ["blah"]}
-                       {:tags ["foo"]}
-                       {:tags ["foo" "bar"]}]]
-           (doseq [e events] (s e))
-           (is (= (deref r)
-                  [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+         (testing "variable"
+                  ; Verify that the macro allows variables to be used in
+                  ; predicates.
+                  (let [regex #"cat"]
+                    (test-stream (where (service regex))
+                                 [{:service "kitten"}
+                                  {:service "cats"}]
+                                 [{:service "cats"}])))
 
-(deftest where-else
-         ; Where should take an else clause.
-         (let [a (atom [])
-               b (atom [])]
-           (run-stream
-             (where (service #"a")
-                    #(swap! a conj (:service %))
-                    (else #(swap! b conj (:service %))))
-             [{:service "cat"}
-              {:service "dog"}
-              {:service nil}
-              {:service "badger"}])
-           (is (= @a ["cat" "badger"]))
-           (is (= @b ["dog" nil]))))
 
-(deftest where-child-evaluated-once
-         ; Where should evaluate its children exactly once.
-         (let [x (atom 0)
-               s (where true (do (swap! x inc) identity))]
-           (is (= @x 1))
-           (s {:service "test"})
-           (is (= @x 1))
-           (s {:service "test"})
-           (is (= @x 1))))
+         (testing "tagged"
+                  (let [r (ref [])
+                        s (where (tagged "foo") (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
-(deftest where-return-value
-         ; Where's return value should be whether the predicate matched.
-         (is (= true  ((where (service "foo")) {:service "foo"})))
-         (is (= false ((where (service "foo")) {:service "bar"})))
-         (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
-         (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+         (testing "else"
+                  ; Where should take an else clause.
+                  (let [a (atom [])
+                        b (atom [])]
+                    (run-stream
+                      (where (service #"a")
+                             #(swap! a conj (:service %))
+                             (else #(swap! b conj (:service %))))
+                      [{:service "cat"}
+                       {:service "dog"}
+                       {:service nil}
+                       {:service "badger"}])
+                    (is (= @a ["cat" "badger"]))
+                    (is (= @b ["dog" nil]))))
 
-         (is (= true ((where (service "foo") 
-                             (fn [event] 2)) 
-                        {:service "foo"})))
-         (is (= false ((where (service "foo")
-                              (else (fn [event] 2)))
-                         {:service "bar"})))
-         
-         (is (= 2 ((where 2) :wheeee!)))
-         (is (= nil ((where nil) :zoooom!))))
+         (testing "evaluates children once"
+                  ; Where should evaluate its children exactly once.
+                  (let [x (atom 0)
+                        s (where true (do (swap! x inc) identity))]
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1))))
+
+         (testing "return value"
+                  ; Where's return value should be whether the predicate
+                  ; matched.
+                  (is (= true  ((where (service "foo")) {:service "foo"})))
+                  (is (= false ((where (service "foo")) {:service "bar"})))
+                  (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
+                  (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+
+                  (is (= true ((where (service "foo") 
+                                      (fn [event] 2)) 
+                                 {:service "foo"})))
+                  (is (= false ((where (service "foo")
+                                       (else (fn [event] 2)))
+                                  {:service "bar"})))
+
+                  (is (= 2 ((where 2) :wheeee!)))
+                  (is (= nil ((where nil) :zoooom!)))))
 
 (deftest default-kv
          (let [r (ref nil)
@@ -690,34 +786,47 @@
                        {:metric -3 :time 4}]))
 
 (deftest ddt-interval-test
-         ; Quick burst without crossing interval
-         (is (= (map :metric (run-stream-intervals 
-                               (ddt 0.1)
-                               [{:metric 1} nil {:metric 2} nil {:metric 3}]))
-                []))
+         (testing "Quick burst without crossing interval"
+                  (reset-time!)
+                  (is (= (map :metric (run-stream-intervals 
+                                        (ddt 0.1)
+                                        [{:metric 1} nil
+                                         {:metric 2} nil 
+                                         {:metric 3}]))
+                         [])))
 
-         ; 1 event per interval
-         (let [t0 (unix-time)]
-           (is (= (map :metric (run-stream-intervals
-                                 (ddt 0.1)
-                                 [{:metric -1 :time t0} 0.1
-                                  {:metric 0 :time (+ 1/10 t0)} 0.1
-                                  {:metric -5 :time (+ 2/10 t0)} 0.1]))
-                  [10 -50])))
+         (testing "1 event per interval"
+                  (reset-time!)
+                  (test-stream-intervals
+                    (ddt 1)
+                    ; Note that the swap occurs just prior to events at time 1.
+                    [{:time 0 :metric -1} 99/100
+                     {:time 1 :metric 0} 1
+                     {:time 2 :metric -5} 1]
+                    [{:time 1 :metric 1}
+                     {:time 2 :metric -5}]))
         
-         (reset-time!)
+         (testing "n events per interval"
+                  (reset-time!)
+                  (test-stream-intervals 
+                    (ddt 1)
+                    [{:time 0 :metric -1} 1/100
+                     {:time 1/2 :metric 100} 1/2 ; Ignored
+                     {:time 2/2 :metric 1} 1/2
+                     {:time 3/2 :metric nil} 1/2 ; Ignored
+                     {:time 4/2 :metric -3} 1/2]
+                    [{:time 2/2 :metric 2}
+                     {:time 4/2 :metric -4}]))
 
-         ; n events per interval
-         (let [t0 (unix-time)]
-           (is (= (map :metric (run-stream-intervals
-                                 (ddt 0.1)
-                                 [{:metric -1 :time t0} 0.01 ; counts
-                                  {:metric 100 :time (+ 1/20 t0)} 0.05
-                                  {:metric 1 :time (+ 2/20 t0)} 0.05
-                                  {:metric nil :time (+ 3/20 t0)} 0.05
-                                  {:metric -3 :time (+ 4/20 t0)} 0.05]))
-                  [20 -40])))
-         )
+         (testing "emits zeroes when no events arrive in an interval"
+                  (reset-time!)
+                  (test-stream-intervals (ddt 2)
+                                         [{:time 0 :metric 0} 1
+                                          {:time 1 :metric 1} 2
+                                          {:time 3 :metric 2} 3]
+                                         [{:time 2 :metric 1}
+                                          {:time 4 :metric 1/2}
+                                          {:time 6 :metric 0}])))
 
 (deftest rate-slow-even
          (let [output (ref [])

@@ -4,6 +4,7 @@
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
   (:require [riemann.core :as core]
+            [riemann.service :as service]
             [riemann.transport.tcp        :as tcp]
             [riemann.transport.udp        :as udp]
             [riemann.transport.websockets :as websockets]
@@ -37,32 +38,62 @@
   [& opts]
   (riemann.repl/start-server (apply hash-map opts)))
 
-(defn add-service!
-  "Adds a service to the next core."
+(defn service!
+  "Ensures that a given service, or its equivalent, is in the next core. If the
+  current core includes an equivalent service, uses that service instead.
+  Returns the service which will be used in the final core.
+  
+  This allows configuration to specify and use services in a way which can,
+  where possible, re-use existing services without interruption--e.g., when
+  reloading. For example, say you want to use a threadpool executor:
+
+  (let [executor (service! (ThreadPoolExecutor. 1 2 ...))]
+    (where (service \"graphite\")
+      (on executor
+        graph)))
+
+  If you reload this config, the *old* executor is busily processing messages
+  from the old set of streams. When the new config evaluates (service! ...)
+  it creates a new ThreadPoolExecutor and compares it to the existing core's
+  services. If it's equivalent, service! will re-use the *existing*
+  executor, which prevents having to shut down the old executor.
+
+  But if you *change* the dynamics of the new executor somehow--maybe by
+  adjusting a queue depth or max pool size--they won't compare as equivalent.
+  When the core transitions, the old executor will be shut down, and the new
+  one used to handle any further graphite events.
+  
+  Note: Yeah, this does duplicate some of the work done in core/transition!.
+  No, I'm not really sure what to do about it. Maybe we need a named service
+  registry so all lookups are dynamic. :-/"
   [service]
   (locking core
-    (swap! next-core assoc :services
-           (conj (:services @next-core) service))))
+    (let [service (or (first (filter #(service/equiv? service %)
+                                     (:services @core)))
+                      service)]
+      (swap! next-core assoc :services
+             (conj (:services @next-core) service))
+      service)))
 
 (defn tcp-server
   "Add a new TCP server with opts to the default core."
   [& opts]
-  (add-service! (tcp/tcp-server (apply hash-map opts))))
+  (service! (tcp/tcp-server (apply hash-map opts))))
 
 (defn graphite-server
   "Add a new Graphite TCP server with opts to the default core."
   [& opts]
-  (add-service! (graphite/graphite-server (apply hash-map opts))))
+  (service! (graphite/graphite-server (apply hash-map opts))))
 
 (defn udp-server
   "Add a new UDP server with opts to the default core."
   [& opts]
-  (add-service! (udp/udp-server (apply hash-map opts))))
+  (service! (udp/udp-server (apply hash-map opts))))
 
 (defn ws-server
   "Add a new websockets server with opts to the default core."
   [& opts]
-  (add-service! (websockets/ws-server (apply hash-map opts))))
+  (service! (websockets/ws-server (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
@@ -105,20 +136,42 @@
   ([]
    (periodically-expire 10))
   ([& args]
-   (add-service! (apply core/reaper args))))
+   (service! (apply core/reaper args))))
+
+(defn async-queue!
+  "A stream which registers (using service!) a new threadpool-service with the
+  next core, and returns a stream which accepts events and applies those events
+  to child streams via the threadpool service.
+
+  WARNING: this function is not intended for dynamic use. It creates a new
+  executor service for *every* invocation. It will not start the executor
+  service until the current configuration is applied. Use sparingly and only at
+  configuration time--preferably once for each distinct IO-bound asynchronous
+  service.
+
+  Example:
+
+  (let [graph (async-queue! :graphite {:queue-size 100}
+                            (graphite {:host ...}))]
+    (streams
+      (where ... graph)))"
+  [name threadpool-service-opts & children]
+  (let [s (service! (service/threadpool-service name threadpool-service-opts))]
+    (apply execute-on s children)))
 
 (defn publish
   "Returns a stream which publishes events to the given channel. Uses this
   core's pubsub registry."
   [channel]
   (fn [event]
-    (pubsub/publish (:pubsub @core) channel event)))
+    (pubsub/publish! (:pubsub @core) channel event)))
 
 (defn subscribe
-  "Subscribes to the given channel with f, which will receive events. Uses this
-  core's pubsub registry."
+  "Subscribes to the given channel with f, which will receive events. Uses the
+  current core's pubsub registry always, because the next core's registry will
+  be discarded by core/transition."
   [channel f]
-  (pubsub/subscribe (:pubsub @next-core) channel f))
+  (pubsub/subscribe! (:pubsub @core) channel f))
 
 (defn clear!
   "Resets the next core."
@@ -194,5 +247,4 @@
   (let [path (config-file-path path)]
     (binding [*config-file* path
               *ns* (find-ns 'riemann.config)]
-      (validate-config path)
-      (load-string (slurp path)))))
+      (load-file path))))
