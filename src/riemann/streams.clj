@@ -1469,7 +1469,7 @@ OA
 (defn runs
   "Usable to perform flap detection, runs examines a moving-event-window of
   n events and determines if :field is the same across all them. If it is,
-  runs passes on the *first* event of the window. In practice, this can be 
+  runs passes on the last (newest) event of the window. In practice, this can be 
   used nested within a (changed-state ...) to reduce 'flappiness' for 
   state changes.
 
