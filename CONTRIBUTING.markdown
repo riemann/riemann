@@ -19,7 +19,7 @@ Cloning official repo:
     git clone git://github.com/aphyr/riemann.git
     cd riemann
 
-You'll also need a JVM, and leiningen 2--the Clojure build system.  [Leiningen 2 installation instructions](https://github.com/technomancy/leiningen#installation)
+You'll also need a JVM, and leiningen 2--the Clojure build system.  [Leiningen 2 installation instructions](https://github.com/technomancy/leiningen#installation).  Running `lein test` will install all the clojure prerequisites.
 
 ## Leiningen commands:
 
@@ -48,17 +48,21 @@ Riemann will read the file `riemann.config` in the current directory. If you wan
 
 This builds target/riemann-{version}-STANDALONE.jar.  Copy this jar as needed.
 
-### Build tarball, debian packages, and md5sums:
+### Build tarball, debian and rpm packages, and md5sums:
 
+    # builds debian, rpm, tarball.  requires rpm,...
     lein pkg
 
-.debs and .tar.gz files, plus md5sums, will appear in target/
+    # tarball only
+    lein tar
+
+.debs, .rpms and .tar.gz files, plus md5sums, will appear in target/
 
 ## protocol buffer and clojure client
 
 The protocol buffer codec and clojure client live in riemann-clojure-client, which wraps the java protobuf code and java client in riemann-java-client. Both of these are available on clojars and most of the time you can ignore them.
 
-However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [clojure client](https://gitub.com/)
+However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [riemann clojure client](https://github.com/aphyr/riemann-clojure-client)
 
 ## Building `riemann-java-client`
 
