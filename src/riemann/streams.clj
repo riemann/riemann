@@ -1466,6 +1466,24 @@ OA
          (condp ~pred (valuefn# ~event-sym)
            ~@condp-clauses)))))
 
+(defn runs
+  [len-run field & children]
+  "Usable to perform flap detection, runs examines a moving-event-window of
+  n events and determines if :field is the same across all them. If it is,
+  runs passes on the *first* event of the window. In practice, this can be 
+  used nested within a (changed-state ...) to reduce 'flappiness' for 
+  state changes.
+
+  (runs 3 :state prn) ; Print events where there are 3-in-a-row of a state."
+  (moving-event-window
+    len-run
+    (smap
+      (fn [events]
+        (if (apply = (map field events))
+          (first events)))
+      (apply sdo children))))
+
+
 (defn project*
   "Like project, but takes predicate *functions* instead of where expressions."
   [predicates & children]
