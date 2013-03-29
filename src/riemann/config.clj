@@ -100,7 +100,7 @@
   [& things]
   (locking core
     (swap! next-core assoc :streams
-           (concat (:streams @next-core) things))))
+           (reduce conj (:streams @next-core) things))))
 
 (defn index
   "Set the index used by this core. Returns the index."
