@@ -84,7 +84,7 @@ do_reload() {
   # restarting (for example, when it is sent a SIGHUP),
   # then implement that here.
   #
-  start-stop-daemon --stop --quiet --signal 1 --pidfile $PIDFILE
+  start-stop-daemon --stop --quiet --signal HUP --pidfile $PIDFILE
   return $?
 }
 
