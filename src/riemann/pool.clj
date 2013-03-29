@@ -1,7 +1,7 @@
 (ns riemann.pool
   "A generic thread-safe resource pool."
   (:use clojure.tools.logging)
-  (:import [java.util.concurrent ArrayBlockingQueue TimeUnit]))
+  (:import [java.util.concurrent LinkedBlockingQueue TimeUnit]))
 
 ; THIS IS A MUTABLE STATE OF AFFAIRS. WHICH IS TO SAY, IT IS FUCKING TERRIBLE.
 
@@ -73,7 +73,7 @@
          regenerate-interval  (or (:regenerate-interval opts) 5)
          block-start          (or (:block-start opts) true)
          pool (FixedQueuePool.
-                (ArrayBlockingQueue. size true)
+                (LinkedBlockingQueue. size)
                 open
                 close
                 regenerate-interval)
