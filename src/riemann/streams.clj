@@ -1467,7 +1467,6 @@ OA
            ~@condp-clauses)))))
 
 (defn runs
-  [len-run field & children]
   "Usable to perform flap detection, runs examines a moving-event-window of
   n events and determines if :field is the same across all them. If it is,
   runs passes on the *first* event of the window. In practice, this can be 
@@ -1475,6 +1474,7 @@ OA
   state changes.
 
   (runs 3 :state prn) ; Print events where there are 3-in-a-row of a state."
+  [len-run field & children]
   (moving-event-window
     len-run
     (smap
