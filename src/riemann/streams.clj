@@ -1480,7 +1480,7 @@ OA
     (smap
       (fn [events]
         (if (apply = (map field events))
-          (first events)))
+          (last events)))
       (apply sdo children))))
 
 
