@@ -44,8 +44,7 @@ do_start()
   #   0 if daemon has been started
   #   1 if daemon was already running
   #   2 if daemon could not be started
-  start-stop-daemon --start --quiet --chuid $DAEMON_USER --chdir / --make-pidfile --background --pidfile $PIDFILE --exec $DAEMON --test > /dev/null \
-    || return 1
+  start-stop-daemon --status --pidfile $PIDFILE && (log_daemon_msg "Riemann is already running (PID `cat ${PIDFILE}`)"; return 1)
   start-stop-daemon --start --quiet --chuid $DAEMON_USER --chdir / --make-pidfile --background --pidfile $PIDFILE --exec $DAEMON -- \
     $DAEMON_ARGS \
     || return 2
