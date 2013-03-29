@@ -19,7 +19,7 @@ Cloning official repo:
     git clone git://github.com/aphyr/riemann.git
     cd riemann
 
-You'll also need a JVM, and leiningen 2--the Clojure build system.  [Leiningen 2 installation instructions](https://github.com/technomancy/leiningen#installation)
+You'll also need a JVM, and leiningen 2--the Clojure build system.  [Leiningen 2 installation instructions](https://github.com/technomancy/leiningen#installation).  Running `lein test` will install all the clojure prerequisites.
 
 ## Leiningen commands:
 
@@ -48,11 +48,15 @@ Riemann will read the file `riemann.config` in the current directory. If you wan
 
 This builds target/riemann-{version}-STANDALONE.jar.  Copy this jar as needed.
 
-### Build tarball, debian packages, and md5sums:
+### Build tarball, debian and rpm packages, and md5sums:
 
+    # builds debian, rpm, tarball.  requires rpm,...
     lein pkg
 
-.debs and .tar.gz files, plus md5sums, will appear in target/
+    # tarball only
+    lein tar
+
+.debs, .rpms and .tar.gz files, plus md5sums, will appear in target/
 
 ## protocol buffer and clojure client
 
