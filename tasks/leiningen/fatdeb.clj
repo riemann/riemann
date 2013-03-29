@@ -49,7 +49,7 @@
               :section "base"
               :priority "optional"
               :architecture "all"
-              :depends "bash"
+              :depends (join ", " ["bash" "default-jre | java2-runtime"])
               :maintainer (:email (:maintainer project))
               :description (:description project)})))
 
