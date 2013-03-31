@@ -102,7 +102,7 @@
 
 (defn product
   "Multiplies events. Returns the first event with a metric, with its metric
-  being the proiduct of all events with metrics."
+  being the product of all events with metrics."
   [events]
   (fold * events))
 
