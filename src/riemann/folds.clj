@@ -120,9 +120,9 @@
   (fold-all - events))
 
 (defn quotient*
-  "Divides events. Returns the first event, with its metric multiplied by the
-  metrics of all subsequent events. Like quotient, but throws when any metric
-  is nil or a divisor is zero."
+  "Divides events. Returns the first event, with its metric divided by the
+  product of the metrics of all subsequent events. Like quotient, but throws
+  when any metric is nil or a divisor is zero."
   [events]
   (fold* / events))
 
@@ -132,7 +132,7 @@
   [events]
   (when-let [event (first events)]
     (try
-      (fold-all / events) 
+      (fold-all / events)
       (catch ArithmeticException e
         (merge event
                {:metric nil
