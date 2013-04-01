@@ -1259,6 +1259,27 @@
          (test-stream (fixed-event-window 2) [1 2] [[1 2]])
          (test-stream (fixed-event-window 2) [1 2 3 4 5] [[1 2] [3 4]]))
 
+(deftest runs-test
+         ;; Zero-width runs
+         (test-stream (runs 0 :state)
+                      []
+                      [])
+
+         (test-stream (runs 0 :state)
+                      [{:state 2} {:state 3} {:state 4}]
+                      [])
+
+         ;; n-width runs
+         (test-stream (runs 3 :state)
+                      [{:state 1} {:state 2} {:state 2}]
+                      [])
+
+         (test-stream (runs 3 :state)
+                      [{:state 1} {:state 1} {:metric "0.5" :state 2} {:metric "0.6" :state 2} {:state 3} {:state 4 :metric "5.0"} {:state 4 :metric "5.1"} {:state 4 :metric "5.2"}]
+                      [{:state 4 :metric "5.2"}]
+                      )
+  )
+
 (deftest moving-time-window-test
          ; Zero-second windows.
          (test-stream (moving-time-window 0) [] [])
