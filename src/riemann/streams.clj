@@ -1479,8 +1479,9 @@ OA
     len-run
     (smap
       (fn [events]
-        (if (apply = (map field events))
-          (last events)))
+        (if (>= (count events) len-run 1)
+          (if (apply = (map field events))
+              (last events))))
       (apply sdo children))))
 
 
