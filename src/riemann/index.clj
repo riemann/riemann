@@ -52,12 +52,16 @@
 
       (expire [this]
               (filter
-                (fn [{:keys [ttl time] :or {:ttl default-ttl} :as state}]
-                  (let [age (- (unix-time) time)]
-                    (when (> age ttl)
-                      (delete this state)
-                      true)))
-                (.values hm)))
+               (fn [{:keys [ttl time]
+                     :or {ttl default-ttl
+                          time (unix-time)}
+                     :as state}]
+                 (when )
+                 (let [age (- (unix-time) time)]
+                   (when (> age ttl)
+                     (delete this state)
+                     true)))
+               (.values hm)))
 
       (search [this query-ast]
               "O(n), sadly."
