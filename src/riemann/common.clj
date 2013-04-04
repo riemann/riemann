@@ -158,3 +158,72 @@
   (not-any? (fn [e]
              (some (fn [r] (= e r)) a))
            b))
+
+; composing human-readable messages
+(defn human-uniq
+  "Returns a human-readable string describing things, e.g.
+
+  importer
+  api1, api2, api4
+  23 services"
+  [things, type]
+  (let [things (distinct things)]
+    (case (count things)
+      0 nil
+      1 (first things)
+      2 (str (first things) " and " (nth things 1))
+      3 (join ", " things)
+      4 (join ", " things)
+      (str (count things) " " type))))
+
+(defn subject
+  "Constructs a subject line for a set of events."
+  [events]
+  (join " " (keep identity
+        [(human-uniq (map :host events) "hosts")
+         (human-uniq (map :service events) "services")
+         (human-uniq (map :state events) "states")])))
+
+(defn body
+  "Constructs a message body for a set of events."
+  [events]
+  (join "\n\n\n"
+        (map
+          (fn [event]
+            (str
+              "At " (time-at (:time event)) "\n"
+              (:host event) " "
+              (:service event) " "
+              (:state event) " ("
+              (:metric event) ")\n"
+              "Tags: [" (join ", " (:tags event)) "]"
+              "\n\n"
+              (:description event)))
+          events)))
+
+(defn count-string-bytes [s]
+  (count (.getBytes s)))
+
+(defn count-character-bytes [c]
+  (count-string-bytes (.toString c)))
+
+(defn truncate [s n]
+  (if (<= n 0)
+    ""
+    (if (> (count s) n)
+      (.substring s 0 n)
+      s)))
+
+(defn truncate-bytes [s n]
+  (let [summed (reduce
+                (fn [memo v]
+                  (if (> (:sum memo) n)
+                    memo
+                    {:sum (+ (:sum memo) (count-character-bytes v))
+                     :i (inc (:i memo))}))
+                {:sum 0 :i 0}
+                s)
+        cutoff (if (> (:sum summed) n)
+            (dec (:i summed))
+            (:i summed))]
+    (truncate s cutoff)))

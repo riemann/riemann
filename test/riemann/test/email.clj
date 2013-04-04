@@ -1,36 +1,17 @@
 (ns riemann.test.email
   (:use [riemann.time :only [unix-time]]
         riemann.email
+        [riemann.logging :only [suppress]]
         clojure.test))
 
-(deftest subject
-         (let [s #'riemann.email/subject]
-           (are [events subject] (= (s events) subject)
-                [] ""
-                
-                [{}] ""
-                
-                [{:host "foo"}] "foo"
-                
-                [{:host "foo"} {:host "bar"}] "foo and bar"
-                
-                [{:host "foo"} {:host "bar"} {:host "baz"}]
-                "foo, bar, baz"
-                
-                [{:host "foo"} {:host "baz"} {:host "bar"} {:host "baz"}]
-                "foo, baz, bar"
+(riemann.logging/init)
 
-                [{:host 1} {:host 2} {:host 3} {:host 4} {:host 5}]
-                "5 hosts"
-                
-                [{:host "foo" :state "ok"}] "foo ok"
-                
-                [{:host "foo" :state "ok"} {:host "bar" :state "ok"}] 
-                "foo and bar ok"
-               
-                [{:host "foo" :state "error"} {:host "bar" :state "ok"}]
-                "foo and bar error and ok"
-                )))
+(deftest deprecated-funcs-test
+         "Test that deprecated funcs are callable"
+         (suppress ["riemann.email"]
+                   (#'riemann.email/human-uniq [] nil)
+                   (#'riemann.email/subject [])
+                   (#'riemann.email/body [])))
 
 (deftest override-formatting-test
          (let [a (promise)]

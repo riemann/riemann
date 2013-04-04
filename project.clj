@@ -21,9 +21,8 @@
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
-    [aleph "0.3.0-beta15"
-     :exclusions [com.yammer.metrics/metrics-core]]
-    [com.yammer.metrics/metrics-core "3.0.0-20130318.142009-8"]
+    [aleph "0.3.0-beta15"]
+    [lamina "0.5.0-beta15"]
     [clj-http "0.4.1"]
     [cheshire "5.0.0"]
     [clj-librato "0.0.2"]
