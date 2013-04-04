@@ -6,8 +6,7 @@
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods"]
   :repositories {
-                 "boundary-site" "http://maven.boundary.com/artifactory/repo"
-                 "sonatype-snaps" "http://oss.sonatype.org/content/repositories/snapshots"
+    "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
