@@ -21,10 +21,16 @@
 (defn- truncate-body [s]
   (truncate-bytes s max-body-bytes))
 
+(defn- try-formatting [msg-opts events key default-formatter]
+  (let [formatter (get msg-opts key default-formatter)]
+    (if (ifn? formatter)
+      (formatter events)
+      formatter)))
+
 (defn- compose-message [msg-opts events]
   (let [events  (flatten [events])
-        subject ((get msg-opts :subject subject) events)
-        body    ((get msg-opts :body body) events)
+        subject (try-formatting msg-opts events :subject riemann.common/subject)
+        body    (try-formatting msg-opts events :body riemann.common/body)
         msg-opts (merge msg-opts {:subject subject :body body})]
     {:arns (flatten [(:arn msg-opts)])
      :subject (truncate-subject (:subject msg-opts))

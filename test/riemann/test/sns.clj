@@ -43,6 +43,14 @@
     (is (<= (count-string-bytes (nth @a 1)) 8092))
     (is (<= (count-string-bytes (nth @a 2)) 100))))
 
+(deftest sns-publisher-static-subject-overriding-test
+  (let [a (promise)
+        sns (sns-publisher fake-aws-opts {:subject "something went wrong"})
+        stream (sns "test:arn")]
+    (with-redefs [riemann.sns/aws-sns-publish #(deliver a [%2 %3 %4])]
+      (stream fake-event))
+    (is (= @a ["test:arn" fake-event-body "something went wrong"]))))
+
 (deftest sns-publisher-sync-test
   (let [a (promise)
         sns (sns-publisher fake-aws-opts)
