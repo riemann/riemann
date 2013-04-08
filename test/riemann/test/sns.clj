@@ -21,24 +21,24 @@
                           "\nlocalhost sns test ok (2.71828)\nTags: []\n\nall clear, uh, situation normal"))
 
 (deftest override-formatting-test
-  (let [a (promise)]
-    (with-redefs [clj-aws.sns/publish #(deliver a [%2 %3 %4])]
-      (sns-publish {} {:body (fn [events]
-                               (apply str "body " 
-                                      (map :service events)))
-                       :subject (fn [events] 
-                                  (apply str "subject " 
-                                         (map :service events)))
-                       :arn ["my:arn"]}
-                   {:service "foo"}))
-    (is (= @a ["my:arn" "subject foo" "body foo"]))))
+  (let [message (#'riemann.sns/compose-message
+                 {:body (fn [events]
+                          (apply str "body " 
+                                 (map :service events)))
+                  :subject (fn [events] 
+                             (apply str "subject " 
+                                    (map :service events)))
+                  :arn ["my:arn"]}
+                 {:service "foo"})]
+    (is (= message {:arns (list "my:arn") :body "body foo" :subject "subject foo"}))))
 
-(deftest is-subject-truncated-test
+(deftest is-message-truncated-test
   (let [a (promise)]
     (with-redefs [clj-aws.sns/publish #(deliver a [%2 %3 %4])]
       (sns-publish {} {:arn ["my:arn"]}
-                   {:service (apply str (repeat 101 "あ")) :time 0}))
-    (is (<= (count-string-bytes (second @a)) 100))))
+                   {:service (apply str (repeat 8093 "あ")) :time 0}))
+    (is (<= (count-string-bytes (nth @a 1)) 100))
+    (is (<= (count-string-bytes (nth @a 2)) 8092))))
 
 (deftest sns-publisher-test
   (let [a (promise)

@@ -16,22 +16,24 @@
 (defn- truncate-body [s]
   (truncate-bytes s max-body-bytes))
 
+(defn- compose-message [msg-opts events]
+  (let [events  (flatten [events])
+        subject ((get msg-opts :subject subject) events)
+        body    ((get msg-opts :body body) events)
+        msg-opts (merge msg-opts {:subject subject :body body})]
+    {:arns (flatten [(:arn msg-opts)])
+     :subject (truncate-subject (:subject msg-opts))
+     :body (truncate-body (:body msg-opts))}))
+
 (defn sns-publish
   "Send an event, or a sequence of events, with the given aws and msg
   options."
   [aws-opts msg-opts events]
-  (let [
-        creds (clj-aws.core/credentials (:access-key aws-opts) (:secret-key aws-opts))
+  (let [creds (clj-aws.core/credentials (:access-key aws-opts) (:secret-key aws-opts))
         client (if (nil? (:region aws-opts))
                  (clj-aws.sns/client creds)
                  (clj-aws.sns/client creds :region (:region aws-opts)))
-        events  (flatten [events])
-        subject ((get msg-opts :subject subject) events)
-        body    ((get msg-opts :body body) events)
-        msg-opts (merge msg-opts {:subject subject :body body})
-        arns    (flatten [(:arn msg-opts)])
-        subject (truncate-subject (:subject msg-opts))
-        body    (truncate-body (:body msg-opts))]
+        {arns :arns subject :subject body :body} (compose-message msg-opts events)]
     (doseq [arn arns]
        (clj-aws.sns/publish client arn subject body))))
 
