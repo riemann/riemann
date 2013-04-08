@@ -1,3 +1,31 @@
+# Version 0.2.1
+
+This is a small maintenance release to address a few issues with 0.2.0: most
+notably, an accidental transitive dependency on a snapshot release of Yammer
+Metrics which is no longer available.
+
+## New features
+
+- streams/runs: detects runs of successive events.
+
+## Improvements
+
+- Various documentation fixes.
+- Riemann.pool uses a LinkedBlockingQueue--reports improved performance.
+
+## Bugfixes
+
+- Fix dependencies on Aleph and Lamina which relied on a snapshot variant of
+  Yammer Metrics.
+- Debian package init script reports "already running" when appropriate.
+- Debian package depends on Java.
+- (streams core) is no longer lazy (fixes a possible threading issue).
+
+## Internals
+
+- Some utility functions for emails got moved to riemann.common, to facilitate
+  their re-use.
+
 # Version 0.2.0
 
 Guess it's time we started a formal changelog. Version 0.2.0 is a fairly major
