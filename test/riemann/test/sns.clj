@@ -4,9 +4,21 @@
         riemann.sns
         clojure.test))
 
-(def access-key-id     (System/getenv "AWS_ACCESS_KEY_ID"))
-(def secret-access-key (System/getenv "AWS_SECRET_ACCESS_KEY"))
-(def arn               (System/getenv "AWS_SNS_TOPIC"))
+(def env-access-key-id     (System/getenv "AWS_ACCESS_KEY_ID"))
+(def env-secret-access-key (System/getenv "AWS_SECRET_ACCESS_KEY"))
+(def env-region            (System/getenv "AWS_REGION"))
+(def env-arn               (System/getenv "AWS_SNS_TOPIC"))
+(def fake-aws-opts {:access-key "access-key" :secret-key "secret-key" :region :ap-north})
+(def fake-event {:host "localhost"
+                 :service "sns test"
+                 :state "ok"
+                 :description "all clear, uh, situation normal"
+                 :metric 2.71828
+                 :time 0})
+(def fake-event-subject "localhost sns test ok")
+(def fake-event-body (str "At "
+                          (time-at 0)
+                          "\nlocalhost sns test ok (2.71828)\nTags: []\n\nall clear, uh, situation normal"))
 
 (deftest override-formatting-test
   (let [a (promise)]
@@ -30,39 +42,25 @@
 
 (deftest sns-publisher-test
   (let [a (promise)
-        sns (sns-publisher {:access-key "riemann-test"
-                            :secret-key "secret"
-                            :region :ap-north})
+        sns (sns-publisher fake-aws-opts)
         stream (sns "test:arn")]
     (with-redefs [clj-aws.sns/publish #(deliver a [%2 %3 %4])]
-      (stream {:host "localhost"
-               :service "sns test"
-               :state "ok"
-               :description "all clear, uh, situation normal"
-               :metric 2.71828
-               :time 0}))
-    (is (= @a [
-               "test:arn"
-               "localhost sns test ok"
-               (str "At "
-                    (time-at 0)
-                    "\nlocalhost sns test ok (2.71828)\nTags: []\n\nall clear, uh, situation normal")]))))
+      (stream fake-event))
+    (is (= @a ["test:arn" fake-event-subject fake-event-body]))))
 
 (deftest ^:sns ^:integration sns-test
-  (when-not access-key-id
+  (when-not env-access-key-id
     (println "export AWS_ACCESS_KEY_ID=\"...\" to run :sns tests."))
-  (when-not secret-access-key
+  (when-not env-secret-access-key
     (println "export AWS_SECRET_ACCESS_KEY=\"...\" to run :sns tests."))
-  (when-not arn
+  (when-not env-region
+    (println "export AWS_REGION=\"...\" to run :sns tests."))
+  (when-not env-arn
     (println "export AWS_SNS_TOPIC=\"...\" to run :sns tests."))
 
-  (let [sns (sns-publisher {:access-key access-key-id
-                            :secret-key secret-access-key
-                            :region :ap-north})
-        stream (sns arn)]
-    (stream {:host "localhost"
-             :service "sns test"
-             :state "ok"
-             :description "all clear, uh, situation normal"
-             :metric 3.14159
-             :time (unix-time)})))
+  (let [sns (sns-publisher {:access-key env-access-key-id
+                            :secret-key env-secret-access-key
+                            :region env-region})
+        stream (sns env-arn)
+        event (merge fake-event {:time (unix-time)})]
+    (stream event)))
