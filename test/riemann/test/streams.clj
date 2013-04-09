@@ -1345,3 +1345,29 @@
                       [[{:time 5} {:time 6}]
                        [{:time 8} {:time 8}]
                        [{:time 9}]]))
+
+(deftest part-time-simple-test
+         ; Record windows of [start-time e1 e2 e3 end-time]
+         (advance! 1)
+         (let [effects (atom [])
+               p (part-time-simple 5
+                   (fn [] [(unix-time)])
+                   conj
+                   #(swap! effects conj (conj % (unix-time))))]
+           (advance! 1) (p :t1)
+           (advance! 2) (p :t2)
+           (advance! 4) (p :t4)
+           (advance! 5) (p :t5)
+           (advance! 6) (p :t6)
+           (advance! 8) (p :t8)
+           (advance! 9) (p :t9)
+           (advance! 99) (p :t99)
+           (advance! 100) (p :t100)
+           (advance! 101) (p :t101)
+           (advance! 102) (p :t102)
+           (advance! 200)
+           (is (= @effects
+                  [[1 :t1 :t2 :t4 :t5 6]
+                  [6 :t6 :t8 :t9 11]
+                  [99 :t99 :t100 101]
+                  [101 :t101 :t102 106]]))))
