@@ -494,11 +494,6 @@ OA
   nothing. (create) may be invoked partway through a window, and should be
   idempotent, as it will be run inside of (swap!).
 
-  IMPORTANT: part-time-simple is analogous to, but not the same as,
-  part-time-fast. Part-time-fast ignored the return value of (add) and expected
-  that (add) would mutate its own state. Part-time-simple handles state for
-  you: (add state event) is expected to return the new state.
-
   Concurrency guarantees:
   
   (create) may be called multiple times for a given time slice.
