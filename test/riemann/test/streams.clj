@@ -1088,24 +1088,26 @@
                         [(a 1) (b 2) (c 3) (d 4)         (a 2)          (b 3)  (c 4) (d 5)]
                         [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])))
 
-(deftest throttle-test
-         (let [out (ref [])
-               quantum 0.1
-               stream (throttle 5 quantum (append out))
-               t1 (unix-time)]
-           
-           (doseq [state (take 100000 (repeat {:state "foo"}))]
-             (stream state))
-
-           (let [dt (- (unix-time) t1)
-                 slices (inc (quot dt quantum))
-                 maxcount (* slices 5)
-                 count (count (deref out))]
-
-             ; Depending on whether we fell exactly on the interval boundary...
-             ; ugh I hate testing this shit
-             (is (approx-equal count maxcount 0.01))
-             (is (zero? (mod count 5))))))
+(deftest ^:focus throttle-test
+         (test-stream-intervals (throttle 3 2)
+                                [{:state "1"} 0
+                                 {:state "2"} 0
+                                 {:state "3"} 1       ; t = 0 
+                                 {:state "4"} 1       ; t = 1
+                                 {:state "5"} 1       ; t = 2
+                                 {:state "expired"} 0 ; t = 3
+                                 {:state "expired"} 0 ; t = 3
+                                 {:state "expired"} 2 ; t = 3
+                                 {:state "expired"} 100] ; t = 5
+                                [{:state "1"}
+                                 {:state "2"}
+                                 {:state "3"}
+                                 
+                                 {:state "5"}
+                                 {:state "expired"}
+                                 {:state "expired"}
+                                 
+                                 {:state "expired"}]))
 
 (deftest rollup-test
          (testing "basic rollups"

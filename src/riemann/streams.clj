@@ -486,48 +486,62 @@ OA
   "Divides wall clock time into discrete windows. Returns a stream. Whenever
   events arrive in a given window, calls (create) to generate some initial
   state for that window, and uses (add state event) to combine events with that
-  state. At the end of the window, calls (finish state).
+  state. At the end of the window, calls (finish state window-start-time
+  window-end-time).
   
   Does not treat expired events differently; ticks will still be scheduled even
   if an expired event arrives. When no events arrive in a given window, does
   nothing. (create) may be invoked partway through a window, and should be
   idempotent, as it will be run inside of (swap!).
 
+  IMPORTANT: part-time-simple is analogous to, but not the same as,
+  part-time-fast. Part-time-fast ignored the return value of (add) and expected
+  that (add) would mutate its own state. Part-time-simple handles state for
+  you: (add state event) is expected to return the new state.
+
   Concurrency guarantees:
   
   (create) may be called multiple times for a given time slice.
   (add)    when called, will receive exactly one distinct bucket in each time
-           slice.
+           slice. Will be called exactly once for each event.
   (finish) will be called *exactly once* for each time slice."
   [dt create add finish]
   (let [anchor (unix-time)
-        ; Whether or not the next tick has been scheduled, and the current
-        ; window.
-        state (atom [nil nil])
+        state (atom {})
         
         ; Called every dt seconds to flush the window.
         tick (fn tick []
-               (let [last-window (atom nil)]
-                 ; Reset the state to nil.
-                 (swap! state (fn [[_ window]]
-                                (reset! last-window window)
-                                [nil nil]))
-
+               (let [last-state (atom nil)
+                     ; Swap out the current state
+                     _ (swap! state (fn [state]
+                                      (reset! last-state state)
+                                      {}))
+                     s @last-state]
                  ; And finalize the last window
-                 (finish @last-window)))]
+                 (finish (:window s) (:start s) (:end s))))]
  
     (fn stream [event]
-      (let [[scheduled _] (swap! state (fn [[scheduled window]]
-                                      (if (nil? scheduled)
-                                        ; We're the first ones here.
-                                        [:first (add (create) event)]
-                                        
-                                        ; Some other thread has already
-                                        ; scheduled
-                                        [:done (add window event)])))]
-        (when (= :first scheduled)
+      ; Race to claim the first write to this window
+      (let [state (swap! state (fn [state]
+                                 (case (:scheduled state)
+                                   ; We're the first ones here.
+                                   nil (let [end (next-tick anchor dt)]
+                                         {:scheduled :first
+                                          :window    (create)
+                                          :start     (- end dt)
+                                          :end       end})
+
+                                   ; Someone else just claimed
+                                   :first (assoc state :scheduled :done)
+
+                                   ; No change
+                                   :done state)))]
+        ; Add event to window
+        (add (:window state) event)
+
+        (when (= :first (:scheduled state))
           ; We were the first thread to update this window.
-          (once! (next-tick anchor dt) tick))))))
+          (once! (:end state) tick))))))
 
 (defn fold-interval
   "Applies the folder function to all event-key values of events during
@@ -912,10 +926,10 @@ OA
 (defn throttle
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
-  (part-time-fast m
-    (fn setup [] (ref 0))
+  (part-time-simple m
+    (fn setup [] (atom 0))
     (fn add [sent event]
-      (when-not (dosync (< n (alter sent inc)))
+      (when-not (< n (swap! sent inc))
         (call-rescue event children)))
     (fn finish [sent start end])))
 
