@@ -1088,7 +1088,7 @@
                         [(a 1) (b 2) (c 3) (d 4)         (a 2)          (b 3)  (c 4) (d 5)]
                         [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])))
 
-(deftest ^:focus throttle-test
+(deftest throttle-test
          (test-stream-intervals (throttle 3 2)
                                 [{:state "1"} 0
                                  {:state "2"} 0
@@ -1352,10 +1352,11 @@
          ; Record windows of [start-time e1 e2 e3 end-time]
          (advance! 1)
          (let [effects (atom [])
-               p (part-time-simple 5
+               p (part-time-simple
+                   5
                    (fn [] [(unix-time)])
                    conj
-                   #(swap! effects conj (conj % (unix-time))))]
+                   (fn [window _ _] (swap! effects conj (conj window (unix-time)))))]
            (advance! 1) (p :t1)
            (advance! 2) (p :t2)
            (advance! 4) (p :t4)

@@ -483,60 +483,69 @@ OA
           (recur event))))))
 
 (defn part-time-simple
-  "Divides wall clock time into discrete windows. Returns a stream. Whenever
-  events arrive in a given window, calls (create) to generate some initial
-  state for that window, and uses (add state event) to combine events with that
-  state. At the end of the window, calls (finish state window-start-time
-  window-end-time).
-  
-  Does not treat expired events differently; ticks will still be scheduled even
-  if an expired event arrives. When no events arrive in a given window, does
-  nothing. (create) may be invoked partway through a window, and should be
-  idempotent, as it will be run inside of (swap!).
-
-  Concurrency guarantees:
-  
-  (create) may be called multiple times for a given time slice.
-  (add)    when called, will receive exactly one distinct bucket in each time
-           slice. Will be called exactly once for each event.
-  (finish) will be called *exactly once* for each time slice."
-  [dt create add finish]
-  (let [anchor (unix-time)
-        state (atom {})
-        
-        ; Called every dt seconds to flush the window.
-        tick (fn tick []
-               (let [last-state (atom nil)
-                     ; Swap out the current state
-                     _ (swap! state (fn [state]
-                                      (reset! last-state state)
-                                      {}))
-                     s @last-state]
-                 ; And finalize the last window
-                 (finish (:window s) (:start s) (:end s))))]
+  "Divides wall clock time into discrete windows. Returns a stream, composed
+  of four functions:
  
-    (fn stream [event]
-      ; Race to claim the first write to this window
-      (let [state (swap! state (fn [state]
-                                 (case (:scheduled state)
-                                   ; We're the first ones here.
-                                   nil (let [end (next-tick anchor dt)]
-                                         {:scheduled :first
-                                          :window    (create)
-                                          :start     (- end dt)
-                                          :end       end})
+  (create) Returns a new state for a given time window. Create must be a pure
+  function, as it will be invoked in a compare-and-set loop.
 
-                                   ; Someone else just claimed
-                                   :first (assoc state :scheduled :done)
+  (add state event) is called every time an event arrives to *combine* the
+  event and the state together, returning some new state. Merge must be a pure
+  function.
 
-                                   ; No change
-                                   :done state)))]
-        ; Add event to window
-        (add (:window state) event)
+  (side-effects state event) is called with the *resulting* state and the event
+  which just arrived, but will be called only once per event, and can be
+  impure. Its return value is used for the return value of the stream.
 
-        (when (= :first (:scheduled state))
-          ; We were the first thread to update this window.
-          (once! (:end state) tick))))))
+  (finish state start-time end-time) is called once at the end of each time
+  window, and receives the final state for that window, and also the start
+  and end times for that window. Finish will be called exactly once per window,
+  and may be impure."
+  ([dt create add finish]
+   (part-time-simple dt create add (fn [state event]) finish))
+  ([dt create add side-effects finish]
+   (let [anchor (unix-time)
+         state (atom {})
+
+         ; Called every dt seconds to flush the window.
+         tick (fn tick []
+                (let [last-state (atom nil)
+                      ; Swap out the current state
+                      _ (swap! state (fn [state]
+                                       (reset! last-state state)
+                                       {}))
+                      s @last-state]
+                  ; And finalize the last window
+                  (finish (:window s) (:start s) (:end s))))]
+
+     (fn stream [event]
+       ; Race to claim the first write to this window
+       (let [state (swap! state (fn [state]
+                                  (case (:scheduled state)
+                                    ; We're the first ones here.
+                                    nil (let [end (next-tick anchor dt)]
+                                          {:scheduled :first
+                                           :window    (add (create) event)
+                                           :start     (- end dt)
+                                           :end       end})
+
+                                    ; Someone else just claimed
+                                    :first (-> state
+                                             (assoc :scheduled :done)
+                                             (assoc :window (add (:window state)
+                                                                 event)))
+
+                                    ; No change
+                                    :done (assoc state :window
+                                                 (add (:window state) 
+                                                      event)))))]
+
+         (when (= :first (:scheduled state))
+           ; We were the first thread to update this window.
+           (once! (:end state) tick))
+
+         ; Side effects
+         (side-effects (:window state) event))))))
 
 (defn fold-interval
   "Applies the folder function to all event-key values of events during
@@ -922,9 +931,10 @@ OA
   "Passes on n events every m seconds. Drops events when necessary."
   [n m & children]
   (part-time-simple m
-    (fn setup [] (atom 0))
-    (fn add [sent event]
-      (when-not (< n (swap! sent inc))
+    (constantly 0)
+    (fn add [sent event] (inc sent))
+    (fn side-effects [sent event]
+      (when-not (< n sent)
         (call-rescue event children)))
     (fn finish [sent start end])))
 
