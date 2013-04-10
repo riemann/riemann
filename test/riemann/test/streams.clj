@@ -1115,6 +1115,7 @@
                     (rollup 2 1)
                     [ 1 0 2 0 3 1   4 0 5 0 6 0 7 1       :foo 10]
                     [[1] [2]   [3] [4]           [5 6 7] [:foo]  ]))
+         ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]] 
 
          (testing "expired events"
                   (reset-time!)
@@ -1354,9 +1355,10 @@
          (let [effects (atom [])
                p (part-time-simple
                    5
-                   (fn [] [(unix-time)])
+                   (fn [_] [])
                    conj
-                   (fn [window _ _] (swap! effects conj (conj window (unix-time)))))]
+                   (fn [window start end] (swap! effects conj
+                                                 (concat [start] window [end]))))]
            (advance! 1) (p :t1)
            (advance! 2) (p :t2)
            (advance! 4) (p :t4)
@@ -1372,5 +1374,5 @@
            (is (= @effects
                   [[1 :t1 :t2 :t4 :t5 6]
                   [6 :t6 :t8 :t9 11]
-                  [99 :t99 :t100 101]
+                  [96 :t99 :t100 101]
                   [101 :t101 :t102 106]]))))

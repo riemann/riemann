@@ -486,8 +486,10 @@ OA
   "Divides wall clock time into discrete windows. Returns a stream, composed
   of four functions:
  
-  (create) Returns a new state for a given time window. Create must be a pure
-  function, as it will be invoked in a compare-and-set loop.
+  (reset previous-state) Given the state for the previous window, returns a
+  fresh state for a new window. Reset must be a pure function, as it will be
+  invoked in a compare-and-set loop. Reset may be invoked at *any* time. Reset
+  will be invoked with nil when no previous state exists.
 
   (add state event) is called every time an event arrives to *combine* the
   event and the state together, returning some new state. Merge must be a pure
@@ -500,12 +502,14 @@ OA
   (finish state start-time end-time) is called once at the end of each time
   window, and receives the final state for that window, and also the start
   and end times for that window. Finish will be called exactly once per window,
-  and may be impure."
-  ([dt create add finish]
-   (part-time-simple dt create add (fn [state event]) finish))
-  ([dt create add side-effects finish]
+  and may be impure.
+  
+  When no events arrive in a given time window, no functions are called."
+  ([dt reset add finish]
+   (part-time-simple dt reset add (fn [state event]) finish))
+  ([dt reset add side-effects finish]
    (let [anchor (unix-time)
-         state (atom {})
+         state (atom {:window (reset nil)})
 
          ; Called every dt seconds to flush the window.
          tick (fn tick []
@@ -513,7 +517,7 @@ OA
                       ; Swap out the current state
                       _ (swap! state (fn [state]
                                        (reset! last-state state)
-                                       {}))
+                                       {:window (reset (:window state))}))
                       s @last-state]
                   ; And finalize the last window
                   (finish (:window s) (:start s) (:end s))))]
@@ -521,24 +525,23 @@ OA
      (fn stream [event]
        ; Race to claim the first write to this window
        (let [state (swap! state (fn [state]
-                                  (case (:scheduled state)
-                                    ; We're the first ones here.
-                                    nil (let [end (next-tick anchor dt)]
-                                          {:scheduled :first
-                                           :window    (add (create) event)
-                                           :start     (- end dt)
-                                           :end       end})
+                                  ; Add the event to our window.
+                                  (let [window (:window state)
+                                        state (assoc state :window
+                                                     (add window event))]
+                                    (case (:scheduled state)
+                                      ; We're the first ones here.
+                                      nil (let [end (next-tick anchor dt)]
+                                            (merge state
+                                                   {:scheduled :first
+                                                    :start (- end dt)
+                                                    :end end}))
 
-                                    ; Someone else just claimed
-                                    :first (-> state
-                                             (assoc :scheduled :done)
-                                             (assoc :window (add (:window state)
-                                                                 event)))
+                                      ; Someone else just claimed
+                                      :first (assoc state :scheduled :done)
 
-                                    ; No change
-                                    :done (assoc state :window
-                                                 (add (:window state) 
-                                                      event)))))]
+                                      ; No change
+                                      :done state))))]
 
          (when (= :first (:scheduled state))
            ; We were the first thread to update this window.
@@ -928,14 +931,18 @@ OA
            bottom-stream))))
 
 (defn throttle
-  "Passes on n events every m seconds. Drops events when necessary."
-  [n m & children]
-  (part-time-simple m
-    (constantly 0)
+  "Passes on n events every dt seconds. Drops events when necessary."
+  [n dt & children]
+  (part-time-simple
+    dt
+    (fn reset [_] 0)
+
     (fn add [sent event] (inc sent))
+    
     (fn side-effects [sent event]
       (when-not (< n sent)
         (call-rescue event children)))
+    
     (fn finish [sent start end])))
 
 (defn rollup
@@ -953,47 +960,28 @@ OA
 
     -> (f [4 5])"
   [n dt & children]
-  (let [anchor (unix-time)
-        state (atom {:sent 0
-                     :buffer []
-                     :flushed nil})
-        ; Flush buffer of events
-        flush (fn flush [state]
-                (if (empty? (:buffer state))
-                  (merge state {:sent 0
-                                :flushed nil})
-                  (merge state {:sent 1
-                                :buffer []
-                                :flushed (:buffer state)})))
-
-        ; Tick function; flushes buffer and invokes children.
-        tick (bound-fn tick []
-               (let [state (swap! state flush)]
-                 ; Reschedule another tick if necessary
-                 (when (= 1 (:sent state))
-                   (once! (next-tick anchor dt) tick))
-                 ; Flush any previously buffered events.
-                 (when (:flushed state)
-                   (call-rescue (:flushed state) children))))
-
-        ; Enqueue an event. Increments :sent until a critical threshold, then
-        ; starts storing events in buffer.
-        enqueue (fn enqueue [state event]
-                  (merge state {:sent (inc (:sent state))
-                                :flushed nil
-                                :buffer (if (< (:sent state) n)
-                                          (:buffer state)
-                                          (conj (:buffer state) event))}))]
+  (part-time-simple
+    dt
     
-    ; Stream: accept events and enqueue into state.
-    (fn stream [event]
-      (let [state (swap! state enqueue event)]
-        (when (= 1 (:sent state))
-          ; We claimed the right to set up the next tick.
-          (once! (next-tick anchor dt) tick))
-        (when (<= (:sent state) n)
-          ; We're clear to send immediately.
-          (call-rescue [event] children))))))
+    (fn reset [[sent buffer]]
+      (if (empty? buffer)
+        ; We didn't carry over any events from the last window
+        [0 []]
+        ; We did carry over events.
+        [1 []]))
+    
+    (fn add [[sent buffer] event]
+      (if (< sent n)
+        [(inc sent) buffer]
+        [(inc sent) (conj buffer event)]))
+
+    (fn side-effects [[sent buffer] event]
+      (when (<= sent n)
+        (call-rescue [event] children)))
+
+    (fn finish [[sent buffer] _ _]
+      (when-not (empty? buffer)
+        (call-rescue buffer children)))))
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
