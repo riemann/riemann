@@ -34,10 +34,11 @@
   (cleanup project)
   (sh "rm" (str (:root project) "/target/*.deb")))
 
+(def build-date (Date.))
 (defn get-version
   [project]
   (let [df   (SimpleDateFormat. "yyyyMMdd-HHmmss")]
-    (replace (:version project) #"SNAPSHOT" (.format df (Date.)))))
+    (replace (:version project) #"SNAPSHOT" (.format df build-date))))
 
 (defn control
   "Control file"
@@ -49,7 +50,7 @@
               :section "base"
               :priority "optional"
               :architecture "all"
-              :depends (join ", " ["bash" "default-jre | java2-runtime"])
+              :depends (join ", " ["bash" "default-jre-headless | java2-runtime-headless"])
               :maintainer (:email (:maintainer project))
               :description (:description project)})))
 
