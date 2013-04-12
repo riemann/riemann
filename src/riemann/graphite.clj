@@ -95,7 +95,7 @@
               the path of that event in graphite. graphite-path-percentiles by
               default.
 
-  :pool-size  The number of connections to keep open.
+  :pool-size  The number of connections to keep open. Default 4.
 
   :reconnect-interval   How many seconds to wait between attempts to connect.
                         Default 5.
@@ -111,6 +111,8 @@
   (let [opts (merge {:host "127.0.0.1"
                      :port 2003
                      :protocol :tcp
+                     :claim-timeout 0.1
+                     :pool-size 4
                      :path graphite-path-percentiles} opts)
         pool (fixed-pool
                (fn []

@@ -1,5 +1,6 @@
 (ns riemann.test.pool
   (:use riemann.pool
+        [slingshot.slingshot :only [try+]]
         clojure.test))
 
 (deftest claim-release-test
@@ -8,20 +9,24 @@
                ; Claim both elements
                a  (claim pool)
                b  (claim pool)
-               ; Pool is empty; should be nil.
-               c  (claim pool)
+               ; Pool is empty; should throw
+               c  (try+ (claim pool 2/1000)
+                        (catch [:type :riemann.pool/timeout]
+                          {:keys [message]}
+                          message))
                a' (release pool a)
                ; Should re-acquire a
                d  (claim pool)
                ; Empty
-               e  (claim pool)
+               e  (try+ (claim pool)
+                        (catch [:type :riemann.pool/timeout] _ :timeout))
                b' (release pool b)
                ; Re-acquire b
                f  (claim pool)]
            (is (= #{1 2} #{a b}))
-           (is (nil? c))
+           (is (= c "Couldn't claim a resource from the pool within 2 ms"))
            (is (= a d))
-           (is (nil? e))
+           (is (= :timeout e))
            (is (= b f))
            ; Shouldn't have (open)'d more than twice.
            (is (= 2 @x))))
@@ -36,7 +41,7 @@
                b' (invalidate pool b)
                c  (claim pool 1)
                d  (claim pool 1)
-               e  (claim pool 1)
+               e  (try (claim pool 1) (catch Exception e nil))
                c' (invalidate pool c)
                d' (invalidate pool d)
                ; Invalidate nil should be a noop

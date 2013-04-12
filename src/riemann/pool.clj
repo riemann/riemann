@@ -1,6 +1,7 @@
 (ns riemann.pool
   "A generic thread-safe resource pool."
-  (:use clojure.tools.logging)
+  (:use clojure.tools.logging
+        [slingshot.slingshot :only [throw+]])
   (:import [java.util.concurrent LinkedBlockingQueue TimeUnit]))
 
 ; THIS IS A MUTABLE STATE OF AFFAIRS. WHICH IS TO SAY, IT IS FUCKING TERRIBLE.
@@ -30,10 +31,16 @@
          (claim this nil))
 
   (claim [this timeout]
-         (try
-           (.poll queue (* 1000 (or timeout 0)) TimeUnit/MILLISECONDS)
-           (catch java.lang.InterruptedException e
-             nil)))
+         (let [timeout (* 1000 (or timeout 0))]
+           (or
+             (try
+               (.poll queue timeout TimeUnit/MILLISECONDS)
+               (catch java.lang.InterruptedException e
+                 nil))
+             (throw+
+               {:type ::timeout
+                :message (str "Couldn't claim a resource from the pool within "
+                              timeout " ms")}))))
 
   (release [this thingy]
            (when thingy
