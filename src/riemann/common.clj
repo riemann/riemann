@@ -41,6 +41,13 @@
   (clj-time.format/unparse (clj-time.format/formatters :date-time)
                            (clj-time.coerce/from-long (long (* 1000 unix)))))
 
+(defn iso8601->unix
+  "Transforms ISO8601 strings to unix timestamps."
+  [iso8601]
+  (->> iso8601
+    (clj-time.format/parse (:date-time-parser clj-time.format/formatters))
+    (clj-time.coerce/to-long)))
+
 ; Events
 (defn post-load-event
   "After events are loaded, we assign default times if none exist."
@@ -82,6 +89,13 @@
   [event]
   (json/generate-string
     (assoc event :time (unix-to-iso8601 (:time event)))))
+
+(defn ensure-event-time
+  "Ensures an event has a timestamp."
+  [e]
+  (assoc e :time (if-let [t (:time e)]
+                   (iso8601->unix t)
+                   (unix-time))))
 
 (defn event
   "Create a new event from a map."

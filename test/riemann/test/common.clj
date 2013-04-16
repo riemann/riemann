@@ -2,6 +2,17 @@
   (:use riemann.common)
   (:use clojure.test))
 
+(deftest iso8601->unix-test
+         (let [times (map iso8601->unix
+                          ["2013-04-15T18:06:58-07:00"
+                          "2013-04-15T18:06:58.123+11:00"
+                           "2013-04-15T18:06:58Z"
+                           "2013-04-15"])]
+           (is (= times [1366074418000
+                         1366009618123
+                         1366049218000
+                         1365984000000]))))
+
 (deftest subset-test
          (are [a b] (subset? a b)
               []    []

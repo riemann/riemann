@@ -3,14 +3,34 @@
   incoming events to the core's streams, queries the core's index for states."
   (:require [riemann.query    :as query]
             [riemann.index    :as index]
-            [riemann.pubsub   :as p])
-  (:use [riemann.common        :only [event-to-json]]
+            [riemann.pubsub   :as p]
+            [aleph.formats    :as formats]
+            [gloss.core       :as gloss]
+            [cheshire.core    :as json])
+  (:use [riemann.common        :only [event-to-json ensure-event-time]]
         [riemann.service       :only [Service ServiceEquiv]]
         [aleph.http            :only [start-http-server]]
-        [lamina.core           :only [receive-all close enqueue]]
+        [lamina.core           :only [receive-all
+                                      close
+                                      channel
+                                      map*
+                                      channel->lazy-seq
+                                      lazy-seq->channel
+                                      on-closed
+                                      enqueue
+                                      channel?
+                                      closed-channel]]
+        [lamina.api            :only [bridge-join]]
+        [clojure.java.io       :only [reader]]
         [clojure.tools.logging :only [info warn]]
         [clj-http.util         :only [url-decode]]
-        [clojure.string        :only [split]]))
+        [clojure.string        :only [split]])
+  (:import (java.io OutputStream
+                    BufferedWriter
+                    OutputStreamWriter
+                    InputStreamReader
+                    PipedInputStream
+                    PipedOutputStream)))
 
 (defn http-query-map
   "Converts a URL query string into a map."
@@ -19,6 +39,14 @@
          (map url-decode
               (mapcat (fn [kv] (split kv #"=" 2))
                       (split string #"&")))))
+
+(defn split-lines
+  "Takes a channel of bytes and returns a channel of utf8 strings, split out by
+  \n."
+  [ch]
+  (formats/decode-channel
+    (gloss/string :utf-8 :delimiters ["\n"])
+    ch))
 
 (defn ws-pubsub-handler [core ch hs]
   (let [topic  (url-decode (last (split (:uri hs) #"/" 3)))
@@ -55,16 +83,68 @@
       (ws-pubsub-handler core ch (assoc hs :uri "/pubsub/index"))
       (close ch))))
 
+(defn json-stream-response
+  "Given a channel of events, returns a Ring HTTP response with a body
+  consisting of a JSON array of the channel's contents."
+  [ch]
+  (let [out (map* #(str (json/generate-string %) "\n") ch)]
+    {:status 200
+     :headers {"Content-Type" "application/x-json-stream"}
+     :body out}))
+
+(defn channel->reader
+  [ch]
+  (InputStreamReader.
+    (formats/channel->input-stream ch)))
+
+(defn json-channel
+  "Takes a channel of bytes containing a JSON array, like \"[1 2 3]\" and
+  returns a channel of JSON messages: 1, 2, and 3."
+  [ch1]
+  (let [reader (channel->reader ch1)
+        ch2 (-> reader
+              (json/parsed-seq true)
+              lazy-seq->channel)]
+    ; Allow control messages like close and error to propagate between ch1 and
+    ; ch2.
+    (on-closed ch2 #(close ch1))
+    ch2))
+
+(defn put-events-handler
+  "Accepts events from the body of an HTTP request as JSON objects, one per
+  line, and applies them to streams."
+  [core ch req]
+  (let [body (:body req)
+        body (if-not (channel? body)
+               (closed-channel body)
+               body)]
+    (->> body
+      json-channel
+      (map* (fn handle [event]
+              (try
+                (let [event (ensure-event-time event)]
+                  (doseq [stream (:streams core)]
+                    (stream event))
+                  ; Empty OK response
+                  {})
+                (catch Exception ^Exception e
+                  {:error (.getMessage e)}))))
+      json-stream-response
+      (enqueue ch))))
+
 (defn ws-handler [core]
-  (fn [ch handshake]
-    (info "Websocket connection from" (:remote-addr handshake)
-          (:uri handshake)
-          (:query-string handshake))
-    (condp re-matches (:uri handshake)
-      #"^/index/?$" (ws-index-handler @core ch handshake)
-      #"^/pubsub/[^/]+/?$" (ws-pubsub-handler @core ch handshake)
+  "Returns a function which is called with new websocket connections.
+  Responsible for routing requests to the appropriate handler."
+  (fn [ch req]
+    (info "Websocket connection from" (:remote-addr req)
+          (:uri req)
+          (:query-string req))
+    (condp re-matches (:uri req)
+      #"/events/?"       (put-events-handler @core ch req) 
+      #"/index/?"        (ws-index-handler @core ch req)
+      #"/pubsub/[^/]+/?" (ws-pubsub-handler @core ch req)
       :else (do
-              (info "Unknown URI " (:uri handshake) ", closing")
+              (info "Unknown URI " (:uri req) ", closing")
               (close ch)))))
 
 (defrecord WebsocketServer [host port core server]
