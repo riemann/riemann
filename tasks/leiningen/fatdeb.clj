@@ -50,7 +50,7 @@
               :section "base"
               :priority "optional"
               :architecture "all"
-              :depends (join ", " ["bash" "default-jre-headless | java2-runtime-headless"])
+              :depends (join ", " ["bash"])
               :maintainer (:email (:maintainer project))
               :description (:description project)})))
 
