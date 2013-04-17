@@ -7,6 +7,8 @@
             Delimiters])
   (:use [riemann.transport.tcp :only [tcp-server
                                       gen-tcp-handler]]
+        [riemann.transport.udp :only [udp-server
+                                      gen-udp-handler]]
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
                                   shared-execution-handler]]
@@ -61,7 +63,11 @@
      (let [core (get opts :core (atom nil))
            host (get opts :host "127.0.0.1")
            port (get opts :port 2003)
+           protocol (get opts :protocol :tcp)
+           server (if (= protocol :tcp) tcp-server udp-server)
            channel-group (channel-group (str "graphite server " host ":" port))
+           graphite-message-handler (if (= protocol :tcp) (gen-tcp-handler core channel-group graphite-handler)
+            (gen-udp-handler core channel-group graphite-handler))
            pipeline-factory (channel-pipeline-factory
                               frame-decoder  (DelimiterBasedFrameDecoder. 
                                                1024
@@ -73,11 +79,8 @@
                               ^:shared executor shared-execution-handler
                               ^:shared graphite-decoder (graphite-frame-decoder
                                                           (:parser-fn opts))
-                              ^:shared handler (gen-tcp-handler core
-                                                       channel-group
-                                                       graphite-handler))]
-
-       (tcp-server (merge opts
+                              ^:shared handler graphite-message-handler)]
+       (server (merge opts
                           {:host host
                            :port port
                            :core core

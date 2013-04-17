@@ -23,18 +23,22 @@
                                       shared-execution-handler
                                       channel-pipeline-factory]]))
 
-(defn udp-handler
-  "Returns a UDP handler for the given atom to a core."
-  [core ^ChannelGroup channel-group]
+(defn gen-udp-handler
+  [core ^ChannelGroup channel-group handler]
   (proxy [SimpleChannelUpstreamHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
                  (.add channel-group (.getChannel state-event)))
 
     (messageReceived [context ^MessageEvent message-event]
-                     (handle @core (.getMessage message-event)))
+                     (handler @core message-event))
 
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
+
+(defn udp-handler
+  "Given a core and a MessageEvent, applies the message to core."
+  [core ^MessageEvent message-event]
+    (handle core (.getMessage message-event)))
 
 (defrecord UDPServer [host port max-size channel-group pipeline-factory core killer]
   ; core is an atom to a core
@@ -118,6 +122,5 @@
                    ^:shared protobuf-decoder (protobuf-decoder)
                    ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
-                   ^:shared handler          (udp-handler core
-                                                          channel-group)))]
+                   ^:shared handler          (gen-udp-handler core channel-group udp-handler)))]
      (UDPServer. host port max-size channel-group pf core (atom nil)))))
