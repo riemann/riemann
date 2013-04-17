@@ -108,7 +108,7 @@
   :pipeline-factory A ChannelPipelineFactory"
   ([] (udp-server {}))
   ([opts]
-   (let [core (atom nil)
+   (let [core (get opts :core (atom nil))
          host (get opts :host "127.0.0.1")
          port (get opts :port 5555)
          max-size (get opts :max-size 16384)
