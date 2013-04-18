@@ -1376,3 +1376,13 @@
                   [6 :t6 :t8 :t9 11]
                   [96 :t99 :t100 101]
                   [101 :t101 :t102 106]]))))
+
+(deftest apdex-test
+         (test-stream-intervals
+           (apdex 1 (state "ok") (state "warning"))
+           (concat
+             (interpose 0 (shuffle (concat (repeat 5 {:state "ok"})
+                                           (repeat 7 {:state "warning"})
+                                           (repeat 1 {:state "fail"}))))
+             [0 {:state "final"} 3])
+           [{:state "final" :metric (/ (+ 5 (/ 7 2)) (+ 5 7 2))}]))

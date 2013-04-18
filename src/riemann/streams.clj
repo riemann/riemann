@@ -1601,3 +1601,51 @@ OA
   [basis & children]
   (let [wrapped (mapv (fn [expr] `(where ~expr)) basis)]
     `(project* ~wrapped ~@children)))
+
+(defrecord ApdexState [event ^long satisfied ^long tolerated ^long other])
+
+(defn apdex*
+  "Like apdex, but takes functions of events rather than where-predicates.
+
+  A stream which computes Apdex metrics every dt seconds for a stream of
+  events. If (satisfied? event) is truthy, increments the satisfied count for
+  that time window by 1. If (tolerated? event) is truthy, increments the
+  tolerated count for that time window by 1.  Any other states are ignored.
+  Every dt seconds (as long as events are arriving), emits an event with a
+  metric between 0 and 1, derived by:
+
+  (satisfied count + (tolerating count / 2) / total count of received events
+
+  See http://en.wikipedia.org/wiki/Apdex for details."
+  [dt satisfied? tolerated? & children]
+  (part-time-simple
+    dt
+    (fn reset [_] (ApdexState. {} 0 0 0))
+    (fn add [^ApdexState state event]
+      (let [k (cond (satisfied? event) :satisfied
+                    (tolerated? event) :tolerated
+                    :else              :other)]
+        (-> state
+          (assoc :last-event event)
+          (assoc k (inc (get state k))))))
+    (fn finish [{:keys [last-event satisfied tolerated other]} _ _]
+                (call-rescue (assoc last-event :metric
+                                    (/ (+ satisfied
+                                          (/ tolerated 2))
+                                       (+ satisfied tolerated other)))
+                             children))))
+
+(defmacro apdex
+  "A stream which computes Apdex metrics every dt seconds for a stream of
+  events. Satisfied? and tolerated? are predicates as for (where). If satisfied
+  is truthy, increments the satisfied count for that time window by 1. If
+  (tolerated? event) is truthy, increments the tolerated count for that time
+  window by 1. Any other states are ignored. Every dt seconds (as long as
+  events are arriving), emits an event with a metric between 0 and 1, derived
+  by:
+
+  (satisfied count + (tolerating count / 2) / total count of received events
+
+  See http://en.wikipedia.org/wiki/Apdex for details."
+  [dt satisfied? tolerated? & children]
+  `(apdex* ~dt (where ~satisfied?) (where ~tolerated?) ~@children))
