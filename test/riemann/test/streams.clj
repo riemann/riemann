@@ -1383,6 +1383,7 @@
            (concat
              (interpose 0 (shuffle (concat (repeat 5 {:state "ok"})
                                            (repeat 7 {:state "warning"})
+                                           (repeat 3 {:state "expired"})
                                            (repeat 1 {:state "fail"}))))
              [0 {:state "final"} 3])
            [{:state "final" :metric (/ (+ 5 (/ 7 2)) (+ 5 7 2))}]))

@@ -1616,24 +1616,30 @@ OA
 
   (satisfied count + (tolerating count / 2) / total count of received events
 
+  Ignores expired events.
+
   See http://en.wikipedia.org/wiki/Apdex for details."
   [dt satisfied? tolerated? & children]
   (part-time-simple
     dt
     (fn reset [_] (ApdexState. {} 0 0 0))
     (fn add [^ApdexState state event]
-      (let [k (cond (satisfied? event) :satisfied
-                    (tolerated? event) :tolerated
-                    :else              :other)]
-        (-> state
-          (assoc :last-event event)
-          (assoc k (inc (get state k))))))
+      (if (expired? event)
+        state
+        (let [k (cond (satisfied? event) :satisfied
+                      (tolerated? event) :tolerated
+                      :else              :other)]
+          (-> state
+            (assoc :last-event event)
+            (assoc k (inc (get state k)))))))
     (fn finish [{:keys [last-event satisfied tolerated other]} _ _]
-                (call-rescue (assoc last-event :metric
-                                    (/ (+ satisfied
-                                          (/ tolerated 2))
-                                       (+ satisfied tolerated other)))
-                             children))))
+      (let [total (+ satisfied tolerated other)]
+        (when-not (zero? total)
+          (call-rescue (assoc last-event :metric
+                              (/ (+ satisfied
+                                    (/ tolerated 2))
+                                 (+ satisfied tolerated other)))
+                       children))))))
 
 (defmacro apdex
   "A stream which computes Apdex metrics every dt seconds for a stream of
@@ -1646,6 +1652,8 @@ OA
 
   (satisfied count + (tolerating count / 2) / total count of received events
 
+  Ignores expired events.
+  
   See http://en.wikipedia.org/wiki/Apdex for details."
   [dt satisfied? tolerated? & children]
   `(apdex* ~dt (where ~satisfied?) (where ~tolerated?) ~@children))
