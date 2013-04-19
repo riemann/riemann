@@ -1376,12 +1376,14 @@ OA
       (partial prn \"Not expired!\")))"
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
-    `(fn stream# [event#]
-       (let [value# (~f event#)]
-         (if value#
-           (call-rescue event# ~true-kids)
-           (call-rescue event# ~else-kids))
-         value#))))
+    `(let [true-kids# ~true-kids
+           else-kids# ~else-kids]
+      (fn stream# [event#]
+         (let [value# (~f event#)]
+           (if value#
+             (call-rescue event# true-kids#)
+             (call-rescue event# else-kids#))
+           value#)))))
 
 (defmacro where
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
