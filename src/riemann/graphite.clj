@@ -36,11 +36,11 @@
              :out (OutputStreamWriter. (.getOutputStream sock)))))
   (send-line [this line]
     (let [out (:out this)]
-      (.write ^OutputStreamWriter out line)
+      (.write ^OutputStreamWriter out ^String line)
       (.flush ^OutputStreamWriter out)))
   (close [this]
-    (.close (:out this))
-    (.close (:socket this))))
+    (.close ^OutputStreamWriter (:out this))
+    (.close ^Socket (:socket this))))
 
 (defrecord GraphiteUDPClient [host port]
   GraphiteClient
@@ -50,13 +50,13 @@
            :host host
            :port port))
   (send-line [this line]
-    (let [bytes (.getBytes line)
+    (let [bytes (.getBytes ^String line)
           length (count line)
           addr (InetAddress/getByName (:host this))
           datagram (DatagramPacket. bytes length addr (:port this))]
       (.send ^DatagramSocket (:socket this) datagram)))
   (close [this]
-    (.close (:socket this))))
+    (.close ^DatagramSocket (:socket this))))
 
 (defn graphite-path-basic
   "Constructs a path for an event. Takes the hostname fqdn, reversed,
