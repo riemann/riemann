@@ -58,6 +58,16 @@
   (close [this]
     (.close (:socket this))))
 
+(defrecord GraphiteDummyClient [host port]
+  GraphiteClient
+  (open [this]
+    this)
+  (send-line [this line]
+    (when (fn? (:host this))
+      ((:host this) line)))
+  (close [this]
+    this))
+
 (defn graphite-path-basic
   "Constructs a path for an event. Takes the hostname fqdn, reversed,
   followed by the service, with spaces converted to dots."
