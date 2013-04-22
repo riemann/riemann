@@ -130,8 +130,9 @@
                  (let [host (:host opts)
                        port (:port opts)
                        client (open (condp = (:protocol opts)
-                                      :tcp (GraphiteTCPClient. host port)
-                                      :udp (GraphiteUDPClient. host port)))]
+                                      :tcp   (GraphiteTCPClient. host port)
+                                      :udp   (GraphiteUDPClient. host port)
+                                      :dummy (GraphiteDummyClient. host port)))]
                    (info "Connected")
                    client))
                (fn [client]
