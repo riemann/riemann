@@ -58,3 +58,14 @@
                :description "all clear, uh, situation normal"
                :metric 3.14159
                :time 123})))))
+
+
+(deftest ^:graphite ^:fake dummy-graphite-empty-callback-test
+  (let [g (graphite {:protocol :dummy
+                     :block-start true})]
+    (is (nil?
+         (g {:service "graphite test"
+             :state "ok"
+             :description "all clear, uh, situation normal"
+             :metric 3.14159
+             :time 123})))))
