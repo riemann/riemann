@@ -58,13 +58,13 @@
   (close [this]
     (.close (:socket this))))
 
-(defrecord GraphiteDummyClient [host port]
+(defrecord GraphiteDummyClient [callback port]
   GraphiteClient
   (open [this]
     this)
   (send-line [this line]
-    (when (fn? (:host this))
-      ((:host this) line)))
+    (when (fn? (:callback this))
+      ((:callback this) line)))
   (close [this]
     this))
 
@@ -132,7 +132,7 @@
                        client (open (condp = (:protocol opts)
                                       :tcp   (GraphiteTCPClient. host port)
                                       :udp   (GraphiteUDPClient. host port)
-                                      :dummy (GraphiteDummyClient. host port)))]
+                                      :dummy (GraphiteDummyClient. (:callback opts) port)))]
                    (info "Connected")
                    client))
                (fn [client]
