@@ -58,6 +58,16 @@
   (close [this]
     (.close (:socket this))))
 
+(defrecord GraphiteDummyClient [callback port]
+  GraphiteClient
+  (open [this]
+    this)
+  (send-line [this line]
+    (when (fn? (:callback this))
+      ((:callback this) line)))
+  (close [this]
+    this))
+
 (defn graphite-path-basic
   "Constructs a path for an event. Takes the hostname fqdn, reversed,
   followed by the service, with spaces converted to dots."
@@ -120,8 +130,9 @@
                  (let [host (:host opts)
                        port (:port opts)
                        client (open (condp = (:protocol opts)
-                                      :tcp (GraphiteTCPClient. host port)
-                                      :udp (GraphiteUDPClient. host port)))]
+                                      :tcp   (GraphiteTCPClient. host port)
+                                      :udp   (GraphiteUDPClient. host port)
+                                      :dummy (GraphiteDummyClient. (:callback opts) port)))]
                    (info "Connected")
                    client))
                (fn [client]
