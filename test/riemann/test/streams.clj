@@ -437,7 +437,17 @@
            (is (= @bad
                   [{:service "bad" :metric 0}
                    {:metric 1}
-                   {:service "bad" :metric 1}]))))
+                   {:service "bad" :metric 1}])))
+
+         (testing "evaluates children once"
+                  ; Where should evaluate its children exactly once.
+                  (let [x (atom 0)
+                        s (where* (fn [e] true) (do (swap! x inc) identity))]
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1))
+                    (s {:service "test"})
+                    (is (= @x 1)))))
 
 (deftest where*-return-value
          ; Where*'s return value should be whether the predicate matched.
