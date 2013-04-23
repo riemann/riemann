@@ -983,20 +983,14 @@ OA
       (when-not (empty? buffer)
         (call-rescue buffer children)))))
 
-(defn coalesce
-  "Combines events over time. Coalesce remembers the most recent event for each
-  service that passes through it (limited by :ttl). Every time it receives an
-  event, it passes on *all* events it remembers. When events expire, they are
-  included in the emitted sequence of events *once*, and removed from the state
-  table thereafter.
-
-  Use coalesce to combine states that arrive at different times--for instance,
-  to average the CPU use over several hosts."
-  [& children]
+(defn coalesce-with-event
+  "Helper for coalesce: calls (f current-event all-events) every time an event
+  is received."
+  [keyfn child]
   ; Past is [{keys -> events}, expired-events]
   (let [past (atom [{} []])]
-    (fn stream [{:keys [host service] :as event}]
-      (let [ekey  [host service]
+    (fn stream [event]
+      (let [ekey   (keyfn event)
             ; Updates the state map and delivers expired events to an atom.
             update (fn update [[ok _]]
                      (doall
@@ -1009,8 +1003,24 @@ OA
                                      (transient [])]
                                     (assoc ok ekey event)))))
             [ok expired] (swap! past update)]
-        (call-rescue (concat expired (vals ok)) children)))))
-    
+        (child event (concat expired (vals ok)))))))
+
+(defn coalesce
+  "Combines events over time. Coalesce remembers the most recent event for each
+  service that passes through it (limited by :ttl). Every time it receives an
+  event, it passes on *all* events it remembers. When events expire, they are
+  included in the emitted sequence of events *once*, and removed from the state
+  table thereafter.
+
+  Use coalesce to combine states that arrive at different times--for instance,
+  to average the CPU use over several hosts."
+  [& children]
+  (coalesce-with-event
+    (fn keyfn [event]
+      [(:host event) (:service event)])
+    (fn drop [event events]
+      (call-rescue events children))))
+
 (defn append
   "Conj events onto the given reference"
   [reference]
@@ -1659,3 +1669,41 @@ OA
   See http://en.wikipedia.org/wiki/Apdex for details."
   [dt satisfied? tolerated? & children]
   `(apdex* ~dt (where ~satisfied?) (where ~tolerated?) ~@children))
+
+(defn clock-skew
+  "Detects clock skew between hosts. Keeps track of what time each host thinks
+  it is, based on their most recent event time. Compares the time of each event
+  to the median clock, and passes on that event with metric equal to the time
+  difference: events ahead of the clock have positive metrics, and events
+  behind the clock have negative metrics."
+  [& children]
+  (smap (fn preprocess [event]
+          (assoc event ::clock-skew-timestamp (unix-time)))
+        (coalesce-with-event
+          ; We only care about the last event on each host
+          (fn keyfn [event] (:host event))
+
+          ; Now, given a specific event and a list of the current state...
+          (fn order [event events]
+            (if (expired? event)
+              (call-rescue event children)
+              (let [now (unix-time)
+                    clock (->> events
+                            ; Figure out what time is is *now*
+                            (map (fn [event]
+                                   (when (:time event)
+                                     (+ (:time event) 
+                                        (- now 
+                                           (::clock-skew-timestamp event))))))
+                            ; Drop expired events (or any others without times)
+                            (remove nil?)
+                            ; Pick median
+                            sort
+                            middle)
+                    delta (if clock
+                            (- (:time event) clock)
+                            0)
+                    event (-> event
+                            (dissoc ::clock-skew-timestamp)
+                            (assoc :metric delta))]
+                (call-rescue event children)))))))

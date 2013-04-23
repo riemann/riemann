@@ -45,13 +45,13 @@
 (defmacro test-stream
   "Verifies that the given stream, taking inputs, forwards outputs to children."
   [stream inputs outputs]
-  `(is (= (run-stream ~stream ~inputs) ~outputs)))
+  `(is (~'= ~outputs (run-stream ~stream ~inputs))))
 
 (defmacro test-stream-intervals
   "Verifies that run-stream-intervals, taking inputs/intervals, forwards
   outputs to chldren."
   [stream inputs-and-intervals outputs]
-  `(is (= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
+  `(is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
 (defn evs
   "Generate events based on the given event, with given metrics"
@@ -1397,3 +1397,21 @@
                                            (repeat 1 {:state "fail"}))))
              [0 {:state "final"} 3])
            [{:state "final" :metric (/ (+ 5 (/ 7 2)) (+ 5 7 2))}]))
+
+(deftest ^:focus clock-skew-test
+         (test-stream-intervals (clock-skew)
+                                [; foo bar baz
+                                 {:time 1 :host :foo} 1
+                                 ; 2
+                                 {:time 3 :host :bar} 1
+                                 ; 3 4
+                                 {:time 9 :host :baz} 1
+                                 ; 4 5 10
+                                 {:time 1 :host :foo} 1
+                                 ; 2 6 11
+                                 {:time 100 :host :foo}]
+                                [{:time 1 :host :foo :metric 0}
+                                 {:time 3 :host :bar :metric 0}
+                                 {:time 9 :host :baz :metric 5}
+                                 {:time 1 :host :foo :metric -4}
+                                 {:time 100 :host :foo :metric 89}]))

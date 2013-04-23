@@ -173,6 +173,13 @@
              (some (fn [r] (= e r)) a))
            b))
 
+(defn middle
+  "Takes the element at the middle of a seq."
+  [s]
+  (if (empty? s)
+    nil
+    (nth s (/ (count s) 2))))
+
 ; composing human-readable messages
 (defn human-uniq
   "Returns a human-readable string describing things, e.g.
