@@ -216,7 +216,7 @@
           events)))
 
 (defn count-string-bytes [s]
-  (count (.getBytes s)))
+  (count (.getBytes s "UTF8")))
 
 (defn count-character-bytes [c]
   (count-string-bytes (.toString c)))
