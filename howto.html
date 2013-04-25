@@ -722,7 +722,7 @@ string.</p>
 
 <p>Because protocol buffers is strongly typed, the metric of an event is
 represented as one of metric_d (floating point 64-bit), metric_f (floating
-point 32-bit), or metric_sint (64-bit signed integer). Your client should emit
+point 32-bit), or metric_sint64 (64-bit signed integer). Your client should emit
 and consume all of these types. For compatibility with older versions of
 Riemann, you may *also* emit a metric_f alongside the normal type; newer
 versions of Riemann will prefer the higher-resolution types.</p>
