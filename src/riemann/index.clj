@@ -28,7 +28,9 @@
   (search [this query-ast]
     "Returns a seq of events from the index matching this query AST")
   (update [this event]
-    "Updates index with event"))
+    "Updates index with event")
+  (lookup [this host service]
+    "Lookup an indexed event from the index"))
 
 ; The index accepts states and maintains a table of the most recent state for
 ; each unique [host, service]. It can be searched for states matching a query.
@@ -68,6 +70,9 @@
               (when-not (= "expired" (:state event))
                 (.put hm [(:host event) (:service event)] event)
                   event))
+
+      (lookup [this host service]
+        (.get hm [host service]))
 
       clojure.lang.Seqable
       (seq [this]
