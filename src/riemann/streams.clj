@@ -405,13 +405,31 @@ OA
         (bin event t)))))
 
 (defn periodically-until-expired
-  "When an event arrives, begins calling f every interval seconds. Starts
-  after delay. Stops calling f when an expired? event arrives."
+  "When an event arrives, begins calling f every interval seconds. Starts after
+  delay. Stops calling f when an expired? event arrives, or the most recent
+  event expires."
   ([f] (periodically-until-expired 1 0 f))
   ([interval f] (periodically-until-expired interval 0 f))
   ([interval delay f]
-   (let [task (atom nil)]
+   (let [task (atom nil)
+         expires-at (atom infinity)
+         f (fn wrapper []
+             (if (< @expires-at (unix-time))
+               ; Expired
+               (when-let [t @task]
+                 (cancel t)
+                 (reset! task nil))
+               ; We're still valid; keep going
+               (f)))]
+               
      (fn stream [event]
+       ; Bump the time we're allowed to keep running for.
+       (if (and (:ttl event) (:time event))
+         ; We have a fixed TTL
+         (reset! expires-at (+ (:time event) (:ttl event)))
+         ; Run forever
+         (reset! expires-at infinity))
+
        (if (expired? event)
          ; Stop periodic.
          (when-let [t @task]

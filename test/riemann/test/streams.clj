@@ -909,6 +909,14 @@
             {:time 3 :metric 0 :service "baz" :ttl 2}
             {:time 4 :metric 0 :service "baz" :ttl 1}]))
 
+(deftest rate-expiration
+         (test-stream-intervals
+           (rate 1)
+           [{:time 0 :metric 1 :ttl 3} 5]
+           [{:time 1 :metric 1 :ttl 3}
+            {:time 2 :metric 0 :ttl 2}
+            {:time 3 :metric 0 :ttl 1}]))
+
 (deftest fold-interval-test
          (test-stream-intervals 
            (riemann.streams/fold-interval 1 :metric incanter.stats/sd)
