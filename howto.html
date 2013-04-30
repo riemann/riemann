@@ -476,6 +476,30 @@ since this event pertains to the system as a whole.</p>
   (with {:service "Max CPU" :host nil} prn)))
 {% endhighlight %}
 
+<h3 id="create-your-own-stream-function">Create your own stream function</h3>
+
+<p>A stream is a function that takes a variable number of child streams and returns a function that takes an event and responds to that event.</p>
+
+<p>Let's create a trivial example.</p>
+
+{% highlight clj %}
+(defn hello-stream [& children]
+  (fn [e] (let [new-event (assoc e :hello :world)]
+    (call-rescue new-event children))))
+{% endhighlight %}
+
+<p>Our stream returns a function that when it receives an event, adds a new key-pair via <code>assoc</code> and then uses <code>call-rescue</code>, a standard library function, to pass the event on to all the child streams it was passed.</p>
+
+<p>Add this new stream to the list of event streams.</p>
+
+{% highlight clj %}
+(streams (hello-stream prn))
+{% endhighlight %}
+
+<p>Now when you pass an event into Riemann you should see the event printed out with an added key-value pair of <code>:hello :world</code>.</p>
+
+<p>Streams all essentially work in this way, if you look at the source code of the Streams namespace in <code>streams.clj</code>. You can find a few simple examples in the functions <code>match</code>, <code>expired</code>, <code>under</code> and <code>over</code> which filter whether the event is passed along the event stream.</p>
+
 <h2>Working with dashboard</h2>
 
 <h3>Application specific host grouping</h3>
