@@ -86,9 +86,7 @@ md5sum -c riemann-0.2.1.tar.bz2.md5
       appear. The Grid view organizes events according to their host and
       service. Color indicates state, and the shaded bars show metrics. You can
       hover over an event, like CPU, to see its description.</p>
-    </div>
 
-    <div class="sixcol last">
       <h2>Working with Clients</h2>
 
       <p>Now that Riemann is installed, let's try sending some of our own
@@ -132,12 +130,62 @@ metric_f: 2.5299999713897705&gt;]</span></pre></code>
       can be configured to calculate rates, averages, min/max, distributions,
       and more.</p>
       
+    </div>
+    <div class="sixcol last">
       <h2>What next?</h2>
       
       <p>Riemann comes with a standard config that listens on the local ipv4
       interface and indexes all events, but that's just the the start. You can learn a little more about <a href="/concepts.html">Riemann core concepts</a>, and use <code>etc/riemann.config</code> as a guide for
       your own configuration. For examples of problems you can solve with
       Riemann, check out the <a href="howto.html">howto guide</a>.</p>
+
+
+      <h3>Get started with your own streams</h3>
+
+      <p>A stream is just a function that takes a variable number of child streams and returns a function that takes an event and responds to the event it is passed when it is invoked.</p>
+
+      <p>Streams can modify an event and pass the modified event on to their child streams. Alternatively they can look at the event and choose which of the child streams to pass the event onto, filtering or partitioning the event stream.</p>
+
+      <p>The <code>Riemann/streams</code> namespace provides a number of functions that handle common stream processing tasks.</p> 
+
+      <p>By default the Riemann config file contains a stream definition that writes each incoming event into the index. We can create more streams by using the <code>streams</code> function.<p>
+
+      <p>Add the following to the bottom of the <code>riemann.config</code> file:</p>
+
+      {% highlight clj %}
+      (streams
+        prn)
+      {% endhighlight %}
+
+      <p>To test this configuration, reload it and then send an event via the irb shell. The content of the event should be printed in the Riemann log.</p>
+
+      <p>When Riemann receives an event it passes it on to all the streams that are registered. When a stream processes an event it can pass the event, or a modified version of it onto its child streams. Let's modify our code to demonstrate this.</p>
+
+      {% highlight clj %}
+      (streams
+        prn
+        (with {:state "normal"} prn)
+        prn)
+      {% endhighlight %}
+
+      <p>Now when you submit an event it should get printed three times and you should see that one event has a state of "normal" (the one resulting from the middle stream) and the other two have a state of nil.</p>
+
+      <p>The <code>streams</code> statement adds each stream function to the current core. This means the following two statements are equivalent.</p>
+
+      {% highlight clj %}
+      (streams
+        prn
+        (with {:state "normal"} prn)
+        prn)
+      {% endhighlight %}
+
+      {% highlight clj %}
+      (streams prn)
+      (streams (with {:state "normal"} prn))
+      (streams prn)
+      {% endhighlight %}
+
+      <p>You can now starting adding stream statements to the configuration file to start processing your own events. For specific examples of common event processing tasks see the <a href="howto.html">howto guide</a>.</p>
 
       <h2>Best Practices</h2>
 
