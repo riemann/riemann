@@ -449,6 +449,23 @@ you:</p>
     ...))
 {% endhighlight %}
 
+<p>By default, Riemann copies <code>[:host :service]</code> to expired events.
+You can control what keys from events are copied onto expired events by
+passing <code>:keep-keys</code> to <code>periodically-expire</code>:</p>
+
+{% highlight clj %}
+(periodically-expire 10 {:keep-keys [:host :service :tags]})
+{% endhighlight %}
+
+<p>With that in place, you can filter expired events on tags. This way, your app
+can decide whether an event is worthy of an alert by tagging it:</p>
+
+{% highlight clj %}
+(streams
+  (expired
+    (tagged "notify-me" (email "ops@foo.com"))))
+{% endhighlight %}
+
 <h3>Group events in time</h3>
 
 <p>Sometimes you want to ask a question about the last few minutes, or of
