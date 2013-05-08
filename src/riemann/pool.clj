@@ -22,7 +22,7 @@
   (grow [this]
         (loop []
           (if-let [thingy (try (open) (catch Throwable t nil))]
-            (.put queue thingy)
+            (.put ^LinkedBlockingQueue queue thingy)
             (do
               (Thread/sleep (* 1000 regenerate-interval))
               (recur)))))
@@ -34,7 +34,7 @@
          (let [timeout (* 1000 (or timeout 0))]
            (or
              (try
-               (.poll queue timeout TimeUnit/MILLISECONDS)
+               (.poll ^LinkedBlockingQueue queue timeout TimeUnit/MILLISECONDS)
                (catch java.lang.InterruptedException e
                  nil))
              (throw+
@@ -44,7 +44,7 @@
 
   (release [this thingy]
            (when thingy
-             (.put queue thingy)))
+             (.put ^LinkedBlockingQueue queue thingy)))
 
   (invalidate [this thingy]
               (when thingy

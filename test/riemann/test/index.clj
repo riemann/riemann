@@ -47,6 +47,15 @@
            (is (= (map (fn [e] (:host e)) i)
                   [2]))))
 
+(deftest nbhm-read-index
+         (let [i (nbhm-index)]
+           (update i {:host 1 :service 1 :metric 5})
+           (update i {:host 1 :service 2 :metric 7})
+
+           (is (= 5 (:metric (lookup i 1 1))))
+           (is (= 7 (:metric (lookup i 1 2))))))
+
+
 (defn random-event
   [& {:as event}]
   (merge {:host    (rand-int 100)
