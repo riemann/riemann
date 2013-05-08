@@ -66,7 +66,7 @@
                 (swap! channels dissoc-in [(:channel sub) (:id sub)]))
 
   (publish! [this channel event]
-            (doseq [[id sub] (get @channels channel)]
+            (doseq [[id ^Subscription sub] (get @channels channel)]
               ((.f sub) event)))
 
   (sweep! [this]
