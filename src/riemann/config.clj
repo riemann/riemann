@@ -23,6 +23,7 @@
         riemann.sns
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
+        [riemann.campfire :only [campfire]]
         [riemann.librato :only [librato-metrics]]
         riemann.streams)
   (:gen-class))
