@@ -34,7 +34,7 @@
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.6.4"]
-    [riemann-clojure-client "0.2.2-SNAPSHOT"]
+    [riemann-clojure-client "0.2.2"]
     [slingshot "0.10.2"]
   ]
   :plugins [[codox "0.6.1"]
