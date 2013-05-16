@@ -213,11 +213,13 @@
                                  :tags ["whiskers" "paws"] :time 2})
              (update-index core {:service "miao" :host "cat" :time 3})
 
-             (let [r (set (query client "metric = 2 or service = \"miao\" or tagged \"whiskers\""))]
+             (let [r (->> "metric = 2 or service = \"miao\" or tagged \"whiskers\""
+                       (query client)
+                       set)]
                (is (= r
                       #{(event {:metric 2, :time 3})
                         (event {:host "kitten" :tags ["whiskers" "paws"] :time 2})
-                        (event {:host "cat", :service "miao", :time 3})} r)))
+                        (event {:host "cat", :service "miao", :time 3})})))
 
              (finally
                (close-client client)
