@@ -95,6 +95,39 @@
   (dorun (pmap service/stop! (core-services core)))
   (info "Hyperspace core shut down"))
 
+(defn stream!
+  "Applies an event to the streams in this core."
+  [core event]
+  (doseq [stream (:streams core)]
+    (stream event)))
+
+(defn update-index
+  "Updates this core's index with an event. Also publishes to the index pubsub
+  channel."
+  [core event]
+  (when (index/update (:index core) event)
+    (when-let [registry (:pubsub core)]
+      (ps/publish! registry "index" event))))
+
+(defn delete-from-index
+  "Deletes similar events from the index. By default, deletes events with the
+  same host and service. If a field, or a list of fields, is given, deletes any
+  events with matching values for all of those fields.
+  
+  ; Delete all events in the index with the same host
+  (delete-from-index index :host event)
+  
+  ; Delete all events in the index with the same host and state.
+  (delete-from-index index [:host :state] event)"
+  ([core event]
+   (index/delete (:index core) event))
+  ([core fields event]
+   (let [match-fn (if (coll? fields) (apply juxt fields) fields)
+         match (match-fn event)
+         index (:index core)]
+       (doseq [event (filter #(= match (match-fn %)) index)]
+         (index/delete-exactly index event)))))
+
 (defn reaper
   "Returns a service which expires states from its core's index every interval
   (default 10) seconds. Expired events are streamed to the core's streams. The
@@ -130,34 +163,7 @@
                                    :time (unix-time)}))]
                    (when-let [registry (:pubsub core)]
                      (ps/publish! registry "index" e))
-                   (doseq [stream streams]
-                     (stream e)))
+                   (stream! core e))
                  (catch Exception e
                    (warn e "Caught exception while processing expired events")))))))))))
 
-(defn update-index
-  "Updates this core's index with an event. Also publishes to the index pubsub
-  channel."
-  [core event]
-  (when (index/update (:index core) event)
-    (when-let [registry (:pubsub core)]
-      (ps/publish! registry "index" event))))
-
-(defn delete-from-index
-  "Deletes similar events from the index. By default, deletes events with the
-  same host and service. If a field, or a list of fields, is given, deletes any
-  events with matching values for all of those fields.
-  
-  ; Delete all events in the index with the same host
-  (delete-from-index index :host event)
-  
-  ; Delete all events in the index with the same host and state.
-  (delete-from-index index [:host :state] event)"
-  ([core event]
-   (index/delete (:index core) event))
-  ([core fields event]
-   (let [match-fn (if (coll? fields) (apply juxt fields) fields)
-         match (match-fn event)
-         index (:index core)]
-       (doseq [event (filter #(= match (match-fn %)) index)]
-         (index/delete-exactly index event)))))
