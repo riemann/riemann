@@ -1,8 +1,7 @@
 (ns riemann.instrumentation
   "Tracks Riemann performance data"
-  (:use [riemann.core :only [core-services stream!]]
-        [riemann.time :only [unix-time]]
-        [riemann.service :only [thread-service]]
+  (:use [riemann.time :only [unix-time]]
+        [riemann.common :only [event localhost]]
         [interval-metrics.core :only [Metric
                                  update!
                                  snapshot!
@@ -10,7 +9,7 @@
                                  quantile
                                  uniform-reservoir]]))
 
-(defprotocol Instrumentation
+(defprotocol Instrumented
   "These things can can be asked to report events about their performance and
   health."
   (events [this]
@@ -20,7 +19,8 @@
 (defn nanos->millis
   "Convert nanoseconds to milliseconds."
   [nanos]
-  (* 1e-6 nanos))
+  (when nanos
+    (* 1e-6 nanos)))
 
 (defrecord RateLatency [event quantiles rate latencies]
   Metric
@@ -28,7 +28,7 @@
            (update! latencies time)
            (update! rate 1))
 
-  Instrumentation
+  Instrumented
   (events [this]
           (let [rate      (snapshot! rate)
                 latencies (snapshot! latencies)
@@ -53,9 +53,16 @@
   latency metrics. Takes an optional base event which is used as the template.
   Input latencies are in nanoseconds (for storage as longs), emits latencies as
   doubles in milliseconds."
-  ([event] (rate+latency event [0.0 0.5 0.95 0.99 1.0]))
-  ([event quantiles]
-   (RateLatency. event quantiles (rate) (uniform-reservoir))))
+  ([event] (rate+latency event [0.0 0.5 0.95 0.99 0.999]))
+  ([ev quantiles]
+   (let [ev (event (merge ev {:host (localhost)
+                              :service (str "riemann " (:service ev))}))]
+     (RateLatency. ev quantiles (rate) (uniform-reservoir)))))
+
+(defn instrumented?
+  "Does a thingy provide instrumentation?"
+  [thingy]
+  (satisfies? Instrumented thingy))
 
 (defmacro measure-latency
   "Wraps body in a macro which reports its running time in nanoseconds to a
@@ -66,15 +73,3 @@
          t1#    (System/nanoTime)]
      (update! ~metric (- t1# t0#))
      value#))
-
-(defn instrumentation-service
-  "Returns a service which samples instrumented services in its core every n
-  seconds, and sends their events to the core itself."
-  [interval]
-  (thread-service
-    ::service interval
-    (fn measure [core]
-      (doseq [service (core-services core)]
-        (when (satisfies? Instrumentation service)
-          (doseq [event (events service)]
-            (stream! core event)))))))

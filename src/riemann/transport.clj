@@ -2,6 +2,7 @@
   "Functions used in several transports. Some netty parts transpire
   here since netty is the preferred method of providing transports"
   (:use [slingshot.slingshot :only [try+]]
+        [riemann.core        :only [stream!]]
         [riemann.common      :only [decode-msg]]
         [riemann.codec       :only [encode-pb-msg]]
         [riemann.index       :only [search]]
@@ -95,25 +96,21 @@
   [core msg]
   (try+
     ;; Send each event/state to each stream
-    (doseq [event  (:states msg)
-            stream (:streams core)]
-      (stream event))
-    (doseq [event (:events msg)
-            stream (:streams core)]
-      (stream event))
+    (doseq [event (:states msg)] (stream! core event))
+    (doseq [event (:events msg)] (stream! core event))
 
-   (if (:query msg)
-     ;; Handle query
-     (let [ast (query/ast (:string (:query msg)))]
-       (if-let [i (:index core)]
-         {:ok true :events (search i ast)}
-         {:ok false :error "no index"}))
+    (if (:query msg)
+      ;; Handle query
+      (let [ast (query/ast (:string (:query msg)))]
+        (if-let [i (:index core)]
+          {:ok true :events (search i ast)}
+          {:ok false :error "no index"}))
 
       ; Otherwise just return an ack
       {:ok true})
 
-   ;; Some kind of error happened
+    ;; Some kind of error happened
     (catch [:type :riemann.query/parse-error] {:keys [message]}
       {:ok false :error (str "parse error: " message)})
     (catch Exception ^Exception e
-           {:ok false :error (.getMessage e)})))
+      {:ok false :error (.getMessage e)})))

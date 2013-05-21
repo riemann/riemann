@@ -8,6 +8,7 @@
             [gloss.core       :as gloss]
             [cheshire.core    :as json])
   (:use [riemann.common        :only [event-to-json ensure-event-time]]
+        [riemann.core          :only [stream!]]
         [riemann.service       :only [Service ServiceEquiv]]
         [aleph.http            :only [start-http-server]]
         [lamina.core           :only [receive-all
@@ -123,8 +124,7 @@
       (map* (fn handle [event]
               (try
                 (let [event (ensure-event-time event)]
-                  (doseq [stream (:streams core)]
-                    (stream event))
+                  (stream! core event)
                   ; Empty OK response
                   {})
                 (catch Exception ^Exception e

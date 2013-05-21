@@ -5,7 +5,8 @@
            [org.jboss.netty.handler.codec.frame
             DelimiterBasedFrameDecoder
             Delimiters])
-  (:use [riemann.transport.tcp :only [tcp-server
+  (:use [riemann.core :only [stream!]]
+        [riemann.transport.tcp :only [tcp-server
                                       gen-tcp-handler]]
         [riemann.transport.udp :only [udp-server
                                       gen-udp-handler]]
@@ -49,8 +50,7 @@
 (defn graphite-handler
   "Given a core and a MessageEvent, applies the message to core."
   [core e]
-  (doseq [stream (:streams core)]
-    (stream (.getMessage e))))
+  (stream! core (.getMessage e)))
 
 (defn graphite-server
   "Start a graphite-server. Options:

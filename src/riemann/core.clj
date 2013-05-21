@@ -1,20 +1,31 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
   (:use [riemann.time :only [unix-time]]
-        clojure.tools.logging)
+        clojure.tools.logging
+        [riemann.instrumentation :only [Instrumented]])
   (:require riemann.streams
             [riemann.service :as service]
             [riemann.index :as index]
             [riemann.pubsub :as ps]
+            [riemann.instrumentation :as instrumentation]
             clojure.set))
 
 (defrecord Core
-  [streams services index pubsub])
+  [streams services index pubsub streaming-metric]
+
+  Instrumented
+  (events [this]
+          (instrumentation/events streaming-metric)))
 
 (defn core
   "Create a new core."
   []
-  (Core. [] [] nil (ps/pubsub-registry)))
+  (Core. []
+         []
+         nil
+         (ps/pubsub-registry)
+         (instrumentation/rate+latency {:service "core streaming"
+                                        :tags ["riemann"]})))
 
 (defn core-services
   "All services in a core--both the :services list and named services like the
@@ -35,6 +46,9 @@
                                    svc))
                              (:services new-core))
         merged (-> new-core
+                 map->Core
+                 (assoc :streaming-metric (or (:streaming-metric new-core)
+                                              (:streaming-metric old-core)))
                  (assoc :index (when (:index new-core)
                                  (if (service/equiv? (:index new-core)
                                                      (:index old-core))
@@ -98,8 +112,9 @@
 (defn stream!
   "Applies an event to the streams in this core."
   [core event]
-  (doseq [stream (:streams core)]
-    (stream event)))
+  (instrumentation/measure-latency (:streaming-metric core)
+    (doseq [stream (:streams core)]
+      (stream event))))
 
 (defn update-index
   "Updates this core's index with an event. Also publishes to the index pubsub
@@ -150,20 +165,38 @@
    (let [interval  (* 1000 (or interval 10))
          keep-keys (get opts :keep-keys [:host :service])]
      (service/thread-service
-       :reaper interval
+       ::reaper interval
        (fn worker [core]
          (Thread/sleep interval)
-         (let [i       (:index core)
-               streams (:streams core)]
-           (when i
-             (doseq [state (index/expire i)]
-               (try
-                 (let [e (-> (select-keys state keep-keys)
-                           (merge {:state "expired"
-                                   :time (unix-time)}))]
-                   (when-let [registry (:pubsub core)]
-                     (ps/publish! registry "index" e))
-                   (stream! core e))
-                 (catch Exception e
-                   (warn e "Caught exception while processing expired events")))))))))))
 
+         (when-let [i (:index core)]
+           (doseq [state (index/expire i)]
+             (try
+               (let [e (-> (select-keys state keep-keys)
+                         (merge {:state "expired"
+                                 :time (unix-time)}))]
+                 (when-let [registry (:pubsub core)]
+                   (ps/publish! registry "index" e))
+                 (stream! core e))
+               (catch Exception e
+                 (warn e "Caught exception while processing expired events"))))))))))
+
+(defn instrumentation-service
+  "Returns a service which samples instrumented services in its core every
+  interval seconds, and sends their events to the core itself."
+  [interval]
+  (let [interval (long (* 1000 (or interval 10)))]
+    (service/thread-service
+      ::service interval
+      (fn measure [core]
+        (Thread/sleep interval)
+
+        ; Instrumentation for the core itself
+        (doseq [event (instrumentation/events core)]
+          (stream! core event))
+
+        ; Instrumentation for services
+        (doseq [service (core-services core)]
+          (when (instrumentation/instrumented? service)
+            (doseq [event (instrumentation/events service)]
+              (stream! core event))))))))

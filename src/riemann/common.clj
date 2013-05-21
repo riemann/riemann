@@ -2,7 +2,8 @@
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
   (:import [java.util Date]
-           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg])
+           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
+           [java.net InetAddress])
   (:require gloss.io
             clj-time.core
             clj-time.format
@@ -28,6 +29,12 @@
   `(do
      (info ~(str "Deprecated: " comment))
      ~@body))
+
+; Platform
+(defn localhost
+  "Returns the local host name."
+  []
+  (.. InetAddress getLocalHost getHostName))
 
 ; Times
 (defn time-at

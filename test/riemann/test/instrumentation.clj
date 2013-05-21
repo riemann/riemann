@@ -22,7 +22,10 @@
              (is (every? true? (map :meow es)))
 
              ; Should emit a rate and quantiles
-             (is (= ["meow rate" "meow 0" "meow 3/5" "meow 1.0"]
+             (is (= ["riemann meow rate"
+                     "riemann meow 0"
+                     "riemann meow 3/5"
+                     "riemann meow 1.0"]
                     (map :service es)))
 
              ; Uses unix-time
