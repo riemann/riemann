@@ -82,6 +82,11 @@
                (= port (:port other))))
   
   Service
+  (conflict? [this other]
+             (and (instance? TCPServer other)
+                  (= host (:host other))
+                  (= port (:port other))))
+
   (reload! [this new-core]
            (reset! core new-core))
 

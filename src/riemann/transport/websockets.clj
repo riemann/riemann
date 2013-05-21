@@ -155,6 +155,11 @@
                (= port (:port other))))
 
   Service
+  (conflict? [this other]
+             (and (instance? WebsocketServer other)
+                  (= host (:host other))
+                  (= port (:port other))))
+
   (reload! [this new-core]
            (reset! core new-core))
 

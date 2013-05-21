@@ -24,7 +24,10 @@
   (start! [service] 
           "Starts a service. Must be idempotent.")
   (stop!  [service] 
-         "Stops a service. Must be idempotent."))
+         "Stops a service. Must be idempotent.")
+  (conflict? [service1 service2]
+             "Do these two services conflict with one another? Adding
+             a service to a core *replaces* any conflicting services."))
 
 (defprotocol ServiceEquiv
   (equiv? [service1 service2] 
@@ -43,6 +46,11 @@
             (= equiv-key (:equiv-key other))))
 
   Service
+  (conflict? [this other]
+             (and
+               (instance? ThreadService other)
+               (= name (:name other))))
+
   (reload! [this new-core]
            (reset! core new-core))
 
@@ -68,7 +76,8 @@
   "Returns a ThreadService which will call (f core) repeatedly when started.
   Will only stop between calls to f. Start and stop are blocking operations.
   Equivalent to other ThreadServices with the same name and equivalence key--
-  if not provided, defaults nil."
+  if not provided, defaults nil. Conflicts with other ThreadServices of the
+  same name."
   ([name f]
    (thread-service name nil f))
   ([name equiv-key f]
@@ -116,6 +125,11 @@
                       (.equiv-key)))
 
   Service
+  (conflict? [a b]
+             (all-equal? a ^ExecutorServiceService b
+                         (class)
+                         (.name)))
+
   (reload! [this new-core])
 
   (start! [this]

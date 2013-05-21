@@ -83,12 +83,14 @@
                                     (assoc channels channel sub-map))))
                               channels)))))
 
-          ServiceEquiv
-  (equiv? [a b] true)
-
-  Service
   ; All pubsub services are equivalent; we clean out old subscriptions using
   ; sweep.
+  ServiceEquiv
+  (equiv? [a b] (= (class a) (class b)))
+
+  Service
+  (conflict? [a b] false)
+
   (start! [this])
 
   (reload! [this new-core]

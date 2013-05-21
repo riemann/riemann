@@ -82,6 +82,7 @@
       (equiv? [this other] (= (class this) (class other)))
 
       Service
+      (conflict? [this other] false)
       (reload! [this new-core])
       (start! [this])
       (stop! [this]))))
