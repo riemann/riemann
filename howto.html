@@ -449,6 +449,23 @@ you:</p>
     ...))
 {% endhighlight %}
 
+<p>By default, Riemann copies <code>[:host :service]</code> to expired events.
+You can control what keys from events are copied onto expired events by
+passing <code>:keep-keys</code> to <code>periodically-expire</code>:</p>
+
+{% highlight clj %}
+(periodically-expire 10 {:keep-keys [:host :service :tags]})
+{% endhighlight %}
+
+<p>With that in place, you can filter expired events on tags. This way, your app
+can decide whether an event is worthy of an alert by tagging it:</p>
+
+{% highlight clj %}
+(streams
+  (expired
+    (tagged "notify-me" (email "ops@foo.com"))))
+{% endhighlight %}
+
 <h3>Group events in time</h3>
 
 <p>Sometimes you want to ask a question about the last few minutes, or of
@@ -475,6 +492,62 @@ since this event pertains to the system as a whole.</p>
 (coalesce (smap folds/maximum
   (with {:service "Max CPU" :host nil} prn)))
 {% endhighlight %}
+
+<h3>Alerting when a certain percentage of events happen</h3>
+
+<p>Sometimes you'll have a service that will fail. You might expect one or two
+failures, but if you get over a certain percentage of failures you want to be
+notified. In this case you can use a <code>fixed-time-window</code>
+
+{% highlight clj %}
+(streams
+  (where (and metric (service "app1")(tagged "sign_in")
+    ; We want to get alerted about failed sign ins. However we expect that there will be failures
+    ; due to incorect passwords etc. So we only want to get alerted if more than 50% of the signins
+    ; in a 60 second period are failures. The app tags failed signins with a warning state.
+    ;
+    ; fixed-time-window sends a vector of events out every 60 seconds
+    (fixed-time-window 60
+      ; smap passes those events into a function
+      (smap (fn [events]
+        ; we include a function here filter the vector for all of the "warning" events and count them
+        ; we will then count the total of the events
+        ; finally work out the percentage
+        (let [percent (/ (count (filter #(= (:state %) "warning") events))
+                         (count events))]
+                         ; take an action on the value of percent, in this example we imagine that the
+                         ; page-ops and mail-devs functions can take strings
+                         (cond
+                           (> percent 0.7) (page-ops (format "sign_in is CRITICAL: %f percent" (float percent)))
+                           (> percent 0.5) (mail-devs (format "sign_in is BAD: %f percent" (float percent)))
+                           :else (prn (format "sign in is %f" (float percent)))
+                           ))))))
+  ))
+{% endhighlight %}
+
+<h3 id="create-your-own-stream-function">Create your own stream function</h3>
+
+<p>A stream is a function that takes a variable number of child streams and returns a function that takes an event and responds to that event.</p>
+
+<p>Let's create a trivial example.</p>
+
+{% highlight clj %}
+(defn hello-stream [& children]
+  (fn [e] (let [new-event (assoc e :hello :world)]
+    (call-rescue new-event children))))
+{% endhighlight %}
+
+<p>Our stream returns a function that when it receives an event, adds a new key-pair via <code>assoc</code> and then uses <code>call-rescue</code>, a standard library function, to pass the event on to all the child streams it was passed.</p>
+
+<p>Add this new stream to the list of event streams.</p>
+
+{% highlight clj %}
+(streams (hello-stream prn))
+{% endhighlight %}
+
+<p>Now when you pass an event into Riemann you should see the event printed out with an added key-value pair of <code>:hello :world</code>.</p>
+
+<p>Streams all essentially work in this way, if you look at the source code of the Streams namespace in <code>streams.clj</code>. You can find a few simple examples in the functions <code>match</code>, <code>expired</code>, <code>under</code> and <code>over</code> which filter whether the event is passed along the event stream.</p>
 
 <h2>Working with dashboard</h2>
 
@@ -689,7 +762,7 @@ string.</p>
 
 <p>Because protocol buffers is strongly typed, the metric of an event is
 represented as one of metric_d (floating point 64-bit), metric_f (floating
-point 32-bit), or metric_sint (64-bit signed integer). Your client should emit
+point 32-bit), or metric_sint64 (64-bit signed integer). Your client should emit
 and consume all of these types. For compatibility with older versions of
 Riemann, you may *also* emit a metric_f alongside the normal type; newer
 versions of Riemann will prefer the higher-resolution types.</p>
