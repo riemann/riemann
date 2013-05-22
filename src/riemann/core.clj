@@ -10,6 +10,45 @@
             [riemann.instrumentation :as instrumentation]
             clojure.set))
 
+(defn stream!
+  "Applies an event to the streams in this core."
+  [core event]
+  (instrumentation/measure-latency (:streaming-metric core)
+    (doseq [stream (:streams core)]
+      (stream event))))
+
+(defn core-services
+  "All services in a core--both the :services list and named services like the
+  index."
+  [core]
+  (remove nil?
+          (concat [(:index core)
+                   (:pubsub core)]
+                (:services core))))
+
+(defn instrumentation-service
+  "Returns a service which samples instrumented services in its core every
+  interval seconds, and sends their events to the core itself."
+  [opts]
+  (let [interval (long (* 1000 (get opts :interval 10)))
+        enabled? (get opts :enabled? true)]
+    (service/thread-service
+      ::instrumentation [interval enabled?]
+      (fn measure [core]
+        (Thread/sleep interval)
+
+        ; Instrumentation for the core itself
+        (doseq [event (instrumentation/events core)]
+          (when enabled?
+            (stream! core event)))
+
+        ; Instrumentation for services
+        (doseq [service (core-services core)]
+          (when (instrumentation/instrumented? service)
+            (doseq [event (instrumentation/events service)]
+              (when enabled?
+                (stream! core event)))))))))
+
 (defrecord Core
   [streams services index pubsub streaming-metric]
 
@@ -21,20 +60,33 @@
   "Create a new core."
   []
   (Core. []
-         []
+         [(instrumentation-service {})]
          nil
          (ps/pubsub-registry)
          (instrumentation/rate+latency {:service "core streaming"
                                         :tags ["riemann"]})))
 
-(defn core-services
-  "All services in a core--both the :services list and named services like the
-  index."
-  [core]
-  (remove nil?
-          (concat [(:index core)
-                   (:pubsub core)]
-                (:services core))))
+(defn conj-service
+  "Adds a service to a core. Throws if any existing services would conflict. If
+  force? is passed, dissoc's any conflicting services."
+  ([core service] (conj-service core service false))
+  ([core service force?]
+   (if force?
+     ; Remove conflicts and conj service
+     (assoc core :services
+            (conj (remove #(service/conflict? service %)
+                          (:services core))
+                  service))
+
+     ; Throw if conflicts arise
+     (let [conflicts (filter #(service/conflict? service %)
+                             (core-services core))]
+       (when-not (empty? conflicts)
+         (throw (IllegalArgumentException.
+                  (binding [*print-level* 3]
+                    (str "won't conj service: " (pr-str service)
+                         " would conflict with " (pr-str conflicts))))))
+       (update-in core [:services] conj service)))))
 
 (defn merge-cores
   "Merge cores old-core and new-core into a new core comprised of services from
@@ -109,13 +161,6 @@
   (dorun (pmap service/stop! (core-services core)))
   (info "Hyperspace core shut down"))
 
-(defn stream!
-  "Applies an event to the streams in this core."
-  [core event]
-  (instrumentation/measure-latency (:streaming-metric core)
-    (doseq [stream (:streams core)]
-      (stream event))))
-
 (defn update-index
   "Updates this core's index with an event. Also publishes to the index pubsub
   channel."
@@ -180,23 +225,3 @@
                  (stream! core e))
                (catch Exception e
                  (warn e "Caught exception while processing expired events"))))))))))
-
-(defn instrumentation-service
-  "Returns a service which samples instrumented services in its core every
-  interval seconds, and sends their events to the core itself."
-  [interval]
-  (let [interval (long (* 1000 (or interval 10)))]
-    (service/thread-service
-      ::service interval
-      (fn measure [core]
-        (Thread/sleep interval)
-
-        ; Instrumentation for the core itself
-        (doseq [event (instrumentation/events core)]
-          (stream! core event))
-
-        ; Instrumentation for services
-        (doseq [service (core-services core)]
-          (when (instrumentation/instrumented? service)
-            (doseq [event (instrumentation/events service)]
-              (stream! core event))))))))

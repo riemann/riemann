@@ -26,17 +26,39 @@
 (deftest blank-test
          (let [c (core)]
            (is (= [] (:streams c)))
-           (is (= [] (:services c)))
+           (is (= (map :name (:services c))
+                  [:riemann.core/instrumentation]))
            (is (= nil (:index c)))
            (is (:pubsub c))))
 
 (defrecord TestService [id running core]
   Service
+  (conflict? [a b] (and (instance? TestService b)
+                        (= id (:id b))))
   (start!  [_]   (reset! running true))
   (stop!   [_]   (reset! running false))
   (reload! [_ c] (reset! core c))
   ServiceEquiv
   (equiv?  [a b] (= (:id a) (:id b))))
+
+(deftest conj-service-test
+         ; Verify that we can't associate two services which conflict
+         (let [ts1  (TestService. 1 (atom nil) (atom nil))
+               ts1' (TestService. 1 (atom nil) (atom nil))
+               ts2  (TestService. 2 (atom nil) (atom nil))
+               c (-> (core)
+                   (assoc :services [])
+                   (conj-service ts1))]
+           (is (thrown? IllegalArgumentException
+                        (conj-service c ts1')))
+
+           ; But we can force it!
+           (is (= (:services (conj-service c ts1' :force))
+                  [ts1']))
+
+           ; It should be fine to associate something that doesn't conflict:
+           (is (= (:services (conj-service c ts2))
+                  [ts1 ts2]))))
 
 (deftest start-transition-stop
          (logging/suppress 

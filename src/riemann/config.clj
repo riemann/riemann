@@ -72,9 +72,20 @@
     (let [service (or (first (filter #(service/equiv? service %)
                                      (:services @core)))
                       service)]
-      (swap! next-core assoc :services
-             (conj (:services @next-core) service))
+      (swap! next-core core/conj-service service)
       service)))
+
+(defn instrumentation
+  "Replaces the default core's instrumentation service with a new one, using
+  the given options. If you prefer not to receive any events about Riemann's
+  well-being, you can pass :enabled? false.
+  
+  (instrumentation {:interval 5
+                    :enabled? false})"
+  [& opts]
+  (let [service (apply core/instrumentation-service opts)]
+    (swap! next-core core/conj-service service :force)
+    service))
 
 (defn tcp-server
   "Add a new TCP server with opts to the default core."
@@ -170,9 +181,15 @@
 (defn subscribe
   "Subscribes to the given channel with f, which will receive events. Uses the
   current core's pubsub registry always, because the next core's registry will
-  be discarded by core/transition."
+  be discarded by core/transition.
+  
+  Returns a single-arity function that does nothing with its inputs and, when
+  invoked, returns the subscription you created. Why do this weird thing? So
+  you can pretend (subscribe ...) is a stream, and use it in the same context
+  as your other streams, like (publish)."
   [channel f]
-  (pubsub/subscribe! (:pubsub @core) channel f))
+  (let [sub (pubsub/subscribe! (:pubsub @core) channel f)]
+    (fn discard [event] sub)))
 
 (defn clear!
   "Resets the next core."

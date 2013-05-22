@@ -9,6 +9,8 @@
             [riemann.streams :as streams])
   (:import (java.util.concurrent RejectedExecutionException)))
 
+(set! *print-level* 4)
+
 (defn reset-core! [f]
   (logging/suppress ["riemann.core"
                      "riemann.service"
@@ -27,26 +29,44 @@
 (deftest blank-test
          (is (empty? (:streams @core)))
          (is (empty? (:streams @next-core)))
-         (is (empty? (:services @core)))
-         (is (empty? (:services @core))))
+         (is (every? true? (map service/equiv?
+                                (:services @core)
+                                (:services (core/core)))))
+         (is (every? true? (map service/equiv?
+                                (:services @next-core)
+                                (:services (core/core))))))
 
 (deftest apply-test
          (is (not= @core @next-core))
          (let [old-next-core @next-core]
            (apply!)
-           ; Pubsub will be replaced by the old core's pubsub, but otherwise
-           ; we should be the same.
-           (is (= (dissoc old-next-core :pubsub)
-                  (dissoc @core :pubsub)))
+           (is (= (dissoc old-next-core :pubsub :services)
+                  (dissoc @core :pubsub :services)))
            (is (not= @core @next-core))))
+
+(defn verify-service
+  "Tests that the given service a.) is a service, b.) is in the next core, and
+  c.) is not in the current core."
+  [s]
+  ; Is a service
+  (is (satisfies? service/Service s))
+  
+  ; Not present in current core
+  (is (not-every? (comp #{s}) (:services @core)))
+
+  ; Present in next core
+  (is (some #{s} (:services @next-core))))
 
 (deftest service-test
          (let [sleep (fn [_] (Thread/sleep 1))]
            (testing "Adds an equivalent service to a core."
                     (let [s1 (service! (service/thread-service :foo sleep))]
-                      (is s1)
+                      (satisfies? service/Service s1)
                       (apply!)
-                      (is (= (:services @core) [s1]))
+                      (is (some #{s1} (:services @core)))
+                      (is (deref (:running s1)))
+                      
+                      ; Now add an equivalent service
                       (let [s (service/thread-service :foo sleep)
                             s2 (service! s)]
                         (is (= s1 s2))
@@ -54,39 +74,43 @@
                         (apply!)
                         (is (deref (:running s1)))
                         (is (not (deref (:running s))))
-                        (is (= (:services @core) [s1])))))
+                        (is (some #{s1} (:services @core)))
+                        (is (not (some #{s} (:services @core)))))))
 
            (testing "Adds a distinct service to a core."
-                    (let [s1 (service! (service/thread-service :foo sleep))]
-                      (is s1)
+                    (let [defaults (set (:services @next-core))
+                          s1 (service! (service/thread-service :foo sleep))]
+                      (satisfies? service/Service s1)
                       (apply!)
-                      (is (= (:services @core) [s1]))
+                      (is (some #{s1} (:services @core)))
+                      (is (deref (:running s1)))
+
+                      ; Add a distinct service. S1 should shut down since
+                      ; it is no longer present in the new target core.
                       (let [s2 (service! (service/thread-service :bar sleep))]
                         (is (not= s1 s2))
                         (apply!)
                         (is (not (deref (:running s1))))
                         (is (deref (:running s2)))
-                        (is (= (:services @core) [s2])))))))
+                        (is (some #{s2} (:services @core)))
+                        (is (not (some #{s1} (:services @core)))))))))
+
+(deftest instrumentation-test
+         (let [s (verify-service (instrumentation {:interval 2
+                                                   :enabled? false}))]
+           (is (= [2000 false] (:equiv-key s)))))
 
 (deftest tcp-server-test
-         (tcp-server :host "a")
-         (is (= "a" (:host (first (:services @next-core)))))
-         (is (empty? (:services @core))))
+         (verify-service (tcp-server :host "a")))
 
 (deftest udp-server-test
-         (udp-server :host "b")
-         (is (= "b" (:host (first (:services @next-core)))))
-         (is (empty? (:services @core))))
+         (verify-service (udp-server :host "b")))
 
 (deftest ws-server-test
-         (ws-server :port 1234)
-         (is (= 1234 (:port (first (:services @next-core)))))
-         (is (empty? (:services @core))))
+         (verify-service (ws-server :port 1234)))
 
 (deftest graphite-server-test
-         (graphite-server :port 1)
-         (is (= 1 (:port (first (:services @next-core)))))
-         (is (empty? (:services @core))))
+         (verify-service (graphite-server :port 1)))
 
 (deftest streams-test
          (streams :a)
@@ -151,7 +175,7 @@
                             (publish :test))
              (subscribe :test (partial deliver received)))
            (apply!)
-           
+
            ; Send through streams
            ((first (:streams @core)) {:service "test-in"})
            (is (= {:service "test-in"} @received))))

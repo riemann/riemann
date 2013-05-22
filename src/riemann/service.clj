@@ -60,7 +60,10 @@
               (reset! running true)
               (let [t (Thread. (fn thread-service-runner []
                                  (while @running
-                                   (f @core))))]
+                                   (try
+                                     (f @core)
+                                     (catch InterruptedException e
+                                       :interrupted)))))]
                 (reset! thread t)
                 (.start t)))))
 
@@ -68,6 +71,7 @@
          (locking this
            (when @running
              (reset! running false)
+             (.interrupt ^Thread @thread)
              ; Wait for exit
              (while (.isAlive ^Thread @thread)
                (Thread/sleep 5))))))
