@@ -24,8 +24,7 @@
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
         [riemann.librato :only [librato-metrics]]
-        riemann.streams)
-  (:gen-class))
+        riemann.streams))
 
 (def core "The currently running core."
   (atom (core/core)))
