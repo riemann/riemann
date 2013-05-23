@@ -6,13 +6,6 @@
 
 (riemann.logging/init)
 
-(deftest deprecated-funcs-test
-         "Test that deprecated funcs are callable"
-         (suppress ["riemann.email"]
-                   (#'riemann.email/human-uniq [] nil)
-                   (#'riemann.email/subject [])
-                   (#'riemann.email/body [])))
-
 (deftest override-formatting-test
          (let [a (promise)]
            (with-redefs [postal.core/send-message #(deliver a [%1 %2])]
