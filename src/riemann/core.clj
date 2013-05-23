@@ -210,7 +210,7 @@
    (let [interval  (* 1000 (or interval 10))
          keep-keys (get opts :keep-keys [:host :service])]
      (service/thread-service
-       ::reaper interval
+       ::reaper [interval keep-keys]
        (fn worker [core]
          (Thread/sleep interval)
 
