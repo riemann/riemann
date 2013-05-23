@@ -55,7 +55,7 @@
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
   :java-source-path "src/riemann/"
-  :aot [riemann.bin]
+;  :aot [riemann.bin]
   :main riemann.bin
   :codox {:output-dir "site/api"}
 )

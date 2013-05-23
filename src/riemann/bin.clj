@@ -11,11 +11,13 @@
   "The configuration file loaded by the bin tool" 
   (atom nil))
 
+(def reload-lock (Object.))
+
 (defn reload!
   "Reloads the given configuration file by clearing the task scheduler, shutting
   down the current core, and loading a new one."
   []
-  (locking riemann.bin
+  (locking reload-lock
     (try
       (riemann.config/validate-config @config-file)
       (riemann.time/reset-tasks!)
