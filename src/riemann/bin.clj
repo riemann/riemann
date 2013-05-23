@@ -42,7 +42,11 @@
 (defn pid
   "Process identifier, such as it is on the JVM. :-/"
   []
-  (-> (java.lang.management.ManagementFactory/getRuntimeMXBean) (.getName)))
+  (let [name (-> (java.lang.management.ManagementFactory/getRuntimeMXBean)
+               (.getName))]
+    (try
+      (get (re-find #"^(\d+).*" name) 1)
+      (catch Exception e name))))
 
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
