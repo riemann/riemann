@@ -23,6 +23,7 @@
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
             [riemann.index :as index]
+            [clojure.string :as s]
             riemann.client
             riemann.logging
             [clojure.set :as set])
@@ -151,6 +152,30 @@ OA
     (let [value (f event)]
       (when-not (nil? value)
         (call-rescue value children)))))
+
+(defn service-rewrite
+  "Rewrite a service based on either tag content or service name
+   Expects a vector of entity, match and replacement.
+
+   When entity is :tag, act on the first tag that matches match.
+
+   Feed either the tag or service to clojure.string/replace,
+   match and replacement are given as is."
+  
+  [[entity match replacement] & children]
+  (let [pattern (-> match str re-pattern)
+        tag-rw (fn [{:keys [tags] :as event}]
+                 (if-let [tag (first (filter (partial re-find pattern) tags))]
+                   (assoc event :service
+                          (s/replace tag match replacement))
+                   event))
+        service-rw (fn [{:keys [service] :as event}]
+                     (if service
+                       (assoc event :service
+                              (s/replace service match replacement))
+                       event))]
+    (apply smap (case entity :tag tag-rw :service service-rw identity)
+           children)))
 
 (defn sreduce
   "Streaming reduce. Two forms:
