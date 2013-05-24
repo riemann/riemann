@@ -1200,6 +1200,15 @@ OA
           (call-rescue event children))))
     (apply smap (first args) (rest args))))
 
+(defn scale
+  "Passes on a changed version of each event by multiplying each
+   metric with the input scale factor"
+  [factor & children]
+  (let [scale-event (fn [{:keys [metric] :as event}]
+                      (assoc event :metric
+                             (if metric (* metric factor))))]
+    (apply smap scale-event children)))
+
 (defn tag
   "Adds a new tag, or set of tags, to events which flow through.
   
