@@ -15,6 +15,11 @@
   [settings room-name]
   (cf/room-by-name settings room-name))
 
+(defn format_string
+  [e]
+  (str (join " " ["HOST:" (str (:host e)) "SERVICE:" (str (:service e)) "STATE:" (str (:state e)) "DESC:" (str (:description e))]))
+  )
+
 (defn campfire
   "Creates an adaptor to forward events to campfire.
   TODO: write more here once the event formatting is better.
