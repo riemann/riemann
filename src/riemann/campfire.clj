@@ -1,5 +1,6 @@
 (ns riemann.campfire
   "Forwards events to Campfire"
+  (:use [clojure.string :only [join]])
   (:require [clj-campfire.core :as cf]))
 
 (defn cf-settings
@@ -18,12 +19,12 @@
   "Creates an adaptor to forward events to campfire.
   TODO: write more here once the event formatting is better.
   TODO: tests
-  TODO: fix event formatting - see pagerduty for ideas?
-  Currently doesn't format events properly, but expired events are ok.
   Tested with:
   (streams
     (by [:host, :service]
       (let [camp (campfire \"token\", true, \"sub-domain\", \"room\")]
         camp)))"
   [token ssl sub-domain room-name]
-  (fn [e] (cf/message (room (cf-settings token ssl sub-domain) room-name) (str e))))
+  (fn [e]
+   (let [string (str (join " " ["HOST:" (str (:host e)) "SERVICE:" (str (:service e)) "STATE:" (str (:state e)) "DESC:" (str (:description e))]))]
+   (cf/message (room (cf-settings token ssl sub-domain) room-name) string))))
