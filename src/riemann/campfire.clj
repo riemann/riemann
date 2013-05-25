@@ -31,5 +31,7 @@
         camp)))"
   [token ssl sub-domain room-name]
   (fn [e]
-   (let [string (str (join " " ["HOST:" (str (:host e)) "SERVICE:" (str (:service e)) "STATE:" (str (:state e)) "DESC:" (str (:description e))]))]
-   (cf/message (room (cf-settings token ssl sub-domain) room-name) string))))
+    (let [string (format_string e)
+          settings (cf-settings token ssl sub-domain)
+          ]
+      (cf/message (room settings room-name) string))))
