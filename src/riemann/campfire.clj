@@ -31,6 +31,6 @@
         camp)))"
   [token ssl sub-domain room-name]
   (fn [e]
-    (let [string (campfire_message e)
+    (let [message_string (campfire_message e)
           settings (cf-settings token ssl sub-domain)]
-      (cf/message (room settings room-name) string))))
+      (cf/message (room settings room-name) message_string))))
