@@ -42,7 +42,7 @@
 (deftest server-errors
          (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
            (let [index (index)
-                 server (tcp-server core)
+                 server (tcp-server)
                  core   (transition! (core) {:services [server]
                                              :index index})
                  client (tcp-client)]

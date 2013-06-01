@@ -11,8 +11,11 @@
         aleph.udp
         gloss.core)
   (:require [clj-http.client :as http]
-            [cheshire.core :as json])
-  (:import (org.jboss.netty.buffer ChannelBuffers)))
+            [cheshire.core :as json]
+            [riemann.client :as client]
+            [riemann.index :as index])
+  (:import (org.jboss.netty.buffer ChannelBuffers)
+           (java.io IOException)))
 
 (riemann.logging/init)
 
@@ -63,6 +66,59 @@
                (finally
                  (close client)
                  (stop! core))))))
+
+(defn test-tcp-client
+  [client-opts server-opts]
+  (riemann.logging/suppress ["riemann.transport"
+                             "riemann.core"
+                             "riemann.pubsub"]
+    (let [server (tcp-server server-opts)
+          index (index/index)
+          core (transition! (core) {:index index
+                                    :services [server]
+                                    :streams [(partial index/update index)]})]
+      (try
+        (let [client (apply client/tcp-client (mapcat identity client-opts))]
+          (try
+            (client/send-event client {:service "laserkat"})
+            (is (= "laserkat" (-> client
+                                (client/query "service = \"laserkat\"")
+                                first
+                                :service)))
+            (finally
+              (client/close-client client))))
+        (finally
+          (stop! core))))))
+
+(deftest tls-test
+         (let [server {:tls? true
+                       :key "test/data/tls/server.pkcs8"
+                       :cert "test/data/tls/server.crt"
+                       :ca-cert "test/data/tls/demoCA/cacert.pem"}
+               client {:tls? true
+                       :key "test/data/tls/client.pkcs8"
+                       :cert "test/data/tls/client.crt"
+                       :ca-cert "test/data/tls/demoCA/cacert.pem"}]
+           ; Works with valid config
+           (test-tcp-client client server)
+
+           ; Fails with mismatching client key/cert
+           (is (thrown? IOException
+                        (test-tcp-client (assoc client :key (:key server))
+                                         server)))
+           ; Fails with non-CA client CA cert
+           (is (thrown? IOException
+                        (test-tcp-client (assoc client :ca-cert (:cert client))
+                                         server)))
+           ; Fails with mismatching server key/cert
+           (is (thrown? IOException
+                        (test-tcp-client client
+                                         (assoc server :key (:key client)))))
+           ; Fails with non-CA server CA cert
+           (is (thrown? IOException
+                        (test-tcp-client client
+                                         (assoc server :ca-cert
+                                                (:cert client)))))))
 
 (deftest ignores-garbage
          (riemann.logging/suppress ["riemann.transport"

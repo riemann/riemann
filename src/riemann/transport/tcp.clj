@@ -20,8 +20,11 @@
            [org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
                                                 LengthFieldPrepender]
            [org.jboss.netty.handler.execution
-            OrderedMemoryAwareThreadPoolExecutor])
-  (:use [riemann.transport :only [handle 
+            OrderedMemoryAwareThreadPoolExecutor]
+           [org.jboss.netty.handler.ssl SslHandler])
+  (:require [less-awful-ssl.core :as ssl])
+  (:use [clojure.tools.logging :only [info warn]]
+        [riemann.transport :only [handle 
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
@@ -30,7 +33,6 @@
                                   channel-group
                                   channel-pipeline-factory]]
         [riemann.service :only [Service ServiceEquiv]]
-        [clojure.tools.logging :only [info warn]]
         [riemann.transport :only [handle]]))
 
 (defn int32-frame-decoder
@@ -70,7 +72,7 @@
   (.write (.getChannel e)
           (handle core (.getMessage e))))
 
-(defrecord TCPServer [host port channel-group pipeline-factory core killer]
+(defrecord TCPServer [host port equiv channel-group pipeline-factory core killer]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -79,7 +81,8 @@
   (equiv? [this other]
           (and (instance? TCPServer other)
                (= host (:host other))
-               (= port (:port other))))
+               (= port (:port other))
+               (= equiv (:equiv other))))
   
   Service
   (conflict? [this other]
@@ -131,33 +134,85 @@
              (@killer)
              (reset! killer nil)))))
 
+(defn ssl-handler 
+  "Given an SSLContext, creates a new SSLEngine and a corresponding Netty
+  SslHandler wrapping it."
+  [context]
+  (-> context
+    .createSSLEngine
+    (doto (.setUseClientMode false)
+          (.setNeedClientAuth true))
+    SslHandler.
+    (doto (.setEnableRenegotiation false))))
+
+(defn cpf
+  "A channel pipeline factory for a TCP server."
+  [core channel-group ssl-context]
+  ; Gross hack; should re-work the pipeline macro
+  (if ssl-context
+    (channel-pipeline-factory
+               ssl                 (ssl-handler ssl-context)
+               int32-frame-decoder (int32-frame-decoder)
+      ^:shared int32-frame-encoder (int32-frame-encoder)
+      ^:shared executor            shared-execution-handler
+      ^:shared protobuf-decoder    (protobuf-decoder)
+      ^:shared protobuf-encoder    (protobuf-encoder)
+      ^:shared msg-decoder         (msg-decoder)
+      ^:shared msg-encoder         (msg-encoder)
+      ^:shared handler             (gen-tcp-handler 
+                                     core
+                                     channel-group
+                                     tcp-handler))
+    (channel-pipeline-factory
+               int32-frame-decoder (int32-frame-decoder)
+      ^:shared int32-frame-encoder (int32-frame-encoder)
+      ^:shared executor            shared-execution-handler
+      ^:shared protobuf-decoder    (protobuf-decoder)
+      ^:shared protobuf-encoder    (protobuf-encoder)
+      ^:shared msg-decoder         (msg-decoder)
+      ^:shared msg-encoder         (msg-encoder)
+      ^:shared handler             (gen-tcp-handler 
+                                     core
+                                     channel-group
+                                     tcp-handler))))
+
 (defn tcp-server
   "Create a new TCP server. Doesn't start until (service/start!). Options:
   :host             The host to listen on (default 127.0.0.1).
   :port             The port to listen on. (default 5555)
   :core             An atom used to track the active core for this server
   :channel-group    A global channel group used to track all connections.
-  :pipeline-factory A ChannelPipelineFactory for creating new pipelines."
+  :pipeline-factory A ChannelPipelineFactory for creating new pipelines.
+  
+  TLS options:
+  :tls?             Whether to enable TLS
+  :key              A PKCS8-encoded private key file
+  :cert             The corresponding public certificate 
+  :ca-cert          The certificate of the CA which signed this key"
   ([]
    (tcp-server {}))
   ([opts]
-     (let [core          (get opts :core (atom nil))
-           host          (get opts :host "127.0.0.1")
-           port          (get opts :port 5555)
-           channel-group (get opts :channel-group
-                              (channel-group 
-                                (str "tcp-server " host ":" port)))
-           pf (get opts :pipeline-factory
-                    (channel-pipeline-factory
-                               int32-frame-decoder (int32-frame-decoder)
-                      ^:shared int32-frame-encoder (int32-frame-encoder)
-                      ^:shared executor            shared-execution-handler
-                      ^:shared protobuf-decoder    (protobuf-decoder)
-                      ^:shared protobuf-encoder    (protobuf-encoder)
-                      ^:shared msg-decoder         (msg-decoder)
-                      ^:shared msg-encoder         (msg-encoder)
-                      ^:shared handler             (gen-tcp-handler 
-                                                     core
-                                                     channel-group
-                                                     tcp-handler)))]
-       (TCPServer. host port channel-group pf core (atom nil)))))
+   (let [core          (get opts :core (atom nil))
+         host          (get opts :host "127.0.0.1")
+         port          (get opts :port 5555)
+         channel-group (get opts :channel-group
+                            (channel-group 
+                              (str "tcp-server " host ":" port)))
+         equiv         (select-keys opts [:tls? :key :cert :ca-cert])
+         ; Use the supplied pipeline factory...
+         pf (get opts :pipeline-factory
+                 ; or construct one for ourselves!
+                 (if (:tls? opts)
+                   ; A TLS-enabled handler
+                   (do
+                     (assert (:key opts))
+                     (assert (:cert opts))
+                     (assert (:ca-cert opts))
+                     (let [ssl-context (ssl/ssl-context (:key opts)
+                                                        (:cert opts)
+                                                        (:ca-cert opts))]
+                       (cpf core channel-group ssl-context)))
+                   ; A standard handler
+                   (cpf core channel-group nil)))]
+
+       (TCPServer. host port equiv channel-group pf core (atom nil)))))
