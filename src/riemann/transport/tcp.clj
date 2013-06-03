@@ -179,7 +179,7 @@
 (defn tcp-server
   "Create a new TCP server. Doesn't start until (service/start!). Options:
   :host             The host to listen on (default 127.0.0.1).
-  :port             The port to listen on. (default 5555)
+  :port             The port to listen on. (default 5554 with TLS, or 5555 std)
   :core             An atom used to track the active core for this server
   :channel-group    A global channel group used to track all connections.
   :pipeline-factory A ChannelPipelineFactory for creating new pipelines.
@@ -194,7 +194,7 @@
   ([opts]
    (let [core          (get opts :core (atom nil))
          host          (get opts :host "127.0.0.1")
-         port          (get opts :port 5555)
+         port          (get opts :port (if (:tls? opts) 5554 5555))
          channel-group (get opts :channel-group
                             (channel-group 
                               (str "tcp-server " host ":" port)))
