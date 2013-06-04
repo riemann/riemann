@@ -1577,6 +1577,64 @@ OA
               (last events))))
       (apply sdo children))))
 
+(defn stable
+  "A stream which detects stable groups of events over time. Takes a time
+  period in seconds, and a function of events. Passes on all events for which
+  (f event1) is equal to (f event2), for each successive pair of events, for at
+  least dt seconds. Use (stable) to filter out transient spikes and flapping
+  states.
+
+  In these plots, stable events are shown as =, and unstable events are shown
+  as -. = events are passed to children, and - events are ignored.
+
+       A spike           Flapping           Stable changes
+  |                 |                    |                    
+  |       -         |    -- -   ======   |      =====        
+  |                 |        -           |           ========
+  |======= ======   |====  -  --         |======              
+  +------------->   +---------------->   +------------------>
+        time              time                  time
+
+  May buffer events for up to dt seconds when the value of (f event) changes,
+  in order to determine if the new value is stable or not.
+  
+  ; Passes on events where the state remains the same for at least five
+  ; seconds.
+  (stable 5 :state prn)"
+  [dt f & children]
+  (let [state (atom {:prev ::unknown
+                     :out    (list)
+                     :buffer []})
+        update (fn update [state event]
+                 (let [value (f event)
+                       buffer (:buffer state)]
+;                   (prn :event event)
+;                   (prn :state state)
+                   (if (= value (:prev state))
+                     ; This event is the same as before.
+                     (if (empty? buffer)
+                       ; We're stable; flush this event immediately.
+                       (assoc state :out (list event))
+                       
+                       ; We're buffering.
+                       (let [buffer (conj buffer event)]
+                         (if (<= dt (- (:time event) (:time (first buffer))))
+                           ; We're now stable. Flush buffer.
+                           (merge state {:out buffer
+                                         :buffer []})
+
+                           ; Still buffering.
+                           (merge state {:out (list)
+                                         :buffer buffer}))))
+
+                     ; This event is different than the one before it; skip
+                     {:prev value
+                      :out (list)
+                      :buffer [event]})))]
+
+    (fn stream [event]
+      (doseq [e (:out (swap! state update event))]
+        (call-rescue e children)))))
 
 (defn project*
   "Like project, but takes predicate *functions* instead of where expressions."

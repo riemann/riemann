@@ -1177,6 +1177,46 @@
            (s b2)
            (is (= (set @out) #{b2 c1}))))
 
+(deftest stable-test
+         ; Doesn't emit until dt seconds have passed.
+         (test-stream (stable 3 :x)
+                      [{:x 1 :time 0} {:x 1 :time 1} {:x 1 :time 2}]
+                      [])
+ 
+         ; Constant values are emitted after dt seconds
+         (test-stream (stable 3 :x)
+                      [{:x 1 :time 0} {:x 1 :time 1} {:x 1 :time 3}]
+                      [{:x 1 :time 0} {:x 1 :time 1} {:x 1 :time 3}])
+
+         ; Ignores spikes
+         (test-stream (stable 3 :x)
+                      [{:x 0 :time 0}
+                       {:x 0 :time 3}
+                       {:x 1 :time 4}
+                       {:x 1 :time 5}
+                       {:x 0 :time 6}
+                       {:x 0 :time 9}]
+                      [{:x 0 :time 0}
+                       {:x 0 :time 3}
+                       ; spike elided
+                       {:x 0 :time 6}
+                       {:x 0 :time 9}])
+
+         ; Ignores flapping
+         (test-stream (stable 3 :x)
+                      [{:x 0 :time 0}
+                       {:x 0 :time 10}
+                       {:x 1 :time 11}
+                       {:x 0 :time 11}
+                       {:x 1 :time 12}
+                       {:x 5 :time 13}
+                       {:x 2 :time 14}
+                       {:x 2 :time 17}]
+                      [{:x 0 :time 0}
+                       {:x 0 :time 10}
+                       {:x 2 :time 14}
+                       {:x 2 :time 17}]))
+
 (deftest project-test
          ; Empty -> empty
          (test-stream (project [(service :foo) (service :bar)])
