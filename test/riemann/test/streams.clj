@@ -517,6 +517,30 @@
                     (is (= (deref r)
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
+         (testing "tagged-all"
+                  (let [r (ref [])
+                        s (where (tagged-all "foo") (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+
+         (testing "tagged-any"
+                  (let [r (ref [])
+                        s (where (tagged-any "foo") (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+
          (testing "else"
                   ; Where should take an else clause.
                   (let [a (atom [])
@@ -547,8 +571,13 @@
                   ; matched.
                   (is (= true  ((where (service "foo")) {:service "foo"})))
                   (is (= false ((where (service "foo")) {:service "bar"})))
+
                   (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
                   (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+                  (is (= true  ((where (tagged-all "foo")) {:tags ["foo"]})))
+                  (is (= nil ((where (tagged-all "foo")) {:tags ["bar"]})))
+                  (is (= true  ((where (tagged-any "foo")) {:tags ["foo"]})))
+                  (is (= nil ((where (tagged-any "foo")) {:tags ["bar"]})))
 
                   (is (= true ((where (service "foo") 
                                       (fn [event] 2)) 
