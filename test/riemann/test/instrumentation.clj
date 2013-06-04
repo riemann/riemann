@@ -23,9 +23,9 @@
 
              ; Should emit a rate and quantiles
              (is (= ["riemann meow rate"
-                     "riemann meow 0"
-                     "riemann meow 3/5"
-                     "riemann meow 1.0"]
+                     "riemann meow latency 0"
+                     "riemann meow latency 3/5"
+                     "riemann meow latency 1.0"]
                     (map :service es)))
 
              ; Uses unix-time
