@@ -63,7 +63,7 @@
          [(instrumentation-service {})]
          nil
          (ps/pubsub-registry)
-         (instrumentation/rate+latency {:service "core streaming"
+         (instrumentation/rate+latency {:service "streams"
                                         :tags ["riemann"]})))
 
 (defn conj-service

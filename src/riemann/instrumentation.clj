@@ -40,7 +40,7 @@
                             :time     t})
               ; Latencies
               (map (fn [q]
-                     (merge event {:service (str (:service event) " " q)
+                     (merge event {:service (str (:service event) " latency " q)
                                    :metric  (-> latencies
                                               (quantile q)
                                               nanos->millis)
