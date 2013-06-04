@@ -1342,10 +1342,10 @@ OA
         (call-rescue event children)))))
 
 (defn- where-test [k v]
-  (case k
+  (condp some [k]
     ; Tagged checks that v is a member of tags.
-    'tagged (list 'when (list :tags 'event)
-                  (list 'riemann.common/member? v (list :tags 'event)))
+    #{'tagged 'tagged-all 'tagged-any} (list 'when (list :tags 'event)
+                                        (list 'riemann.common/member? v (list :tags 'event)))
     ; Otherwise, match.
     (list 'riemann.common/match v (list (keyword k) 'event))))
 
@@ -1367,7 +1367,9 @@ OA
                'ttl
                'description
                'tags
-               'tagged}]
+               'tagged
+               'tagged-all
+               'tagged-any}]
     (if (list? expr)
       ; This is a list.
       (if (syms (first expr))
