@@ -102,6 +102,11 @@
     (copy (file (:root project) "pkg" "riemann.config")
           (file dir "etc" "riemann" "riemann.config"))
 
+    ; defaults file
+    (.mkdirs (file dir "etc" "default"))
+    (copy (file (:root project) "pkg" "riemann-default")
+          (file dir "etc" "default" "riemann"))
+
     ; Init script
     (.mkdirs (file dir "etc" "init.d"))
     (copy (file (:root project) "pkg" "deb" "init.sh")

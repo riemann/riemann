@@ -127,6 +127,13 @@
          :configuration true
          :sources [(source (file (:root project) "pkg" "riemann.config")
                            "riemann.config")]}
+
+        ; Default file
+        {:directory "/etc/default"
+         :filemode "644"
+         :configuration true
+         :sources [(source (file (:root project) "pkg" "riemann-default")
+                           "riemann-default")]}
         
         ; Init script
         {:directory "/etc/init.d"
