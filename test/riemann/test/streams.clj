@@ -39,7 +39,7 @@
          (advance! (deref next-time#))))
      (let [result# (deref out#)]
        ; close stream
-       (stream# {:state "expired"})
+       (stream# {:state "expired" :time (unix-time)})
        result#)))
 
 (defmacro test-stream
@@ -1215,7 +1215,25 @@
                       [{:x 0 :time 0}
                        {:x 0 :time 10}
                        {:x 2 :time 14}
-                       {:x 2 :time 17}]))
+                       {:x 2 :time 17}])
+
+         ; Triggers after dt seconds of stability, even without new events.
+         (test-stream-intervals (stable 10 :x)
+                                [{:x 0 :time 0} 1
+                                 {:x 1 :time 1} 10
+                                 {:x 2 :time 11} 1]
+                                [{:x 1 :time 1}])
+
+         ; Triggers after dt seconds with new events.
+         (reset-time!)
+         (test-stream-intervals (stable 10 :x)
+                                [{:x 0 :time 0} 1
+                                 {:x 0 :time 1} 4
+                                 {:x 0 :time 5} 6
+                                 {:x 1 :time 11} 1]
+                                [{:x 0 :time 0}
+                                 {:x 0 :time 1}
+                                 {:x 0 :time 5}]))
 
 (deftest project-test
          ; Empty -> empty

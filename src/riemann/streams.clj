@@ -1602,9 +1602,32 @@ OA
   ; seconds.
   (stable 5 :state prn)"
   [dt f & children]
-  (let [state (atom {:prev ::unknown
+  (let [state (atom {:prev   ::unknown
+                     :task   nil
                      :out    (list)
                      :buffer []})
+
+        ; Called by our timeout task dt seconds after a state transition;
+        ; ensures that we flush the buffer if no new events have arrived.
+        timeout (fn timeout []
+                  (let [es (-> state
+                             (swap!
+                               (fn [state]
+                                 (let [e (first (:buffer state))]
+                                   (if (and e
+                                            (<= dt (- (unix-time)
+                                                      (:time e))))
+                                     ; Flush!
+                                     (merge state {:out (:buffer state)
+                                                   :buffer []})
+                                     ; Either the buffer was flushed already,
+                                     ; or the event we were meant to flush was
+                                     ; replaced by another.
+                                     state))))
+                             :out)]
+                    (doseq [e es]
+                      (call-rescue e children))))
+
         update (fn update [state event]
                  (let [value (f event)
                        buffer (:buffer state)]
@@ -1633,8 +1656,18 @@ OA
                       :buffer [event]})))]
 
     (fn stream [event]
-      (doseq [e (:out (swap! state update event))]
-        (call-rescue e children)))))
+      (let [state (swap! state update event)]
+        (when (= 1 (count (:buffer state)))
+          ; We just replaced the buffer with a single event, which means the
+          ; value *just* changed. In N seconds we may need to flush the buffer,
+          ; if the value doesn't change. We *could* track the task to do this,
+          ; but it's simpler to just add N tasks during a flapping state and
+          ; let them all fight it out.
+          (once! (+ dt (:time (first (:buffer state))))
+                 timeout))
+
+        (doseq [e (:out state)]
+          (call-rescue e children))))))
 
 (defn project*
   "Like project, but takes predicate *functions* instead of where expressions."
