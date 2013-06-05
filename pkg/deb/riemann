@@ -1,6 +1,10 @@
 #!/bin/bash
 
-JAR="/usr/lib/riemann/riemann.jar"
+if [ -f /etc/defaults/riemann ]; then
+    . /etc/defaults/riemann
+fi
+
+JAR="$EXTRA_CLASSATH:/usr/lib/riemann/riemann.jar"
 CONFIG="/etc/riemann/riemann.config"
 AGGRESSIVE_OPTS="-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops"
 
@@ -38,4 +42,4 @@ for arg in "$@"; do
   esac
 done
 
-exec java $OPTS -jar "$JAR" "$CONFIG"
+exec java $EXTRA_JAVA_OPTS $OPTS -cp "$JAR" riemann.bin "$CONFIG"

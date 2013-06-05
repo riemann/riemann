@@ -1077,40 +1077,45 @@ OA
       (call-rescue event children)
       true)))
 
+(defn tagged-all?
+  "Predicate function to check if a collection of tags is
+  present in the tags of event."
+  [tags event]
+  (set/subset? (set tags) (set (:tags event))))
+
 (defn tagged-all
   "Passes on events where all tags are present. This stream returns true if an
   event it receives matches those tags, nil otherwise.
 
+  Can be used as a predicate in a where form.
+
   (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
-  (if (coll? tags)
+  (let [tag-coll (flatten [tags])]
     (fn stream [event]
-      (when (set/subset? (set tags) (set (:tags event)))
-        (call-rescue event children)
-        true))
-
-    (fn stream [event]
-      (when (member? tags (:tags event))
+      (when (tagged-all? tag-coll event)
         (call-rescue event children)
         true))))
+
+(defn tagged-any?
+  "Predicate function to check if any of a collection of tags
+  are present in the tags of event."
+  [tags event]
+  (not= nil (some (set tags) (:tags event))))
 
 (defn tagged-any
   "Passes on events where any of tags are present. This stream returns true if
   an event it receives matches those tags, nil otherwise.
 
+  Can be used as a predicate in a where form.
+
   (tagged-any \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)"
   [tags & children]
-  (if (coll? tags)
-    (let [required (set tags)]
-      (fn stream [event]
-        (when (some required (:tags event))
-          (call-rescue event children)
-          true)))
-
+  (let [tag-coll (flatten [tags])]
     (fn stream [event]
-      (when (member? tags (:tags event))
+      (when (tagged-any? tag-coll event)
         (call-rescue event children)
         true))))
 
@@ -1342,10 +1347,12 @@ OA
         (call-rescue event children)))))
 
 (defn- where-test [k v]
-  (case k
+  (condp some [k]
     ; Tagged checks that v is a member of tags.
-    'tagged (list 'when (list :tags 'event)
-                  (list 'riemann.common/member? v (list :tags 'event)))
+    #{'tagged 'tagged-all} (list 'when (list :tags 'event)
+                             (list 'tagged-all? (list 'flatten [v]) 'event))
+    #{'tagged-any} (list 'when (list :tags 'event)
+                     (list 'tagged-any? (list 'flatten [v]) 'event))
     ; Otherwise, match.
     (list 'riemann.common/match v (list (keyword k) 'event))))
 
@@ -1367,7 +1374,9 @@ OA
                'ttl
                'description
                'tags
-               'tagged}]
+               'tagged
+               'tagged-all
+               'tagged-any}]
     (if (list? expr)
       ; This is a list.
       (if (syms (first expr))
