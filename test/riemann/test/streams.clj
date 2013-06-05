@@ -505,7 +505,7 @@
                                  [{:service "cats"}])))
 
 
-         (testing "tagged"
+         (testing "tagged (one tag)"
                   (let [r (ref [])
                         s (where (tagged "foo") (append r))
                         events [{}
@@ -517,7 +517,7 @@
                     (is (= (deref r)
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
-         (testing "tagged-all"
+         (testing "tagged-all (one tag)"
                   (let [r (ref [])
                         s (where (tagged-all "foo") (append r))
                         events [{}
@@ -529,7 +529,7 @@
                     (is (= (deref r)
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
-         (testing "tagged-any"
+         (testing "tagged-any (one tag)"
                   (let [r (ref [])
                         s (where (tagged-any "foo") (append r))
                         events [{}
@@ -540,6 +540,45 @@
                     (doseq [e events] (s e))
                     (is (= (deref r)
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
+
+         (testing "tagged (multiple tags)"
+                  (let [r (ref [])
+                        s (where (tagged ["foo" "bar"]) (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}
+                                {:tags ["foo" "bar" "baz"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo" "bar"]} {:tags ["foo" "bar" "baz"]}]))))
+
+         (testing "tagged-all (multiple tags)"
+                  (let [r (ref [])
+                        s (where (tagged-all ["foo" "bar"]) (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}
+                                {:tags ["foo" "bar" "baz"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo" "bar"]} {:tags ["foo" "bar" "baz"]}]))))
+
+         (testing "tagged-any (multiple tags)"
+                  (let [r (ref [])
+                        s (where (tagged-any ["foo" "bar"]) (append r))
+                        events [{}
+                                {:tags []}
+                                {:tags ["blah"]}
+                                {:tags ["foo"]}
+                                {:tags ["foo" "bar"]}
+                                {:tags ["baz" "bar"]}]]
+                    (doseq [e events] (s e))
+                    (is (= (deref r)
+                           [{:tags ["foo"]} {:tags ["foo" "bar"]} {:tags ["baz" "bar"]}]))))
 
          (testing "else"
                   ; Where should take an else clause.
@@ -573,11 +612,18 @@
                   (is (= false ((where (service "foo")) {:service "bar"})))
 
                   (is (= true  ((where (tagged "foo")) {:tags ["foo"]})))
-                  (is (= nil ((where (tagged "foo")) {:tags ["bar"]})))
+                  (is (= false ((where (tagged "foo")) {:tags ["bar"]})))
                   (is (= true  ((where (tagged-all "foo")) {:tags ["foo"]})))
-                  (is (= nil ((where (tagged-all "foo")) {:tags ["bar"]})))
+                  (is (= false ((where (tagged-all "foo")) {:tags ["bar"]})))
                   (is (= true  ((where (tagged-any "foo")) {:tags ["foo"]})))
-                  (is (= nil ((where (tagged-any "foo")) {:tags ["bar"]})))
+                  (is (= false ((where (tagged-any "foo")) {:tags ["bar"]})))
+
+                  (is (= true  ((where (tagged ["foo" "bar"])) {:tags ["foo" "bar"]})))
+                  (is (= false ((where (tagged ["foo" "bar"])) {:tags ["bar"]})))
+                  (is (= true  ((where (tagged-all ["foo" "bar"])) {:tags ["foo" "bar"]})))
+                  (is (= false ((where (tagged-all ["foo" "bar"])) {:tags ["bar"]})))
+                  (is (= true ((where (tagged-any ["foo" "bar"])) {:tags ["foo" "bar"]})))
+                  (is (= false ((where (tagged-any ["foo" "bar"])) {:tags ["blah"]})))
 
                   (is (= true ((where (service "foo") 
                                       (fn [event] 2)) 
