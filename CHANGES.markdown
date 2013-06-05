@@ -1,3 +1,47 @@
+# Version 0.2.2
+
+## New features
+
+- HTTP server: PUT /events can take a series of JSON-encoded events
+- Graphite server: can also speak Carbon over UDP
+- riemann.sns: hooks in to Amazon's Simple Notification Service
+- riemann.campfire: sends events to Campfire
+- streams/apdex: the fraction of requests which are acceptable
+- streams/clock-skew: detects clock skew between hosts
+- streams/scale: multiplies metrics by a fixed factor
+- streams/stable: passes on events with the same value for at least dt seconds
+- Internal instrumentation: measures throughput and latency of streams
+- Limited TLS support for tcp-server
+
+## Improvements
+
+- Graphite pool: improved logging and saner concurrency defaults
+- streams/periodically-until-expired (and dependent streams) now correctly
+  handle their own expiry
+- More type hints (reduces several performance bottlenecks in the index,
+  pubsub, and graphite)!
+- PID log message logs just the PID, not pid@host
+- bin/riemann: easier to add custom jars and JVM options via /etc/defaults/
+
+## Bugfixes
+
+- streams/where: tagged-any and tagged-all work correctly
+- streams/where\*: evaluates child streams only once
+- streams/throttle: throttles expired events correctly
+- count-string-bytes: fixed an error with multibyte chars
+- Debian package: saner java deps, md5s for snapshot versions
+- Reaper: reloads correctly when you change :keep-keys
+
+## Internals
+
+- Removed need for AOT compilation
+- No more gen-class for riemann.config
+- Removed dependency on incanter-charts
+- Services can declare that they conflict with other services.
+- streams/part-time-simple: like part-time-fast, but with a saner API
+- index/lookup: looks up an event by host and service
+- riemann.email: Cleaned up deprecated formatting functions
+
 # Version 0.2.1
 
 This is a small maintenance release to address a few issues with 0.2.0: most
