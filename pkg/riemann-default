@@ -1,0 +1,5 @@
+# Optionally add classes to the classpath for additional functionality
+# EXTRA_CLASSPATH=
+
+# Optional JAVA_OPTS
+# EXTRA_JAVA_OPTS=

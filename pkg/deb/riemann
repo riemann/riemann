@@ -42,4 +42,4 @@ for arg in "$@"; do
   esac
 done
 
-exec java $OPTS -cp "$JAR" riemann.bin "$CONFIG"
+exec java $EXTRA_JAVA_OPTS $OPTS -cp "$JAR" riemann.bin "$CONFIG"
