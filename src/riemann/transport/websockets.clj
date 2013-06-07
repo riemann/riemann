@@ -1,28 +1,30 @@
 (ns riemann.transport.websockets
   "Accepts messages from external sources. Associated with a core. Sends
   incoming events to the core's streams, queries the core's index for states."
-  (:require [riemann.query    :as query]
-            [riemann.index    :as index]
-            [riemann.pubsub   :as p]
-            [aleph.formats    :as formats]
-            [gloss.core       :as gloss]
-            [cheshire.core    :as json])
+  (:require [riemann.query         :as query]
+            [riemann.index         :as index]
+            [riemann.pubsub        :as p]
+            [aleph.formats         :as formats]
+            [gloss.core            :as gloss]
+            [cheshire.core         :as json]
+            [interval-metrics.core :as metrics])
   (:use [riemann.common        :only [event-to-json ensure-event-time]]
         [riemann.core          :only [stream!]]
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
         [riemann.time          :only [unix-time]]
         [aleph.http            :only [start-http-server]]
-        [lamina.core           :only [receive-all
-                                      close
-                                      channel
-                                      map*
-                                      channel->lazy-seq
-                                      lazy-seq->channel
-                                      on-closed
-                                      enqueue
+        [lamina.core           :only [channel
                                       channel?
-                                      closed-channel]]
+                                      channel->lazy-seq
+                                      close
+                                      closed-channel
+                                      enqueue
+                                      lazy-seq->channel
+                                      map*
+                                      on-closed
+                                      receive-all
+                                      run-pipeline]]
         [lamina.api            :only [bridge-join]]
         [clojure.java.io       :only [reader]]
         [clojure.tools.logging :only [info warn]]
@@ -51,31 +53,46 @@
     (gloss/string :utf-8 :delimiters ["\n"])
     ch))
 
-(defn ws-pubsub-handler [core ch hs]
+(defn ws-pubsub-handler
+  "Subscribes to a pubsub channel and streams events back over the WS conn."
+  [core stats ch hs]
   (let [topic  (url-decode (last (split (:uri hs) #"/" 3)))
         params (http-query-map (:query-string hs))
         query  (params "query")
         pred   (query/fun (query/ast query))
         ; Subscribe persistently.
         sub    (p/subscribe! (:pubsub core) topic
-                            (fn [event]
+                            (fn emit [event]
                               (when (pred event)
-                                (enqueue ch (event-to-json event))))
+                                ; Send event to client, measuring write latency
+                                (let [t1 (System/nanoTime)]
+                                  (run-pipeline
+                                    (enqueue ch (event-to-json event))
+                                    ; When the write completes, measure latency
+                                    (fn measure [_]
+                                      (metrics/update!
+                                        (:out stats)
+                                        (- (System/nanoTime) t1)))))))
+
                              true)]
     (info "New websocket subscription to" topic ":" query)
+
+    ; When the channel closes, unsubscribe.
+    (on-closed ch (fn []
+                    (info "Closing websocket " (:remote-addr hs) topic query)
+                    (p/unsubscribe! (:pubsub core) sub)))
+
+    ; Close channel on nil msg
     (receive-all ch (fn [msg]
                       (when-not msg
                         ; Shut down channel
-                        (info "Closing websocket "
-                              (:remote-addr hs) topic query)
-                        (close ch)
-                        (p/unsubscribe! (:pubsub core) sub))))))
+                        (close ch))))))
 
 (defn ws-index-handler
   "Queries the index for events and streams them to the client. If subscribe is
   true, also initiates a pubsub subscription to the index topic with that
   query."
-  [core ch hs]
+  [core stats ch hs]
   (let [params (http-query-map (:query-string hs))
         query  (params "query")
         ast    (query/ast query)]
@@ -83,7 +100,7 @@
       (doseq [event (index/search i ast)]
         (enqueue ch (event-to-json event))))
     (if (= (params "subscribe") "true")
-      (ws-pubsub-handler core ch (assoc hs :uri "/pubsub/index"))
+      (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index"))
       (close ch))))
 
 (defn json-stream-response
@@ -155,8 +172,8 @@
     ; Route request
     (condp re-matches (:uri req)
       #"/events/?"       (put-events-handler @core stats ch req) 
-      #"/index/?"        (ws-index-handler @core ch req)
-      #"/pubsub/[^/]+/?" (ws-pubsub-handler @core ch req)
+      #"/index/?"        (ws-index-handler @core stats ch req)
+      #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
       :else (do
               (info "Unknown URI " (:uri req) ", closing")
               (close ch)))))
@@ -194,11 +211,33 @@
 
   Instrumented
   (events [this]
-          (let [svc (str "riemann server ws " host ":" port)]
-            [{:service (str svc " conns")
-              :state "ok"
-              :metric (deref (:conns stats))
-              :time   (unix-time)}])))
+          ; Take snapshots of our current stats.
+          (let [svc (str "riemann server ws " host ":" port)
+                base {:time (unix-time)
+                      :state "ok"}
+                out (metrics/snapshot! (:out stats))
+                in  (metrics/snapshot! (:in stats))]
+            (map (partial merge base)
+                 (concat [; Connections
+                          {:service (str svc " conns")
+                           :metric (deref (:conns stats))}
+                         
+                          ; Rates
+                          {:service (str svc " out rate")
+                           :metric (:rate out)}
+                          {:service (str svc " in rate")
+                           :metric (:rate in)}]
+
+                         ; Latencies
+                         (map (fn [[q latency]]
+                                {:service (str svc " out latency " q)
+                                 :metric latency})
+                              (:latencies out))
+                         (map (fn [[q latency]]
+                                {:service (str svc " in latency " q)
+                                 :metric latency})
+                              (:latencies in)))
+             ))))
 
 (defn ws-server
   "Starts a new websocket server for a core. Starts immediately.
@@ -216,4 +255,6 @@
      (get opts :port 5556)
      (atom nil)
      (atom nil)
-     {:conns (atom 0)})))
+     {:out   (metrics/rate+latency)
+      :in    (metrics/rate+latency)
+      :conns (atom 0)})))

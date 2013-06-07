@@ -30,7 +30,7 @@
     [com.draines/postal "1.9.0"]
     [com.amazonaws/aws-java-sdk "1.4.1"]
     [incanter/incanter-core "1.4.1"]
-    [interval-metrics "0.0.1"] 
+    [interval-metrics "0.0.2"] 
     [io.netty/netty "3.6.1.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
