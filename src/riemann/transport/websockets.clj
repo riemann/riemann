@@ -9,7 +9,9 @@
             [cheshire.core    :as json])
   (:use [riemann.common        :only [event-to-json ensure-event-time]]
         [riemann.core          :only [stream!]]
+        [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
+        [riemann.time          :only [unix-time]]
         [aleph.http            :only [start-http-server]]
         [lamina.core           :only [receive-all
                                       close
@@ -132,13 +134,19 @@
       json-stream-response
       (enqueue ch))))
 
-(defn ws-handler [core]
+(defn ws-handler [core stats]
   "Returns a function which is called with new websocket connections.
   Responsible for routing requests to the appropriate handler."
   (fn [ch req]
     (info "Websocket connection from" (:remote-addr req)
           (:uri req)
           (:query-string req))
+
+    ; Stats
+    (swap! (:conns stats) inc)
+    (on-closed ch #(swap! (:conns stats) dec))
+
+    ; Route request
     (condp re-matches (:uri req)
       #"/events/?"       (put-events-handler @core ch req) 
       #"/index/?"        (ws-index-handler @core ch req)
@@ -147,7 +155,7 @@
               (info "Unknown URI " (:uri req) ", closing")
               (close ch)))))
 
-(defrecord WebsocketServer [host port core server]
+(defrecord WebsocketServer [host port core server stats]
   ServiceEquiv
   (equiv? [this other]
           (and (instance? WebsocketServer other)
@@ -166,7 +174,7 @@
   (start! [this]
           (locking this
             (when-not @server
-              (reset! server (start-http-server (ws-handler core)
+              (reset! server (start-http-server (ws-handler core stats)
                                                 {:host host
                                                  :port port
                                                  :websocket true}))
@@ -176,7 +184,15 @@
          (locking this
            (when @server
              (@server)
-             (info "Websockets server" host port "shut down")))))
+             (info "Websockets server" host port "shut down"))))
+
+  Instrumented
+  (events [this]
+          (let [svc (str "riemann server ws " host ":" port)]
+            [{:service (str svc " conns")
+              :state "ok"
+              :metric (deref (:conns stats))
+              :time   (unix-time)}])))
 
 (defn ws-server
   "Starts a new websocket server for a core. Starts immediately.
@@ -193,4 +209,5 @@
      (get opts :host "127.0.0.1")
      (get opts :port 5556)
      (atom nil)
-     (atom nil))))
+     (atom nil)
+     {:conns (atom 0)})))

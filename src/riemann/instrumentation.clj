@@ -55,8 +55,7 @@
   doubles in milliseconds."
   ([event] (rate+latency event [0.0 0.5 0.95 0.99 0.999]))
   ([ev quantiles]
-   (let [ev (event (merge ev {:host (localhost)
-                              :service (str "riemann " (:service ev))}))]
+   (let [ev (event (merge ev {:service (str "riemann " (:service ev))}))]
      (RateLatency. ev quantiles (rate) (uniform-reservoir)))))
 
 (defn instrumented?

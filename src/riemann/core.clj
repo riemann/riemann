@@ -1,6 +1,7 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
   (:use [riemann.time :only [unix-time]]
+        [riemann.common :only [localhost event]]
         clojure.tools.logging
         [riemann.instrumentation :only [Instrumented]])
   (:require riemann.streams
@@ -37,17 +38,24 @@
       (fn measure [core]
         (Thread/sleep interval)
 
-        ; Instrumentation for the core itself
-        (doseq [event (instrumentation/events core)]
-          (when enabled?
-            (stream! core event)))
+        (try
+          ; Take events from core and instrumented services
+          (let [base (event {:host (localhost)
+                             :ttl  (* 2 interval)})
+                events (mapcat instrumentation/events
+                            (cons core
+                                  (filter instrumentation/instrumented?
+                                          (core-services core))))]
 
-        ; Instrumentation for services
-        (doseq [service (core-services core)]
-          (when (instrumentation/instrumented? service)
-            (doseq [event (instrumentation/events service)]
-              (when enabled?
-                (stream! core event)))))))))
+            (if enabled?
+              ; Stream each event through this core
+              (doseq [event events]
+                (stream! core (merge base event)))
+              ; Ensure we consume all events, to avoid overflowing stats
+              (dorun events)))
+
+          (catch Exception e
+            (warn e "instrumentation service caught")))))))
 
 (defrecord Core
   [streams services index pubsub streaming-metric]
