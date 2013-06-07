@@ -116,11 +116,16 @@
 (defn put-events-handler
   "Accepts events from the body of an HTTP request as JSON objects, one per
   line, and applies them to streams."
-  [core ch req]
+  [core stats ch req]
   (let [body (:body req)
         body (if-not (channel? body)
                (closed-channel body)
                body)]
+
+    ; Track connections
+    (swap! (:conns stats) inc)
+    (on-closed body #(swap! (:conns stats) dec))
+    
     (->> body
       json-channel
       (map* (fn handle [event]
@@ -143,12 +148,13 @@
           (:query-string req))
 
     ; Stats
-    (swap! (:conns stats) inc)
-    (on-closed ch #(swap! (:conns stats) dec))
+    (when (:websocket? req)
+      (swap! (:conns stats) inc)
+      (on-closed ch #(swap! (:conns stats) dec)))
 
     ; Route request
     (condp re-matches (:uri req)
-      #"/events/?"       (put-events-handler @core ch req) 
+      #"/events/?"       (put-events-handler @core stats ch req) 
       #"/index/?"        (ws-index-handler @core ch req)
       #"/pubsub/[^/]+/?" (ws-pubsub-handler @core ch req)
       :else (do
