@@ -7,11 +7,13 @@
            [org.jboss.netty.bootstrap ServerBootstrap]
            [org.jboss.netty.buffer ChannelBuffers]
            [org.jboss.netty.channel ChannelHandler
+                                    ChannelFuture
+                                    ChannelFutureListener
                                     ChannelHandlerContext
                                     ChannelPipeline
                                     ChannelPipelineFactory
-                                    ChannelStateEvent
                                     Channels
+                                    ChannelStateEvent
                                     ExceptionEvent
                                     MessageEvent
                                     SimpleChannelHandler]
@@ -51,7 +53,7 @@
   "Wraps netty boilerplate for common TCP server handlers. Given a reference to
   a core, a channel group, and a handler fn, returns a SimpleChannelHandler
   which calls (handler core message-event) with each received message."
-  [core ^ChannelGroup channel-group handler]
+  [core stats ^ChannelGroup channel-group handler]
   (proxy [SimpleChannelHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
       (.add channel-group (.getChannel state-event)))
@@ -59,7 +61,7 @@
     (messageReceived [^ChannelHandlerContext context
                       ^MessageEvent message-event]
         (try
-          (handler @core message-event)
+          (handler @core stats message-event)
           (catch java.nio.channels.ClosedChannelException e
             (warn "channel closed"))))
     
@@ -70,12 +72,23 @@
           (.close (.getChannel exception-event)))))))
 
 (defn tcp-handler
-  "Given a core and a MessageEvent, applies the message to core."
-  [core ^MessageEvent e]
-  (.write (.getChannel e)
-          (handle core (.getMessage e))))
+  "Given a core and a MessageEvent, applies the message to core and writes a
+  response back on this channel."
+  [core stats ^MessageEvent e]
+  (let [msg (.getMessage e)
+        t1  (:decode-time msg)]
+    (.. e
+      getChannel
+      ; Actually handle request
+      (write (handle core msg))
+      ; Record time from parse to write completion
+      (addListener
+        (reify ChannelFutureListener
+          (operationComplete [this fut]
+                             (metrics/update! stats
+                                              (- (System/nanoTime) t1))))))))
 
-(defrecord TCPServer [host port equiv channel-group pipeline-factory core killer]
+(defrecord TCPServer [host port equiv channel-group pipeline-factory core stats killer]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -139,12 +152,19 @@
 
   Instrumented
   (events [this]
-          (let [svc (str "riemann server tcp " host ":" port)
+          (let [svc  (str "riemann server tcp " host ":" port)
+                in   (metrics/snapshot! stats)
                 base {:state "ok"
-                      :time (unix-time)}]
+                      :time (:time in)}]
             (map (partial merge base)
                  (concat [{:service (str svc " conns")
-                           :metric (count channel-group)}])))))
+                           :metric (count channel-group)}
+                          {:service (str svc " in rate")
+                           :metric (:rate in)}]
+                         (map (fn [[q latency]]
+                                {:service (str svc " in latency " q)
+                                 :metric  latency})
+                              (:latencies in)))))))
 
 (defn ssl-handler 
   "Given an SSLContext, creates a new SSLEngine and a corresponding Netty
@@ -159,7 +179,7 @@
 
 (defn cpf
   "A channel pipeline factory for a TCP server."
-  [core channel-group ssl-context]
+  [core stats channel-group ssl-context]
   ; Gross hack; should re-work the pipeline macro
   (if ssl-context
     (channel-pipeline-factory
@@ -173,6 +193,7 @@
       ^:shared msg-encoder         (msg-encoder)
       ^:shared handler             (gen-tcp-handler 
                                      core
+                                     stats
                                      channel-group
                                      tcp-handler))
     (channel-pipeline-factory
@@ -185,6 +206,7 @@
       ^:shared msg-encoder         (msg-encoder)
       ^:shared handler             (gen-tcp-handler 
                                      core
+                                     stats
                                      channel-group
                                      tcp-handler))))
 
@@ -205,6 +227,7 @@
    (tcp-server {}))
   ([opts]
    (let [core          (get opts :core (atom nil))
+         stats         (metrics/rate+latency)
          host          (get opts :host "127.0.0.1")
          port          (get opts :port (if (:tls? opts) 5554 5555))
          channel-group (get opts :channel-group
@@ -223,8 +246,8 @@
                      (let [ssl-context (ssl/ssl-context (:key opts)
                                                         (:cert opts)
                                                         (:ca-cert opts))]
-                       (cpf core channel-group ssl-context)))
+                       (cpf core stats channel-group ssl-context)))
                    ; A standard handler
-                   (cpf core channel-group nil)))]
+                   (cpf core stats channel-group nil)))]
 
-       (TCPServer. host port equiv channel-group pf core (atom nil)))))
+       (TCPServer. host port equiv channel-group pf core stats (atom nil)))))

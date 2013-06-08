@@ -12,6 +12,7 @@
                                     SimpleChannelUpstreamHandler]
            [org.jboss.netty.channel.group ChannelGroup]
            [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
+  (:require [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
         [riemann.instrumentation :only [Instrumented]]
@@ -26,23 +27,25 @@
                                       channel-pipeline-factory]]))
 
 (defn gen-udp-handler
-  [core ^ChannelGroup channel-group handler]
+  [core stats ^ChannelGroup channel-group handler]
   (proxy [SimpleChannelUpstreamHandler] []
     (channelOpen [context ^ChannelStateEvent state-event]
                  (.add channel-group (.getChannel state-event)))
 
     (messageReceived [context ^MessageEvent message-event]
-                     (handler @core message-event))
+                     (handler @core stats message-event))
 
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (warn (.getCause exception-event) "UDP handler caught"))))
 
 (defn udp-handler
   "Given a core and a MessageEvent, applies the message to core."
-  [core ^MessageEvent message-event]
-    (handle core (.getMessage message-event)))
+  [core stats ^MessageEvent message-event]
+  (let [msg (.getMessage message-event)]
+    (handle core msg)
+    (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))))
 
-(defrecord UDPServer [host port max-size channel-group pipeline-factory core killer]
+(defrecord UDPServer [host port max-size channel-group pipeline-factory stats core killer]
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
   
@@ -100,11 +103,17 @@
 
   Instrumented
   (events [this]
-          (let [svc (str "riemann server udp " host ":" port)
+          (let [svc  (str "riemann server udp " host ":" port)
+                in   (metrics/snapshot! stats)
                 base {:state "ok"
-                      :time (unix-time)}]
+                      :time (:time in)}]
             (map (partial merge base)
-                 []))))
+                 (concat [{:service (str svc " in rate")
+                           :metric (:rate in)}]
+                         (map (fn [[q latency]]
+                                {:service (str svc " in latency " q)
+                                 :metric latency})
+                              (:latencies in)))))))
 
 (defn udp-server
   "Starts a new UDP server. Doesn't start until (service/start!).
@@ -122,9 +131,10 @@
   :pipeline-factory A ChannelPipelineFactory"
   ([] (udp-server {}))
   ([opts]
-   (let [core (get opts :core (atom nil))
-         host (get opts :host "127.0.0.1")
-         port (get opts :port 5555)
+   (let [core  (get opts :core (atom nil))
+         stats (metrics/rate+latency)
+         host  (get opts :host "127.0.0.1")
+         port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
          channel-group (get opts :channel-group
                             (channel-group
@@ -136,5 +146,5 @@
                    ^:shared protobuf-decoder (protobuf-decoder)
                    ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
-                   ^:shared handler          (gen-udp-handler core channel-group udp-handler)))]
-     (UDPServer. host port max-size channel-group pf core (atom nil)))))
+                   ^:shared handler          (gen-udp-handler core stats channel-group udp-handler)))]
+     (UDPServer. host port max-size channel-group pf stats core (atom nil)))))

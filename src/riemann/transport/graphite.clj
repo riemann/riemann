@@ -66,8 +66,11 @@
            protocol (get opts :protocol :tcp)
            server (if (= protocol :tcp) tcp-server udp-server)
            channel-group (channel-group (str "graphite server " host ":" port))
-           graphite-message-handler (if (= protocol :tcp) (gen-tcp-handler core channel-group graphite-handler)
-            (gen-udp-handler core channel-group graphite-handler))
+           graphite-message-handler (if (= protocol :tcp)
+                                      (gen-tcp-handler
+                                        core nil channel-group graphite-handler)
+                                      (gen-udp-handler
+                                        core nil channel-group graphite-handler))
            pipeline-factory (channel-pipeline-factory
                               frame-decoder  (DelimiterBasedFrameDecoder. 
                                                1024
