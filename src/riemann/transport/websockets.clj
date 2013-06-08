@@ -26,6 +26,7 @@
                                       receive-all
                                       run-pipeline]]
         [lamina.api            :only [bridge-join]]
+        [interval-metrics.measure :only [measure-latency]]
         [clojure.java.io       :only [reader]]
         [clojure.tools.logging :only [info warn]]
         [clj-http.util         :only [url-decode]]
@@ -146,13 +147,14 @@
     (->> body
       json-channel
       (map* (fn handle [event]
-              (try
-                (let [event (ensure-event-time event)]
-                  (stream! core event)
-                  ; Empty OK response
-                  {})
-                (catch Exception ^Exception e
-                  {:error (.getMessage e)}))))
+              (measure-latency (:in stats)
+                               (try
+                                 (let [event (ensure-event-time event)]
+                                   (stream! core event)
+                                   ; Empty OK response
+                                   {})
+                                 (catch Exception ^Exception e
+                                   {:error (.getMessage e)})))))
       json-stream-response
       (enqueue ch))))
 
