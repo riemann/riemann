@@ -43,9 +43,12 @@
           (let [base (event {:host (localhost)
                              :ttl  (* 2 interval)})
                 events (mapcat instrumentation/events
-                            (cons core
-                                  (filter instrumentation/instrumented?
-                                          (core-services core))))]
+                            (concat
+                              [core
+                               ; lol circular deps
+                               (deref (find-var 'riemann.transport/instrumentation))]
+                              (filter instrumentation/instrumented?
+                                      (core-services core))))]
 
             (if enabled?
               ; Stream each event through this core

@@ -6,6 +6,8 @@
         [riemann.common      :only [decode-msg]]
         [riemann.codec       :only [encode-pb-msg]]
         [riemann.index       :only [search]]
+        [riemann.instrumentation :only [Instrumented]]
+        [riemann.time         :only [unix-time]]
         clojure.tools.logging)
   (:require [riemann.query       :as query])
   (:import
@@ -90,6 +92,20 @@
 
 (defonce shared-execution-handler
   (execution-handler))
+
+(defonce instrumentation
+  (let [^OrderedMemoryAwareThreadPoolExecutor executor 
+        (.getExecutor shared-execution-handler)
+        svc "riemann netty execution-handler "]
+
+    (reify Instrumented
+      (events [this]
+              (let [base {:state "ok" :time (unix-time)}]
+                (map (partial merge base)
+                     [{:service (str svc "queue size")
+                       :metric  (.. executor getQueue size)}
+                      {:service (str svc "threads active")
+                       :metric (.. executor getActiveCount)}]))))))
 
 (defn handle
   "Handles a msg with the given core."
