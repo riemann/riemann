@@ -22,8 +22,13 @@
            [org.jboss.netty.handler.execution
             OrderedMemoryAwareThreadPoolExecutor]
            [org.jboss.netty.handler.ssl SslHandler])
-  (:require [less-awful-ssl.core :as ssl])
+  (:require [less-awful-ssl.core :as ssl]
+            [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
+        [interval-metrics.measure :only [measure-latency]]
+        [riemann.instrumentation :only [Instrumented]]
+        [riemann.service :only [Service ServiceEquiv]]
+        [riemann.time :only [unix-time]]
         [riemann.transport :only [handle 
                                   protobuf-decoder
                                   protobuf-encoder
@@ -31,9 +36,7 @@
                                   msg-encoder
                                   shared-execution-handler
                                   channel-group
-                                  channel-pipeline-factory]]
-        [riemann.service :only [Service ServiceEquiv]]
-        [riemann.transport :only [handle]]))
+                                  channel-pipeline-factory]]))
 
 (defn int32-frame-decoder
   []
@@ -121,7 +124,7 @@
 
                 ; fn to close server
                 (reset! killer 
-                        (fn []
+                        (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
                           (.releaseExternalResources bootstrap)
                           (.shutdown worker-pool)
@@ -132,7 +135,16 @@
          (locking this
            (when @killer
              (@killer)
-             (reset! killer nil)))))
+             (reset! killer nil))))
+
+  Instrumented
+  (events [this]
+          (let [svc (str "riemann server tcp " host ":" port)
+                base {:state "ok"
+                      :time (unix-time)}]
+            (map (partial merge base)
+                 (concat [{:service (str svc " conns")
+                           :metric (count channel-group)}])))))
 
 (defn ssl-handler 
   "Given an SSLContext, creates a new SSLEngine and a corresponding Netty

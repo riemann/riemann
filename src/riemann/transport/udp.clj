@@ -14,7 +14,9 @@
            [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
+        [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
+        [riemann.time          :only [unix-time]]
         [riemann.transport     :only [handle
                                       channel-group
                                       protobuf-decoder
@@ -94,8 +96,15 @@
          (locking this
            (when @killer
              (@killer)
-             (reset! killer nil)))))
+             (reset! killer nil))))
 
+  Instrumented
+  (events [this]
+          (let [svc (str "riemann server udp " host ":" port)
+                base {:state "ok"
+                      :time (unix-time)}]
+            (map (partial merge base)
+                 []))))
 
 (defn udp-server
   "Starts a new UDP server. Doesn't start until (service/start!).
