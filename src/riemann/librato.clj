@@ -59,7 +59,8 @@
 
   (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
 
-  (tagged \"latency\" (librato :gauge))
+  (tagged \"latency\" 
+    (fixed-event-window 50 (librato :gauge)))
 
   (where (service \"www\")
     (changed-state
@@ -69,15 +70,19 @@
           (:end-annotation librato)))))"
   [user api-key]
   (let [annotation-ids (atom {})]
-    {:gauge      (fn [event]
-                   (let [gauge (event->gauge event)]
-                     (collate user api-key [gauge] [])
-                     gauge))
+    {:gauge      (fn [& args]
+                   (let [data (first args)
+                         events (if (vector? data) data [data])
+                         gauges (map event->gauge events)]
+                     (collate user api-key gauges [])
+                     (last gauges)))
 
-     :counter    (fn [event]
-                   (let [counter (event->counter event)]
-                     (collate user api-key [] [counter])
-                     counter))
+     :counter    (fn [& args]
+                   (let [data (first args)
+                         events (if (vector? data) data [data])
+                         counters (map event->counter events)]
+                     (collate user api-key [] counters)
+                     (last counters)))
 
      :annotation (fn [event]
                    (let [a (event->annotation event)]
