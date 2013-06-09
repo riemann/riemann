@@ -38,6 +38,19 @@
                       (is (= (:metric e) (:value m)))
                       (is (= (round (:time e)) (:measure-time m)))))
 
+           (testing "multiple gauges with source"
+                    (let [e0 {:host "a" :service "b" :metric (rand) 
+                             :time (unix-time)}
+                          e1 {:host "c" :service "d" :metric (rand) 
+                             :time (unix-time)}
+                          r ((:gauge l) [e0 e1])]
+                      (for [event [e0 e1]
+                            :let [m (get-metric (event->gauge event))]]
+                        (do 
+                          (is m)
+                          (is (= (:metric event) (:value m)))
+                          (is (= (round (:time event)) (:measure-time m)))))))
+
            (testing "gauge without source"
                     (let [e {:service "sourceless" :metric (rand) 
                              :time (unix-time)}
@@ -46,6 +59,28 @@
                       (is m)
                       (is (= (:metric e) (:value m)))
                       (is (= (round (:time e)) (:measure-time m)))))
+
+           (testing "counter with source"
+                    (let [e {:host "p" :service "q" :metric (rand-int 2048) 
+                             :time (unix-time)}
+                          r ((:counter l) e)
+                          m (get-metric (event->counter e))]
+                      (is m)
+                      (is (= (:metric e) (:value m)))
+                      (is (= (round (:time e)) (:measure-time m)))))
+
+           (testing "multiple counters with source"
+                    (let [e0 {:host "p" :service "q" :metric (rand-int 2048) 
+                             :time (unix-time)}
+                          e1 {:host "x" :service "y" :metric (rand-int 2048) 
+                             :time (unix-time)}
+                          r ((:counter l) [e0 e1])]
+                      (for [event [e0 e1]
+                            :let [m (get-metric (event->counter event))]]
+                        (do 
+                          (is m)
+                          (is (= (:metric event) (:value m)))
+                          (is (= (round (:time event)) (:measure-time m)))))))
 
            (testing "annotation"
                     (let [e {:service "ann test" 
