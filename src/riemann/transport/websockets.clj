@@ -176,9 +176,9 @@
       #"/events/?"       (put-events-handler @core stats ch req) 
       #"/index/?"        (ws-index-handler @core stats ch req)
       #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
-      :else (do
-              (info "Unknown URI " (:uri req) ", closing")
-              (close ch)))))
+      (do
+        (info "Unknown URI " (:uri req) ", closing")
+        (close ch)))))
 
 (defrecord WebsocketServer [host port core server stats]
   ServiceEquiv
