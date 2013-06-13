@@ -501,7 +501,7 @@ notified. In this case you can use a <code>fixed-time-window</code>
 
 {% highlight clj %}
 (streams
-  (where (and metric (service "app1")(tagged "sign_in")
+  (where (and metric (service "app1")(tagged "sign_in"))
     ; We want to get alerted about failed sign ins. However we expect that there will be failures
     ; due to incorect passwords etc. So we only want to get alerted if more than 50% of the signins
     ; in a 60 second period are failures. The app tags failed signins with a warning state.
