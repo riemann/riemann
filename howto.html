@@ -501,7 +501,7 @@ notified. In this case you can use a <code>fixed-time-window</code>
 
 {% highlight clj %}
 (streams
-  (where (and metric (service "app1")(tagged "sign_in")
+  (where (and metric (service "app1")(tagged "sign_in"))
     ; We want to get alerted about failed sign ins. However we expect that there will be failures
     ; due to incorect passwords etc. So we only want to get alerted if more than 50% of the signins
     ; in a 60 second period are failures. The app tags failed signins with a warning state.
@@ -737,6 +737,42 @@ view.</p>
     (by [:host :service]
        (changed :state
                 (forward client)))))
+{% endhighlight %}
+
+<h2>Operations on the running service</h2>
+
+<h3>Hot code reloading</h3>
+
+<p>Riemann can be told to reload its running config. To do this you simply need to
+HUP the process. By default riemann will write its PID into the logfile.</p>
+
+{% highlight sh %}
+kill -HUP 12345
+{% endhighlight %}
+
+You can also reload the config from the REPL.
+
+<h3>Connecting to the REPL</h3>
+
+<p>Riemann has a REPL service, you can enable this in your config with:</p>
+
+{% highlight clj %}
+(repl-server :host "127.0.0.1")
+{% endhighlight %}
+
+<p>You can then use <code>lein</code> to to connect to it (make sure you have leiningen 2):</p>
+
+{% highlight sh %}
+git clone git://github.com/aphyr/riemann.git
+cd riemann
+lein repl :connect 127.0.0.1:5557
+{% endhighlight %}
+
+<p>A very useful thing you can do from the REPL is to reload the config file, this is handy
+when testing locally:</p>
+
+{% highlight clj %}
+user=> (riemann.bin/reload!)
 {% endhighlight %}
 
 <h2>Contributing to Riemann</h2>
