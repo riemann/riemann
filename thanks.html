@@ -52,11 +52,30 @@ layout: default
     <div class="twelvecol">
       <h2>Contributors to the next release</h2>
 
-      <p>Torbjörn Norinder (lwf) added timeouts to riemann-tools, allowing the
-      client to reconnect when using TCP.</p>
+      <p>Ben Mabey (bmabey) fixed a typo in the docs.</p>
 
-      <p>Robert Rees (rrees) extended the quickstart docs to help newbies learn
-      about streams.</p>
+      <p>Brian Wong (bwong114) improved the Librato Metrics adapter by adding
+      support for sending batches of events at once.</p>
+      
+      <p>Drew Searcy (supersix4our) added HTTPS support to riemann-riak.</p>
+
+      <h2>0.2.2</h2>
+
+      <p>Sam Neubardt (samn) fixed a really confusing bug where (where
+      (tagged-any ...)) behaved unexpectedly.</p>
+
+      <p>Tilman Holschuh helped fix a typo in riemann's documentation.</p>
+
+      <p>odiszapc added numpad +/- keybindings to riemann-dash.</p>
+
+      <p>Pierre Yves-Ritschard (pyr) added streams/scale and made it easier to
+      add custom JARs and JVM options when using bin/riemann.</p>
+
+      <p>vadv helped fix a bug in riemann-ruby-client's connected? method.</p>
+
+      <p>Torbjörn Norinder (lwf) helped clean up dead code in riemann-tools, and
+      added timeouts to riemann-tools, allowing the client to reconnect when
+      using TCP.</p>
 
       <p>William Roe (wjlroe) explained how to match tags against expired
       events in the howto.</p>
@@ -75,10 +94,14 @@ layout: default
       calls and channels in FreeSWITCH</p>
 
       <p>Gavin Sandie contributed a howto article on finding a fraction of
-      events over a time period.</p>
+      events over a time period, added configurable FQDN behavior to
+      riemann-resmon, and added a connect timeout to the ruby client. He also
+      added campfire integration to Riemann proper. He also updated riemann-net
+      to report TX errors on interfaces.</p>
 
       <p>Robert Rees added index/lookup, for fetching specific events from the
-      index.<.p>
+      index, and extended the quickstart docs to help newbies learn about
+      streams.</p>
 
       <p>Benjamin Anderson added type hints to the graphite client.</p>
 
