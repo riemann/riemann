@@ -843,15 +843,16 @@ OA
   "Emits the most recent event each time this stream is called, but with the
   average of all received metrics."
   [children]
-  (let [sum (ref nil)
-        total (ref 0)]
-    (fn stream [event]
-      (let [m (dosync
-                (let [t (commute total inc)
-                      s (commute sum + (:metric event))]
-                  (/ s t)))
-            event (assoc event :metric m)]
-        (call-rescue event children)))))
+  (deprecated "Use streams/ewma-timeless"
+              (let [sum (ref nil)
+                    total (ref 0)]
+                (fn stream [event]
+                  (let [m (dosync
+                            (let [t (commute total inc)
+                                  s (commute sum + (:metric event))]
+                              (/ s t)))
+                        event (assoc event :metric m)]
+                    (call-rescue event children))))))
 
 (defn ewma-timeless
   "Exponential weighted moving average. Constant space and time overhead.
