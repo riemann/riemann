@@ -254,7 +254,8 @@
       (throw (logging/nice-syntax-error e file)))))
 
 (defn include
-  "Include another config file.
+  "Include another config file or directory. If the path points to a 
+   directory, all files within it will be loaded recursively.
 
   ; Relative to the current config file, or cwd
   (include \"foo.clj\")
@@ -262,7 +263,12 @@
   ; Absolute path
   (include \"/foo/bar.clj\")"
   [path]
-  (let [path (config-file-path path)]
+  (let [path (config-file-path path)
+        file (file path)]
     (binding [*config-file* path
               *ns* (find-ns 'riemann.config)]
-      (load-file path))))
+      (if (.isDirectory file)
+        (doseq [f (file-seq file)]
+          (when (.isFile f)
+            (load-file (.toString f))))
+        (load-file path)))))
