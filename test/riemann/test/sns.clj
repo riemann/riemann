@@ -19,7 +19,7 @@
 (def fake-event-subject "localhost sns test ok")
 (def fake-event-body (str "At "
                           (time-at 0)
-                          "\nlocalhost sns test ok (2.71828)\nTags: []\n\nall clear, uh, situation normal"))
+                          "\nlocalhost sns test ok (2.71828)\nTags: []\nAttributes: {}\n\nall clear, uh, situation normal"))
 
 (deftest override-formatting-test
   (let [message (#'riemann.sns/compose-message
