@@ -33,7 +33,7 @@
 (defn handle-signals
   "Sets up POSIX signal handlers."
   []
-  (if (not (. contains (. System getProperty "os.name") "Windows"))
+  (if (not (.contains (. System getProperty "os.name") "Windows"))
     (sun.misc.Signal/handle
       (sun.misc.Signal. "HUP")
       (proxy [sun.misc.SignalHandler] []
