@@ -98,10 +98,9 @@
   (is (= (count-string-bytes "あいう") 9)))
 
 (deftest count-character-bytes-test
-  (is (= (count-character-bytes 'a) 1))
-  (is (= (count-character-bytes 'é) 2))
-  (is (= (count-character-bytes 'あ) 3))
-  (is (= (count-character-bytes '𠜎) 4)))
+  (is (= (count-character-bytes \a) 1))
+  (is (= (count-character-bytes \é) 2))
+  (is (= (count-character-bytes \あ) 3)))
 
 (deftest truncate-test
   (is (= (truncate "あいう" -1) ""))

@@ -217,4 +217,4 @@
         max-pool-size
         keep-alive-time
         keep-alive-unit
-        (LinkedBlockingQueue. queue-size)))))
+        (LinkedBlockingQueue. ^int queue-size)))))

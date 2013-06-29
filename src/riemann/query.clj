@@ -5,6 +5,7 @@
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
+           (org.antlr.runtime.tree BaseTree)
            (riemann QueryLexer QueryParser)))
 
 ; With many thanks to Brian Carper
@@ -33,7 +34,7 @@
                    tokens)]
     (re-pattern (str "^" (apply str pairs) "$"))))
 
-(defn node-ast [node]
+(defn node-ast [^BaseTree node]
   "The AST for a given parse node"
   (let [n    (.getText node)
         kids (remove (fn [x] (= x :useless))

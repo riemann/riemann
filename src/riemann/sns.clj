@@ -3,10 +3,13 @@
   (sns-publisher opts), then create streams which publish to topic(s) with
   (your-publisher \"your::arn\"). Or simply call sns-publish or
   sns-publish-async directly."
-  (:import [com.amazonaws.auth BasicAWSCredentials]
+  (:import (com.amazonaws AmazonWebServiceClient)
+           [com.amazonaws.auth BasicAWSCredentials]
            [com.amazonaws.regions RegionUtils]
            [com.amazonaws.handlers AsyncHandler]
-           [com.amazonaws.services.sns AmazonSNSClient AmazonSNSAsyncClient]
+           (com.amazonaws.services.sns AmazonSNS
+                                       AmazonSNSClient
+                                       AmazonSNSAsyncClient)
            [com.amazonaws.services.sns.model PublishRequest])
   (:use [clojure.set :only [union]]
         [clojure.string :only [join]]
@@ -49,7 +52,8 @@
 (defn- aws-client
   [klass opts]
   (let [aws-creds (aws-credentials opts)
-        client (clojure.lang.Reflector/invokeConstructor klass (into-array Object [aws-creds]))]
+        client ^AmazonWebServiceClient (clojure.lang.Reflector/invokeConstructor
+                                         klass (into-array Object [aws-creds]))]
     (when-let [region (:region opts)]
       (.setRegion client (aws-region region)))
     client))
@@ -60,13 +64,13 @@
 (defn- aws-sns-client-async [opts]
   (aws-client AmazonSNSAsyncClient opts))
 
-(defn- aws-sns-publish [client arn body subject]
+(defn- aws-sns-publish [^AmazonSNS client arn body subject]
   (.publish client (PublishRequest. arn body subject)))
 
 (defn- aws-sns-publish-async
-  ([client arn body subject]
+  ([^AmazonSNSAsyncClient client arn body subject]
      (.publishAsync client (PublishRequest. arn body subject)))
-  ([client arn body subject success error]
+  ([^AmazonSNSAsyncClient client arn body subject success error]
      (.publishAsync
       client
       (PublishRequest. arn body subject)

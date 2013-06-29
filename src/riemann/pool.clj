@@ -75,7 +75,7 @@
   ([open opts]
    (fixed-pool open identity opts))
   ([open close opts]
-   (let [size                 (or (:size opts) (* 2 (.availableProcessors
+   (let [^int size            (or (:size opts) (* 2 (.availableProcessors
                                                       (Runtime/getRuntime))))
          regenerate-interval  (or (:regenerate-interval opts) 5)
          block-start          (or (:block-start opts) true)

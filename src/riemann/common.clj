@@ -2,6 +2,7 @@
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
   (:import [java.util Date]
+           (java.io InputStream)
            [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
            [java.net InetAddress])
   (:require gloss.io
@@ -73,7 +74,7 @@
 (defn decode-inputstream
   "Decode an InputStream to a message. Decodes the protobuf representation of
   Msg and applies post-load-event to all events."
-  [s]
+  [^InputStream s]
   (let [msg (decode-pb-msg (Proto$Msg/parseFrom s))]
     (-> msg
       (assoc :states (map post-load-event (:states msg)))
@@ -113,7 +114,7 @@
 
 (defn exception->event
   "Creates an event from an Exception."
-  [e]
+  [^Throwable e]
   (map->Event {:time (unix-time)
                :service "riemann exception"
                :state "error"
@@ -240,10 +241,10 @@
 (defn count-string-bytes [s]
   (count (.getBytes ^String s "UTF8")))
 
-(defn count-character-bytes [c]
+(defn count-character-bytes [^Character c]
   (count-string-bytes (.toString c)))
 
-(defn truncate [s n]
+(defn truncate [^String s n]
   (if (<= n 0)
     ""
     (if (> (count s) n)

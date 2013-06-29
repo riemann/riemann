@@ -4,6 +4,7 @@
   (:import [java.net InetSocketAddress]
            [java.util.concurrent Executors]
            [java.nio.channels ClosedChannelException]
+           (javax.net.ssl SSLContext)
            [org.jboss.netty.bootstrap ServerBootstrap]
            [org.jboss.netty.buffer ChannelBuffers]
            [org.jboss.netty.channel ChannelHandler
@@ -88,7 +89,14 @@
                              (metrics/update! stats
                                               (- (System/nanoTime) t1))))))))
 
-(defrecord TCPServer [host port equiv channel-group pipeline-factory core stats killer]
+(defrecord TCPServer [^String host
+                      ^int port
+                      equiv
+                      ^ChannelGroup channel-group
+                      pipeline-factory
+                      core
+                      stats
+                      killer]
   ; core is a reference to a core
   ; killer is a reference to a function which shuts down the server.
 
@@ -130,9 +138,9 @@
                   (.setOption "child.keepAlive" true))
 
                 ; Start bootstrap
-                (let [server-channel (.bind bootstrap
-                                            (InetSocketAddress. host port))]
-                  (.add channel-group server-channel))
+                (->> (InetSocketAddress. host port)
+                     (.bind bootstrap)
+                     (.add channel-group))
                 (info "TCP server" host port "online")
 
                 ; fn to close server
@@ -169,7 +177,7 @@
 (defn ssl-handler 
   "Given an SSLContext, creates a new SSLEngine and a corresponding Netty
   SslHandler wrapping it."
-  [context]
+  [^SSLContext context]
   (-> context
     .createSSLEngine
     (doto (.setUseClientMode false)
