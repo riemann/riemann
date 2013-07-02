@@ -213,7 +213,7 @@
          (human-uniq (map :service events) "services")
          (human-uniq (map :state events) "states")])))
 
-(defn attributes
+(defn custom-attributes
   "Returns a Map of the custom attributes of an Event."
   [event]
   (let [attribute-keys (filter (complement event-keys) (keys event))]
@@ -233,7 +233,7 @@
               (:metric event) ")\n"
               "Tags: [" (join ", " (:tags event)) "]"
               "\n"
-              "Attributes: " (attributes event)
+              "Custom Attributes: " (custom-attributes event)
               "\n\n"
               (:description event)))
           events)))
