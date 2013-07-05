@@ -50,7 +50,7 @@
               :section "base"
               :priority "optional"
               :architecture "all"
-              :depends (join ", " ["bash"])
+              :depends (join ", " ["bash", "default-jre"])
               :maintainer (:email (:maintainer project))
               :description (:description project)})))
 
