@@ -168,7 +168,7 @@ h1,h2,h3,h4,h5,h6 {
   font-weight: bold;
   display: block;
   text-align: left;
-  margin: 0.6em 0 0.2em 0;
+  margin: 1em 0 0.2em 0;
 }
 h4, h5, h6 {
   margin: 0.2em 0 0.2em 0;
@@ -185,8 +185,8 @@ h1 a:hover, h2 a:hover, h3 a:hover {
   text-decoration: underline;
 }
 h2 { 
-  font-size: 28px;
-  line-height: 34px;
+  font-size: 32px;
+  line-height: 38px;
 }
 h3 {
   font-size: 24px;

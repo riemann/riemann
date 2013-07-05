@@ -35,6 +35,13 @@ layout: default
     <div class="sixcol">
       <h2>Installing Riemann</h2>
 
+      <p>Riemann's components are all configured to work out-of-the-box on
+      localhost, and this quickstart assumes you'll be running everything
+      locally. If you're jumping right into running Riemann on multiple nodes,
+      check out <a
+        href="http://localhost/howto.html#putting-riemann-into-production">Putting
+        Riemann into production</a> for tips.
+
 <code><pre>wget <a href="http://aphyr.com/riemann/riemann-0.2.2.tar.bz2">http://aphyr.com/riemann/riemann-0.2.2.tar.bz2</a>
 tar xvfj riemann-0.2.2.tar.bz2
 cd riemann-0.2.2</pre></code>
@@ -132,15 +139,8 @@ metric_f: 2.5299999713897705&gt;]</span></pre></code>
       
     </div>
     <div class="sixcol last">
-      <h2>What next?</h2>
-      
-      <p>Riemann comes with a standard config that listens on the local ipv4
-      interface and indexes all events, but that's just the the start. You can learn a little more about <a href="/concepts.html">Riemann core concepts</a>, and use <code>etc/riemann.config</code> as a guide for
-      your own configuration. For examples of problems you can solve with
-      Riemann, check out the <a href="howto.html">howto guide</a>.</p>
 
-
-      <h3>Get started with your own streams</h3>
+      <h2>Get started with your own streams</h2>
 
       <p>A stream is just a function that takes a variable number of child streams and returns a function that takes an event and responds to the event it is passed when it is invoked.</p>
 
@@ -185,16 +185,22 @@ metric_f: 2.5299999713897705&gt;]</span></pre></code>
       (streams prn)
       {% endhighlight %}
 
-      <p>You can now starting adding stream statements to the configuration file to start processing your own events. For specific examples of common event processing tasks see the <a href="howto.html">howto guide</a>.</p>
+      <p>You can now starting adding stream statements to the configuration
+      file to start processing your own events. For specific examples of common
+      event processing tasks see the <a href="howto.html">howto guide</a>.</p>
 
-      <h2>Best Practices</h2>
-
-      <p>Your clocks may be unsynchronized to varying degrees. In some places,
-      Riemann uses the server clock as the authoritative time. In other cases,
-      Riemann will use the timestamps on individual events. Clock
-      desynchronization can lead to unusual consequences if you don't consider
-      these effects carefully; we recommend using NTP to synchronize your
-      clocks as closely as possible.</p>
+      <h2>What next?</h2>
+      
+      <p>Riemann comes with a standard config that listens on the local ipv4
+      interface and indexes all events, but that's just the the start. You can
+      learn a little more about <a href="/concepts.html">Riemann core
+        concepts</a>, and use <code>etc/riemann.config</code> as a guide for
+      your own configuration. When you're ready to run Riemann in production,
+      check out <a
+        href="http://localhost/howto.html#changing-the-config">Changing the
+        config</a> and <a
+        href="howto.html#http://localhost/howto.html#putting-riemann-into-production">Putting
+        Riemann into production</a>.</p>
     </div>
   </div>
 </div>
