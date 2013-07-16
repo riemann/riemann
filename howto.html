@@ -455,7 +455,7 @@ track of which services are starting, crashing, and gracefully restarting.</p>
        ; each second. So we *set* the metric of every event to 1, *then*
        ; take the rate:
 
-       (with :metric 1 (rate 5 index))
+       (with :metric 1.0 (rate 5 index))
 
        ; (with) takes each event and calls (rate) with a *changed*
        ; copy--one where :metric is always 1. Then (rate) adds up all those
@@ -490,7 +490,7 @@ need the most attention.</p>
 
 {% highlight clj %}
 (where (tagged "exception")
-  (with :metric 1
+  (with :metric 1.0
     (by :service
       (adjust [:service (str " exception rate")]
         (rate 10 index graph)))))
