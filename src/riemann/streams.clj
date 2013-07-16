@@ -370,17 +370,21 @@ OA
         bins (ref {})
         ; Eventually finish a bin.
         finish-eventually (fn finish-eventually [bin start]
-          (.start (new Thread (bound-fn thread []
-                         (let [end (+ start interval)]
-                           ; Sleep until this bin is past
-                           (Thread/sleep (max 0 (* 1000 (- end (unix-time)))))
-                           ; Prevent anyone else from creating or changing this
-                           ; bin. Congratulations, you've invented timelocks.
-                           (dosync
-                             (alter bins dissoc start)
-                             (alter watermark max end))
-                           ; Now that we're safe from modification, finish him!
-                           (finish bin start end))))))
+                            (let [f (bound-fn thread []
+                                      (let [end (+ start interval)]
+                                        ; Sleep until this bin is past
+                                        (Thread/sleep
+                                          (max 0 (* 1000 (- end (unix-time)))))
+                                        ; Prevent anyone else from creating or
+                                        ; changing this bin. Congratulations,
+                                        ; you've invented timelocks.
+                                        (dosync
+                                          (alter bins dissoc start)
+                                          (alter watermark max end))
+                                        ; Now that we're safe from
+                                        ; modification, finish him!
+                                        (finish bin start end)))]
+                              (.start (Thread. ^Runnable f))))
 
         ; Add event to the bin for a time
         bin (fn bin [event t]

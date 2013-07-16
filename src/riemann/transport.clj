@@ -90,7 +90,7 @@
       10485760 ; 10MB total queued
       )))
 
-(defonce shared-execution-handler
+(defonce ^ExecutionHandler shared-execution-handler
   (execution-handler))
 
 (defonce instrumentation

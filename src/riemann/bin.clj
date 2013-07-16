@@ -33,12 +33,13 @@
 (defn handle-signals
   "Sets up POSIX signal handlers."
   []
-  (sun.misc.Signal/handle
-    (sun.misc.Signal. "HUP")
-    (proxy [sun.misc.SignalHandler] []
-      (handle [sig]
-              (info "Caught SIGHUP, reloading")
-              (reload!)))))
+  (if (not (.contains (. System getProperty "os.name") "Windows"))
+    (sun.misc.Signal/handle
+      (sun.misc.Signal. "HUP")
+      (proxy [sun.misc.SignalHandler] []
+        (handle [sig]
+                (info "Caught SIGHUP, reloading")
+                (reload!))))))
 (defn pid
   "Process identifier, such as it is on the JVM. :-/"
   []

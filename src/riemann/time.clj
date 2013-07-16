@@ -64,7 +64,7 @@
 (def max-task-id
   (atom 0))
 
-(def tasks
+(def ^ConcurrentSkipListSet tasks
   "Scheduled operations."
   (ConcurrentSkipListSet.
     (fn [a b] (compare [(:t a) (:id a)]
@@ -174,7 +174,7 @@
   []
   (locking threadpool
     (reset! running false)
-    (while (some #(.isAlive %) @threadpool)
+    (while (some #(.isAlive ^Thread %) @threadpool)
       ; Allow at most 1/10th park-interval to pass after all threads exit.
       (Thread/sleep (* park-interval 100)))
     (reset! threadpool [])))
@@ -187,7 +187,7 @@
     (reset! running true)
     (reset! threadpool
             (map (fn [i]
-                   (doto (Thread. (bound-fn [] (run-tasks! i))
-                                  (str "riemann task " i))
-                     (.start)))
+                   (let [^Runnable f (bound-fn [] (run-tasks! i))]
+                     (doto (Thread. f (str "riemann task " i))
+                       (.start))))
                  (range thread-count)))))

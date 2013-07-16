@@ -45,7 +45,14 @@
     (handle core msg)
     (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))))
 
-(defrecord UDPServer [host port max-size channel-group pipeline-factory stats core killer]
+(defrecord UDPServer [^String host
+                      ^int port
+                      max-size
+                      ^ChannelGroup channel-group
+                      pipeline-factory
+                      stats
+                      core
+                      killer]
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
   
@@ -81,9 +88,9 @@
                                 max-size)))
 
                 ; Start bootstrap
-                (let [server-channel (.bind bootstrap
-                                            (InetSocketAddress. host port))]
-                  (.add channel-group server-channel))
+                (->> (InetSocketAddress. host port)
+                    (.bind bootstrap)
+                    (.add channel-group))
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server

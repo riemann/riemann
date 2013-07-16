@@ -1,5 +1,6 @@
 (ns riemann.transport.graphite
   (:import [org.jboss.netty.util CharsetUtil]
+           (org.jboss.netty.channel MessageEvent)
            [org.jboss.netty.handler.codec.oneone OneToOneDecoder]
            [org.jboss.netty.handler.codec.string StringDecoder StringEncoder]
            [org.jboss.netty.handler.codec.frame
@@ -30,7 +31,7 @@
   graphite metrics have known patterns that you wish to extract more
   information (host, refined service name, tags) from"
   [line parser-fn]
-  (when-let [[service metric timestamp] (split line #" ")]
+  (when-let [[service ^String metric ^String timestamp] (split line #" ")]
     (when (not= metric "nan") ;; discard nan values
       (try
         (let [res {:service service
@@ -49,7 +50,7 @@
 
 (defn graphite-handler
   "Given a core and a MessageEvent, applies the message to core."
-  [core e]
+  [core ^MessageEvent e]
   (stream! core (.getMessage e)))
 
 (defn graphite-server

@@ -27,7 +27,7 @@
   (close [client]
          "Cleans up (closes sockets etc.)"))
 
-(defrecord GraphiteTCPClient [host port]
+(defrecord GraphiteTCPClient [^String host ^int port]
   GraphiteClient
   (open [this]
     (let [sock (Socket. host port)]
@@ -42,7 +42,7 @@
     (.close ^OutputStreamWriter (:out this))
     (.close ^Socket (:socket this))))
 
-(defrecord GraphiteUDPClient [host port]
+(defrecord GraphiteUDPClient [^String host ^int port]
   GraphiteClient
   (open [this]
     (assoc this 
@@ -53,7 +53,7 @@
     (let [bytes (.getBytes ^String line)
           length (count line)
           addr (InetAddress/getByName (:host this))
-          datagram (DatagramPacket. bytes length addr (:port this))]
+          datagram (DatagramPacket. bytes length ^InetAddress addr port)]
       (.send ^DatagramSocket (:socket this) datagram)))
   (close [this]
     (.close ^DatagramSocket (:socket this))))
