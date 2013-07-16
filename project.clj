@@ -23,7 +23,7 @@
     [aleph "0.3.0-beta16"]
     [clj-http "0.4.1"]
     [cheshire "5.0.0"]
-    [clj-librato "0.0.2"]
+    [clj-librato "0.0.3"]
     [clj-time "0.4.3"]
     [clj-wallhack "1.0"]
     [com.boundary/high-scale-lib "1.0.3"]
@@ -42,6 +42,7 @@
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
+  :profiles {:dev {:dependencies [[criterium "0.4.1"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
