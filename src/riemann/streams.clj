@@ -6,7 +6,7 @@
   streams as children. When invoking children, they typically catch all
   exceptions and log them, then proceed to the next child.
 
-  Any function accepting an event map (e.g. {:service \"foo\" :metric 3.5} can
+  Any function accepting an event map (e.g. {:service \"foo\" :metric 3.5}) can
   be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
   streams namespace aims to provide a comprehensive set of widely applicable,
   combinable tools for building up more complicated streams."
