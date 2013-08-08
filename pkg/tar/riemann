@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 top="$(dirname "$0")/.."
 
 JAR="$top/lib/riemann.jar"
