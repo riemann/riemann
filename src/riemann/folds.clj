@@ -175,7 +175,7 @@
   [events]
   (when-let [e (some identity events)]
     (let [
-      samples (map :metric events)
+      samples (non-nil-metrics events)
       n (count samples)
       mean (/ (reduce + samples) n)
       intermediate (map #(Math/pow (- %1 mean) 2) samples)]
