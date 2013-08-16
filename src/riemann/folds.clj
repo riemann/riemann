@@ -169,3 +169,14 @@
   "Returns the maximum event, by metric."
   [events]
   (apply max-key :metric (filter #(and % (:metric %)) events)))
+
+(defn std-dev
+  "calculates standard deviation across a seq of events"
+  [events]
+  (when-let [e (some identity events)]
+    (let [
+      samples (non-nil-metrics events)
+      n (count samples)
+      mean (/ (reduce + samples) n)
+      intermediate (map #(Math/pow (- %1 mean) 2) samples)]
+      (assoc e :metric (Math/sqrt (/ (reduce + intermediate) n))))))
