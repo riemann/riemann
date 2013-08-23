@@ -768,14 +768,13 @@ an anonymous function to <code>(streams)</code> that will store a set of hosts.<
 tag. In riemann.config, try this stream:</p>
 
 {% highlight clj %}
-(let [hosts (atom {}) host (atom #{})]
+(let [hosts (atom {})]
   (fn [event]
     (let [tag-str (keyword (clojure.string/join "-" (:tags event)))]
     (swap! hosts assoc tag-str (conj (tag-str @hosts #{}) (:host event)))
     (index {:service (str (name tag-str) "-count")
             :time (unix-time)
-            :metric (count (tag-str @hosts))})
-    (swap! hosts (atom {})))))
+            :metric (count (tag-str @hosts))}))))
 {% endhighlight %}
 
 <p>The above code will create a unique service using all your tags with "-count"
