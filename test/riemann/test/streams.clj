@@ -145,7 +145,16 @@
                       (s {:metric 2})
                       (is (nil? @e))
                       (advance! 1)
-                      (is (= "error" (:state @e)))))))
+                      (is (= "error" (:state @e))))))
+
+         (testing "exception handling takes care of Throwables"
+                  (logging/suppress
+                   "riemann.streams"
+                   (let [exceptions (atom [])]
+                     (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
+                       (run-stream (sdo #(throw (Throwable. %)))
+                                   ["boo!"]))
+                     (is (= 1 (count @exceptions)))))))
 
 (deftest execute-on-test
          (let [output (atom [])
