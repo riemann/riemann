@@ -52,7 +52,7 @@
      (doseq [child# ~children]
        (try
          (child# ~event)
-         (catch Exception e#
+         (catch Throwable e#
            (warn e# (str child# " threw"))
            (if-let [ex-stream# *exception-stream*]
              (ex-stream# (exception->event e#))))))
