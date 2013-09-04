@@ -44,7 +44,11 @@ do_start()
   #   0 if daemon has been started
   #   1 if daemon was already running
   #   2 if daemon could not be started
-  start-stop-daemon --status --pidfile $PIDFILE && (log_daemon_msg "Riemann is already running (PID `cat ${PIDFILE}`)"; return 1)
+  pid=$( pidofproc -p $PID_FILE "$NAME")
+  if [ -n "$pid" ] ; then
+    log_daemon_msg "Riemann is already running (PID `cat ${PIDFILE}`)"
+    return 1
+  fi
   start-stop-daemon --start --quiet --chuid $DAEMON_USER --chdir / --make-pidfile --background --pidfile $PIDFILE --exec $DAEMON -- \
     $DAEMON_ARGS \
     || return 2
@@ -112,7 +116,6 @@ case "$1" in
     log_daemon_msg "Reloading $DESC" "$NAME"
     do_reload
     log_end_msg $?
-    
     ;;
   restart)
     log_daemon_msg "Restarting $DESC" "$NAME"
