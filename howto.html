@@ -771,7 +771,7 @@ tag. In riemann.config, try this stream:</p>
 (let [hosts (atom {})]
   (fn [event]
     (let [tag-str (keyword (clojure.string/join "-" (:tags event)))]
-    (swap! hosts assoc tag-str (conj (tag-str @hosts #{}) (:host event)))
+    (swap! hosts update-in [tag-str] (fn [h] (conj (or h #{}) (:host event))))
     (index {:service (str (name tag-str) "-count")
             :time (unix-time)
             :metric (count (tag-str @hosts))}))))
