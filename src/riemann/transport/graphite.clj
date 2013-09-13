@@ -50,7 +50,7 @@
 
 (defn graphite-handler
   "Given a core and a MessageEvent, applies the message to core."
-  [core ^MessageEvent e]
+  [core stats ^MessageEvent e]
   (stream! core (.getMessage e)))
 
 (defn graphite-server
