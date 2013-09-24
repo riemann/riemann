@@ -25,6 +25,7 @@
         [riemann.pagerduty :only [pagerduty]]
         [riemann.campfire :only [campfire]]
         [riemann.librato :only [librato-metrics]]
+        [riemann.nagios :only [nagios]]
         riemann.streams))
 
 (def core "The currently running core."

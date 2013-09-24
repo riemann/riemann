@@ -39,6 +39,7 @@
     [slingshot "0.10.2"]
     [clj-campfire "2.1.0"]
     [less-awful-ssl "0.1.0"]
+    [clj-nsca "0.0.1"]
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
