@@ -11,7 +11,7 @@
 
 (def expected
   (let [e test-event]
-  (nagios-message :host (:host e) :service (:service e) :level (:state e) :message (:description e))))
+  (nagios-message (:host e) (:state e) (:service e) (:description e))))
 
 (deftest nagios-test
   (is (= (event->nagios test-event)
