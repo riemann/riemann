@@ -128,9 +128,10 @@
                  (info "Closing connection to "
                        (select-keys opts [:host :port]))
                  (close client))
-               {:size                 (:pool-size opts)
-                :block-start          (:block-start opts)
-                :regenerate-interval  (:reconnect-interval opts)})
+               (-> opts
+                   (select-keys [:block-start])
+                   (assoc :size (:pool-size opts))
+                   (assoc :regenerate-interval (:reconnect-interval opts))))
         path (:path opts)]
 
     (fn [event]

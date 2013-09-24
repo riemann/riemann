@@ -78,7 +78,7 @@
    (let [^int size            (or (:size opts) (* 2 (.availableProcessors
                                                       (Runtime/getRuntime))))
          regenerate-interval  (or (:regenerate-interval opts) 5)
-         block-start          (or (:block-start opts) true)
+         block-start          (get opts :block-start true)
          pool (FixedQueuePool.
                 (LinkedBlockingQueue. size)
                 open
