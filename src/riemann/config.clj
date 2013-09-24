@@ -15,6 +15,7 @@
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
             [riemann.graphite :as graphite-client]
+            [riemann.logstash :as logstash-client]
             [clojure.tools.nrepl.server :as repl])
   (:use clojure.tools.logging
         [clojure.java.io :only [file]]
@@ -33,6 +34,8 @@
   (atom (core/core)))
 
 (def graphite #'graphite-client/graphite)
+(def logstash #'logstash-client/logstash)
+
 
 (defn repl-server
   "Starts a new REPL server with opts."
