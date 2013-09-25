@@ -39,7 +39,7 @@
     [slingshot "0.10.2"]
     [clj-campfire "2.1.0"]
     [less-awful-ssl "0.1.0"]
-    [clj-nsca "0.0.2"]
+    [clj-nsca "0.0.3"]
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
@@ -52,6 +52,7 @@
                    :sns :sns
                    :graphite :graphite
                    :librato :librato
+                   :nagios :nagios
                    :time :time
                    :bench :bench
                    :focus :focus
