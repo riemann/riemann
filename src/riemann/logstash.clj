@@ -61,24 +61,20 @@
 
 
 (defn logstash
-  "Returns a function which accepts an event and sends it to Graphite.
-  Silently drops events when graphite is down. Attempts to reconnect
+  "Returns a function which accepts an event and sends it to logstash.
+  Silently drops events when logstash is down. Attempts to reconnect
   automatically every five seconds. Use:
 
   (logstash {:host \"logstash.local\" :port 2003})
 
   Options:
 
-  :path       A function which, given an event, returns the string describing
-              the path of that event in graphite. graphite-path-percentiles by
-              default.
-
   :pool-size  The number of connections to keep open. Default 4.
 
   :reconnect-interval   How many seconds to wait between attempts to connect.
                         Default 5.
 
-  :claim-timeout        How many seconds to wait for a graphite connection from
+  :claim-timeout        How many seconds to wait for a logstash connection from
                         the pool. Default 0.1.
 
   :block-start          Wait for the pool's initial connections to open
@@ -107,11 +103,10 @@
                  (close client))
                {:size                 (:pool-size opts)
                 :block-start          (:block-start opts)
-                :regenerate-interval  (:reconnect-interval opts)})
-        path (:path opts)]
+                :regenerate-interval  (:reconnect-interval opts)})]
 
     (fn [event]
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (event-to-json event)]
+                   (let [string (event-to-json (merge event {:source (:host event)}))]
                      (send-line client string)))))))
