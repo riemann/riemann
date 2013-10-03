@@ -42,6 +42,7 @@
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
     [capacitor "0.2.2"]
+    [mschristiansen/moustache "1.1.0"] ; used for the http interface
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]

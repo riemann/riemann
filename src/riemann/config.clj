@@ -12,6 +12,7 @@
             [riemann.transport.websockets :as websockets]
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
+            [riemann.transport.http       :as http]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
@@ -149,6 +150,11 @@
   (sse-server {:port 5556})"
   [& opts]
   (service! (sse/sse-server (kwargs-or-map opts))))
+
+(defn http-server
+  "Add a new http server with opts to the default core."
+  [& opts]
+  (service! (http/http-server (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
