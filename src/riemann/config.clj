@@ -8,6 +8,7 @@
             [riemann.transport.tcp        :as tcp]
             [riemann.transport.udp        :as udp]
             [riemann.transport.websockets :as websockets]
+            [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
             [riemann.repl]
             [riemann.index]
@@ -110,6 +111,11 @@
   "Add a new websockets server with opts to the default core."
   [& opts]
   (service! (websockets/ws-server (apply hash-map opts))))
+
+(defn sse-server
+  "Add a new SSE channel server with opts to the default core."
+  [& opts]
+  (service! (sse/sse-server (apply hash-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
