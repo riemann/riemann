@@ -492,7 +492,7 @@ need the most attention.</p>
 (where (tagged "exception")
   (with :metric 1
     (by :service
-      (adjust [:service (str " exception rate")]
+      (adjust [:service str " exception rate"]
         (rate 10 index graph)))))
 {% endhighlight %}
 
