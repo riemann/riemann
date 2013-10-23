@@ -637,32 +637,37 @@ since this event pertains to the system as a whole.</p>
 
 <p>Sometimes you'll have a service that will fail. You might expect one or two
 failures, but if you get over a certain percentage of failures you want to be
-notified. In this case you can use a <code>fixed-time-window</code>
+notified. In this case you can use a <code>fixed-time-window</code>.</p>
 
 {% highlight clj %}
 (streams
-  (where (and metric (service "app1")(tagged "sign_in"))
-    ; We want to get alerted about failed sign ins. However we expect that there will be failures
-    ; due to incorect passwords etc. So we only want to get alerted if more than 50% of the signins
-    ; in a 60 second period are failures. The app tags failed signins with a warning state.
+  (where (and (service "signin")
+              (not (expired? event)))
+    ; We want to get alerted about failed sign ins. However we expect that
+    ; there will be failures due to incorect passwords etc. So we only want to
+    ; get alerted if more than 50% of the signins in a 60 second period are
+    ; failures. Failed signings have state "warning".
     ;
     ; fixed-time-window sends a vector of events out every 60 seconds
     (fixed-time-window 60
       ; smap passes those events into a function
       (smap (fn [events]
-        ; we include a function here filter the vector for all of the "warning" events and count them
-        ; we will then count the total of the events
-        ; finally work out the percentage
-        (let [percent (/ (count (filter #(= (:state %) "warning") events))
-                         (count events))]
-                         ; take an action on the value of percent, in this example we imagine that the
-                         ; page-ops and mail-devs functions can take strings
-                         (cond
-                           (> percent 0.7) (page-ops (format "sign_in is CRITICAL: %f percent" (float percent)))
-                           (> percent 0.5) (mail-devs (format "sign_in is BAD: %f percent" (float percent)))
-                           :else (prn (format "sign in is %f" (float percent)))
-                           ))))))
-  ))
+        ; Given a list of events, we'll find the number which have state
+        ; warning, divide by the total number of events, and emit a new event
+        ; based on the ratio.
+        (let [fraction (/ (count (filter #(= "warning" (:state %)) events))
+                          (count events))]
+          ; The metric for this event will be the fraction of failed signins,
+          ; and the state will depend on how many failures we see.
+          {:service "signin failures"
+           :metric  fraction
+           :state   (condp < fraction
+                      0.7 "critical"
+                      0.3 "warning"
+                          "ok")))
+        ; Now we can use those "signin failures" events to alert on state
+        transitions:
+        (changed-state (email "ops@trioptimum.com"))))))
 {% endhighlight %}
 
 <h3 id="create-your-own-stream-function">Create your own stream function</h3>
