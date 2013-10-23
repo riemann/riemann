@@ -664,7 +664,7 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
            :state   (condp < fraction
                       0.7 "critical"
                       0.3 "warning"
-                          "ok")))
+                          "ok")}))
         ; Now we can use those "signin failures" events to alert on state
         ; transitions:
         (changed-state (email "ops@trioptimum.com"))))))
