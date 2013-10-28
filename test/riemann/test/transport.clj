@@ -80,7 +80,7 @@
        (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
 
          (is (#{"service1" "service2"} (get r1 "service")))
-         (is (#{"service1" "service2"} (get r1 "service"))))
+         (is (#{"service1" "service2"} (get r2 "service"))))
        (finally
          (stop! core))))))
 
