@@ -11,6 +11,10 @@
         aleph.udp
         gloss.core)
   (:require [clj-http.client :as http]
+            [riemann.pubsub :as pubsub]
+            [riemann.transport.sse :refer [sse-server]]
+            [aleph.http :refer [http-request]]
+            [aleph.formats :as formats]
             [cheshire.core :as json]
             [riemann.client :as client]
             [riemann.index :as index])
@@ -47,6 +51,37 @@
                       (json/parse-string (:body res) true))))
 
              (stop! core))))
+
+(deftest sse-subscribe-events-test
+  (riemann.logging/suppress
+   ["riemann.transport" "riemann.core" "riemann.pubsub"]
+   (let [s1       (tcp-server)
+         s2       (sse-server)
+         index    (index/index)
+         pubsub   (pubsub/pubsub-registry)
+         core     (transition! 
+                   (core)
+                   {:index    index
+                    :pubsub   pubsub
+                    :services [s1 s2]
+                    :streams  [(partial index/update index)]})
+         client   (client/tcp-client)
+         convert  (comp json/parse-string
+                        second
+                        (partial re-matches #"data: (.*)\n\n")
+                        formats/bytes->string)
+         response (http-request 
+                   {:method :get
+                    :url    "http://127.0.0.1:5558/index?query=true"})]
+     (try
+       (client/send-event client {:service "service1"})
+       (client/send-event client {:service "service2"})
+       (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
+         ;; Making assumptions on order of arrival might not be very smart
+         (is (= (get r1 "service") "service1"))
+         (is (= (get r2 "service") "service2")))
+       (finally
+         (stop! core))))))
 
 (deftest udp
          (riemann.logging/suppress ["riemann.transport"
