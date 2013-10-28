@@ -77,9 +77,9 @@
        (client/send-event client {:service "service1"})
        (client/send-event client {:service "service2"})
        (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
-         ;; Making assumptions on order of arrival might not be very smart
-         (is (= (get r1 "service") "service1"))
-         (is (= (get r2 "service") "service2")))
+
+         (is (#{"service1" "service2"} (get r1 "service")))
+         (is (#{"service1" "service2"} (get r1 "service"))))
        (finally
          (stop! core))))))
 
