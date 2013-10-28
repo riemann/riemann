@@ -76,6 +76,7 @@
      (try
        (client/send-event client {:service "service1"})
        (client/send-event client {:service "service2"})
+       (Thread/sleep 100)
        (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
 
          (is (#{"service1" "service2"} (get r1 "service")))
