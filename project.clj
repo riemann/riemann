@@ -41,7 +41,6 @@
     [clj-campfire "2.1.0"]
     [less-awful-ssl "0.1.0"]
     [clj-nsca "0.0.3"]
-    [fakesink "0.1.0"]
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
