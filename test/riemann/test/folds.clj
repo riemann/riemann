@@ -107,7 +107,9 @@
 
 (deftest mean-test
     (is (= {:metric 4} (mean [{:metric 2} {:metric 4} {:metric 6}])))
-    (is (= {:metric 4} (mean [{:metric 2} {:metric 4} {:metric nil} {:metric 6}]))))
+    (is (= {:metric 4} (mean [{:metric 2} {:metric 4} {:metric nil} {:metric 6}])))
+    (is (= {:metric 4} (mean [{:metric 2} {:metric 4} {:metric nil} {:metric 6} nil])))
+    (is (= nil (mean []))))
 
 (deftest std-dev-test
     (is (= 147.0 (Math/floor (:metric (std-dev [{:metric 600} {:metric 470} {:metric 170} {:metric 430} {:metric 300}])))))
