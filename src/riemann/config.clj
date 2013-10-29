@@ -23,6 +23,7 @@
         riemann.client
         riemann.email
         riemann.sns
+        [riemann.plugin  :only [load-plugin load-plugins]]
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
         [riemann.campfire :only [campfire]]
