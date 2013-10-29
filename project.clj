@@ -15,6 +15,7 @@
     [org.clojure/math.numeric-tower "0.0.1"]
     [org.clojure/tools.logging "0.2.3"]
     [org.clojure/tools.nrepl "0.2.2"]
+    [org.clojure/java.classpath "0.2.0"]
     [clojure-complete "0.2.2"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
@@ -40,6 +41,7 @@
     [clj-campfire "2.1.0"]
     [less-awful-ssl "0.1.0"]
     [clj-nsca "0.0.3"]
+    [fakesink "0.1.0"]
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
