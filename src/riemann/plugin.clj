@@ -14,9 +14,10 @@
   containing at least two keys:
 
   - `plugin`: the plugin name
-  - `require`: a vector of require statements to hand over to
-               `clojure.core/require`
+  - `require`: the namespace to load
 
+  The namespace will be made available using the plugin name's symbol
+  value.
 "
   (:require [clojure.java.classpath :as cp]
             [clojure.java.io        :refer [resource]]
@@ -29,15 +30,15 @@
     (read-string src)))
 
 (defn load-from-meta
-  "Given a metadata description map, follow requirements"
+  "Given a metadata description map, require plugin's namespace"
   [{:keys [plugin require]}]
-  (when (seq require)
-    (info "loading plugin:" plugin)
-    (apply clojure.core/require require)))
+  (let [to-symbol (comp symbol name)]
+    (when require
+      (info "loading plugin:" plugin)
+      (clojure.core/require [(to-symbol require) :as (to-symbol plugin)]))))
 
 (defn load-from-resource
-  "Given a path to a java resource, load metadata and apply
-   given requirements."
+  "Given a path to a java resource, load metadata and require plugin"
   [src]
   (-> src
       resource
@@ -55,8 +56,8 @@
       (load-from-resource desc-file))))
 
 (defn load-plugin
-  "Given a plugin name, look for its metadata description file, execute
-   given requirements."
+  "Given a plugin name, look for its metadata description file, and
+   require plugin's namespace"
   [plugin]
   (load-from-resource (format "riemann_plugin/%s/meta.edn" (name plugin))))
 
