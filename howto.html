@@ -799,11 +799,10 @@ count of all your production web servers.  </p>
 <p><code>riemann.email</code> can send single events--or vectors of events--via email:</p>
 
 {% highlight clj %}
-(def email (mailer {:from "riemann@trioptimum.com"}))
-
-(streams
-  (where (state "critical")
-    (email "shodan@tauceti.five")))
+(let [email (mailer {:from "riemann@trioptimum.com"})]
+  (streams
+    (where (state "critical")
+      (email "shodan@tauceti.five"))))
 {% endhighlight %}
 
 <p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:</p>
