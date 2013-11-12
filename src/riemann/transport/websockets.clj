@@ -249,7 +249,7 @@
           Currently does nothing; this option depends on an incomplete
           feature in Aleph, the underlying networking library. Aleph will
           currently bind to all interfaces, regardless of this value.
-  :post   The port to listen on (default 5556)"
+  :port   The port to listen on (default 5556)"
   ([] (ws-server {}))
   ([opts]
    (WebsocketServer.
