@@ -28,7 +28,7 @@
     [clj-time "0.4.3"]
     [clj-wallhack "1.0"]
     [com.boundary/high-scale-lib "1.0.3"]
-    [com.draines/postal "1.9.0"]
+    [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.4.1"]
     [incanter/incanter-core "1.4.1"]
     [interval-metrics "0.0.2"] 
