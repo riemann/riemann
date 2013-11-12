@@ -39,7 +39,7 @@
     [riemann-clojure-client "0.2.9"]
     [slingshot "0.10.3"]
     [clj-campfire "2.2.0"]
-    [less-awful-ssl "0.1.0"]
+    [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
   ]
   :plugins [[codox "0.6.1"]
