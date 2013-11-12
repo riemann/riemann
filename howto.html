@@ -218,14 +218,14 @@ sudo service riemann reload
   <code>riemann.config</code>.</p>
 
   <p>For instance, let's say you wanted to change how emails are formatted. The
-  namespace <code>riemann.email</code> has a function called <code>body</code>,
+  namespace <code>riemann.common</code> has a function called <code>body</code>,
   which accepts a sequence of events and returns a string. We'll override it in
   our config file:</p>
   </div>
 
   <div class="sixcol last">
 {% highlight clj %}
-(ns riemann.email)
+(ns riemann.common)
 (defn body [events]
   ; pr-str formats events as a clojure-readable string.
   (pr-str events))
