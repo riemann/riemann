@@ -12,7 +12,7 @@
   :dependencies [
     [org.clojure/algo.generic "0.1.0"]
     [org.clojure/clojure "1.5.1"]
-    [org.clojure/math.numeric-tower "0.0.1"]
+    [org.clojure/math.numeric-tower "0.0.2"]
     [org.clojure/tools.logging "0.2.6"]
     [org.clojure/tools.nrepl "0.2.3"]
     [org.clojure/java.classpath "0.2.1"]
@@ -30,6 +30,7 @@
     [com.boundary/high-scale-lib "1.0.3"]
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.4.1"]
+    ; TODO: remove incanter? It's no longer mandatory.
     [incanter/incanter-core "1.5.4"]
     [interval-metrics "0.0.2"] 
     [io.netty/netty "3.8.0.Final"]
