@@ -21,7 +21,7 @@
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
-    [aleph "0.3.0-beta16"]
+    [aleph "0.3.0"]
     [clj-http "0.7.7"]
     [cheshire "5.2.0"]
     [clj-librato "0.0.3"]
