@@ -16,7 +16,7 @@
     [org.clojure/tools.logging "0.2.3"]
     [org.clojure/tools.nrepl "0.2.2"]
     [org.clojure/java.classpath "0.2.0"]
-    [clojure-complete "0.2.2"]
+    [clojure-complete "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
