@@ -127,34 +127,36 @@
           (stop! core))))))
 
 (deftest tls-test
-         (let [server {:tls? true
-                       :key "test/data/tls/server.pkcs8"
-                       :cert "test/data/tls/server.crt"
-                       :ca-cert "test/data/tls/demoCA/cacert.pem"}
-               client {:tls? true
-                       :key "test/data/tls/client.pkcs8"
-                       :cert "test/data/tls/client.crt"
-                       :ca-cert "test/data/tls/demoCA/cacert.pem"}]
-           ; Works with valid config
-           (test-tcp-client client server)
+  (let [server {:tls? true
+                :key "test/data/tls/server.pkcs8"
+                :cert "test/data/tls/server.crt"
+                :ca-cert "test/data/tls/demoCA/cacert.pem"}
+        client {:tls? true
+                :key "test/data/tls/client.pkcs8"
+                :cert "test/data/tls/client.crt"
+                :ca-cert "test/data/tls/demoCA/cacert.pem"}]
+    ; Works with valid config
+    (test-tcp-client client server)
 
-           ; Fails with mismatching client key/cert
-           (is (thrown? IOException
-                        (test-tcp-client (assoc client :key (:key server))
-                                         server)))
-           ; Fails with non-CA client CA cert
-           (is (thrown? IOException
-                        (test-tcp-client (assoc client :ca-cert (:cert client))
-                                         server)))
-           ; Fails with mismatching server key/cert
-           (is (thrown? IOException
-                        (test-tcp-client client
-                                         (assoc server :key (:key client)))))
-           ; Fails with non-CA server CA cert
-           (is (thrown? IOException
-                        (test-tcp-client client
-                                         (assoc server :ca-cert
-                                                (:cert client)))))))
+    (riemann.logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
+      ; Fails with mismatching client key/cert
+      (is (thrown? IOException
+                   (test-tcp-client (assoc client :key (:key server))
+                                    server)))
+
+      ; Fails with non-CA client CA cert
+      (is (thrown? IOException
+                   (test-tcp-client (assoc client :ca-cert (:cert client))
+                                    server)))
+      ; Fails with mismatching server key/cert
+      (is (thrown? IOException
+                   (test-tcp-client client
+                                    (assoc server :key (:key client)))))
+      ; Fails with non-CA server CA cert
+      (is (thrown? IOException
+                   (test-tcp-client client
+                                    (assoc server :ca-cert
+                                           (:cert client))))))))
 
 (deftest ignores-garbage
          (riemann.logging/suppress ["riemann.transport"
