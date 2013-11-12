@@ -230,7 +230,9 @@
               (:host event) " "
               (:service event) " "
               (:state event) " ("
-              (:metric event) ")\n"
+              (if (ratio? (:metric event))
+                (double (:metric event))
+                (:metric event)) ")\n"
               "Tags: [" (join ", " (:tags event)) "]"
               "\n"
               "Custom Attributes: " (custom-attributes event)
