@@ -37,7 +37,7 @@
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.7.5"]
     [riemann-clojure-client "0.2.9"]
-    [slingshot "0.10.2"]
+    [slingshot "0.10.3"]
     [clj-campfire "2.1.0"]
     [less-awful-ssl "0.1.0"]
     [clj-nsca "0.0.3"]
