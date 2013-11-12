@@ -15,7 +15,7 @@
     [org.clojure/math.numeric-tower "0.0.1"]
     [org.clojure/tools.logging "0.2.6"]
     [org.clojure/tools.nrepl "0.2.3"]
-    [org.clojure/java.classpath "0.2.0"]
+    [org.clojure/java.classpath "0.2.1"]
     [clojure-complete "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
                                        javax.jms/jms
