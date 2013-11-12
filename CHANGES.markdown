@@ -1,3 +1,69 @@
+# Version 0.2.3
+
+Riemann continues to expand in scope and adaptability, especially adding
+support for integration with other monitoring systems. Metrics for riemann
+internals are now recorded and exposed as events through the standard streams.
+Packaging improvements and some minor performance/bugfixes round out the mix!
+
+## New features
+
+- Comprehensive instrumentation for UDP, TCP, and Websocket servers, plus core;
+  latencies, queue depths, and throughput
+- Plugin system for loading external namespaces from the classpath.
+- Standard deviation fold
+- HipChat client
+- Logstash client
+- Support for passive Nagios checks
+- HTTP server-sent-event transport
+
+## Improvements
+
+- Librato adapter can take a sequence of events, e.g. from rollups. Much more
+  efficient
+- Improved error handling for Websockets HTTP server for 404 paths
+- Custom attributes included in emails and SNS notifications
+- config/include can now recursively load all files if given a directory
+- Ratios are now formatted as doubles in email
+
+## Bugfixes
+
+- Debian package now correctly respects `$EXTRA_CLASSPATH`
+- No longer attempts to register SIGHUP handler on windows
+- Index expiry no longer breaks on events with nil ttls
+- Riemann.pool no longer sets :block-start true always
+- Various docstring fixups
+- Tarball now uses /usr/bin/env bash, not /bin/bash
+- Fix an issue with start-stop-daemon on older Debian versions
+- Load defaults from /etc/default on Debian
+
+## Internals
+
+- Additional type hints; improves performance, especially for Graphite.
+- mean-over-time is now deprecated
+- Tests for graphite server
+- Expanded test suite
+- clojure 1.5.0 -> 1.5.1
+- clj-librato 0.0.3
+- riemann-clojure-client 0.2.9
+- postal 1.11.1
+- clj-time 0.6.0
+- clj-http 0.7.7
+- cheshire 5.2.0
+- clj-wallhack 1.0.1
+- clojure-complete 0.2.3
+- netty 3.8.0-Final
+- slf4j-log4j12 1.7.5
+- slingshot 0.10.3
+- clj-campfire 2.2.0
+- less-awful-ssl 0.1.1
+- tools.nrepl 0.2.3
+- tools.logging 0.2.6
+- org.clojure/java.classpath 0.2.1
+- aleph 0.3.0
+- incanter-core 1.5.4
+- math.numeric-tower 0.0.2
+- algo.generic 0.1.1
+
 # Version 0.2.2
 
 ## New features
@@ -41,6 +107,7 @@
 - streams/part-time-simple: like part-time-fast, but with a saner API
 - index/lookup: looks up an event by host and service
 - riemann.email: Cleaned up deprecated formatting functions
+
 
 # Version 0.2.1
 
