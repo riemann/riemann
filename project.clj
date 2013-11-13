@@ -1,5 +1,5 @@
 (defproject riemann "0.2.3"
-  :description 
+  :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
@@ -32,7 +32,7 @@
     [com.amazonaws/aws-java-sdk "1.4.1"]
     ; TODO: remove incanter? It's no longer mandatory.
     [incanter/incanter-core "1.5.4"]
-    [interval-metrics "0.0.2"] 
+    [interval-metrics "0.0.2"]
     [io.netty/netty "3.8.0.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
@@ -59,7 +59,6 @@
                    :bench :bench
                    :focus :focus
                    :all (fn [_] true)}
-  :profiles {:dev {:dependencies []}} 
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
   :java-source-path "src/riemann/"
