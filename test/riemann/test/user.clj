@@ -14,6 +14,8 @@
    riemann.query))
 
 (defmacro configure-core [& conf]
+  "Load the given Riemann conf into the current core and reset the index.
+FOR TESTING PURPOSES ONLY."
   `(binding [*ns* (find-ns 'riemann.config)]
     (eval '(do
               (~'riemann.time/reset-tasks!)
@@ -28,9 +30,11 @@
               (~'apply!)))))
 
 (defn stream-events [& events]
+  "Run the given events through the current config."
   (doseq [ev events]
     (riemann.core/stream! @riemann.config/core ev)))
 
 (defn search-index [query]
+  "Query the current state of the Riemann index."
   (riemann.index/search (:index @riemann.config/core)
                         (riemann.query/ast query)))
