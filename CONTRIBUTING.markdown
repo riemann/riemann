@@ -58,7 +58,7 @@ This builds target/riemann-{version}-STANDALONE.jar.  Copy this jar as needed.
 
 The protocol buffer codec and clojure client live in riemann-clojure-client, which wraps the java protobuf code and java client in riemann-java-client. Both of these are available on clojars and most of the time you can ignore them.
 
-However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [clojure client](https://gitub.com/)
+However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [clojure client](https://github.com/aphyr/riemann-clojure-client)
 
 ## Building `riemann-java-client`
 
