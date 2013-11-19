@@ -1,4 +1,4 @@
-(defproject riemann "0.2.3"
+(defproject riemann "0.2.4-SNAPSHOT"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
@@ -21,7 +21,7 @@
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
-    [aleph "0.3.0"]
+    [aleph "0.3.1"]
     [clj-http "0.7.7"]
     [cheshire "5.2.0"]
     [clj-librato "0.0.3"]
