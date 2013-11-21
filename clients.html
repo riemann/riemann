@@ -158,7 +158,7 @@ title: Riemann - Clients
     
       <h2 id="graphite">Graphite</h2>
       <p>Riemann is able to <a
-        href="http://riemann.io/api/riemann.graphite.html#var-graphite-server">listen
+        href="http://riemann.io/api/riemann.transport.graphite.html#var-graphite-server">listen
         for events</a> sent over <a
         href="https://graphite.readthedocs.org/en/latest/feeding-carbon.html#the-plaintext-protocol">carbon's
         plaintext protocol</a>. This allows to hook in a <a
@@ -183,7 +183,7 @@ title: Riemann - Clients
 
       <h2 id="logstash">Logstash</h2>
       <p>Logstash's <a
-        href="http://logstash.net/docs/1.1.9/outputs/riemann">Riemann output
+        href="http://logstash.net/docs/1.2.2/outputs/riemann">Riemann output
         plugin</a> sends log events to Riemann.</p>
       
       <h2 id="monitorlib">Monitorlib</h2>
@@ -198,10 +198,17 @@ title: Riemann - Clients
       <h2 id="puppet">Puppet</h2>
       <p><a
         href="https://github.com/exoscale/riemann-puppet-ping">Riemann-icmp-ping</a>
-      monitors hosts from puppet via ICMP ping.</p>
+      monitors hosts from puppet via ICMP ping. <a
+        href="https://github.com/jamtur01/puppet-riemann">Puppet-riemann</a>
+      sends puppet reports to Riemann.</p>
 
       <h2 id="run-and-report">Run-and-report</h2>
       <p>This <a href="https://github.com/samn/run-and-report">Python script</a> runs a shell command and sends specially formatted events to Riemann.</p>
+
+      <h2 id="syslog-ng">Syslog-ng</h2>
+      <p>This <a
+        href="https://github.com/balabit/syslog-ng-incubator/tree/master/modules/riemann">syslog-ng module</a>
+      sends log events to Riemann.</p>
     </div>
   </div>
 </div>
