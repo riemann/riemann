@@ -263,6 +263,34 @@ user=> (riemann.bin/reload!)
 
 <h2>Instrumenting your systems</h2>
 
+<h3>Measure Riemann itself</h3>
+
+<p>Riemann comes with instrumentation built-in, all of which is sampled
+periodically and injected into the event stream. You can query the dashboard
+for <code>"service =~ riemann %"</code> to see Riemann's internal metrics. All
+latencies are in milliseconds.</p>
+
+<p><code>riemann streams</code> refers to the stream processor: its throughput
+measures the number of events being passed to <code>(streams ...)</code> per
+second, and its latencies indicate the time it takes to process a single event
+through the streaming system.</p>
+
+<p>The TCP, UDP, and Websockets servers instrument their throughput and latency
+where possible. TCP latency measures the time from initial message deframing to
+Netty write of the corresponding response. For instance, <code>riemann server
+  tcp 1.2.3.4:5555 in latency 0.95</code> measures the 95th percentile time, in
+milliseconds, for the TCP server on port 5555 to parse, queue, process, and
+dispatch a response for a message. The rate for servers measures *message*
+rate, not *event* rate.</p>
+
+<p>The main queue connecting Netty IO threads to the parsing/execution
+threadpool is measured by <code>riemann netty execution-handler queue
+  size</code>, and is a critical measure of whether the streaming system is
+overloaded relative to inbound request load.</p>
+
+<p>To disable instrumentation, or control how often events are sampled, see <a
+  href="http://riemann.io/api/riemann.config.html#var-instrumentation">riemann.config/instrumentation</a>.</p>
+
 <h3>Measure CPU, memory, and disk use</h3>
 
 <p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes
