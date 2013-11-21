@@ -265,9 +265,9 @@ user=> (riemann.bin/reload!)
 
 <h3>Measure Riemann itself</h3>
 
-<p>Riemann comes with instrumentation built-in, all of which is sampled
-periodically and injected into the event stream. You can query the dashboard
-for <code>"service =~ riemann %"</code> to see Riemann's internal metrics. All
+<p>Riemann comes with instrumentation built-in, which is sampled periodically
+and injected into the event stream. You can query the dashboard for
+<code>service =~ "riemann %"</code> to see Riemann's internal metrics. All
 latencies are in milliseconds.</p>
 
 <p><code>riemann streams</code> refers to the stream processor: its throughput
