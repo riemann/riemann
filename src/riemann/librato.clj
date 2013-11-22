@@ -1,7 +1,8 @@
 (ns riemann.librato
   "Forwards events to Librato Metrics."
   (:require [clojure.string :as string])
-  (:use [clj-librato.metrics :only [collate annotate connection-manager]]
+  (:use [clj-librato.metrics :only [collate annotate connection-manager
+                                    update-annotation]]
         clojure.math.numeric-tower))
 
 (defn safe-name
@@ -109,7 +110,7 @@
                                     [(:host event) (:service event)])
                                 a (event->annotation event)]
                             (when id
-                              (let [res (annotate
+                              (let [res (update-annotation
                                          user api-key (:name a) id
                                          {:end-time (round (:time event))}
                                          http-options)]
