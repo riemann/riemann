@@ -10,7 +10,7 @@
   (:gen-class :name riemann.bin))
 
 (def config-file
-  "The configuration file loaded by the bin tool" 
+  "The configuration file loaded by the bin tool"
   (atom nil))
 
 (def reload-lock (Object.))
