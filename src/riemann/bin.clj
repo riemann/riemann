@@ -5,7 +5,8 @@
             riemann.time
             riemann.pubsub)
   (:use clojure.tools.logging
-        [clojure.tools.cli :only [cli]])
+        [clojure.tools.cli :only [cli]]
+        [riemann.streams :only [testing-mode]])
   (:gen-class :name riemann.bin))
 
 (def config-file
@@ -61,13 +62,14 @@
       (println banner)
       (System/exit 0))
     (riemann.logging/init)
-    (try
-      (info "PID" (pid))
-      (reset! config-file (or (first args) "riemann.config"))
-      (handle-signals)
-      (riemann.time/start!)
-      (riemann.config/include @config-file)
-      (riemann.config/apply!)
-      nil
-      (catch Exception e
-        (error e "Couldn't start")))))
+    (binding [testing-mode (:test options)]
+      (try
+        (info "PID" (pid))
+        (reset! config-file (or (first args) "riemann.config"))
+        (handle-signals)
+        (riemann.time/start!)
+        (riemann.config/include @config-file)
+        (riemann.config/apply!)
+        nil
+        (catch Exception e
+          (error e "Couldn't start"))))))
