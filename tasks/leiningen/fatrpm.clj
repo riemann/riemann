@@ -3,7 +3,8 @@
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
         [clojure.string :only [join capitalize trim-newline replace]]
-        [leiningen.uberjar :only [uberjar]])
+        [leiningen.uberjar :only [uberjar]]
+        [leiningen.tar :only [md5]])
   (:import java.util.Date
            java.text.SimpleDateFormat
            (org.codehaus.mojo.rpm RPMMojo 
@@ -191,7 +192,7 @@
 
         ; MD5
         (write (str dest ".md5")
-               (:out (sh "md5sum" (str dest))))))))
+               (str (md5 dest) " " (.getName rpm)))))))
 
 (defn fatrpm
   ([project] (fatrpm project true))
