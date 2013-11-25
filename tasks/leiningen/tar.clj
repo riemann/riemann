@@ -52,7 +52,7 @@
 
     ; Config
     (.mkdirs (file dir "etc"))
-    (copy (file (:root project) "pkg" "riemann.config")
+    (copy (file (:root project) "pkg" "tar" "riemann.config")
           (file dir "etc" "riemann.config"))
 
     dir))

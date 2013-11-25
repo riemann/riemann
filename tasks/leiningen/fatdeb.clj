@@ -99,7 +99,7 @@
 
     ; Config
     (.mkdirs (file dir "etc" "riemann"))
-    (copy (file (:root project) "pkg" "riemann.config")
+    (copy (file (:root project) "pkg" "deb" "riemann.config")
           (file dir "etc" "riemann" "riemann.config"))
 
     ; defaults file

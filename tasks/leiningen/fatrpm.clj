@@ -125,7 +125,7 @@
         {:directory "/etc/riemann"
          :filemode "644"
          :configuration true
-         :sources [(source (file (:root project) "pkg" "riemann.config")
+         :sources [(source (file (:root project) "pkg" "rpm" "riemann.config")
                            "riemann.config")]}
 
         ; Default file
