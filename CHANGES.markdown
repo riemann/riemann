@@ -1,3 +1,19 @@
+# Version 0.2.4
+
+Minor bugfix release: fixes a few packaging issues and an obnoxious but
+nonfatal bug in the websocket server, introduced in 0.2.3.
+
+## Bugfixes
+
+- Packages generate correct md5sums by default
+- Tarball package logs to cwd, not /var/log/riemann.log.
+- Aleph 0.3.1: fixes a bug which caused websockets to crash on the first conn
+
+## Internals
+
+- Explicit gen-class for riemann.bin; aids in embedding Riemann in Java
+- Early work towards testable configs
+
 # Version 0.2.3
 
 Riemann continues to expand in scope and adaptability, especially adding
