@@ -698,9 +698,36 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
         (changed-state (email "ops@trioptimum.com"))))))
 {% endhighlight %}
 
+<h3 id="arbitrary-functions-as-streams">Arbitrary functions as streams</h3>
+<div class="row">
+  <div class="sixcol">
+    <p>Since streams are just functions which take an event as their sole
+    argument, you can do <i>any</i> computation over events that you like. Just
+    write a function, either named or anonymous.</p>
+
+    <p>You can run any Clojure code you like here; using Clojure or Java
+    libraries on the classpath, writing to the network, logging to disk, using
+    existing variables from the config, and so on. It's up to you.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "foo")
+  (fn [event]
+    ; Log a message
+    (info "I got an event:" event)
+
+    ; Then extract some fields and insert them into a DB.
+    (save-to-my-database (:description event) (:metric event))))
+{% endhighlight clj %}
+  </div>
+</div>
+
 <h3 id="create-your-own-stream-function">Create your own stream function</h3>
 
-<p>A stream is a function that takes a variable number of child streams and returns a function that takes an event and responds to that event.</p>
+<p>Riemann builtins like <code>rate</code>, <code>percentiles</code>,
+<code>smap</code>, and so on are all functions which take a variable number of
+child streams and returns a function that takes an event and responds to that
+event. You can build your own stream-generating functions too.</p>
 
 <p>Let's create a trivial example.</p>
 
