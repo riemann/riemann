@@ -330,3 +330,8 @@ table.plain th {
   color: #fff;
   font-weight: bolder;
 }
+
+ul {
+  list-style: disc !important;
+  padding-left: 2em;
+}

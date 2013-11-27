@@ -261,6 +261,97 @@ when testing locally:</p>
 user=> (riemann.bin/reload!)
 {% endhighlight %}
 
+<h2>Debugging</h2>
+
+<h3>Troubleshooting missing events</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>First, determine whether the events you're looking for are actually
+    making it into Riemann. This will help localize the problem to the
+    <i>network</i> or the <i>streams</i>. Add a new top-level stream which
+    simply logs all inbound events. Use a <code>(where)</code> filter around
+    that logging stream to cut down on noise.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  #(info %))
+{% endhighlight %}
+    
+{% highlight clj %}
+(streams
+  (where (service "some thing you're looking for")
+    #(info %)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>If you don't see the events you're looking for in the logs, they must
+    be dropped <i>before</i> arriving at the streaming system. Check:</p>
+
+    <ul>
+      <li>Riemann clients are sending to the correct Riemann host and port.</li>
+      <li>Riemann is listening to that host and port. Check <code>(tcp-server)</code> and <code>netstat -lntp | grep riemann</code>.</li>
+      <li>The network can relay packets from the client machine to the Riemann
+      server. Use <code>telnet some.host 5555</code> or <code>nmap -sT
+        some.host -P 5555</code>.</li>
+      <li>Your packets are making it from the client to the server. UDP
+      messages can be dropped, delayed, duplicated, or re-ordered at any time
+      by the network, or discarded if the receiving node's receive buffer is
+      too full. Try using TCP.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>If your messages <i>are</i> arriving in the streaming system, but aren't
+    making it to the index or other output streams, gradually slide the
+    <code>#(info %)</code> stream downstream towards the exit point, to verify
+    at which point in the chain the events are not what you expect.</p>
+
+    <p>If you're indexing events, but they don't appear in queries, they may
+    have expired from the index. Try <code>(expired #(warn "expired" %))</code>
+    to warn about expired events. They may be expiring because their TTL is
+    shorter than the interval between events. They may also expire because the
+    Riemann clock is in the future relative to the originating event, due to
+    clock skew or network/processing latency.</p>
+
+    <p>Check the internal instrumentation for the Riemann queue depth and core
+    latencies; if the queue is more than a handful of events deep, or stream
+    latencies are on the order of the relevant event TTLs, you might need to
+    reduce the load on the Riemann server or investigate downstream services
+    that might be slow.</p>
+
+    <p>Check clock skew between nodes using <code>watch date</code> or similar.
+    Make sure your clocks are in UTC, <i>not</i> local time. Never local time.
+    <i>Especially</i> never Daylight Savings Time. You can use Riemann's
+    <code>clock-skew</code> stream to measure clock skew as seen by the Riemann
+    node as well.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  #(info %) ; First, measure here
+  (where (service #"^riak .+")
+    #(info %) ; Then move the info stream here to check the filter
+    (by :service
+      (coalesce
+        #(info %) ; Third, check the coalesced vector of events
+        (smap folds/max
+          #(info %) ; Fourth, probe here to check the maximum calculation
+          (with :host nil
+            #(info %) ; Finally, check exactly what events are being applied
+                      ; to the index.
+            index))))))
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Instrumenting your systems</h2>
 
 <h3>Measure Riemann itself</h3>
