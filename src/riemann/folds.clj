@@ -10,7 +10,8 @@
   
   Called with an empty list, folds which would return a single event return
   nil."
-  (:use [riemann.common]))
+  (:use [riemann.common])
+  (:refer-clojure :exclude [count]))
 
 (defn sorted-sample-extract
   "Returns the events in seqable s, sorted and taken at each point p of points,
@@ -21,7 +22,7 @@
   (let [sorted (sort-by :metric (filter :metric s))]
     (if (empty? sorted)
       '()
-      (let [n (count sorted)
+      (let [n (clojure.core/count sorted)
             extract (fn [point]
                       (let [idx (min (dec n) (int (Math/floor (* n point))))]
                         (nth sorted idx)))]
@@ -153,7 +154,7 @@
   [events]
   (when-let [e (some identity events)]
     (let [metrics (non-nil-metrics events)]
-      (assoc e :metric (/ (reduce + metrics) (count metrics))))))
+      (assoc e :metric (/ (reduce + metrics) (clojure.core/count metrics))))))
 
 (defn median
   "Returns the median event from events, by metric."
@@ -176,7 +177,14 @@
   (when-let [e (some identity events)]
     (let [
       samples (non-nil-metrics events)
-      n (count samples)
+      n (clojure.core/count samples)
       mean (/ (reduce + samples) n)
       intermediate (map #(Math/pow (- %1 mean) 2) samples)]
       (assoc e :metric (Math/sqrt (/ (reduce + intermediate) n))))))
+
+(defn count
+  "Returns the number of events."
+  [events]
+  (let [events (remove nil? events)]
+    (if-let [e (first events)]
+      (assoc e :metric (clojure.core/count events)) {:metric 0})))

@@ -114,3 +114,11 @@
 (deftest std-dev-test
     (is (= 147.0 (Math/floor (:metric (std-dev [{:metric 600} {:metric 470} {:metric 170} {:metric 430} {:metric 300}])))))
     (is (= 147.0 (Math/floor (:metric (std-dev [{:metric 600} {:metric nil} {:metric 470} {:metric 170} {:metric 430} {:metric 300}]))))))
+
+(deftest count-test
+         (is (= (count nil)
+                {:metric 0}))
+         (is (= (count [{:metric 2} {:metric 3}])
+                {:metric 2}))
+         (is (= (count [{:metric 2} {:metric 3 :state "expired"} {:metric 4 :ttl 1 :time -3}])
+                {:metric 3})))
