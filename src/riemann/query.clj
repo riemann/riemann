@@ -50,6 +50,8 @@
       "<="  (list 'when (first kids) (apply list '<= kids))
       "=~"  (list 'when (first kids) (list 're-find (make-regex (last kids))
                                            (first kids)))
+      "~="  (list 'when (first kids) (list 're-find (re-pattern (last kids))
+                                           (first kids)))
       "!="  (list 'not (apply list '= kids))
       "tagged"      (list 'when 'tags (list 'member? (first kids) 'tags))
       "("           :useless
