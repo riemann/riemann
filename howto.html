@@ -238,6 +238,60 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>Fault tolerance</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Because Riemann performs arbitrary computation over the event stream,
+    with side effects, it <i>cannot</i> be distributed safely. You can,
+    however, distribute it somewhat less than safely--a technique aligned with
+    Riemann's philosophy that "mostly correct information <i>right now</i> is
+    more useful, than totally correct information only available once the
+    failure is over."</p>
+
+    <p>One obvious distribution strategy is to place two Riemann nodes on the
+    same switch and have them share a virtual IP address using, say, Heartbeat
+    or Corosync. On resource acquisition, the node allocating the IP should
+    issue a gratuitous arp broadcast over that interface advertising the new
+    route to the relevant switch(es). Failover in this case looks essentially
+    like restarting a Riemann node, which should be relatively painless--most
+    Riemann deployments fill in missing state within a few seconds to
+    minutes.</p>
+
+    <p>What happens if the nodes are isolated by a network partition and both
+    claim the interface? Depends on your network, but the answer is "probably
+    not good things". OTOH, there's no good way for *any* consensus algorithm
+    in an asynchronous network to make latency-bounded decisions in a safe way.
+    FLP rears its ugly head. You're going to lose data in the short term; the
+    question is how to emit as much useful, actionable information as possible,
+    so you can fix the problem.</p>
+
+    <p>I've got a sketch worked out for a highly-available clustered Riemann
+    which tries to negotiate these tradeoffs in a sane way, but it involves
+    minimum latency costs, severe throughput costs (I'm estimating three to
+    five orders of magnitude slower), disk IO, all kinds of esoteric failure
+    modes, and some moderately challenging mathematics. It'd take a long time
+    to build and would require some serious educational work on my part.
+    There's just no way around it: distributing arbitrary latency-bounded
+    computation is hard. You're going to have to reason about consensus. I'm
+    really sorry about this. :(</p>
+  </div>
+</div>
+
+<h3>Sharding</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Because Riemann performs arbitrary computation, it can't shard your
+    workload automatically. You'll need to pick some axes along which to shard,
+    perform local aggregation on those nodes, and reduce the results with some
+    higher-level Riemann node. The <code>forward</code> stream can help you
+    connect nodes to one another, and <code>async-queue!</code> can allow some
+    elasticity around latency jitters and downstream node restarts, but the
+    actual sharding and discovery mechanics you'll have to build yourself.</p>
+  </div>
+</div>
+
 <h3>Connecting to the REPL</h3>
 
 <p>Riemann has an nREPL server built in. You can enable this in your config with:</p>
