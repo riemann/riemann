@@ -29,6 +29,7 @@
         [riemann.campfire :only [campfire]]
         [riemann.librato :only [librato-metrics]]
         [riemann.nagios :only [nagios]]
+        [riemann.hipchat :only [hipchat]]
         riemann.streams))
 
 (def core "The currently running core."
