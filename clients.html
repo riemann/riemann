@@ -219,4 +219,27 @@ title: Riemann - Clients
       information about your chef run to Riemann.</p>
     </div>
   </div>
+
+<div class="row">
+  <div class="sixcol">
+    <h1>Plugins</h1>
+      <p>Additional functionality within riemann provided by external libraries</p>
+
+      <h2 id="riemann-acknowledgement">riemann-acknowledgement</h2>
+    <p>Provides the ability to acknowledge hosts & services temporarily, suppressing alert sending.
+      Acnowledgements are handled through a simple web interface.
+      <a href="https://github.com/exoscale/riemann-acknowledgement">https://github.com/exoscale/riemann-acknowledgement</a>
+    </p>
+
+    <h2 id="riemann-extra">riemann-extra</h2>
+    <p>A collection of plugins for often-met use cases:
+      <ul>
+        <li>collectd: provides useful metric rewriting facilities for events coming from collectd.</li>
+        <li>thresholds: update event state based on a given threshold map.</li>
+        <li>python: handle events coming from https://github.com/exoscale/python-riemann-wrapper</li>
+      </ul>
+      <a href="https://github.com/pyr/riemann-extra">https://github.com/pyr/riemann-extra</a>
+    </p>
+  </div>
+</div>
 </div>
