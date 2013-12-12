@@ -84,8 +84,10 @@
                 open
                 close
                 regenerate-interval)
-         openers (map (fn open-pool [_] (future (grow pool)))
-                      (range size))]
+         openers (doall
+                   (map (fn open-pool [_]
+                          (future (grow pool)))
+                        (range size)))]
      (when block-start
        (doseq [worker openers] @worker))
      pool)))
