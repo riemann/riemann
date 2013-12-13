@@ -36,9 +36,9 @@
              (set-level ~logger old-level#))))
       `(do ~@body))))
 
-(def riemann-layout 
+(def riemann-layout
   "A nice format for log lines."
-  (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
+  (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable"))
 
 (defn init
   "Initialize log4j. You will probably call this from the config file. You can
