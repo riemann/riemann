@@ -173,6 +173,8 @@
   configuration time--preferably once for each distinct IO-bound asynchronous
   service.
 
+  See `riemann.service/threadpool-service` for options.
+
   Example:
 
   (let [graph (async-queue! :graphite {:queue-size 100}
