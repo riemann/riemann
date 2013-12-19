@@ -116,6 +116,11 @@
             [{:host "s."} {:host "foos."}]
             [{:host "a."} {:host "s.murf"} {}]))
 
+(deftest regexp
+         (f "host ~= \"foo?[1-9]+\""
+            [{:host "foo19"} {:host "foo1"} {:host "fo42"}]
+            [{:host "abc"} {:host "foo"} {:host "fooo42"} {}]))
+
 (deftest inequality
          (f "metric > 1e10"
             [{:metric 1e11}]

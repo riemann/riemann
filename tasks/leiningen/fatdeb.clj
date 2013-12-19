@@ -70,8 +70,8 @@
     ; Meta
     (.mkdirs (file dir "DEBIAN"))
     (write (file dir "DEBIAN" "control") (control project))
-    (write (file dir "DEBIAN" "conffiles") 
-           (join "\n" ["/etc/riemann/riemann.config"]))
+    (write (file dir "DEBIAN" "conffiles")
+           (join "\n" ["/etc/riemann/riemann.config" "/etc/default/riemann"]))
 
     ; Preinst
     (copy (file (:root project) "pkg" "deb" "preinst.sh")

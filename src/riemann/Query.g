@@ -10,6 +10,7 @@ tokens {
 	OR = 'or';
 	NOT = 'not';
 	APPROXIMATELY = '=~';
+	REGEX_MATCH = '~=';
 	NOT_EQUAL = '!=';
 	EQUAL = '=';
 	LESSER = '<';
@@ -40,6 +41,7 @@ fragment
 simple	:	( t | f | nil
 		| tagged
 		| approximately
+		| regex_match
 		| lesser
 		| lesser_equal
 		| greater
@@ -50,6 +52,8 @@ simple	:	( t | f | nil
 
 approximately
 	:	field WS* APPROXIMATELY^ WS* value;
+regex_match
+	:	field WS* REGEX_MATCH^ WS* value;
 lesser	:	field WS* LESSER^ WS* value;
 lesser_equal
 	:	field WS* LESSER_EQUAL^ WS* value;

@@ -9,6 +9,7 @@
              ConsoleAppender
              FileAppender
              SimpleLayout)
+           (net.logstash.log4j JSONEventLayoutV1 JSONEventLayout)
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
                                      RollingFileAppender))
@@ -36,46 +37,69 @@
              (set-level ~logger old-level#))))
       `(do ~@body))))
 
-(def riemann-layout 
-  "A nice format for log lines."
-  (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable%n"))
+(def ^{:doc "available logging patterns"}
+  layouts
+  {:riemann       (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable")
+   :json-event    (JSONEventLayout.)
+   :json-event-v1 (JSONEventLayoutV1.)})
+
+(defn get-layout
+  "Fetch a logging layout by name"
+  [layout-name]
+  (get layouts (or layout-name :riemann)))
 
 (defn init
   "Initialize log4j. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
 
-  :file   The file to log to. If omitted, logs to console only."
-  [& { :keys [file] }]
-  ; Reset loggers
-  (doto (Logger/getRootLogger)
-    (.removeAllAppenders)
-    (.addAppender (ConsoleAppender. riemann-layout)))
+  :console Determine if logging should happen on the console
+  :console-layout On the off-chance that someone runs riemann within runit, keep the
+                  option of specifying the layout
+  :file    The file to log to. If omitted, logs to console only. If provided log
+           to that file using the default layout
+  :files   A list of files to log to. If provided, a seq is expected containing maps
+           with a :path and an optional :layout key which can be any of: :riemann,
+           :json-event :json-eventv1"
+  [& {:keys [file console console-layout files] :or {console true}}]
+  ;; Reset loggers
+  (let [logger (doto (Logger/getRootLogger) (.removeAllAppenders))]
 
-  (when file
-    (let [rolling-policy (doto (TimeBasedRollingPolicy.)
-                           (.setActiveFileName file)
-                           (.setFileNamePattern
-                             (str file ".%d{yyyy-MM-dd}.gz"))
-                           (.activateOptions))
-          log-appender (doto (RollingFileAppender.)
-                         (.setRollingPolicy rolling-policy)
-                         (.setLayout riemann-layout)
-                         (.activateOptions))]
-      (.addAppender (Logger/getRootLogger) log-appender)))
+    (when console
+      (.addAppender logger (ConsoleAppender. (get-layout console-layout))))
 
-  ; Set levels.
-  (. (Logger/getRootLogger) (setLevel Level/INFO))
+    (when file
+      (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                             (.setActiveFileName file)
+                             (.setFileNamePattern
+                              (str file ".%d{yyyy-MM-dd}.gz"))
+                             (.activateOptions))
+            log-appender (doto (RollingFileAppender.)
+                           (.setRollingPolicy rolling-policy)
+                           (.setLayout (get-layout :riemann))
+                           (.activateOptions))]
+        (.addAppender logger log-appender)))
 
-  (set-level "riemann.client" Level/DEBUG)
-  (set-level "riemann.server" Level/DEBUG)
-  (set-level "riemann.streams" Level/DEBUG)
-  (set-level "riemann.graphite" Level/DEBUG))
+    (when files
+      (doseq [{:keys [path layout]} files
+              :let [layout (get-layout layout)]]
+        (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                             (.setActiveFileName path)
+                             (.setFileNamePattern
+                              (str path ".%d{yyyy-MM-dd}.gz"))
+                             (.activateOptions))
+            log-appender (doto (RollingFileAppender.)
+                           (.setRollingPolicy rolling-policy)
+                           (.setLayout layout)
+                           (.activateOptions))]
+        (.addAppender logger log-appender))))
 
-; Not sure where he intended this to go....
-(defn- add-file-appender [loggername filename]
-  (.addAppender (Logger/getLogger loggername)
-                (doto (FileAppender.)
-                  (.setLayout riemann-layout))))
+    ;; Set levels.
+    (.setLevel logger Level/INFO)
+
+    (set-level "riemann.client" Level/DEBUG)
+    (set-level "riemann.server" Level/DEBUG)
+    (set-level "riemann.streams" Level/DEBUG)
+    (set-level "riemann.graphite" Level/DEBUG)))
 
 (defn nice-syntax-error
   "Rewrites clojure.lang.LispReader$ReaderException to have error messages that

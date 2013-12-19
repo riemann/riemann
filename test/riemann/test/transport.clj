@@ -59,7 +59,7 @@
          s2       (sse-server)
          index    (index/index)
          pubsub   (pubsub/pubsub-registry)
-         core     (transition! 
+         core     (transition!
                    (core)
                    {:index    index
                     :pubsub   pubsub
@@ -70,13 +70,13 @@
                         second
                         (partial re-matches #"data: (.*)\n\n")
                         formats/bytes->string)
-         response (http-request 
+         response (http-request
                    {:method :get
                     :url    "http://127.0.0.1:5558/index?query=true"})]
      (try
        (client/send-event client {:service "service1"})
        (client/send-event client {:service "service2"})
-       (Thread/sleep 100)
+       (Thread/sleep 500)
        (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
 
          (is (#{"service1" "service2"} (get r1 "service")))
@@ -95,8 +95,8 @@
                        (encode {:ok true}))]
 
              (try
-               (enqueue client {:host "localhost" 
-                                :port 5555 
+               (enqueue client {:host "localhost"
+                                :port 5555
                                 :message msg})
                (Thread/sleep 100)
                (finally
@@ -164,15 +164,15 @@
                                     "riemann.pubsub"]
             (let [server (tcp-server)
                   core   (transition! (core) {:services [server]})
-                  client (wait-for-result 
-                           (aleph.tcp/tcp-client 
-                             {:host "localhost" 
+                  client (wait-for-result
+                           (aleph.tcp/tcp-client
+                             {:host "localhost"
                               :port 5555
                               :frame (finite-block :int32)}))]
 
               (try
-                (enqueue client 
-                         (java.nio.ByteBuffer/wrap 
+                (enqueue client
+                         (java.nio.ByteBuffer/wrap
                            (byte-array (map byte [0 1 2]))))
                 (is (thrown? java.lang.IllegalStateException
                              (wait-for-message client)))
