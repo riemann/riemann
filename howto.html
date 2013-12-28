@@ -474,6 +474,68 @@ riemann-riak --host 1.2.3.4
 Basho, but it's tunable for other configurations. See <code>riemann-riak
   --help</code> for more options.</p>
 
+<h3>Custom event attributes</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can include arbitrary additional fields in Riemann
+    events. These are not a replacement for service, host, and time: the
+    composite primary key of a logical "thing" in the Riemann universe, but
+    they *do* let you more easily aggregate and filter events, or carry richer
+    contextual information associated with a single message.</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>In most clients you can simply pass an extra key and value in the event
+    map. In strongly-typed clients like riemann-java-client, special methods
+    like EventDSL.attribute(key, value) are present.</p>
+  </div>
+ 
+  <div class="sixcol last">
+{% highlight rb %}
+client << {service: "thumbnailer rate",
+           metric:  5.0,
+           build:   "7543"}
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Custom attributes are always encoded as strings in Protocol Buffers
+    (pull request welcome!), but you can replace them with parsed variants in
+    your streams using smap, adjust, and friends.</p>
+    
+    <p>In the Riemann server, custom attributes work just like normal
+    attributes on events--they're just a bit slower, owing to the hashmap
+    lookup. Just like normal fields, you can use get, assoc, dissoc, update,
+    and all the other Clojure functions over maps. Custom attributes do *not*
+    have shorthand syntax in <code>(where)</code> (to prevent arbitrary symbol
+    capture), but are accessible through <code>(:my-field event)</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "thumbnailer rate")
+  ; Convert build numbers from strings to longs
+  (adjust [:build #(Long. %)]
+    ; Compute a throughput for each specific build
+    (by :build
+      (smap #(assoc % :service (str (:service %) " build " (:build %)))
+        (rate 5 index)))
+
+    ; Or maybe an old version reported numbers that were 2x larger than they
+    ; should have been
+    (where (< (:build event) 1055)
+      (scale 1/2 index)
+      (else index))))
+{% endhighlight %}
+  </div>
+</div>
+
+</div>
+
 <h2>Working with streams</h2>
 
 <h3>Filter events</h3>
