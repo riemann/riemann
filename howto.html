@@ -791,6 +791,20 @@ groups of 10 consecutive events at a time.</p>
   <li><a href="api/riemann.streams.html#var-fixed-event-window">fixed-event-window</a> forwards disjoint sequences of n events</li>
 </ul>
 
+<h3>Change units</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Use the <a href="/api/riemann.streams.html#var-scale">scale</a> stream. For instance, to convert bytes to gigabytes, scale by 1/1024^3.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(scale (/ 1 1024 1024 1024)
+  index)
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Find the host using the most CPU</h3>
 
 <p>If you're running riemann-health, all hosts will report events like
