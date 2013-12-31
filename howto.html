@@ -970,6 +970,80 @@ event. You can build your own stream-generating functions too.</p>
 
 <p>Streams all essentially work in this way, if you look at the source code of the Streams namespace in <code>streams.clj</code>. You can find a few simple examples in the functions <code>match</code>, <code>expired</code>, <code>under</code> and <code>over</code> which filter whether the event is passed along the event stream.</p>
 
+<h3>Query the index from within a stream</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Sometimes, you want the behavior of a stream to depend on the current
+    state of the index. Say, for instance, that you wanted to use a
+    mainentance-mode service to suppress alerting. To enter maintenance mode,
+    we'll submit an event to Riemann which has a TTL as long as the maintenance
+    window we want. Here's a ten minute window, sent from a Ruby client:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight rb %}
+1.9.3p385 :001 > Riemann::Client.new << {service: "maintenance-mode", host: nil, state: "active", ttl: 600}
+ => nil
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Next, we'll write a function which identifies whether maintenance mode
+    is active:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(defn maintenance-mode?
+  "Is Riemann currently in maintenance mode?"
+  []
+  ; Take an expression representing a query for maintenance mode
+  (->> '(and (= host nil)
+             (= service "maintenance-mode"))
+       ; Search the current Riemann core's index for any matching events
+       (riemann.index/search (:index @core))
+       ; Take the first match
+       first
+       ; Find its state
+       :state
+       ; Is it the string "active"?
+       (= "active")))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Now we can use that function inside of a where predicate, to pass events
+    on only when we're *not* in maintenance mode.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  (changed-state {:init "ok"}
+    (where (not (maintenance-mode?))
+      (email "ops@trioptimum.com"))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Naturally, you could parameterize the maintenance-mode function, perhaps
+    taking a host, tag, or service as an argument, and searching for particular
+    matching events.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(defn maintenance-mode [host] ...)
+
+(where (not (maintenance-mode? host))
+  (email "ops@trioptimum.com"))))
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Working with the dashboard</h2>
 
 <h3>Application specific host grouping</h3>
