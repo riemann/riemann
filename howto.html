@@ -991,7 +991,9 @@ event. You can build your own stream-generating functions too.</p>
 <div class="row">
   <div class="sixcol">
     <p>Next, we'll write a function which identifies whether maintenance mode
-    is active:</p>
+    is active. We could use <code>riemann.index/lookup</code> to find a
+    particular host/service pair, or <code>riemann.index/search</code> for a
+    more general query.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1036,7 +1038,11 @@ event. You can build your own stream-generating functions too.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
-(defn maintenance-mode [host] ...)
+(defn maintenance-mode [host]
+  ; Using (list) to build a query dynamically
+  (->> (list 'and (list '= 'host host)
+                  '(= service "maintenance-mode"))
+       ...))
 
 (where (not (maintenance-mode? host))
   (email "ops@trioptimum.com"))))
