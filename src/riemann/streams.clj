@@ -1212,7 +1212,10 @@ OA
 
 (defn scale
   "Passes on a changed version of each event by multiplying each
-   metric with the input scale factor"
+   metric with the given scale factor.
+  
+  ; Convert bytes to kilobytes
+  (scale 1/1024 index)"
   [factor & children]
   (let [scale-event (fn [{:keys [metric] :as event}]
                       (assoc event :metric
