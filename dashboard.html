@@ -33,11 +33,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#84c5ff', end
 
 <div class="row">
   <div class="sevencol">
-    <div class="video-container">
-      <iframe src="http://www.youtube.com/embed/jEO81l5HgEc" frameborder="0" allowfullscreen></iframe>
-    </div>
-    <p>Riemann-dash is <i>fast</i>. It'll render well over a thousand events per second.</p>
-    <!-- <img src="images/dash-full.jpg" alt="Showyou's dashboard" />-->
+    <a href="images/dash-riak.png"><img style="opacity: 1" src="images/dash-riak.png" alt="Instrumenting a production Riak cluster during handoff" /></a>
   </div>
 
   <div class="fivecol last">
@@ -74,36 +70,30 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#84c5ff', end
     </div>
 
     <div class="sixcol last">
-      <h2>Notes for current users</h2>
 
-      <p>If you're migrating from the old Sinatra app, your old configuration
-      won't apply here. They're completely separate applications, though most
-      of the old dashboard's features are in the new JS dash too.</p>
+      <h2>Help Out!</h2>
 
-      <p>I don't like to leave folks hanging, but the old dash had fundamental
-      constraints around performance, latency, and ease-of-use. I'm hoping to
-      address all three with this redesign. If you prefer the old static dash,
-      just stick with 0.1.0.</p>
+      <p>Frontend design is <i>not</i> my strong suit. The dashboard is full of
+      rough edges, and though I've put several hundred hours into it... this is
+      just the start. You'll find CSS in <code>lib/riemann/dash/views/</code>,
+      and JS in <code>lib/riemann/dash/public/</code>. Try writing a view, based
+      on <code>views/gauge.js</code>, to get familiar with the codebase.
     </div>
-
-    <h2>Help Out!</h2>
-
-    <p>Frontend design is <i>not</i> my strong suit. The dashboard is full of
-    rough edges, and though I've put several hundred hours into it... this is
-    just the start. You'll find CSS in <code>lib/riemann/dash/views/</code>,
-    and JS in <code>lib/riemann/dash/public/</code>. Try writing a view, based
-    on <code>views/gauge.js</code>, to get familiar with the codebase.
   </div>
 
-
+  <div class="row">
+    <div class="twelvecol">
+      <a href="images/dash-riemann.png">
+        <img style="opacity: 1" src="images/dash-riemann.png" alt="A three-node RIemann topology" />
+      </a>
+    </div>
+  </div>
 
   <div class="row">
     <div class="twelvecol">
       <h1>Other dashboards</h1>
     </div>
   </div>
-
-
 
   <div class="row">
     <div class="sixcol">

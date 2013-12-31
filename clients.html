@@ -48,6 +48,11 @@ title: Riemann - Clients
       <h2 id="c">C</h2> <p>Daniel Hilst wrote a <a
         href="https://github.com/gkos/riemann-c-client">client in C</a>,
       supporting both events and queries.</p>
+
+        <p>Gergely Nagy wrote another <a
+          href="https://github.com/algernon/riemann-c-client">client in C</a>,
+        supporting both events and queries, but with a different API and
+        goals.</p>
       
       <h2 id="c-sharp">C#</h2>
       <p>Blue Mountain Capital has written a <a
@@ -118,6 +123,10 @@ title: Riemann - Clients
       <p>The <a href="https://github.com/aphyr/riemann-ruby-client"</a>Riemann
       Ruby client</a> is a threadsafe, auto-retrying client supporting both TCP
     and UDP. It also provides utility classes to help manage service state.</p>
+
+      <p>Users of the <a href="http://adhearsion.com/">adhearsion telephony
+        framework</a> might appreciate <a
+        href="https://github.com/krakatoa/ahn_riemann">ahn_riemann</a>.</p>
 
       <h2 id="scala">Scala</h2> <p>Rached Ben Mustapha is building a <a
         href="https://github.com/benmur/riemann-scala-client">Scala client</a>,
@@ -215,4 +224,27 @@ title: Riemann - Clients
       information about your chef run to Riemann.</p>
     </div>
   </div>
+
+<div class="row">
+  <div class="sixcol">
+    <h1>Plugins</h1>
+      <p>Additional functionality within riemann provided by external libraries</p>
+
+      <h2 id="riemann-acknowledgement">riemann-acknowledgement</h2>
+    <p>Provides the ability to acknowledge hosts & services temporarily, suppressing alert sending.
+      Acnowledgements are handled through a simple web interface.
+      <a href="https://github.com/exoscale/riemann-acknowledgement">https://github.com/exoscale/riemann-acknowledgement</a>
+    </p>
+
+    <h2 id="riemann-extra">riemann-extra</h2>
+    <p>A collection of plugins for often-met use cases:
+      <ul>
+        <li>collectd: provides useful metric rewriting facilities for events coming from collectd.</li>
+        <li>thresholds: update event state based on a given threshold map.</li>
+        <li>python: handle events coming from https://github.com/exoscale/python-riemann-wrapper</li>
+      </ul>
+      <a href="https://github.com/pyr/riemann-extra">https://github.com/pyr/riemann-extra</a>
+    </p>
+  </div>
+</div>
 </div>
