@@ -25,7 +25,7 @@
     [aleph "0.3.1"]
     [clj-http "0.7.7"]
     [cheshire "5.2.0"]
-    [clj-librato "0.0.3"]
+    [clj-librato "0.0.4-SNAPSHOT"]
     [clj-time "0.6.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.3"]
