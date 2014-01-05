@@ -1030,10 +1030,10 @@ OA
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
-  service that passes through it (limited by :ttl). Every time it receives an
-  event, it passes on *all* events it remembers. When events expire, they are
-  included in the emitted sequence of events *once*, and removed from the state
-  table thereafter.
+  service/host combination that passes through it (limited by :ttl). Every time
+  it receives an event, it passes on *all* events it remembers. When events
+  expire, they are included in the emitted sequence of events *once*, and
+  removed from the state table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
