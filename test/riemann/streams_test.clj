@@ -480,6 +480,11 @@
                     (doseq [e events] (s e))
                     (is (= expect (deref r)))))
 
+         (testing "event binding"
+           (test-stream (where (= event 2))
+                        [1 2 3 2]
+                        [2 2]))
+
          (testing "regex"
                   (test-stream (where (service #"^foo"))
                                [{}
