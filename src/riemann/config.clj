@@ -4,6 +4,7 @@
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index) which modify that core."
   (:require [riemann.core :as core]
+            [riemann.common :as common]
             [riemann.service :as service]
             [riemann.transport.tcp        :as tcp]
             [riemann.transport.udp        :as udp]
@@ -138,7 +139,8 @@
   "Updates the given index with all events received. Also publishes to the
   index pubsub channel."
   [index]
-  (fn update [event] (core/update-index @core event)))
+  (common/deprecated "(update-index idx) is unnecessary; use idx directly instead. Indexes are now streams themselves, so it's not necessary to wrap them in update-index."
+    (fn update [event] (core/update-index @core event))))
 
 (defn delete-from-index
   "Deletes any events that pass through from the index. By default, deletes
