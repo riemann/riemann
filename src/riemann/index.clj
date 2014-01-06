@@ -27,6 +27,8 @@
     "Return a seq of expired states from this index, removing each.")
   (search [this query-ast]
     "Returns a seq of events from the index matching this query AST")
+  (update [this event]
+    "Updates index with event")
   (lookup [this host service]
     "Lookup an indexed event from the index"))
 
@@ -63,6 +65,9 @@
               "O(n), sadly."
               (let [matching (query/fun query-ast)]
                 (filter matching (.values hm))))
+
+      (update [this event]
+        (this event))
 
       (lookup [this host service]
         (.get hm [host service]))
