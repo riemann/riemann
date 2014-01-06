@@ -64,7 +64,7 @@
                    {:index    index
                     :pubsub   pubsub
                     :services [s1 s2]
-                    :streams  [(partial index/update index)]})
+                    :streams  [index]})
          client   (client/tcp-client)
          convert  (comp json/parse-string
                         second
@@ -112,7 +112,7 @@
           index (index/index)
           core (transition! (core) {:index index
                                     :services [server]
-                                    :streams [(partial index/update index)]})]
+                                    :streams [index]})]
       (try
         (let [client (apply client/tcp-client (mapcat identity client-opts))]
           (try

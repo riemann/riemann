@@ -6,8 +6,8 @@
 (defn context [events]
   (let [i (nbhm-index)]
     (doseq [e events]
-      (update i e))
-           i))
+      (i e))
+    i))
 
 (deftest hash-match
          ; No states
@@ -44,9 +44,9 @@
 
          ; Single dep
          (let [r (depends {:service "x"} {:service "y" :state "ok"})]
-           (is (match r (context [{:service "y" :state "ok"}]) 
+           (is (match r (context [{:service "y" :state "ok"}])
                       {:service "x"}))
-           (is (not (match r (context [{:service "y" :state "no"}]) 
+           (is (not (match r (context [{:service "y" :state "no"}])
                            {:service "x"})))
            (is (not (match r (context [])
                            {:service "x"})))
@@ -57,7 +57,7 @@
            (is (match r (context [{:service "x"} {:service "y"}]) nil))
            (is (not (match r (context []) nil)))
            (is (not (match r (context [{:service "x"}]) nil)))))
-                    
+
 (deftest any-match
          (let [r (any {:service "x"} {:service "y"})]
            (is (match r (context [{:service "x"} {:service "y"}]) nil))
@@ -65,8 +65,8 @@
            (is (match r (context [{:service "x"}]) nil))))
 
 (deftest real-match
-         (let [r (all (depends {:service "lbapp"} 
-                               (any {:service "riak 1" :state "ok"} 
+         (let [r (all (depends {:service "lbapp"}
+                               (any {:service "riak 1" :state "ok"}
                                     {:service "riak 2" :state "ok"}))
                       (depends {:service "api"}
                                (all
@@ -113,7 +113,7 @@
                s (deps-tag index rule append-out)]
 
            (is (= #{} (get-out)))
-           
+
            ; Pass through unrelated events.
            (s {})
            (s {:service "other"})
@@ -138,7 +138,7 @@
                                               append-out)]
 
            (is (= #{} (get-out)))
-           
+
            ; Should pass through unrelated events.
            (s {})
            (s {:service "other"})
@@ -149,8 +149,8 @@
            (s {:service "x"})
            (Thread/sleep 100)
            (is (= #{} (get-out)))
-           
-           (update index {:service "y"})
+
+           (index {:service "y"})
            (Thread/sleep 150)
            (is (= #{{:service "x"}} (get-out)))
 
@@ -162,7 +162,7 @@
            (Thread/sleep 100)
            (is (= #{} (get-out)))
 
-           (update index {:service "y"})
+           (index {:service "y"})
            (Thread/sleep 150)
            (is (= #{{:service "x" :state 2}}))
            )))

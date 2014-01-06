@@ -17,11 +17,11 @@
    (let [s1       (graphite-server)
          s2       (tcp-server)
          index    (index/index)
-         core     (transition! 
+         core     (transition!
                    (core)
                    {:index    index
                     :services [s1 s2]
-                    :streams  [(partial index/update index)]})
+                    :streams  [index]})
          sendout! (graphite {:path graphite-path-basic})
          client   (client/tcp-client)]
      (try
@@ -61,14 +61,14 @@
                :description "all clear, uh, situation normal"
                :metric -2
                :time (unix-time)}))
-         
+
          (let [g (graphite {:block-start true})]
            (g {:service "graphite test"
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 3.14159
                :time (unix-time)}))
-         
+
          (let [g (graphite {:block-start true})]
            (g {:host "no-service.riemann.local"
                :state "ok"
