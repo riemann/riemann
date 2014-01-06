@@ -1,15 +1,29 @@
 (ns riemann.streams
-  "Streams are functions which accept events (or, in some cases, lists of
-  events). They can filter those events, transform them, apply them to other
-  streams, combine them over time, update state, forward to other services, and
-  more. Most streams accept, after their initial arguments, any number of
-  streams as children. When invoking children, they typically catch all
-  exceptions and log them, then proceed to the next child.
+  "The streams namespace aims to provide a comprehensive set of widely
+  applicable, combinable tools for building more complex streams.
 
-  Any function accepting an event map (e.g. {:service \"foo\" :metric 3.5}) can
-  be a stream. prn is a stream. So is (partial log :info), or (fn [x]). The
-  streams namespace aims to provide a comprehensive set of widely applicable,
-  combinable tools for building up more complicated streams."
+  Streams are functions which accept events or, in some cases, lists of events.
+
+  Streams typically do one or more of the following.
+
+  * Filter events.
+  * Transform events.
+  * Combine events over time.
+  * Apply events to other streams.
+  * Forward events to other services.
+
+  Most streams accept, after their initial arguments, any number of streams as
+  children. These are known as children or \"child streams\" of the stream.
+  The children are typically invoked sequentially, any exceptions thrown are
+  caught, logged and optionally forwarded to *exception-stream*.
+  Return values of children are ignored.
+
+  Events are backed by a map (e.g. {:service \"foo\" :metric 3.5}), so any
+  function that accepts maps will work with events.
+  Common functions like prn can be used as a child stream.
+
+  Some common patterns for defining child streams are (fn [e] (println e))
+  and (partial log :info)."
   (:use [riemann.common :exclude [match]]
         [riemann.time :only [unix-time
                              linear-time
@@ -32,12 +46,13 @@
 (def -infinity (/ -1.0 0))
 
 (def ^:dynamic *exception-stream*
-  "When a stream catches an exception, it's converted to an event and send
-  here."
+  "When an exception is caught, it's converted to an event and sent here."
   nil)
 
 (defn expired?
-  "There are two ways an event can be considered expired. First, if it has state \"expired\". Second, if its :ttl and :time indicates it has expired."
+  "There are two ways an event can be considered expired.
+  First, if it has state \"expired\".
+  Second, if its :ttl and :time indicates it has expired."
   [event]
     (or (= (:state event) "expired")
         (when-let [time (:time event)]
@@ -46,7 +61,8 @@
             (> age ttl)))))
 
 (defmacro call-rescue
-  "Call each child, in order, with event. Rescues and logs any failure."
+  "Call each child (children), in order, with event.
+  Rescues and logs any failure."
   [event children]
   `(do
      (doseq [child# ~children]
@@ -56,12 +72,13 @@
            (warn e# (str child# " threw"))
            (if-let [ex-stream# *exception-stream*]
              (ex-stream# (exception->event e#))))))
+     ; TODO: Why return true?
      true))
 
 (defmacro exception-stream
   "Catches exceptions, converts them to events, and sends those events to a
   special exception stream.
-  
+
   (exceptions-to (email \"polito@vonbraun.com\")
     (execute-on io-pool
       graph))
@@ -81,7 +98,7 @@
   need to bind this variable during the runtime execution of child streams, but
   *also* during the evaluation of the child streams themselves, e.g. at the
   invocation time of exceptions itself. If we write
-OA
+
   (exceptions (email ...)
     (rate 5 index))
 
@@ -101,11 +118,12 @@ OA
   [args])
 
 (defn dual
-  "A stream which splits events into two mirror-images streams, based on (pred
-  e). If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
+  "A stream which splits events into two mirror-images streams, based on
+  (pred e).
+  If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
   If (pred e) is false, does the opposite. Expired events are forwarded to both
   streams.
-  
+
   (pred e) is always called once per incoming event."
   [pred true-stream false-stream]
   (fn stream [event]
@@ -125,15 +143,15 @@ OA
           (call-rescue event [false-stream]))))))
 
 (defn combine
-  "Returns a function which takes a seq of events. Combines events with f, then
-  forwards the result to children."
+  "Returns a function which takes a seq of events.
+  Combines events with f, then forwards the result to children."
   [f & children]
   (fn stream [events]
     (call-rescue (f events) children)))
 
 (defn smap*
-  "Streaming map: less magic. Calls children with (f event). Unlike smap,
-  passes on nil results to children. Example:
+  "Streaming map: less magic. Calls children with (f event).
+  Unlike smap, passes on nil results to children. Example:
 
   (smap folds/maximum prn) ; Prints the maximum of lists of events."
   [f & children]
@@ -196,7 +214,7 @@ OA
   "Takes a list of functions f1, f2, f3, and returns f such that (f event)
   calls (f1 event) (f2 event) (f3 event). Useful for binding several streams to
   a single variable.
-  
+
   (sdo prn (rate 5 index))"
   [& children]
   (fn stream [event]
@@ -214,7 +232,7 @@ OA
   event; e.g. if its queue is full. Use together with
   riemann.service/executor-service for reloadable asynchronous execution of
   streams.
-  
+
   (let [io-pool (service!
                   (executor-service
                     #(ThreadPoolExecutor. 1 10 ...)))
@@ -227,7 +245,7 @@ OA
     (.execute executor
              (bound-fn runner []
                (call-rescue event children)))))
-    
+
 (defn moving-event-window
   "A sliding window of the last few events. Every time an event arrives, calls
   children with a vector of the last n events, from oldest to newest. Ignores
@@ -425,7 +443,7 @@ OA
                  (reset! task nil))
                ; We're still valid; keep going
                (f)))]
-               
+
      (fn stream [event]
        ; Bump the time we're allowed to keep running for.
        (if (and (:ttl event) (:time event))
@@ -457,9 +475,9 @@ OA
   new bin by calling (create). Applies each received event to the current bin
   with (add bin event). When the time interval is over, calls (finish bin
   start-time elapsed-time).
-  
+
   Concurrency guarantees:
-  
+
   (create) may be called multiple times for a given time slice.
   (add)    when called, will receive exactly one distinct bucket in each time
            slice.
@@ -497,7 +515,7 @@ OA
         ; We have a current bin
         @state
         (add (:current @state) event)
-       
+
         ; Create an initial bin
         :else
         (do
@@ -507,7 +525,7 @@ OA
 (defn part-time-simple
   "Divides wall clock time into discrete windows. Returns a stream, composed
   of four functions:
- 
+
   (reset previous-state) Given the state for the previous window, returns a
   fresh state for a new window. Reset must be a pure function, as it will be
   invoked in a compare-and-set loop. Reset may be invoked at *any* time. Reset
@@ -525,7 +543,7 @@ OA
   window, and receives the final state for that window, and also the start
   and end times for that window. Finish will be called exactly once per window,
   and may be impure.
-  
+
   When no events arrive in a given time window, no functions are called."
   ([dt reset add finish]
    (part-time-simple dt reset add (fn [state event]) finish))
@@ -588,7 +606,10 @@ OA
               event (assoc (last @r) event-key stat)]
           (call-rescue event children)))))
 
-(defn fold-interval-metric [interval folder & children] (apply fold-interval interval :metric folder children))
+(defn fold-interval-metric
+  "Wrapping for fold-interval that assumes :metric as event-key."
+  [interval folder & children]
+  (apply fold-interval interval :metric folder children))
 
 (defn fill-in
   "Passes on all events. Fills in gaps in event stream with copies of the given
@@ -725,7 +746,6 @@ OA
               (when-not (zero? dt)
                 (let [diff (/ (- m (:metric prev-event)) dt)]
                   (call-rescue (assoc event :metric diff) children))))))))))
-  
 
 (defn ddt
   "Differentiate metrics with respect to time. With no args, emits an event for
@@ -801,7 +821,7 @@ OA
 (defn counter
   "Counts things. The first argument may be an initial counter value, which
   defaults to zero.
-  
+
   ; Starts at zero
   (counter index)
 
@@ -917,7 +937,7 @@ OA
 (defn top
   "Bifurcates a stream into a dual pair of streams: one for the top k events,
   and one for the bottom k events.
-  
+
   f is a function which maps events to comparable values, e.g. numbers. If an
   incoming event e falls in the top k, the top stream receives e and the bottom
   stream receives (expire e). If the event is *not* in the top k, calls (top
@@ -930,14 +950,14 @@ OA
   Index the top 10 events, by metric:
 
   (top 10 :metric index)
- 
+
   Index everything, but tag the top k events with \"top\":
 
   (top 10 :metric
     (adjust [:tags conj \"top\"]
       index)
     index)
-  
+
   This implementation of top is lazy, in a sense. It won't proactively expire
   events which are bumped from the top-k set--you have to wait for another
   event with the same host and service to arrive before child streams will know
@@ -961,11 +981,11 @@ OA
     (fn reset [_] 0)
 
     (fn add [sent event] (inc sent))
-    
+
     (fn side-effects [sent event]
       (when-not (< n sent)
         (call-rescue event children)))
-    
+
     (fn finish [sent start end])))
 
 (defn rollup
@@ -985,14 +1005,14 @@ OA
   [n dt & children]
   (part-time-simple
     dt
-    
+
     (fn reset [[sent buffer]]
       (if (empty? buffer)
         ; We didn't carry over any events from the last window
         [0 []]
         ; We did carry over events.
         [1 []]))
-    
+
     (fn add [[sent buffer] event]
       (if (< sent n)
         [(inc sent) buffer]
@@ -1073,7 +1093,7 @@ OA
   (match :metric 5 prn)
   (match expired? true prn)
   (match (fn [e] (/ (:metric e) 1000)) 5 prn)
-  
+
   For cases where you only care about whether (f event) is truthy, use (where
   some-fn) instead of (match some-fn true)."
   [f value & children]
@@ -1224,7 +1244,7 @@ OA
 
 (defn tag
   "Adds a new tag, or set of tags, to events which flow through.
-  
+
   (tag \"foo\" index)
   (tag [\"foo\" \"bar\"] index)"
   [tags & children]
@@ -1416,7 +1436,7 @@ OA
               (= 'else (first expr))))
           exprs)))
 
-(defmacro where* 
+(defmacro where*
   "A simpler, less magical variant of (where). Instead of binding symbols in
   the context of an expression, where* takes a function which takes an event.
   When (f event) is truthy, passes event to children--and otherwise, passes
@@ -1424,7 +1444,7 @@ OA
 
   (where* (fn [e] (< 2 (:metric e))) prn)
 
-  (where* expired? 
+  (where* expired?
     (partial prn \"Expired\")
     (else
       (partial prn \"Not expired!\")))"
@@ -1460,7 +1480,7 @@ OA
     (notify-www-team)
     (else
       (notify-misc-team)))
-  
+
   The streams generated by (where) return the value of expr: truthy if expr
   matched the given event, and falsey otherwise. This means (where (metric 5))
   tests events and returns true if their metric is five."
@@ -1502,7 +1522,7 @@ OA
 (defmacro split
   "Behave as for split*, expecting predicates to be (where) expressions instead
   of functions. Example:
-  
+
   (split
     (< 0.9  metric) (with :state \"critical\" index)
     (< 0.75 metric) (with :state \"warning\" index)
@@ -1524,16 +1544,16 @@ OA
   splitp returns a stream which accepts an event. Expr is a (where) expression,
   which will be evaluated against the event to obtain a value for selecting a
   clause. For each clause, evaluates (pred test-expr value). If the result is
-  logical true, evaluates (stream event) and returns that value. 
-  
+  logical true, evaluates (stream event) and returns that value.
+
   A single default stream can follow the clauses, and its value will be
   returned if no clause matches. If no default stream is provided and no clause
   matches, an IllegalArgumentException is thrown.
-  
+
   Splitp evaluates streams once at invocation time.
-  
+
   Example:
-  
+
   (splitp < metric
     0.9  (with :state \"critical\" index)
     0.75 (with :state \"warning\" index)
@@ -1579,9 +1599,9 @@ OA
 (defn runs
   "Usable to perform flap detection, runs examines a moving-event-window of
   n events and determines if :field is the same across all them. If it is,
-  runs passes on the last (newest) event of the window. In practice, this can be 
-  used with (changed-state ...) as a child to reduce 'flappiness' for 
-  state changes.
+  runs passes on the last (newest) event of the window. In practice, this can
+  be used with (changed-state ...) as a child to reduce 'flappiness' for state
+  changes.
 
   (runs 3 :state prn) ; Print events where there are 3-in-a-row of a state."
   [len-run field & children]
@@ -1614,7 +1634,7 @@ OA
 
   May buffer events for up to dt seconds when the value of (f event) changes,
   in order to determine if the new value is stable or not.
-  
+
   ; Passes on events where the state remains the same for at least five
   ; seconds.
   (stable 5 :state prn)"
@@ -1655,7 +1675,7 @@ OA
                      (if (empty? buffer)
                        ; We're stable; flush this event immediately.
                        (assoc state :out (list event))
-                       
+
                        ; We're buffering.
                        (let [buffer (conj buffer event)]
                          (if (<= dt (- (:time event) (:time (first buffer))))
@@ -1702,7 +1722,7 @@ OA
                          (if (<= n i)
                            [clean expired]
                            (if (expired? (state i))
-                             (recur (inc i) 
+                             (recur (inc i)
                                     (assoc clean i nil)
                                     (assoc expired i (expire (state i))))
                              (recur (inc i) clean expired)))))
@@ -1726,7 +1746,7 @@ OA
         (when (not (empty? indices))
           (let [[_ events] (swap! state update indices event)]
             (call-rescue events children)))))))
-  
+
 (defmacro project
   "Projects an event stream into a specific basis--like (coalesce), but where
   you only want to compare two or three specific events. Takes a vector of
@@ -1800,7 +1820,7 @@ OA
   (satisfied count + (tolerating count / 2) / total count of received events
 
   Ignores expired events.
-  
+
   See http://en.wikipedia.org/wiki/Apdex for details."
   [dt satisfied? tolerated? & children]
   `(apdex* ~dt (where ~satisfied?) (where ~tolerated?) ~@children))
@@ -1827,8 +1847,8 @@ OA
                             ; Figure out what time is is *now*
                             (map (fn [event]
                                    (when (:time event)
-                                     (+ (:time event) 
-                                        (- now 
+                                     (+ (:time event)
+                                        (- now
                                            (::clock-skew-timestamp event))))))
                             ; Drop expired events (or any others without times)
                             (remove nil?)
