@@ -149,7 +149,7 @@
                  (clojure.set/difference old-services merged-services)))
 
     ; Reload merged services
-    (dorun (pmap #(service/reload! % merged) merged-services)) 
+    (dorun (pmap #(service/reload! % merged) merged-services))
 
     ; Start merged services
     (dorun (pmap service/start! merged-services))
@@ -176,7 +176,7 @@
   "Updates this core's index with an event. Also publishes to the index pubsub
   channel."
   [core event]
-  (when (index/update (:index core) event)
+  (when ((:index core) event)
     (when-let [registry (:pubsub core)]
       (ps/publish! registry "index" event))))
 
@@ -184,10 +184,10 @@
   "Deletes similar events from the index. By default, deletes events with the
   same host and service. If a field, or a list of fields, is given, deletes any
   events with matching values for all of those fields.
-  
+
   ; Delete all events in the index with the same host
   (delete-from-index index :host event)
-  
+
   ; Delete all events in the index with the same host and state.
   (delete-from-index index [:host :state] event)"
   ([core event]
@@ -205,10 +205,10 @@
   streamed states have only the host and service copied, current time, and
   state expired. Expired events from the index are also published to the
   \"index\" pubsub channel.
-  
+
   Options:
-  
-  :keep-keys A list of event keys which should be preserved from the indexed 
+
+  :keep-keys A list of event keys which should be preserved from the indexed
              event in the expired event. Defaults to [:host :service], which
              means that when an event expires, its :host and :service are
              copied to a new event, but no other keys are preserved.
