@@ -3,11 +3,11 @@
   (:use [riemann.time :only [unix-time]]
         [riemann.common :only [event localhost]]
         [interval-metrics.core :only [Metric
-                                 update!
-                                 snapshot!
-                                 rate
-                                 quantile
-                                 uniform-reservoir]]))
+                                      update!
+                                      snapshot!
+                                      rate
+                                      quantile
+                                      uniform-reservoir]]))
 
 (defprotocol Instrumented
   "These things can can be asked to report events about their performance and
