@@ -4,9 +4,9 @@
   events which have exceeded their TTL. Presently the only implementation of
   the index protocol is backed by a nonblockinghashmap, but I plan to add an
   HSQLDB backend as well.
-  
+
   Indexes must extend three protocols:
-  
+
   Index: indexing and querying events
   Seqable: returning a list of events
   Service: lifecycle management"
@@ -27,8 +27,6 @@
     "Return a seq of expired states from this index, removing each.")
   (search [this query-ast]
     "Returns a seq of events from the index matching this query AST")
-  (update [this event]
-    "Updates index with event")
   (lookup [this host service]
     "Lookup an indexed event from the index"))
 
@@ -66,13 +64,14 @@
               (let [matching (query/fun query-ast)]
                 (filter matching (.values hm))))
 
-      (update [this event]
-              (when-not (= "expired" (:state event))
-                (.put hm [(:host event) (:service event)] event)
-                  event))
-
       (lookup [this host service]
         (.get hm [host service]))
+
+      clojure.lang.IFn
+      (invoke [this event]
+        (when-not (= "expired" (:state event))
+          (.put hm [(:host event) (:service event)] event)
+          event))
 
       clojure.lang.Seqable
       (seq [this]
