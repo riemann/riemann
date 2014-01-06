@@ -1,7 +1,8 @@
 (ns riemann.librato
   "Forwards events to Librato Metrics."
   (:require [clojure.string :as string])
-  (:use [clj-librato.metrics :only [collate annotate]]
+  (:use [clj-librato.metrics :only [collate annotate connection-manager
+                                    update-annotation]]
         clojure.math.numeric-tower))
 
 (defn safe-name
@@ -59,7 +60,7 @@
 
   (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
 
-  (tagged \"latency\" 
+  (tagged \"latency\"
     (fixed-event-window 50 (librato :gauge)))
 
   (where (service \"www\")
@@ -68,43 +69,51 @@
         (:start-annotation librato)
         (else
           (:end-annotation librato)))))"
-  [user api-key]
-  (let [annotation-ids (atom {})]
-    {:gauge      (fn [& args]
-                   (let [data (first args)
-                         events (if (vector? data) data [data])
-                         gauges (map event->gauge events)]
-                     (collate user api-key gauges [])
-                     (last gauges)))
+  ([user api-key]
+     (librato-metrics user api-key {:threads 4}))
+  ([user api-key connection-mgr-options]
+     (let [annotation-ids (atom {})
+           http-options {:connection-manager
+                         (connection-manager connection-mgr-options)}]
+       {::http-options http-options
+        :gauge      (fn [& args]
+                      (let [data (first args)
+                            events (if (vector? data) data [data])
+                            gauges (map event->gauge events)]
+                        (collate user api-key gauges [] http-options)
+                        (last gauges)))
 
-     :counter    (fn [& args]
-                   (let [data (first args)
-                         events (if (vector? data) data [data])
-                         counters (map event->counter events)]
-                     (collate user api-key [] counters)
-                     (last counters)))
+        :counter    (fn [& args]
+                      (let [data (first args)
+                            events (if (vector? data) data [data])
+                            counters (map event->counter events)]
+                        (collate user api-key [] counters http-options)
+                        (last counters)))
 
-     :annotation (fn [event]
-                   (let [a (event->annotation event)]
-                     (annotate user api-key (:name a)
-                               (dissoc a :name))))
+        :annotation (fn [event]
+                      (let [a (event->annotation event)]
+                        (annotate user api-key (:name a)
+                                  (dissoc a :name)
+                                  http-options)))
 
-     :start-annotation (fn [event]
-                         (let [a (event->annotation event)
-                               res (annotate user api-key (:name a)
-                                             (dissoc a :name))]
-                           (swap! annotation-ids assoc
-                                  [(:host event) (:service event)] (:id res))
-                           res))
+        :start-annotation (fn [event]
+                            (let [a (event->annotation event)
+                                  res (annotate user api-key (:name a)
+                                                (dissoc a :name)
+                                                http-options)]
+                              (swap! annotation-ids assoc
+                                     [(:host event) (:service event)] (:id res))
+                              res))
 
-     :end-annotation (fn [event]
-                       (let [id ((deref annotation-ids)
-                                   [(:host event) (:service event)])
-                             a (event->annotation event)]
-                         (when id
-                           (let [res (annotate
-                                       user api-key (:name a) id
-                                       {:end-time (round (:time event))})]
-                             (swap! annotation-ids dissoc
+        :end-annotation (fn [event]
+                          (let [id ((deref annotation-ids)
                                     [(:host event) (:service event)])
-                             res))))}))
+                                a (event->annotation event)]
+                            (when id
+                              (let [res (update-annotation
+                                         user api-key (:name a) id
+                                         {:end-time (round (:time event))}
+                                         http-options)]
+                                (swap! annotation-ids dissoc
+                                       [(:host event) (:service event)])
+                                res))))})))

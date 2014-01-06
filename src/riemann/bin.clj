@@ -49,6 +49,7 @@
       (get (re-find #"^(\d+).*" name) 1)
       (catch Exception e name))))
 
+(println "loading bin")(flush)
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   [& argv]

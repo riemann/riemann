@@ -57,11 +57,7 @@
   then restores them. Definitely not threadsafe. Not safe by any standard,
   come to think of it. Only for testing purposes."
   [f]
-  (let [unix-time   riemann.time/unix-time
-        linear-time riemann.time/linear-time]
-    ; Please forgive me.
-    (intern 'riemann.time 'unix-time unix-time-controlled)
-    (intern 'riemann.time 'linear-time linear-time-controlled)
-    (f)
-    (intern 'riemann.time 'unix-time unix-time)
-    (intern 'riemann.time 'linear-time linear-time)))
+  ; Please forgive me.
+  (with-redefs [riemann.time/unix-time unix-time-controlled
+                riemann.time/linear-time linear-time-controlled]
+    (f)))
