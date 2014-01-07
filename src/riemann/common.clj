@@ -35,7 +35,11 @@
 (defn localhost
   "Returns the local host name."
   []
-  (.. InetAddress getLocalHost getHostName))
+  (try
+    (.. InetAddress getLocalHost getHostName)
+    (catch Exception _
+      (warn "could not determine local host name")
+      "localhost")))
 
 ; Times
 (defn time-at
