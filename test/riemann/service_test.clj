@@ -8,16 +8,21 @@
                                  ArrayBlockingQueue
                                  SynchronousQueue
                                  ThreadPoolExecutor))
-  (:require [riemann.logging :as logging])
+  (:require [riemann.logging :as logging]
+            [riemann.instrumentation :as instrumentation]
+            [riemann.time.controlled :as time.controlled])
   (:use riemann.service
         clojure.test))
+
+(use-fixtures :once time.controlled/control-time!)
+(use-fixtures :each time.controlled/reset-time!)
 
 (deftest thread-service-equiv-test
          (is (equiv? (thread-service :foo #())
                      (thread-service :foo #())))
          (is (equiv? (thread-service :test 1 #())
                      (thread-service :test 1 #())))
-        
+
          (is (not (equiv? (thread-service :foo #())
                           (thread-service :bar #()))))
          (is (not (equiv? (thread-service :foo 1 #())
@@ -56,7 +61,7 @@
            ; We may or may not have a waiting iteration with nil core
            (is (= :reload-1 (first (send :reload-1))))
            (is (= [:reload-2 :core] (send :reload-2)))
-           
+
            ; Start! is idempotent
            ; Not a very good test--should probably check the threads used. :/
            (start! s)
@@ -89,7 +94,7 @@
          (are [f] (equiv? (f) (f))
               #(literal-executor-service
                  :cat
-                 (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS 
+                 (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS
                                       (ArrayBlockingQueue. 10)))
 
               #(literal-executor-service
@@ -104,14 +109,14 @@
         (literal-executor-service
           :dog
           (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
-       
+
         (literal-executor-service
           :cat
           (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
         (literal-executor-service
           :cat
           (ThreadPoolExecutor. 1 2 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
-        
+
         (literal-executor-service
           :cat
           (ThreadPoolExecutor. 1 1 20 TimeUnit/SECONDS (ArrayBlockingQueue. 1)))
@@ -126,13 +131,58 @@
                      (let [p (promise)]
                        (.execute s #(deliver p (swap! x inc)))
                        @p))]
-           (is (thrown? RejectedExecutionException (run)))
-           (is (= 0 @x))
 
-           (logging/suppress "riemann.service" (.start! s))
-           (is (= 1 (run)))
-           (is (= 2 (run)))
+           (testing "rejects prior to start"
+             (is (thrown? RejectedExecutionException (run)))
+             (is (= 0 @x)))
 
-           (logging/suppress "riemann.service" (.stop! s))
-           (is (thrown? RejectedExecutionException (run)))
-           (is (= 2 @x))))
+           (testing "accepts work"
+             (logging/suppress "riemann.service" (.start! s))
+             (is (= 1 (run)))
+             (is (= 2 (run))))
+
+           (testing "rejects when stopped"
+             (logging/suppress "riemann.service" (.stop! s))
+             (is (thrown? RejectedExecutionException (run)))
+             (is (= 2 @x)))
+
+           (testing "stats"
+             (logging/suppress "riemann.service" (.start! s))
+             (dotimes [i 3] (run))
+
+             (time.controlled/advance! 5)
+             (is (= (instrumentation/events s)
+                    [{:service "riemann executor cat accepted rate"
+                      :metric 3/5
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat completed rate"
+                      :metric 3/5
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat rejected rate"
+                      :metric 0
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat queue capacity"
+                      :metric 2
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat queue size"
+                      :metric 0
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat queue used"
+                      :metric 0
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat threads active"
+                      :metric 0
+                      :state "ok"
+                      :time 5}
+                     {:service "riemann executor cat threads alive"
+                      :metric 1
+                      :state "ok"
+                      :time 5}]))
+
+             (logging/suppress "riemann.service" (.stop! s)))))

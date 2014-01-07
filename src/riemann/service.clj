@@ -1,8 +1,11 @@
 (ns riemann.service
   "Lifecycle protocol for stateful services bound to a core."
-  (:require wall.hack)
-  (:use clojure.tools.logging)
-  (:import (java.util.concurrent TimeUnit
+  (:require wall.hack
+            riemann.instrumentation)
+  (:use clojure.tools.logging
+        [riemann.time :only [unix-time]])
+  (:import (riemann.instrumentation Instrumented)
+           (java.util.concurrent TimeUnit
                                  ThreadFactory
                                  AbstractExecutorService
                                  Executor
@@ -13,24 +16,23 @@
                                  ArrayBlockingQueue
                                  SynchronousQueue
                                  ThreadPoolExecutor)))
-                                 
 
 (defprotocol Service
   "Services are components of a core with a managed lifecycle. They're used for
   stateful things like connection pools, network servers, and background
   threads."
-  (reload! [service core] 
+  (reload! [service core]
           "Informs the service of a change in core.")
-  (start! [service] 
+  (start! [service]
           "Starts a service. Must be idempotent.")
-  (stop!  [service] 
+  (stop!  [service]
          "Stops a service. Must be idempotent.")
   (conflict? [service1 service2]
              "Do these two services conflict with one another? Adding
              a service to a core *replaces* any conflicting services."))
 
 (defprotocol ServiceEquiv
-  (equiv? [service1 service2] 
+  (equiv? [service1 service2]
           "Used to identify which services can remain running through a core
           transition, like reloading. If the old service is equivalent to the
           new service, the old service may be preserved and used by the new
@@ -76,7 +78,7 @@
              (while (.isAlive ^Thread @thread)
                (Thread/sleep 5))))))
 
-(defn thread-service 
+(defn thread-service
   "Returns a ThreadService which will call (f core) repeatedly when started.
   Will only stop between calls to f. Start and stop are blocking operations.
   Equivalent to other ThreadServices with the same name and equivalence key--
@@ -116,11 +118,11 @@
   (getExecutor [this]))
 
 (deftype ExecutorServiceService
-  [name equiv-key f ^:volatile-mutable ^ExecutorService executor]
+  [name equiv-key f ^:volatile-mutable ^ExecutorService executor stats]
 
   IExecutorServiceService
   (getExecutor [this] executor)
-  
+
   ServiceEquiv
   (equiv? [a b]
           (all-equal? a ^ExecutorServiceService b
@@ -140,7 +142,17 @@
           (locking this
             (when-not executor
               (info "Executor Service" name "starting")
-              (set! executor (f)))))
+              (let [x              (f)
+                    queue-capacity (if (instance? ThreadPoolExecutor x)
+                                     (.remainingCapacity
+                                       (.getQueue ^ThreadPoolExecutor x))
+                                     Integer/MAX_VALUE)]
+                (reset! stats {:accepted        0
+                               :completed       0
+                               :rejected        0
+                               :time            (unix-time)
+                               :queue-capacity  queue-capacity})
+                (set! executor x)))))
 
   (stop! [this]
          (locking this
@@ -152,33 +164,107 @@
   Executor
   (execute [this runnable]
            (if-let [x executor]
-             (.execute x runnable)
+             (try
+               (.execute x runnable)
+               (catch RejectedExecutionException e
+                 ; Update rejected stats and rethrow
+                 (swap! stats (fn [stats] (assoc stats :rejected
+                                                 (inc (:rejected stats)))))
+                 (throw e)))
+
              (throw (RejectedExecutionException.
                       (str "ExecutorServiceService " name
-                           " isn't running."))))))
+                           " isn't running.")))))
+
+  Instrumented
+  (events [this]
+    (when (instance? ThreadPoolExecutor executor)
+      (let [time               (unix-time)
+            tasks-completed    (.getCompletedTaskCount executor)
+            tasks-accepted     (.getTaskCount executor)
+            {:keys [queue-capacity
+                    dcompleted
+                    daccepted
+                    drejected
+                    dtime]}    (swap!
+                                 stats
+                                 (fn [stats]
+                                   (merge stats
+                                          {:dcompleted (- tasks-completed
+                                                          (:completed stats))
+                                           :completed  tasks-completed
+
+                                           :daccepted  (- tasks-accepted
+                                                          (:accepted stats))
+                                           :accepted   tasks-accepted
+
+                                           :drejected  (:rejected stats)
+                                           :rejected   0
+
+                                           :dtime      (- time (:time stats))
+                                           :time       time})))
+            queue-size (- tasks-accepted tasks-completed)
+            queue-used (/ queue-size queue-capacity)
+            queue-used-state (condp < queue-used
+                               3/4 "critical"
+                               1/2 "warning"
+                               "ok")
+            s (partial str "riemann executor " (clojure.core/name name) " ")]
+        [{:service (s "accepted rate")
+          :metric  (/ daccepted dtime)
+          :state   "ok"
+          :time    time}
+         {:service (s "completed rate")
+          :metric  (/ dcompleted dtime)
+          :state   "ok"
+          :time    time}
+         {:service (s "rejected rate")
+          :metric  (/ drejected dtime)
+          :state   (if (pos? drejected) "warning" "ok")
+          :time    time}
+         {:service (s "queue capacity")
+          :metric  queue-capacity
+          :state   "ok"
+          :time    time}
+         {:service (s "queue size")
+          :metric  queue-size
+          :state   queue-used-state
+          :time    time}
+         {:service (s "queue used")
+          :metric  queue-used
+          :state   queue-used-state
+          :time    time}
+         {:service (s "threads active")
+          :metric  (.getActiveCount executor)
+          :state   "ok"
+          :time    time}
+         {:service (s "threads alive")
+          :metric  (.getPoolSize executor)
+          :state   "ok"
+          :time    time}]))))
 
 (defn executor-service
   "Creates a new threadpool executor service ... service! Takes a function
   which generates an ExecutorService. Returns an ExecutorServiceService which
   provides start/stop/reload/equiv? lifecycle management of that service.
-  
+
   Equivalence-key controls how services are compared to tell if they are
   equivalent. Services with a nil equivalence key are *never* equivalent.
   Otherwise, services are equivalent when their class, name, and equiv-key are
   equal.
-  
+
   (executor-service* :graphite {foo: 4}
     #(ThreadPoolExecutor. 2 ...))"
-  ([name f] (executor-service name nil f)) 
+  ([name f] (executor-service name nil f))
   ([name equiv-key f]
-   (ExecutorServiceService. name equiv-key f nil)))
+   (ExecutorServiceService. name equiv-key f nil (atom nil))))
 
 (defmacro literal-executor-service
   "Like executor-service, but captures the *expression* passed to it as the
   equivalence key. This only works if the expression is literal; if there are
   any variables or function calls, they will be compared as code, not as
   their evaluated values.
-  
+
   OK:  (literal-executor-service :io (ThreadPoolExecutor. 2 ...))
   OK:  (literal-executor-service :io (ThreadPoolExecutor. (inc 1) ...))
   BAD: (literal-executor-service :io (ThreadPoolExecutor. x ...))"
@@ -191,7 +277,7 @@
 (defn threadpool-service
   "An ExecutorServiceService based on a ThreadPoolExecutor with core and
   maximum threadpool sizes, and a LinkedBlockingQueue of a given size. Options:
-  
+
   :core-pool-size             Default 0
   :max-pool-size              Default 4
   :keep-alive-time            Default 5
