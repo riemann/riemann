@@ -293,10 +293,10 @@
                  keep-alive-unit
                  queue-size]
           :as opts
-          :or {core-pool-size 0
-               max-pool-size 4
-               keep-alive-time 5
-               keep-alive-unit TimeUnit/SECONDS
+          :or {core-pool-size 1
+               max-pool-size 128
+               keep-alive-time 10
+               keep-alive-unit TimeUnit/MILLISECONDS
                queue-size 1000}}]
    (executor-service
      name
