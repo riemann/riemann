@@ -23,8 +23,12 @@
     event, or nil.")
   (delete-exactly [this event]
     "Deletes event from index. Returns the deleted event, or nil.")
+  (delete-with [this pred]
+    "Deletes events matching a given predicate")
   (expire [this]
     "Return a seq of expired states from this index, removing each.")
+  (search-with [this pred]
+    "Returns a seq of events matching a given predicate")
   (search [this query-ast]
     "Returns a seq of events from the index matching this query AST")
   (update [this event]
@@ -52,6 +56,10 @@
       (delete-exactly [this event]
                       (.remove hm [(:host event) (:service event)] event))
 
+      (delete-with [this pred]
+        (doseq [event (search-with this pred)]
+          (delete this event)))
+
       (expire [this]
               (filter
                 (fn [{:keys [ttl time] :or {ttl default-ttl} :as state}]
@@ -61,10 +69,12 @@
                       true)))
                 (.values hm)))
 
+      (search-with [this pred]
+        "O(n), sadly."
+        (filter pred (.values hm)))
+
       (search [this query-ast]
-              "O(n), sadly."
-              (let [matching (query/fun query-ast)]
-                (filter matching (.values hm))))
+        (search-with this (query/fun query-ast)))
 
       (update [this event]
         (this event))

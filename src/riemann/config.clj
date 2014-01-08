@@ -12,7 +12,7 @@
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
             [riemann.repl]
-            [riemann.index]
+            [riemann.index :as index]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
@@ -51,7 +51,7 @@
   "Ensures that a given service, or its equivalent, is in the next core. If the
   current core includes an equivalent service, uses that service instead.
   Returns the service which will be used in the final core.
-  
+
   This allows configuration to specify and use services in a way which can,
   where possible, re-use existing services without interruption--e.g., when
   reloading. For example, say you want to use a threadpool executor:
@@ -71,7 +71,7 @@
   adjusting a queue depth or max pool size--they won't compare as equivalent.
   When the core transitions, the old executor will be shut down, and the new
   one used to handle any further graphite events.
-  
+
   Note: Yeah, this does duplicate some of the work done in core/transition!.
   No, I'm not really sure what to do about it. Maybe we need a named service
   registry so all lookups are dynamic. :-/"
@@ -87,7 +87,7 @@
   "Replaces the default core's instrumentation service with a new one, using
   the given options. If you prefer not to receive any events about Riemann's
   well-being, you can pass :enabled? false.
-  
+
   (instrumentation {:interval 5
                     :enabled? false})"
   [& opts]
@@ -130,8 +130,8 @@
 (defn index
   "Set the index used by this core. Returns the index."
   [& opts]
-  (let [index (apply riemann.index/index opts)]
-    (locking core 
+  (let [index (apply index/index opts)]
+    (locking core
       (swap! next-core assoc :index index))
     index))
 
@@ -149,7 +149,7 @@
 
   ; Delete all events in the index with the same host
   (delete-from-index :host event)
-  
+
   ; Delete all events in the index with the same host and state.
   (delete-from-index [:host :state] event)"
   ([]
@@ -198,7 +198,7 @@
   "Subscribes to the given channel with f, which will receive events. Uses the
   current core's pubsub registry always, because the next core's registry will
   be discarded by core/transition.
-  
+
   Returns a single-arity function that does nothing with its inputs and, when
   invoked, returns the subscription you created. Why do this weird thing? So
   you can pretend (subscribe ...) is a stream, and use it in the same context
@@ -270,7 +270,7 @@
       (throw (logging/nice-syntax-error e file)))))
 
 (defn include
-  "Include another config file or directory. If the path points to a 
+  "Include another config file or directory. If the path points to a
    directory, all files within it will be loaded recursively.
 
   ; Relative to the current config file, or cwd
