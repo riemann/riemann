@@ -14,6 +14,7 @@
             [clojure.java.io :as io])
   (:use [clojure.string :only [split join]]
         [riemann.time :only [unix-time]]
+        [clojure.java.shell :only [sh]]
         clojure.tools.logging
         riemann.codec
         gloss.core
@@ -31,11 +32,25 @@
      (info ~(str "Deprecated: " comment))
      ~@body))
 
+(defn get-hostname
+  [[age val]]
+  (if (and val (<= 60000 (- (System/currentTimeMillis) age)))
+   [age val]
+   [(System/currentTimeMillis)
+    (let [{:keys [exit out]} (sh "hostname")]
+      (if (= exit 0)
+        (.trim out)))]))
+
 ; Platform
-(defn localhost
-  "Returns the local host name."
-  []
-  (.. InetAddress getLocalHost getHostName))
+(let [cache (atom [nil nil])]
+  (defn localhost
+    "Returns the local host name."
+    []
+    (if (re-find #"^Windows" (System/getProperty "os.name"))
+      (or (System/getenv "COMPUTERNAME") "localhost")
+      (or (System/getenv "HOSTNAME")
+          (second (swap! cache get-hostname))
+          "localhost"))))
 
 ; Times
 (defn time-at
