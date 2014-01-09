@@ -902,7 +902,7 @@
         scan (fn scan [top]
                (if (empty? top)
                  nil
-                 (first (apply min-key second top))))
+                 (first (sort-by second top))))
         trim (fn trim [top smallest]
                (if (< k (count top))
                  (dissoc top smallest)
@@ -922,15 +922,15 @@
 
       ; Falls outside the top set.
       (and (not (top ekey))
-           (<= value (top smallest))
-           (<= k (count top)))
+           (pos? (compare (top smallest) value))
+           (>= (count top) k))
       [smallest top]
 
       ; In the top set
       :else
       (let [top (trim (assoc top ekey value) smallest)]
         (if (or (nil? (top smallest))
-                (< value (top smallest)))
+                (neg? (compare value (top smallest))))
           [(scan top) top]
           [smallest top])))))
 
