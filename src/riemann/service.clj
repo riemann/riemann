@@ -203,8 +203,11 @@
 
                                            :dtime      (- time (:time stats))
                                            :time       time})))
-            queue-size (- tasks-accepted tasks-completed)
-            queue-used (/ queue-size queue-capacity)
+            threads-active  (.getActiveCount executor)
+            queue-size      (max 0 (- tasks-accepted
+                                      tasks-completed
+                                      threads-active))
+            queue-used      (/ queue-size queue-capacity)
             queue-used-state (condp < queue-used
                                3/4 "critical"
                                1/2 "warning"
@@ -235,7 +238,7 @@
           :state   queue-used-state
           :time    time}
          {:service (s "threads active")
-          :metric  (.getActiveCount executor)
+          :metric  threads-active
           :state   "ok"
           :time    time}
          {:service (s "threads alive")
@@ -290,10 +293,10 @@
                  keep-alive-unit
                  queue-size]
           :as opts
-          :or {core-pool-size 0
-               max-pool-size 4
-               keep-alive-time 5
-               keep-alive-unit TimeUnit/SECONDS
+          :or {core-pool-size 1
+               max-pool-size 128
+               keep-alive-time 10
+               keep-alive-unit TimeUnit/MILLISECONDS
                queue-size 1000}}]
    (executor-service
      name
