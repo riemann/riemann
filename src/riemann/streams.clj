@@ -902,11 +902,11 @@
         scan (fn scan [top]
                (if (empty? top)
                  nil
-                 (first (apply min-key second top))))
+                 (first (first (sort-by second top)))))
         trim (fn trim [top smallest]
                (if (< k (count top))
-                 (dissoc top smallest)
-                 top))]
+                 [(dissoc top smallest) smallest]
+                 [top]))]
     (cond
       ; Expired or irrelevant event
       (or (expired? event)
@@ -922,21 +922,22 @@
 
       ; Falls outside the top set.
       (and (not (top ekey))
-           (<= value (top smallest))
+           ((complement pos?) (compare value (top smallest)))
            (<= k (count top)))
       [smallest top]
 
       ; In the top set
       :else
-      (let [top (trim (assoc top ekey value) smallest)]
+      (let [[top out] (trim (assoc top ekey value) smallest)]
         (if (or (nil? (top smallest))
-                (< value (top smallest)))
-          [(scan top) top]
-          [smallest top])))))
+                (neg? (compare value (top smallest))))
+          [(scan top) top out]
+          [smallest top out])))))
 
 (defn top
   "Bifurcates a stream into a dual pair of streams: one for the top k events,
-  and one for the bottom k events.
+  and one for the bottom k events. An optional third stream can be provided
+  which will receive events which are leaving the top
 
   f is a function which maps events to comparable values, e.g. numbers. If an
   incoming event e falls in the top k, the top stream receives e and the bottom
@@ -954,22 +955,34 @@
   Index everything, but tag the top k events with \"top\":
 
   (top 10 :metric
-    (adjust [:tags conj \"top\"]
-      index)
+    (tag \"top\" index)
     index)
 
   This implementation of top is lazy, in a sense. It won't proactively expire
   events which are bumped from the top-k set--you have to wait for another
   event with the same host and service to arrive before child streams will know
-  it's expired. At some point I (or an enterprising committer) should fix
-  that."
+  it's expired. If you wish to eagerly remove bumped events you would use the
+  following construct:
+
+  (top 10 :metric
+    (tag \"top\" index)
+    index
+    index)
+"
   ([k f top-stream]
-   (top k f top-stream bit-bucket))
+     (top k f top-stream bit-bucket nil))
   ([k f top-stream bottom-stream]
+     (top k f top-stream bottom-stream nil))
+  ([k f top-stream bottom-stream demote-stream]
    (let [state (atom [nil {}])]
      (dual (fn stream [event]
-             (let [top   (second (swap! state top-update k f event))]
-               (top [(:host event) (:service event)])))
+             (let [[_ top out] (swap! state top-update k f event)]
+               (when (top [(:host event) (:service event)])
+                 (when (and out demote-stream)
+                   (call-rescue (assoc (zipmap [:host :service] out)
+                                  :time (unix-time))
+                                [demote-stream]))
+                 true)))
            top-stream
            bottom-stream))))
 
