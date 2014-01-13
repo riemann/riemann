@@ -32,9 +32,17 @@
      (info ~(str "Deprecated: " comment))
      ~@body))
 
+(def hostname-refresh-interval
+  "How often to allow shelling out to hostname (1), in seconds."
+  60)
+
 (defn get-hostname
+  "Fetches the hostname by shelling out to hostname (1), whenever the given age
+  is stale enough. If the given age is recent, as defined by
+  hostname-refresh-interval, returns age and val instead."
   [[age val]]
-  (if (and val (<= 60000 (- (System/currentTimeMillis) age)))
+  (if (and val (<= (* 1000 hostname-refresh-interval)
+                   (- (System/currentTimeMillis) age)))
    [age val]
    [(System/currentTimeMillis)
     (let [{:keys [exit out]} (sh "hostname")]
