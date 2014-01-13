@@ -74,9 +74,9 @@
 
       clojure.lang.IFn
       (invoke [this event]
-        (when-not (= "expired" (:state event))
-          (.put hm [(:host event) (:service event)] event)
-          event))
+        (if (= "expired" (:state event))
+          (delete this event)
+          (.put hm [(:host event) (:service event)] event)))
 
       clojure.lang.Seqable
       (seq [this]
