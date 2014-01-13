@@ -902,10 +902,10 @@
         scan (fn scan [top]
                (if (empty? top)
                  nil
-                 (first (first (sort-by second top)))))
+                 (first (first (sort-by (comp f second) top)))))
         trim (fn trim [top smallest]
                (if (< k (count top))
-                 [(dissoc top smallest) smallest]
+                 [(dissoc top smallest) (top smallest)]
                  [top]))]
     (cond
       ; Expired or irrelevant event
@@ -918,19 +918,19 @@
 
       ; Empty set
       (nil? smallest)
-      [ekey (assoc top ekey value)]
+      [ekey (assoc top ekey event)]
 
       ; Falls outside the top set.
       (and (not (top ekey))
-           ((complement pos?) (compare value (top smallest)))
+           ((complement pos?) (compare value (f (top smallest))))
            (<= k (count top)))
       [smallest top]
 
       ; In the top set
       :else
-      (let [[top out] (trim (assoc top ekey value) smallest)]
+      (let [[top out] (trim (assoc top ekey event) smallest)]
         (if (or (nil? (top smallest))
-                (neg? (compare value (top smallest))))
+                (neg? (compare value (f (top smallest)))))
           [(scan top) top out]
           [smallest top out])))))
 
@@ -972,16 +972,15 @@
   ([k f top-stream]
      (top k f top-stream bit-bucket nil))
   ([k f top-stream bottom-stream]
-     (top k f top-stream bottom-stream nil))
-  ([k f top-stream bottom-stream demote-stream]
+     (top k f top-stream bottom-stream false))
+  ([k f top-stream bottom-stream demote?]
    (let [state (atom [nil {}])]
      (dual (fn stream [event]
              (let [[_ top out] (swap! state top-update k f event)]
                (when (top [(:host event) (:service event)])
-                 (when (and out demote-stream)
-                   (call-rescue (assoc (zipmap [:host :service] out)
-                                  :time (unix-time))
-                                [demote-stream]))
+                 (when (and out demote?)
+                   (call-rescue (expire out) [top-stream])
+                   (call-rescue out [bottom-stream]))
                  true)))
            top-stream
            bottom-stream))))
