@@ -47,6 +47,16 @@
   [stream inputs outputs]
   `(is (~'= ~outputs (run-stream ~stream ~inputs))))
 
+(defmacro with-test-stream
+  "Exposes a fake index, verifies that the given stream, taking inputs,
+  forwards outputs to children"
+  [sym stream inputs outputs]
+  `(let [out#    (ref [])
+         ~sym    (append out#)
+         stream# ~stream]
+     (doseq [e# ~inputs] (stream# e#))
+     (is (~'= (deref out#) ~outputs))))
+
 (defmacro test-stream-intervals
   "Verifies that run-stream-intervals, taking inputs/intervals, forwards
   outputs to chldren."
@@ -1139,11 +1149,11 @@
                       (em 1/2 3/4 7/8 15/16 31/32)))
 
 (deftest top-test
-         (let [e (fn [s m] {:service s :metric m})
-               a (fn [m] (e :a m))
-               b (fn [m] (e :b m))
-               c (fn [m] (e :c m))
-               d (fn [m] (e :d m))]
+  (let [e (fn [s m & tags] {:service s :metric m :tags tags})
+        a (fn [m & tags] (apply e :a m tags))
+        b (fn [m & tags] (apply e :b m tags))
+        c (fn [m & tags] (apply e :c m tags))
+        d (fn [m & tags] (apply e :d m tags))]
 
            ; A single event
            (test-stream (top 1 :metric)
@@ -1193,7 +1203,13 @@
            ; Ring
            (test-stream (top 2 :metric)
                         [(a 1) (b 2) (c 3) (d 4)         (a 2)          (b 3)  (c 4) (d 5)]
-                        [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])))
+                        [(a 1) (b 2) (c 3) (d 4) (expire (a 2)) (expire (b 3)) (c 4) (d 5)])
+
+           ; Demotion
+           (with-test-stream index
+             (top 1 :metric index bit-bucket true)
+             [(a 1) (b 2)]
+             [(a 1) (expire (a 1)) (b 2)])))
 
 (deftest throttle-test
          (test-stream-intervals (throttle 3 2)
