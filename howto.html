@@ -970,6 +970,29 @@ event. You can build your own stream-generating functions too.</p>
 
 <p>Streams all essentially work in this way, if you look at the source code of the Streams namespace in <code>streams.clj</code>. You can find a few simple examples in the functions <code>match</code>, <code>expired</code>, <code>under</code> and <code>over</code> which filter whether the event is passed along the event stream.</p>
 
+<h3>Reinject events</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>To reinsert an event back into the current core, use
+    <code>riemann.config/reinject</code>. Reinjected events flow through all
+    top-level streams, just as if they had just arrived from the network. In
+    this example, incoming "initial" events are remapped to "derivative"
+    events and reinjected into the streaming system. Each event is printed
+    twice, first "initial", then "derivative".</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  (streams/where (service "derivative")
+    #(info "derivative" %))
+  (streams/where (service "initial")
+    #(info "initial" %)
+    (streams/with :service "derivative" reinject)))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Query the index from within a stream</h3>
 
 <div class="row">
