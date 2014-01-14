@@ -165,6 +165,17 @@
            (deref p)
            (is (= [:bar] @out))))
 
+(deftest reinject-test
+  (let [event (promise)]
+    (streams
+      (streams/where (service "bar")
+                     (partial deliver event))
+      (streams/where (service "foo")
+                     (streams/with :service "bar" reinject)))
+    (apply!)
+    (core/stream! @core {:service "foo" :metric 2})
+    (is (= (deref event 10 :timeout) {:service "bar" :metric 2}))))
+
 (deftest subscribe-in-stream-test
          (let [received (promise)]
            (streams

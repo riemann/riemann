@@ -2,7 +2,7 @@
   "Riemann config files are eval'd in the context of this namespace. Includes
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
-  index) which modify that core."
+  index, reinject) which operate on that core."
   (:require [riemann.core :as core]
             [riemann.common :as common]
             [riemann.service :as service]
@@ -163,6 +163,13 @@
    (periodically-expire 10))
   ([& args]
    (service! (apply core/reaper args))))
+
+(defn reinject
+  "A stream which applies any events it receives back into the current core.
+  
+  (with :metric 1 reinject)"
+  [event]
+  (core/stream! @core event))
 
 (defn async-queue!
   "A stream which registers (using service!) a new threadpool-service with the
