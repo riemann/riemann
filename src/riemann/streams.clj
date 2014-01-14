@@ -936,8 +936,7 @@
 
 (defn top
   "Bifurcates a stream into a dual pair of streams: one for the top k events,
-  and one for the bottom k events. An optional third stream can be provided
-  which will receive events which are leaving the top
+  and one for the bottom k events.
 
   f is a function which maps events to comparable values, e.g. numbers. If an
   incoming event e falls in the top k, the top stream receives e and the bottom
@@ -958,21 +957,14 @@
     (tag \"top\" index)
     index)
 
-  This implementation of top is lazy, in a sense. It won't proactively expire
-  events which are bumped from the top-k set--you have to wait for another
-  event with the same host and service to arrive before child streams will know
-  it's expired. If you wish to eagerly remove bumped events you would use the
-  following construct:
-
-  (top 10 :metric
-    (tag \"top\" index)
-    index
-    index)
-"
+  This implementation of top is lazy, in the sense that it won't proactively
+  expire events which are bumped from the top-k set--you have to wait for
+  another event with the same host and service to arrive before child streams
+  will know it's expired." 
   ([k f top-stream]
      (top k f top-stream bit-bucket nil))
   ([k f top-stream bottom-stream]
-     (top k f top-stream bottom-stream false))
+     (top k f top-stream bottom-stream true))
   ([k f top-stream bottom-stream demote?]
    (let [state (atom [nil {}])]
      (dual (fn stream [event]
