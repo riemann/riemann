@@ -538,6 +538,53 @@ client << {service: "thumbnailer rate",
 
 <h2>Working with streams</h2>
 
+<h3>Split streams</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Splitting streams is the default in Riemann. Almost all streams, unless
+    otherwise documented, take any number of child streams as their final
+    arguments, and forward the same events on to all of them.  Because Riemann
+    uses Clojure's immutable data structures, you don't have to worry about
+    locking or mutation. Streams "change" events by sending altered,
+    shared-structure *copies* of events downstream. For instance, this where
+    expression sends matching events to <i>two</i> child streams; one of which
+    indexes a copy of the event with service "foo", and the other with service
+    "bar".</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (host "db04")
+  (with :service "foo" index)
+  (with :service "bar" index))
+{% endhighlight %}
+  </div>
+</div>
+
+<h3>Combine streams</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Sending events from two places to the same stream is simple: just bind
+    the stream to a variable. In Clojure, <code>(let [x 1 y 2] ...)</code>
+    assigns <code>x</code> to <code>1</code> and <code>y</code> to
+    <code>2</code> everywhere inside the <code>let</code> expression. Since
+    streams are values, you can bind them to variables too. For instance, this
+    code has two paths--one for http and one for 0mq--which flow into the same
+    rate stream, and from there to the index.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (index)
+      aggregate (rate 5 index)]
+  (where (service "http req rate")
+    aggregate)
+  (where (service "0mq req rate")
+    (scale 2 aggregate)))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Filter events</h3>
 
 <p>Often, we want to do some operation only on a subset of events flowing
