@@ -101,16 +101,20 @@
            (is (= [2000 false] (:equiv-key s)))))
 
 (deftest tcp-server-test
-         (verify-service (tcp-server :host "a")))
+  (verify-service (tcp-server :host "a"))
+  (verify-service (tcp-server {:host "a"})))
 
 (deftest udp-server-test
-         (verify-service (udp-server :host "b")))
+  (verify-service (udp-server :host "b"))
+  (verify-service (udp-server {:host "b"})))
 
 (deftest ws-server-test
-         (verify-service (ws-server :port 1234)))
+  (verify-service (ws-server :port 1234))
+  (verify-service (ws-server {:port 1234})))
 
 (deftest graphite-server-test
-         (verify-service (graphite-server :port 1)))
+  (verify-service (graphite-server :port 1))
+  (verify-service (graphite-server {:port 1})))
 
 (deftest streams-test
          (streams :a)

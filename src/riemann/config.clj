@@ -42,10 +42,23 @@
 (def logstash #'logstash-client/logstash)
 
 
+(defn kwargs-or-map
+  "Takes a sequence of arguments like
+
+  [{:foo 2 :bar 3}]
+  [:foo 2 :bar 3]
+
+  as would be passed to a function taking either kwargs or an options map, and
+  returns an options map."
+  [opts]
+  (if (map? opts)
+    opts
+    (apply array-map opts)))
+
 (defn repl-server
   "Starts a new REPL server with opts."
   [& opts]
-  (riemann.repl/start-server (apply hash-map opts)))
+  (riemann.repl/start-server (kwargs-or-map opts)))
 
 (defn service!
   "Ensures that a given service, or its equivalent, is in the next core. If the
@@ -96,29 +109,39 @@
     service))
 
 (defn tcp-server
-  "Add a new TCP server with opts to the default core."
+  "Add a new TCP server with opts to the default core.
+  
+  (tcp-server {:host \"localhost\" :port 5555})"
   [& opts]
-  (service! (tcp/tcp-server (apply hash-map opts))))
+  (service! (tcp/tcp-server (kwargs-or-map opts))))
 
 (defn graphite-server
-  "Add a new Graphite TCP server with opts to the default core."
+  "Add a new Graphite TCP server with opts to the default core.
+  
+  (graphite-server {:port 2222})"
   [& opts]
-  (service! (graphite/graphite-server (apply hash-map opts))))
+  (service! (graphite/graphite-server (kwargs-or-map opts))))
 
 (defn udp-server
-  "Add a new UDP server with opts to the default core."
+  "Add a new UDP server with opts to the default core.
+  
+  (udp-server {:port 5555})"
   [& opts]
-  (service! (udp/udp-server (apply hash-map opts))))
+  (service! (udp/udp-server (kwargs-or-map opts))))
 
 (defn ws-server
-  "Add a new websockets server with opts to the default core."
+  "Add a new websockets server with opts to the default core.
+  
+  (ws-server {:port 5556})"
   [& opts]
-  (service! (websockets/ws-server (apply hash-map opts))))
+  (service! (websockets/ws-server (kwargs-or-map opts))))
 
 (defn sse-server
-  "Add a new SSE channel server with opts to the default core."
+  "Add a new SSE channel server with opts to the default core.
+  
+  (sse-server {:port 5556})"
   [& opts]
-  (service! (sse/sse-server (apply hash-map opts))))
+  (service! (sse/sse-server (kwargs-or-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
