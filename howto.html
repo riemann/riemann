@@ -197,7 +197,7 @@ sudo service riemann reload
     <p>To log to a file, just say</p>
 
 {% highlight clj %}
-(logging/init :file "/path/to/some/riemann.log")
+(logging/init {:file "/path/to/some/riemann.log"})
 {% endhighlight %}
 
     <p>If you'd prefer to only log to the console, just leave out :file</p>
