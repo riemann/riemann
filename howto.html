@@ -144,9 +144,9 @@ sudo service riemann reload
   <div class="sixcol last">
 {% highlight clj %}
 (let [host "0.0.0.0"]
-  (tcp-server :host host)
-  (udp-server :host host)
-  (ws-server  :host host))
+  (tcp-server {:host host})
+  (udp-server {:host host})
+  (ws-server  {:host host}))
 {% endhighlight %}
   </div>
 </div>
@@ -297,7 +297,7 @@ sudo service riemann reload
 <p>Riemann has an nREPL server built in. You can enable this in your config with:</p>
 
 {% highlight clj %}
-(repl-server :host "127.0.0.1")
+(repl-server {:host "127.0.0.1"})
 {% endhighlight %}
 
 <p>You can then use <code>lein</code> to to connect to it (make sure you have leiningen 2):</p>
