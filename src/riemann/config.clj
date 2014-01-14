@@ -51,8 +51,9 @@
   as would be passed to a function taking either kwargs or an options map, and
   returns an options map."
   [opts]
-  (if (map? opts)
-    opts
+  (if (and (= 1 (count opts))
+           (map? (first opts)))
+    (first opts)
     (apply array-map opts)))
 
 (defn repl-server

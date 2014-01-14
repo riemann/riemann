@@ -52,17 +52,29 @@
   "Initialize log4j. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
 
-  :console Determine if logging should happen on the console
-  :console-layout On the off-chance that someone runs riemann within runit, keep the
-                  option of specifying the layout
-  :file    The file to log to. If omitted, logs to console only. If provided log
-           to that file using the default layout
-  :files   A list of files to log to. If provided, a seq is expected containing maps
-           with a :path and an optional :layout key which can be any of: :riemann,
-           :json-event :json-eventv1"
-  [& {:keys [file console console-layout files] :or {console true}}]
+  :console         Determine if logging should happen on the console
+  :console-layout  On the off-chance that someone runs riemann within runit,
+                   keep the option of specifying the layout
+  :file            The file to log to. If omitted, logs to console only. If
+                   provided log to that file using the default layout
+  :files           A list of files to log to. If provided, a seq is expected
+                   containing maps with a :path and an optional :layout key
+                   which can be any of: :riemann, :json-event :json-eventv1
+  
+  Example:
+  
+  (init {:console false :file \"/var/log/riemann.log\"})"
+  [& opts]
   ;; Reset loggers
-  (let [logger (doto (Logger/getRootLogger) (.removeAllAppenders))]
+  (let [{:keys [file
+                files
+                console
+                console-layout]} (if (and (= 1 (count opts))
+                                          (map? (first opts)))
+                                   (first opts)
+                                   (apply array-map opts))
+         console (or console true)
+         logger (doto (Logger/getRootLogger) (.removeAllAppenders))]
 
     (when console
       (.addAppender logger (ConsoleAppender. (get-layout console-layout))))
@@ -100,6 +112,7 @@
     (set-level "riemann.server" Level/DEBUG)
     (set-level "riemann.streams" Level/DEBUG)
     (set-level "riemann.graphite" Level/DEBUG)))
+
 
 (defn nice-syntax-error
   "Rewrites clojure.lang.LispReader$ReaderException to have error messages that

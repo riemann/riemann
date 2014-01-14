@@ -102,18 +102,22 @@
 
 (deftest tcp-server-test
   (verify-service (tcp-server :host "a"))
+  (reset-core! #())
   (verify-service (tcp-server {:host "a"})))
 
 (deftest udp-server-test
   (verify-service (udp-server :host "b"))
+  (reset-core! #())
   (verify-service (udp-server {:host "b"})))
 
 (deftest ws-server-test
   (verify-service (ws-server :port 1234))
+  (reset-core! #())
   (verify-service (ws-server {:port 1234})))
 
 (deftest graphite-server-test
   (verify-service (graphite-server :port 1))
+  (reset-core! #())
   (verify-service (graphite-server {:port 1})))
 
 (deftest streams-test
