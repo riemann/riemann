@@ -274,8 +274,11 @@ tagged "product"
 true
 {% endhighlight %}
 
-      <p>Query messages return a list of matching events. The full grammar is <a
-        href="https://github.com/aphyr/riemann/blob/master/src/riemann/Query.g">here</a>.</p>
+<p>Query messages return a list of matching events. See <a
+  href="https://github.com/aphyr/riemann/blob/master/test/riemann/query_test.clj">the
+query tests</a> for tons of examples, or read <a
+href="https://github.com/aphyr/riemann/blob/master/src/riemann/Query.g">the
+full grammar</a>.</p>
     </div>
 
     <div class="sixcol last">
@@ -284,7 +287,7 @@ true
       <p>"Riemann" usually refers to the JVM process that handles events, i.e.
       <code>bin/riemann</code>. Internally, that process has several distinct
       servers which are specified in the configuration file.</p>
-     
+
       <p>The TCP and UDP servers listen on port 5555 for TCP connections and
       UDP datagrams. They accept a stream of protocol buffer <i>messages</i>
       containing <i>events</i> (or queries, control messages, etc). Those
