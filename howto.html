@@ -585,6 +585,40 @@ client << {service: "thumbnailer rate",
   </div>
 </div>
 
+<h3>Distinct streams for each host, service, etc.</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Often, you want to run *many copies* of a particular stream; say,
+    computing a rate for each service separately, or each [host, service] pair.
+    Use <code>by</code> to bifurcate a stream into distinct copies based on a
+    function or vector of functions of that event. For instance, to sum up disk
+    use across hosts, but retaining a distinct sum for each service, you could
+    write:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(by :service
+  (coalesce
+    (smap folds/sum
+      (with :host nil
+        index))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Or to compute a rate for each distinct host and service:
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(by [:host :service]
+  (rate 5 index))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Filter events</h3>
 
 <p>Often, we want to do some operation only on a subset of events flowing
