@@ -109,7 +109,7 @@
         ; Binary
         {:directory "/usr/bin"
          :filemode "755"
-         :sources [(source (file (:root project) "pkg" "deb" "riemann")
+         :sources [(source (file (:root project) "pkg" "rpm" "riemann")
                            "riemann")]}
 
         ; Log dir
