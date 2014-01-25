@@ -621,17 +621,31 @@ client << {service: "thumbnailer rate",
 
 <h3>Filter events</h3>
 
-<p>Often, we want to do some operation only on a subset of events flowing
-through a stream. For instance, we might only want to email events which have
-the state "error". The basic filtering streams are <a
-  href="api/riemann.streams.html#var-where">where</a>, her less magical sister
-<a href="api/riemann.streams.html#var-where*">where*</a>, <a
-  href="api/riemann.streams.html#var-match">match</a>, <a
-  href="api/riemann.streams.html#var-tagged-all">tagged-all</a> and <a
-  href="api/riemann.streams.html#var-tagged-any">tagged-any</a>, and <a
-  href="api/riemann.streams.html#var-expired">expired</a>. Most of the time,
-you'll use <code>where</code>.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Often, we want to do some operation only on a subset of events flowing
+    through a stream. For instance, we might only want to email events which
+    have the state "error". The basic filtering streams are <a
+    href="api/riemann.streams.html#var-where">where</a>, her less magical
+    sister <a href="api/riemann.streams.html#var-where*">where*</a>, <a
+      href="api/riemann.streams.html#var-match">match</a>, <a
+      href="api/riemann.streams.html#var-tagged-all">tagged-all</a> and <a
+      href="api/riemann.streams.html#var-tagged-any">tagged-any</a>, and <a
+      href="api/riemann.streams.html#var-expired">expired</a>. Most of the
+    time, you'll use <code>where</code>.</p>
+  </div>
+</div>
 
+<div class="row">
+  <div class="sixcol">
+    <p>Where takes a <i>predicate</i>, which is a special expression for
+    matching events. After the predicate, <code>where</code> takes any number
+    of child streams, each of which will receive events which the predicate
+    matched. For example, we could email only events which have state
+    "error".</p>
+  </div>
+
+  <div class="sixcol last">
 {% highlight clj %}
 (streams
   (where (state "error")
@@ -639,50 +653,139 @@ you'll use <code>where</code>.</p>
     ; stream:
     (email "delacroix@vonbraun.com")))
 {% endhighlight %}
+  </div>
+</div>
 
+<div class="row">
+  <div class="sixcol">
+    <p>Where expressions can match particular values of a field; like passing
+    on events which occur only on the Von Braun:</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
-; Where is powerful stuff. You can match using equality:
-(where (host "von braun"))
+(where (host "von braun") ...)
+{% endhighlight %}
+  </div>
+</div>
 
-; Regular expressions
-(where (description #"an+elids"))
+<div class="row">
+  <div class="sixcol">
+    <p>Regular expressions (in Clojure, strings like <code>#"foo .+"</code>) can be used to match fields as well.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (description #"an+elids") ...)
+{% endhighlight %}
+  </div>
+</div>
 
-; The presence of a given tag
-(where (tagged "mutant"))
+<div class="row">
+  <div class="sixcol">
+    <p>You can filter for the presence of a given tag.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (tagged "mutant") ...)
+{% endhighlight %}
+  </div>
+</div>
 
-; There are also streams specifically for selecting events which have some,
-; or all, of a set of tags.
+<div class="row">
+  <div class="sixcol">
+    <p>There are also streams specifically for selecting events which have
+    some, or all, of a set of tags. Tagged is shorthand for tagged-all.</p>
+
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
 (tagged-any ["cat" "dog"] (with :service "animals/sec" (rate 1 index)))
 (tagged-all ["ops" "ddos"] (email "ops@githug.com"))
 
-; tagged is shorthand for tagged-all:
 (tagged "page" page-ops)
+{% endhighlight %}
+  </div>
+</div>
 
-; Arbitrary functions on values
+<div class="row">
+  <div class="sixcol">
+    <p>Numeric functions work like you'd expect:</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
 (where (>= (* metric 1000) 2.5))
+{% endhighlight %}
+  </div>
+</div>
 
-; Which makes range queries easy
+<div class="row">
+  <div class="sixcol">
+    <p>Which makes range queries easy:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
 (where (< 5 metric 10))
+{% endhighlight %}
+  </div>
+</div>
 
-; Boolean operators
+<div class="row">
+  <div class="sixcol">
+    <p>Predicates can use any function or macro, including boolean operators.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
 (where (not (or (tagged "www")
                 (and (state "ok") (nil? metric)))))
+{% endhighlight %}
+  </div>
+</div>
 
-; And arbitrary functions
+<div class="row">
+  <div class="sixcol">
+    <p>You can also define and use arbitrary functions in your predicates.
+    (where) binds the variable <code>event</code> to the event being
+    considered.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
 (defn global? [event] (nil? (:host event)))
 (where (global? event))
 {% endhighlight %}
+  </div>
+</div>
 
-<p>Where streams forward an event to their children when the predicate matches.
-When the predicate *doesn't* match, where will forward events to any children
-in an <code>(else)</code> block.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Higher-order functions work like you'd expect, so you can happily map,
+    fold, filter, etc inside a where predicate too. For instance, we can match
+    any of several regular expressions:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (some (fn [r] (re-find r service)) [#"cassandra disk .+"
+                                           #"cassandra net .+"
+                                           #"cassandra latency \d+"])
+  ...)
+{% endhighlight %}
+  </div>
+</div>
 
+<div class="row">
+  <div class="sixcol">
+    <p>Where streams forward an event to their children when the predicate
+    matches.  When the predicate *doesn't* match, where will forward events to
+    any children in an <code>(else)</code> block.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 (where (or (service "ok") (service "warning"))
   index
   (else
     (email "ops@foo.com")))
 {% endhighlight %}
+  </div>
+</div>
 
 <h3>Set thresholds</h3>
 
