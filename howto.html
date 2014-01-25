@@ -294,26 +294,42 @@ sudo service riemann reload
 
 <h3>Connecting to the REPL</h3>
 
-<p>Riemann has an nREPL server built in. You can enable this in your config with:</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann has an nREPL server built in. You can enable this in your config
+    with:</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 (repl-server {:host "127.0.0.1"})
 {% endhighlight %}
+  </div>
+</div>
 
-<p>You can then use <code>lein</code> to to connect to it (make sure you have leiningen 2):</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>You can then use Leiningen 2 to connect to it.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight sh %}
 git clone git://github.com/aphyr/riemann.git
 cd riemann
 lein repl :connect 127.0.0.1:5557
 {% endhighlight %}
+  </div>
+</div>
 
-<p>A very useful thing you can do from the REPL is to reload the config file, this is handy
-when testing locally:</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>You can reload the config by sending Riemann a SIGHUP, but you can also
+    do it from the REPL.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 user=> (riemann.bin/reload!)
 {% endhighlight %}
+  </div>
+</div>
 
 <h2>Debugging</h2>
 
@@ -410,69 +426,95 @@ user=> (riemann.bin/reload!)
 
 <h3>Measure Riemann itself</h3>
 
-<p>Riemann comes with instrumentation built-in, which is sampled periodically
-and injected into the event stream. You can query the dashboard for
-<code>service =~ "riemann %"</code> to see Riemann's internal metrics. All
-latencies are in milliseconds.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann comes with instrumentation built-in, which is sampled
+    periodically and injected into the event stream. You can query the
+    dashboard for <code>service =~ "riemann %"</code> to see Riemann's internal
+    metrics. All latencies are in milliseconds.</p>
 
-<p><code>riemann streams</code> refers to the stream processor: its throughput
-measures the number of events being passed to <code>(streams ...)</code> per
-second, and its latencies indicate the time it takes to process a single event
-through the streaming system.</p>
+    <p><code>riemann streams</code> refers to the stream processor: its
+    throughput measures the number of events being passed to <code>(streams
+      ...)</code> per second, and its latencies indicate the time it takes to
+    process a single event through the streaming system.</p>
 
-<p>The TCP, UDP, and Websockets servers instrument their throughput and latency
-where possible. TCP latency measures the time from initial message deframing to
-Netty write of the corresponding response. For instance, <code>riemann server
-  tcp 1.2.3.4:5555 in latency 0.95</code> measures the 95th percentile time, in
-milliseconds, for the TCP server on port 5555 to parse, queue, process, and
-dispatch a response for a message. The rate for servers measures *message*
-rate, not *event* rate.</p>
+    <p>The TCP, UDP, and Websockets servers instrument their throughput and
+    latency where possible. TCP latency measures the time from initial message
+    deframing to Netty write of the corresponding response. For instance,
+    <code>riemann server tcp 1.2.3.4:5555 in latency 0.95</code> measures the
+    95th percentile time, in milliseconds, for the TCP server on port 5555 to
+    parse, queue, process, and dispatch a response for a message.  The rate for
+    servers measures *message* rate, not *event* rate.</p>
 
-<p>The main queue connecting Netty IO threads to the parsing/execution
-threadpool is measured by <code>riemann netty execution-handler queue
-  size</code>, and is a critical measure of whether the streaming system is
-overloaded relative to inbound request load.</p>
+    <p>The main queue connecting Netty IO threads to the parsing/execution
+    threadpool is measured by <code>riemann netty execution-handler queue
+    size</code>, and is a critical measure of whether the streaming system is
+  overloaded relative to inbound request load.</p>
 
-<p>To disable instrumentation, or control how often events are sampled, see <a
-  href="http://riemann.io/api/riemann.config.html#var-instrumentation">riemann.config/instrumentation</a>.</p>
+    <p>To disable instrumentation, or control how often events are sampled, see
+    <a
+      href="http://riemann.io/api/riemann.config.html#var-instrumentation">riemann.config/instrumentation</a>.</p>
+  </div>
+</div>
 
 <h3>Measure CPU, memory, and disk use</h3>
 
-<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes
-a program called riemann-health, which measures the local host's cpu, memory,
-and disk use. You can install it from rubygems:</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a>
+    includes a program called riemann-health, which measures the local host's
+    cpu, memory, and disk use. You can install it from rubygems.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight sh %}
 gem install riemann-tools
 {% endhighlight %}
+  </div>
+</div>
 
-<p>... and run riemann-health with the address of your riemann server like so:</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>... and run riemann-health with the address of your riemann server like
+    so:</p>
+  </div>
+  <div class="sixcol last">
 {% highlight sh %}
 riemann-health --host 1.2.3.4
 {% endhighlight %}
+  </div>
+</div>
 
-<p>Riemann-health reports utilization *fractions* by default, ranging from zero
-to one. Load average is divided by the number of cores, and disk use by
-capacity. You can adjust the polling interval, what percentage of cpu use is
-considered critical, and more. <code>riemann-health --help</code> will tell you more.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann-health reports utilization <i>fractions</i> by default, ranging
+    from zero to one. Load average is divided by the number of cores, and disk
+    use by capacity. You can adjust the polling interval, what percentage of
+    cpu use is considered critical, and more. <code>riemann-health
+    --help</code> will tell you more.</p>
+  </div>
+</div>
 
 <h3>Monitor Riak</h3>
 
-<p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a> includes
-riemann-riak, which uses riak's HTTP stats interface, some filesystem checks,
-and optionally, some erlang RPC requests to measure Riak's get and put
-latencies, request throughput, ring status, and disk use. Run riemann-riak on
-each Riak node.</p>
+<div class="row">
+  <div class="sixcol">
+    <p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a>
+    includes riemann-riak, which uses riak's HTTP stats interface, some
+    filesystem checks, and optionally, some erlang RPC requests to measure
+    Riak's get and put latencies, request throughput, ring status, and disk
+    use. Run riemann-riak on each Riak node.</p>
 
-{% highlight sh %}
-gem install riemann-tools
-riemann-riak --host 1.2.3.4
-{% endhighlight %}
-
-<p>Riemann-riak comes with defaults for the riak .deb packages shipped by
-Basho, but it's tunable for other configurations. See <code>riemann-riak
-  --help</code> for more options.</p>
+    <p>Riemann-riak comes with defaults for the riak .deb packages shipped by
+    Basho, but it's tunable for other configurations. See <code>riemann-riak
+    --help</code> for more options.</p>
+  </div>
+  <div class="sixcol last">
+    {% highlight sh %}
+    gem install riemann-tools
+    riemann-riak --host 1.2.3.4
+    {% endhighlight %}
+  </div>
+</div>
 
 <h3>Custom event attributes</h3>
 
