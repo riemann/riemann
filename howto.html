@@ -1231,7 +1231,10 @@ event. You can build your own stream-generating functions too.</p>
   </div>
   <div class="sixcol last">
 {% highlight rb %}
-1.9.3p385 :001 > Riemann::Client.new << {service: "maintenance-mode", host: nil, state: "active", ttl: 600}
+1.9.3p385 :001 > Riemann::Client.new << {service: "maintenance-mode",
+                                         host:    nil,
+                                         state:   "active",
+                                         ttl:     600}
  => nil
 {% endhighlight %}
   </div>
