@@ -1069,15 +1069,19 @@ can decide whether an event is worthy of an alert by tagging it:</p>
 
 <h3>Group events in time</h3>
 
-<p>Sometimes you want to ask a question about the last few minutes, or of
-groups of 10 consecutive events at a time.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Sometimes you want to ask a question about the last few minutes, or of
+    groups of 10 consecutive events at a time.</p>
 
-<ul>
-  <li><a href="api/riemann.streams.html#var-moving-time-window">moving-time-window</a> forwards the last n seconds of events</li>
-  <li><a href="api/riemann.streams.html#var-moving-event-window">moving-event-window</a> forwards the last n events</li>
-  <li><a href="api/riemann.streams.html#var-fixed-time-window">fixed-time-window</a> forwards events from disjoint n-second windows</li>
-  <li><a href="api/riemann.streams.html#var-fixed-event-window">fixed-event-window</a> forwards disjoint sequences of n events</li>
-</ul>
+    <ul>
+      <li><a href="api/riemann.streams.html#var-moving-time-window">moving-time-window</a> forwards the last n seconds of events</li>
+      <li><a href="api/riemann.streams.html#var-moving-event-window">moving-event-window</a> forwards the last n events</li>
+      <li><a href="api/riemann.streams.html#var-fixed-time-window">fixed-time-window</a> forwards events from disjoint n-second windows</li>
+      <li><a href="api/riemann.streams.html#var-fixed-event-window">fixed-event-window</a> forwards disjoint sequences of n events</li>
+    </ul>
+  </div>
+</div>
 
 <h3>Change units</h3>
 
@@ -1095,18 +1099,24 @@ groups of 10 consecutive events at a time.</p>
 
 <h3>Find the host using the most CPU</h3>
 
-<p>If you're running riemann-health, all hosts will report events like
-<code>{:service "cpu" :host "foo" :metric 0.12}</code>. You want to know which
-host is under the heaviest CPU load. The <code>coalesce</code> stream remembers
-the last events from each host and service, and sends them all as a vector to
-its children. We can map that vector of events to a single event--the one with
-the largest metric--using folds/maximum. Then we just set the service and host,
-since this event pertains to the system as a whole.</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>If you're running riemann-health, all hosts will report events like
+    <code>{:service "cpu" :host "foo" :metric 0.12}</code>. You want to know
+    which host is under the heaviest CPU load. The <code>coalesce</code> stream
+    remembers the last events from each host and service, and sends them all as
+    a vector to its children. We can map that vector of events to a single
+    event--the one with the largest metric--using folds/maximum. Then we just
+    set the service and host, since this event pertains to the system as a
+    whole.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 (coalesce (smap folds/maximum
   (with {:service "Max CPU" :host nil} prn)))
 {% endhighlight %}
+  </div>
+</div>
 
 <h3>Alerting when a certain percentage of events happen</h3>
 
@@ -1171,30 +1181,56 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
 
 <h3 id="create-your-own-stream-function">Create your own stream function</h3>
 
-<p>Riemann builtins like <code>rate</code>, <code>percentiles</code>,
-<code>smap</code>, and so on are all functions which take a variable number of
-child streams and returns a function that takes an event and responds to that
-event. You can build your own stream-generating functions too.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann builtins like <code>rate</code>, <code>percentiles</code>,
+    <code>smap</code>, and so on are all functions which take a variable number
+    of child streams and returns a function that takes an event and responds to
+    that event. You can build your own stream-generating functions too.</p>
+  </div>
+</div>
 
-<p>Let's create a trivial example.</p>
-
+<div class="row">
+  <div class="sixcol">
+    <p>Let's create a trivial example.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 (defn hello-stream [& children]
   (fn [e] (let [new-event (assoc e :hello :world)]
     (call-rescue new-event children))))
 {% endhighlight %}
+  </div>
+</div>
 
-<p>Our stream returns a function that when it receives an event, adds a new key-pair via <code>assoc</code> and then uses <code>call-rescue</code>, a standard library function, to pass the event on to all the child streams it was passed.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Our stream returns a function that when it receives an event, adds a new
+    key-pair via <code>assoc</code> and then uses <code>call-rescue</code>, a
+    standard library function, to pass the event on to all the child streams it
+    was passed.</p>
 
-<p>Add this new stream to the list of event streams.</p>
-
+    <p>Add this new stream to the list of event streams.</p>
+  </div>
+  <div class="sixcol last">
 {% highlight clj %}
 (streams (hello-stream prn))
 {% endhighlight %}
+  </div>
+</div>
 
-<p>Now when you pass an event into Riemann you should see the event printed out with an added key-value pair of <code>:hello :world</code>.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Now when you pass an event into Riemann you should see the event printed
+    out with an added key-value pair of <code>:hello :world</code>.</p>
 
-<p>Streams all essentially work in this way, if you look at the source code of the Streams namespace in <code>streams.clj</code>. You can find a few simple examples in the functions <code>match</code>, <code>expired</code>, <code>under</code> and <code>over</code> which filter whether the event is passed along the event stream.</p>
+    <p>Streams all essentially work in this way, if you look at the source code
+    of the Streams namespace in <code>streams.clj</code>. You can find a few
+    simple examples in the functions <code>match</code>, <code>expired</code>,
+    <code>under</code> and <code>over</code> which filter whether the event is
+    passed along the event stream.</p>
+  </div>
+</div>
 
 <h3>Reinject events</h3>
 
