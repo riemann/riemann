@@ -84,7 +84,7 @@
 (def fun-cache
   "Speeds up the compilation of queries by caching map of ASTs to corresponding
   functions."
-  (atom (cache/lu-cache-factory {} :threshold 64)))
+  (atom (cache/lru-cache-factory {} :threshold 64)))
 
 (defn fun
   "Transforms an AST into a fn [event] which returns true if the query matches
