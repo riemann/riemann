@@ -50,7 +50,7 @@
   [s]
   ; Is a service
   (is (satisfies? service/Service s))
-  
+
   ; Not present in current core
   (is (not-every? (comp #{s}) (:services @core)))
 
@@ -65,7 +65,7 @@
                       (apply!)
                       (is (some #{s1} (:services @core)))
                       (is (deref (:running s1)))
-                      
+
                       ; Now add an equivalent service
                       (let [s (service/thread-service :foo sleep)
                             s2 (service! s)]
@@ -133,13 +133,13 @@
            (is (nil? (:index @core)))))
 
 (deftest update-index-test
-         (let [i (index)]
+         (let [i (core/wrap-index (index))]
            (apply!)
            (i {:service 1 :state "ok"})
            (is (= (seq i) [{:service 1 :state "ok"}]))))
 
 (deftest delete-from-index-test
-         (let [i (index)
+         (let [i (core/wrap-index (index))
                delete (delete-from-index)
                states [{:host 1 :state "ok"}
                        {:host 2 :state "ok"}
@@ -150,7 +150,7 @@
            (is (= (seq i) [{:host 2 :state "ok"}]))))
 
 (deftest delete-from-index-fields
-         (let [i (index)
+         (let [i (core/wrap-index (index))
                delete (delete-from-index [:host :state])]
            (apply!)
            (i {:host 1 :state "foo"})

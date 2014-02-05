@@ -5,7 +5,7 @@
   (:require [riemann.logging :as logging]
             [riemann.client :as client]
             [riemann.index :as index]
-            [riemann.core :refer [transition! core stop!]]
+            [riemann.core :refer [transition! core stop! wrap-index]]
             [riemann.transport.tcp :refer [tcp-server]]
             [riemann.transport.graphite :refer [graphite-server]]))
 
@@ -16,7 +16,7 @@
    ["riemann.transport" "riemann.core" "riemann.pubsub" "riemann.graphite"]
    (let [s1       (graphite-server)
          s2       (tcp-server)
-         index    (index/index)
+         index    (wrap-index (index/index))
          core     (transition!
                    (core)
                    {:index    index
