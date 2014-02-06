@@ -2,7 +2,7 @@
   (:use riemann.config
         clojure.test
         [riemann.index :only [Index]])
-  (:require [riemann.core :as core]
+  (:require [riemann.core :as core :refer [wrap-index]]
             [riemann.pubsub :as pubsub]
             [riemann.logging :as logging]
             [riemann.service :as service]
