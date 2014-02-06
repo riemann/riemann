@@ -182,48 +182,55 @@
 
 (defn wrap-index
   "Yield a wrapper to an index, exposing the same protocols as well
-   as IFn which will index an event and then publish to all subscriptions"
-  [source]
-  (reify
-    Index
-    (clear [this]
-      (index/clear source))
-    (delete [this event]
-      (index/delete source event))
-    (delete-exactly [this event]
-      (index/delete-exactly source event))
-    (expire [this]
-      (index/expire source))
-    (search [this query-ast]
-      (index/search source query-ast))
-    (update [this event]
-      (index/update source event))
-    (lookup [this host service]
-      (index/lookup source host service))
+   as IFn which will index an event. If a second argument is present
+   it should implement the PubSub interface and will be notified
+   when events are updated in the index."
+  ([source]
+     (wrap-index source nil))
+  ([source registry]
+     (reify
+       Object
+       (equals [this other]
+         (= source other))
+       Index
+       (clear [this]
+         (index/clear source))
+       (delete [this event]
+         (index/delete source event))
+       (delete-exactly [this event]
+         (index/delete-exactly source event))
+       (expire [this]
+         (index/expire source))
+       (search [this query-ast]
+         (index/search source query-ast))
+       (update [this event]
+         (index/update source event))
+       (lookup [this host service]
+         (index/lookup source host service))
 
-    clojure.lang.Seqable
-    (seq [this]
-      (seq source))
+       clojure.lang.Seqable
+       (seq [this]
+         (seq source))
 
-    ServiceEquiv
-    (equiv? [this other]
-      (service/equiv? source other))
+       ServiceEquiv
+       (equiv? [this other]
+         (service/equiv? source other))
 
-    Service
-    (conflict? [this other]
-      (service/conflict? source other))
-    (reload! [this new-core]
-      (service/reload! source new-core))
-    (start! [this]
-      (service/start! source))
-    (stop! [this]
-      (service/stop! source))
+       Service
+       (conflict? [this other]
+         (service/conflict? source other))
+       (reload! [this new-core]
+         (service/reload! source new-core))
+       (start! [this]
+         (service/start! source))
+       (stop! [this]
+         (service/stop! source))
 
-    clojure.lang.IFn
-    (invoke [this event]
-      (when (index/update source event)
-        (when-let [registry (:pubsub core)]
-          (ps/publish! registry "index" event))))))
+       clojure.lang.IFn
+       (invoke [this event]
+         (index/update source event)
+         (when registry
+           (ps/publish! registry "index" event))))))
 
 
 (defn delete-from-index

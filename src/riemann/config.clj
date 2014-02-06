@@ -156,8 +156,8 @@
   [& opts]
   (let [index (apply riemann.index/index opts)]
     (locking core
-      (swap! next-core assoc :index index))
-    index))
+      (swap! next-core assoc :index index)
+      (core/wrap-index index (:pubsub @next-core)))))
 
 (defn update-index
   "Updates the given index with all events received. Also publishes to the
