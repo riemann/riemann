@@ -154,10 +154,11 @@
 (defn index
   "Set the index used by this core. Returns the index."
   [& opts]
-  (let [index (apply riemann.index/index opts)]
+  (let [index (apply riemann.index/index opts)
+        wrap  (fn [{:keys [pubsub] :as core}]
+                (assoc core :index (core/wrap-index index pubsub)))]
     (locking core
-      (swap! next-core assoc :index index)
-      (core/wrap-index index (:pubsub @next-core)))))
+      (:index (swap! next-core wrap)))))
 
 (defn update-index
   "Updates the given index with all events received. Also publishes to the

@@ -2,7 +2,7 @@
   (:use riemann.config
         clojure.test
         [riemann.index :only [Index]])
-  (:require [riemann.core :as core :refer [wrap-index]]
+  (:require [riemann.core :as core]
             [riemann.pubsub :as pubsub]
             [riemann.logging :as logging]
             [riemann.service :as service]
@@ -133,13 +133,13 @@
            (is (nil? (:index @core)))))
 
 (deftest update-index-test
-         (let [i (core/wrap-index (index))]
+         (let [i (index)]
            (apply!)
            (i {:service 1 :state "ok"})
            (is (= (seq i) [{:service 1 :state "ok"}]))))
 
 (deftest delete-from-index-test
-         (let [i (core/wrap-index (index))
+         (let [i (index)
                delete (delete-from-index)
                states [{:host 1 :state "ok"}
                        {:host 2 :state "ok"}
@@ -150,7 +150,7 @@
            (is (= (seq i) [{:host 2 :state "ok"}]))))
 
 (deftest delete-from-index-fields
-         (let [i (core/wrap-index (index))
+         (let [i (index)
                delete (delete-from-index [:host :state])]
            (apply!)
            (i {:host 1 :state "foo"})
