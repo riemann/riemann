@@ -34,7 +34,7 @@ layout: default
       href="api/riemann.streams.html">riemann.streams</a>), and <a
       href="https://github.com/aphyr/riemann/tree/master/src/riemann">the
       source</a>.  I try hard to write readable code. The <a
-      href="https://github.com/aphyr/riemann/tree/master/test/riemann/test">test
+      href="https://github.com/aphyr/riemann/tree/master/test/riemann">test
       suite</a> is also a great place to look for use examples.</p>
   </div>
 </div>
@@ -92,7 +92,7 @@ tail -F /var/log/riemann.log
     an event and logs it at the INFO log level.</p>
   </div>
   <div class="sixcol last">
-{% highlight clj %} 
+{% highlight clj %}
 (streams
   index
   ...
@@ -178,7 +178,7 @@ sudo service riemann reload
     to that address and begin displaying events. Hit <code>s</code> to save the
     new dash config; the dashboard will connect to that address every time you
     load the page.</p>
-   
+
     <p>If the dashboard is unable to connect to the Riemann websocket server,
     you'll see an alert pop up every few seconds. Check that the server is
     running, that the Riemann websocket server is reachable from your browser,
@@ -348,7 +348,7 @@ user=> (riemann.bin/reload!)
 (streams
   #(info %))
 {% endhighlight %}
-    
+
 {% highlight clj %}
 (streams
   (where (service "some thing you're looking for")
@@ -534,7 +534,7 @@ riemann-health --host 1.2.3.4
     map. In strongly-typed clients like riemann-java-client, special methods
     like EventDSL.attribute(key, value) are present.</p>
   </div>
- 
+
   <div class="sixcol last">
 {% highlight rb %}
 client << {service: "thumbnailer rate",
@@ -549,7 +549,7 @@ client << {service: "thumbnailer rate",
     <p>Custom attributes are always encoded as strings in Protocol Buffers
     (pull request welcome!), but you can replace them with parsed variants in
     your streams using smap, adjust, and friends.</p>
-    
+
     <p>In the Riemann server, custom attributes work just like normal
     attributes on events--they're just a bit slower, owing to the hashmap
     lookup. Just like normal fields, you can use get, assoc, dissoc, update,
@@ -1565,7 +1565,7 @@ to add a nanosecond field as well.</p>
 submit a Message with your query in message.query.string. Search queries will
 return a message with repeated Events matching that expression. A null
 expression will return no states. For some example queries, see <a
-  href="https://github.com/aphyr/riemann/blob/master/test/riemann/test/query.clj">The
+  href="https://github.com/aphyr/riemann/blob/master/test/riemann/query_test.clj">The
   query test suite</a>.</p>
 
 <p>You might find it useful to read the <a
