@@ -1,5 +1,7 @@
 (ns riemann.pubsub-test
   (:use riemann.pubsub
+        riemann.core
+        riemann.index
         clojure.test)
   (:require [riemann.logging :as logging]))
 
@@ -29,9 +31,9 @@
                out2 (atom [])
                foo1 (subscribe! r :foo #(swap! out1 conj %))
                foo2 (subscribe! r :foo #(swap! out2 conj %))]
-               
+
            (publish! r :foo 1)
-          
+
            (unsubscribe! r foo1)
            (publish! r :foo 2)
 
@@ -55,3 +57,17 @@
 
            (is (= @pers [1 2]))
            (is (= @temp [1]))))
+
+(deftest index-subscription-test
+  (let [ps   (pubsub-registry)
+        i    (wrap-index (index) ps)
+        core (logging/suppress
+              ["riemann.core" "riemann.pubsub"]
+              (transition! (core) {:index i :pubsub ps}))
+        l    (atom nil)
+        e1   {:host "a" :service "b" :metric 1}
+        e2   {:host "b" :service "a" :metric 2}]
+    (subscribe! ps "index" (partial swap! l conj))
+    (i e1)
+    (i e2)
+    (is (= @l (list e2 e1)))))

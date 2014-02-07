@@ -67,16 +67,12 @@
                 (filter matching (.values hm))))
 
       (update [this event]
-        (this event))
-
-      (lookup [this host service]
-        (.get hm [host service]))
-
-      clojure.lang.IFn
-      (invoke [this event]
         (if (= "expired" (:state event))
           (delete this event)
           (.put hm [(:host event) (:service event)] event)))
+
+      (lookup [this host service]
+        (.get hm [host service]))
 
       clojure.lang.Seqable
       (seq [this]

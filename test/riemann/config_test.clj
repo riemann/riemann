@@ -50,7 +50,7 @@
   [s]
   ; Is a service
   (is (satisfies? service/Service s))
-  
+
   ; Not present in current core
   (is (not-every? (comp #{s}) (:services @core)))
 
@@ -65,7 +65,7 @@
                       (apply!)
                       (is (some #{s1} (:services @core)))
                       (is (deref (:running s1)))
-                      
+
                       ; Now add an equivalent service
                       (let [s (service/thread-service :foo sleep)
                             s2 (service! s)]
