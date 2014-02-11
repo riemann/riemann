@@ -54,7 +54,7 @@
 
       (expire [this]
               (filter
-                (fn [{:keys [ttl time] :or {ttl default-ttl} :as state}]
+                (fn [{:keys [ttl time] :or {ttl default-ttl time 0} :as state}]
                   (let [age (- (unix-time) time)]
                     (when (> age ttl)
                       (delete this state)
