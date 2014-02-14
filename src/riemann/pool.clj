@@ -50,7 +50,7 @@
               (when thingy
                 (try (close thingy)
                   (catch Throwable t
-                    (warn "Closing" thingy "threw" t)))
+                    (warn t "Closing" thingy "threw")))
                 (future (grow this)))))
 
 (defn fixed-pool
