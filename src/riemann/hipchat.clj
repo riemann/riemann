@@ -1,6 +1,7 @@
 (ns ^{:doc    "Forwards events to HipChat"
       :author "Hubert Iwaniuk"}
   riemann.hipchat
+  (:use [clojure.string :only [join]])
   (:require [clj-http.client :as client]
             [cheshire.core :as json]))
 
@@ -26,18 +27,24 @@
 (def ^:private chat-url
   "https://api.hipchat.com/v1/rooms/message?format=json")
 
-(defn- format-message [{:keys [host service state metric]}]
-  (str "Host: " host
-       ",\nservice: " service
-       ",\nstate: " state
-       ",\nmetric: " metric))
+(defn- format-message [ev]
+  "Formats a message, accepts a single
+  event or a sequence of events."
+  (join "\n\n"
+        (map
+          (fn [e]
+            (str
+              "Host: " (:host e)
+              " \nService: " (:service e)
+              " \nState: " (:state e)
+              " \nMetric: " (:metric e))) ev)))
 
 (defn- format-event [{:keys [room_id from notify message] :as conf} event]
   "Creates an event suitable for posting to hipchat."
   (merge {:color (set-message-colour event)}
          conf
          (when-not message
-           {:message (format-message event)})))
+           {:message (format-message (flatten [event]))})))
 
 (defn- post
   "POST to the HipChat API."
