@@ -4,6 +4,25 @@
   (:require [clj-http.client :as client]
             [cheshire.core :as json]))
 
+(defn- get-state [ev]
+  "Gets the state from an event"
+  (:state ev))
+
+(defn- get-nested-state [ev]
+  "Gets the state from the first event
+  in a vector."
+  (:state (first ev)))
+
+(defn- set-message-colour [ev]
+  "Set the colour to be used in the
+  hipchat message."
+  (let [state (if-let [s (get-state ev)] s (get-nested-state ev))]
+    (condp = state
+      "ok"        "green"
+      "critical"  "red"
+      "error"     "red"
+      "yellow")))
+
 (def ^:private chat-url
   "https://api.hipchat.com/v1/rooms/message?format=json")
 
@@ -14,11 +33,8 @@
        ",\nmetric: " metric))
 
 (defn- format-event [{:keys [room_id from notify message] :as conf} event]
-  (merge {:color (condp = (:state event)
-                   "ok"       "green"
-                   "critical" "red"
-                   "error"    "red"
-                   "yellow")}
+  "Creates an event suitable for posting to hipchat."
+  (merge {:color (set-message-colour event)}
          conf
          (when-not message
            {:message (format-message event)})))
