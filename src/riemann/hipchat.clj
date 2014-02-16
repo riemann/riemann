@@ -5,19 +5,10 @@
   (:require [clj-http.client :as client]
             [cheshire.core :as json]))
 
-(defn- get-state [ev]
-  "Gets the state from an event"
-  (:state ev))
-
-(defn- get-nested-state [ev]
-  "Gets the state from the first event
-  in a vector."
-  (:state (first ev)))
-
 (defn- set-message-colour [ev]
   "Set the colour to be used in the
   hipchat message."
-  (let [state (if-let [s (get-state ev)] s (get-nested-state ev))]
+  (let [state (if-let [s (:state ev)] s (:state (first ev)))]
     (condp = state
       "ok"        "green"
       "critical"  "red"
