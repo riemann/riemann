@@ -15,35 +15,35 @@
 
 (logging/init)
 
-(deftest good_event
+(deftest ^:hipchat ^:integration good_event
   (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test good"
          :metric 42
          :state "ok"})))
 
-(deftest error_event
+(deftest ^:hipchat ^:integration error_event
   (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test error"
          :metric 43
          :state "error"})))
 
-(deftest critical_event
+(deftest ^:hipchat ^:integration critical_event
   (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test critical"
          :metric 44
          :state "critical"})))
 
-(deftest yellow
+(deftest ^:hipchat ^:integration yellow
   (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test yellow"
          :metric 45
          :state "unknown"})))
 
-(deftest multiple_events
+(deftest ^:hipchat ^:integration multiple_events
   (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
     (hc [{:host "localhost"
           :service "hipchat multi 1"
