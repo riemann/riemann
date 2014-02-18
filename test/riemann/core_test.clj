@@ -229,11 +229,11 @@
 
            (try
              ; Send events
-             (update-index core {:metric 1 :time 1})
-             (update-index core {:metric 2 :time 3})
-             (update-index core {:host "kitten"
-                                 :tags ["whiskers" "paws"] :time 2})
-             (update-index core {:service "miao" :host "cat" :time 3})
+             (index {:metric 1 :time 1})
+             (index {:metric 2 :time 3})
+             (index {:host "kitten"
+                     :tags ["whiskers" "paws"] :time 2})
+             (index {:service "miao" :host "cat" :time 3})
 
              (let [r (->> "metric = 2 or service = \"miao\" or tagged \"whiskers\""
                        (query client)
@@ -265,8 +265,8 @@
                                            :index index}))]
 
            ; Insert events
-           (update-index core {:service 1 :ttl 0.01 :time (unix-time)})
-           (update-index core {:service 2 :ttl 1 :time (unix-time)})
+           (index {:service 1 :ttl 0.01 :time (unix-time)})
+           (index {:service 2 :ttl 1 :time (unix-time)})
 
            (advance! 0.011)
 
@@ -300,7 +300,7 @@
                                            :streams [expired-stream]
                                            :index index}))]
 
-           (update-index core {:service 1 :ttl 0.01 :time 0 :tags ["hi"]})
+           (index {:service 1 :ttl 0.01 :time 0 :tags ["hi"]})
            (advance! 2)
            (Thread/sleep 100)
            (is (= @res {:tags ["hi"]
