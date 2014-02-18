@@ -28,7 +28,8 @@
               "Host: " (:host e)
               " \nService: " (:service e)
               " \nState: " (:state e)
-              " \nMetric: " (:metric e))) ev)))
+              " \nMetric: " (:metric e)
+              " \nDescription: " (:description e))) ev)))
 
 (defn- format-event [{:keys [room_id from notify message] :as conf} event]
   "Creates an event suitable for posting to hipchat."
