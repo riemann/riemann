@@ -1,7 +1,7 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
   (:use [riemann.time :only [unix-time]]
-        [riemann.common :only [localhost event]]
+        [riemann.common :only [deprecated localhost event]]
         clojure.tools.logging
         [riemann.instrumentation :only [Instrumented]])
   (:require riemann.streams
@@ -173,12 +173,11 @@
   (info "Hyperspace core shut down"))
 
 (defn update-index
-  "Updates this core's index with an event. Also publishes to the index pubsub
-  channel."
+  "Updates this core's index with an event."
   [core event]
-  (when ((:index core) event)
-    (when-let [registry (:pubsub core)]
-      (ps/publish! registry "index" event))))
+  (deprecated "update-index is redundant; wrap-index provides pubsub
+              integration now."
+              ((:index core) event)))
 
 (defn wrap-index
   "Yield a wrapper to an index, exposing the same protocols as well
@@ -204,7 +203,9 @@
        (search [this query-ast]
          (index/search source query-ast))
        (update [this event]
-         (index/update source event))
+         (index/update source event)
+         (when registry
+           (ps/publish! registry "index" event)))
        (lookup [this host service]
          (index/lookup source host service))
 
@@ -228,9 +229,7 @@
 
        clojure.lang.IFn
        (invoke [this event]
-         (index/update source event)
-         (when registry
-           (ps/publish! registry "index" event))))))
+         (index/update this event)))))
 
 
 (defn delete-from-index
