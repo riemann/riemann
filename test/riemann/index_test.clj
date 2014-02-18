@@ -1,11 +1,12 @@
 (ns riemann.index-test
   (:use riemann.index
+        riemann.core
         riemann.query
         [riemann.time :only [unix-time]]
         clojure.test))
 
 (deftest nbhm-update
-         (let [i (nbhm-index)]
+         (let [i (wrap-index (index))]
            (i {:host 1})
            (i {:host 2})
            (i {:host 1 :service 3 :state :ok})
@@ -17,7 +18,7 @@
                     {:host 1 :service 3 :description "new"}}))))
 
 (deftest nhbm-delete
-         (let [i (nbhm-index)]
+         (let [i (wrap-index (index))]
            (i {:host 1})
            (i {:host 2})
            (delete i {:host 1 :service 1})
@@ -26,7 +27,7 @@
                   #{{:host 1}}))))
 
 (deftest nhbm-search
-         (let [i (nbhm-index)]
+         (let [i (wrap-index (index))]
            (i {:host 1})
            (i {:host 2 :service "meow"})
            (i {:host 3 :service "mrrrow"})
@@ -34,7 +35,7 @@
                   #{{:host 2 :service "meow"}}))))
 
 (deftest nhbm-expire
-         (let [i (nbhm-index)]
+         (let [i (wrap-index (index))]
            (i {:host 1 :ttl 0 :time (unix-time)})
            (i {:host 2 :ttl 10 :time (unix-time)})
            (i {:host 3 :ttl 20 :time (- (unix-time) 21)})
@@ -48,7 +49,7 @@
                   [2]))))
 
 (deftest nbhm-read-index
-         (let [i (nbhm-index)]
+         (let [i (wrap-index (index))]
            (i {:host 1 :service 1 :metric 5})
            (i {:host 1 :service 2 :metric 7})
 
@@ -69,7 +70,7 @@
         not-much (doall (repeatedly 100 random-event))
         a-few    (doall (repeatedly 100000 random-event))
         a-lot    (doall (repeatedly 1000000 random-event))
-        i        (nbhm-index)]
+        i        (wrap-index (nbhm-index))]
     (println "updating and expiring the same 100 events 10000 times:")
     (time (dotimes [iter 10000]
             (do (doseq [event not-much]

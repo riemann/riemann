@@ -61,7 +61,7 @@
                   [ts1 ts2]))))
 
 (deftest start-transition-stop
-         (logging/suppress 
+         (logging/suppress
            ["riemann.core"
             "riemann.pubsub"]
            (let [old-running    (atom nil)
@@ -115,7 +115,7 @@
                (is (= final @new-core))))))
 
 (deftest transition-index
-         (logging/suppress 
+         (logging/suppress
            ["riemann.core" "riemann.pubsub"]
            (testing "Different indexes"
                     (let [old-running (atom nil)
@@ -201,7 +201,7 @@
                        {:metric Long/MIN_VALUE}
                        {:time 1234}
                        {:ttl 12.0}]]
-           
+
            (try
              ; Send events
              (doseq [e events] (send-event client e))
@@ -213,11 +213,11 @@
                (close-client client)
                (logging/suppress ["riemann.core"
                                   "riemann.transport.tcp"
-                                  "riemann.pubsub"] 
+                                  "riemann.pubsub"]
                                  (stop! core))))))
 
 (deftest query-test
-         (let [index  (index)
+         (let [index  (wrap-index (index))
                server (riemann.transport.tcp/tcp-server)
                core   (logging/suppress ["riemann.core"
                                          "riemann.transport.tcp"
@@ -231,7 +231,7 @@
              ; Send events
              (update-index core {:metric 1 :time 1})
              (update-index core {:metric 2 :time 3})
-             (update-index core {:host "kitten" 
+             (update-index core {:host "kitten"
                                  :tags ["whiskers" "paws"] :time 2})
              (update-index core {:service "miao" :host "cat" :time 3})
 
@@ -251,12 +251,12 @@
                  (stop! core))))))
 
 (deftest expires
-         (let [index (index)
+         (let [index (wrap-index (index))
                res (atom nil)
-               expired-stream (riemann.streams/expired 
+               expired-stream (riemann.streams/expired
                                 (fn [e] (reset! res e)))
                reaper (reaper 0.001)
-               core (logging/suppress 
+               core (logging/suppress
                       ["riemann.core"
                        "riemann.transport.tcp"
                        "riemann.pubsub"]
@@ -276,7 +276,7 @@
            ; Kill reaper
            (logging/suppress ["riemann.core" "riemann.pubsub"]
                              (stop! core))
-           
+
            ; Check that index does not contain these states
            (is (= [2] (map (fn [e] (:service e)) index)))
 
@@ -287,7 +287,7 @@
                    :state "expired"}))))
 
 (deftest reaper-keep-keys
-         (let [index (index)
+         (let [index (wrap-index (index))
                res (atom nil)
                expired-stream (riemann.streams/expired
                                 (partial reset! res))
@@ -303,16 +303,16 @@
            (update-index core {:service 1 :ttl 0.01 :time 0 :tags ["hi"]})
            (advance! 2)
            (Thread/sleep 100)
-           (is (= @res {:tags ["hi"] 
+           (is (= @res {:tags ["hi"]
                         :time 2
                         :state "expired"}))))
 
 (deftest percentiles
          (let [out (ref [])
                server (riemann.transport.tcp/tcp-server)
-               stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1] 
+               stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1]
                                                  (riemann.streams/append out))
-               core   (logging/suppress 
+               core   (logging/suppress
                         ["riemann.core"
                          "riemann.transport.tcp"
                          "riemann.pubsub"]
@@ -324,7 +324,7 @@
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
                (send-event client {:metric n :service "per"}))
              (close-client client)
-             
+
              ; Wait for percentiles
              (advance! 1)
 
