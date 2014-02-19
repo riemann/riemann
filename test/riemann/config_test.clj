@@ -204,3 +204,12 @@
            ; Send outside streams
            (pubsub/publish! (:pubsub @core) :test "hi")
            (is (= "hi" @received))))
+
+(deftest index-pubsub-test
+  (let [received (promise)
+        index (index)]
+    (subscribe "index" (partial deliver received))
+    (streams index)
+    (apply!)
+    (core/stream! @core {:service "foo"})
+    (is (= {:service "foo"} (deref received 500 :timeout)))))
