@@ -1377,64 +1377,34 @@ list of tags for a given event. This query will return only "prod" and
 
 <h3>Count total number of hosts</h3>
 
-<p>Sometimes it is useful to know how many hosts are sending data to Riemann.
-This is especially useful in cloud environments where nodes are constantly
-scaling up and down.</p>
+<div class="row">
+  <div class="sixcol">
+    <p>Sometimes it is useful to know how many hosts are sending data to
+    Riemann.  This is especially useful in cloud environments where nodes are
+    constantly scaling up and down. We'll assign every event the same service,
+    use <code>coalesce</code> to combine the current set of hosts and services
+    into a single map, <code>throttle</code> to cut down on the number of
+    updates, and <code>folds/count</code> to count the distinct set of hosts.
+    Finally we'll strip the host from that event, since it represents a
+    property of the entire system, and index it.</p>
+  </div>
 
-<p>We'll create a new stream that will keep track of unique hosts and index it
-as a new service so the Riemann dashboard can query it.</p>
-
+  <div class="sixcol last">
 {% highlight clj %}
-(let [index (default :ttl 300 (update-index (index)))]
-    (streams
-      prn
-      index))
+; All services should be the same
+(with :service "distinct hosts"
+  ; Combine hosts and services
+  (coalesce
+    ; Only one update per second.
+    (throttle 1 1
+      ; Turn lists of events into a single event with the count as its metric
+      (smap folds/count
+        ; Strip host field
+        (with :host nil
+          index)))))
 {% endhighlight %}
-
-<p>Since stream is just a function that takes an event as an argument, we'll add
-an anonymous function to <code>(streams)</code> that will store a set of hosts.</p>
-
-{% highlight clj %}
-(let [hosts (atom #{})]
-  (fn [event]
-    (swap! hosts conj (:host event))
-    (prn :hosts @hosts)
-    (index {:service "unique hosts"
-            :time (unix-time)
-            :metric (count @hosts)})))
-{% endhighlight %}
-
-<p>On the dashboard you can create a gauge view with the following query:</p>
-
-<p><code>(service = "unique hosts")</code></p>
-
-<p>If you created the query correctly, you should see a "Total Count" gauge.</p>
-
-<h3>Count number of hosts by application group</h3>
-
-<p>Let's say events from each host come with a particular tag, like
-"production" or "staging".  You'd like to know how many hosts have a certain
-tag. In riemann.config, try this stream:</p>
-
-{% highlight clj %}
-(let [hosts (atom {})]
-  (fn [event]
-    (let [tag-str (keyword (clojure.string/join "-" (:tags event)))]
-    (swap! hosts update-in [tag-str] (fn [h] (conj (or h #{}) (:host event))))
-    (index {:service (str (name tag-str) "-count")
-            :time (unix-time)
-            :metric (count (tag-str @hosts))}))))
-{% endhighlight %}
-
-<p>The above code will create a unique service using all your tags with "-count"
-appended to the end. For example, if you have "webserver" and "prod" tags, the
-new service that will count unique hosts will be named "webserver-prod-count".
-In your dashboard you can query it like below:</p>
-
-<p><code>(service = "webserver-prod-count")</code></p>
-
-<p> If you create a new gauge view with that query, you will get the current
-count of all your production web servers.  </p>
+  </div>
+</div>
 
 <h2>Integrating with other systems</h2>
 
