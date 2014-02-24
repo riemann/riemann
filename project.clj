@@ -56,6 +56,7 @@
                    :sns :sns
                    :graphite :graphite
                    :librato :librato
+                   :hipchat :hipchat
                    :nagios :nagios
                    :time :time
                    :bench :bench
