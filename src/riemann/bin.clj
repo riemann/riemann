@@ -5,7 +5,7 @@
             riemann.time
             riemann.pubsub)
   (:use clojure.tools.logging)
-  (:gen-class :name riemann.bin))
+  (:gen-class :name riemann.bin_runner))
 
 (def config-file
   "The configuration file loaded by the bin tool" 
