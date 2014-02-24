@@ -71,8 +71,8 @@
                                    ; latency
                                    (let [t1 (System/nanoTime)]
                                      (run-pipeline
-                                       {:error-handler (fn [_] (close ch))}
                                        (enqueue ch (event-to-json event))
+                                       {:error-handler (fn [_] (close ch))}
                                        ; When the write completes, measure
                                        ; latency
                                        (fn measure [_]
