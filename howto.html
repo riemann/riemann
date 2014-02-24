@@ -1118,6 +1118,38 @@ can decide whether an event is worthy of an alert by tagging it:</p>
   </div>
 </div>
 
+<h3>Count total number of hosts</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Sometimes it is useful to know how many hosts are sending data to
+    Riemann.  This is especially useful in cloud environments where nodes are
+    constantly scaling up and down. We'll assign every event the same service,
+    use <code>coalesce</code> to combine the current set of hosts and services
+    into a single map, <code>throttle</code> to cut down on the number of
+    updates, and <code>folds/count</code> to count the distinct set of hosts.
+    Finally we'll strip the host from that event, since it represents a
+    property of the entire system, and index it.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+; All services should be the same
+(with :service "distinct hosts"
+  ; Combine hosts and services
+  (coalesce
+    ; Only one update per second.
+    (throttle 1 1
+      ; Turn lists of events into a single event with the count as its metric
+      (smap folds/count
+        ; Strip host field
+        (with :host nil
+          index)))))
+{% endhighlight %}
+  </div>
+</div>
+
+
 <h3>Alerting when a certain percentage of events happen</h3>
 
 <p>Sometimes you'll have a service that will fail. You might expect one or two
@@ -1374,37 +1406,6 @@ the following query: </p>
 <p>The tagged keyword in the query ensures that the given tag is present in the
 list of tags for a given event. This query will return only "prod" and
 "webservers" hosts.</p>
-
-<h3>Count total number of hosts</h3>
-
-<div class="row">
-  <div class="sixcol">
-    <p>Sometimes it is useful to know how many hosts are sending data to
-    Riemann.  This is especially useful in cloud environments where nodes are
-    constantly scaling up and down. We'll assign every event the same service,
-    use <code>coalesce</code> to combine the current set of hosts and services
-    into a single map, <code>throttle</code> to cut down on the number of
-    updates, and <code>folds/count</code> to count the distinct set of hosts.
-    Finally we'll strip the host from that event, since it represents a
-    property of the entire system, and index it.</p>
-  </div>
-
-  <div class="sixcol last">
-{% highlight clj %}
-; All services should be the same
-(with :service "distinct hosts"
-  ; Combine hosts and services
-  (coalesce
-    ; Only one update per second.
-    (throttle 1 1
-      ; Turn lists of events into a single event with the count as its metric
-      (smap folds/count
-        ; Strip host field
-        (with :host nil
-          index)))))
-{% endhighlight %}
-  </div>
-</div>
 
 <h2>Integrating with other systems</h2>
 
