@@ -71,6 +71,7 @@
                                    ; latency
                                    (let [t1 (System/nanoTime)]
                                      (run-pipeline
+                                       {:error-handler (fn [_] (close ch))}
                                        (enqueue ch (event-to-json event))
                                        ; When the write completes, measure
                                        ; latency
@@ -167,15 +168,25 @@
 (defn ws-handler [core stats]
   "Returns a function which is called with new websocket connections.
   Responsible for routing requests to the appropriate handler."
-  (fn [ch req]
-    (info "Websocket connection from" (:remote-addr req)
-          (:uri req)
-          (:query-string req))
+  (fn handle [ch req]
+    (try
+      (info "Websocket connection from" (:remote-addr req)
+            (:uri req)
+            (:query-string req))
 
-    ; Stats
-    (when (:websocket? req)
-      (swap! (:conns stats) inc)
-      (on-closed ch #(swap! (:conns stats) dec)))
+      ; Stats
+      (when (:websocket? req)
+        (swap! (:conns stats) inc)
+        (on-closed ch #(swap! (:conns stats) dec)))
+
+      ; Route request
+      (condp re-matches (:uri req)
+        #"/events/?"       (put-events-handler @core stats ch req)
+        #"/index/?"        (ws-index-handler @core stats ch req)
+        #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
+        (do
+          (info "Unknown URI " (:uri req) ", closing")
+          (close ch)))
 
     ; Route request
     (condp re-matches (:uri req)
@@ -184,7 +195,9 @@
       #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
       (do
         (info "Unknown URI " (:uri req) ", closing")
-        (close ch)))))
+        (close ch)))
+      (catch Throwable t
+        (warn t "ws-handler caught; closing websocket connection.")))))
 
 (defrecord WebsocketServer [host port core server stats]
   ServiceEquiv
