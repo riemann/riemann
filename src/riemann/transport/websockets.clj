@@ -78,7 +78,8 @@
                                        (fn measure [_]
                                          (metrics/update!
                                            (:out stats)
-                                           (- (System/nanoTime) t1)))))))
+                                           (- (System/nanoTime) t1)))
+                                       {:error-handler (fn [_] (close ch))}))))
 
                                true)]
       (info "New websocket subscription to" topic ":" query)
@@ -188,16 +189,10 @@
           (info "Unknown URI " (:uri req) ", closing")
           (close ch)))
 
-    ; Route request
-    (condp re-matches (:uri req)
-      #"/events/?"       (put-events-handler @core stats ch req)
-      #"/index/?"        (ws-index-handler @core stats ch req)
-      #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
-      (do
-        (info "Unknown URI " (:uri req) ", closing")
-        (close ch)))
       (catch Throwable t
-        (warn t "ws-handler caught; closing websocket connection.")))))
+        (do
+          (warn t "ws-handler caught; closing websocket connection.")
+          (close ch))))))
 
 (defrecord WebsocketServer [host port core server stats]
   ServiceEquiv
