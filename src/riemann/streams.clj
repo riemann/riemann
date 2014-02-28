@@ -79,8 +79,8 @@
   "Catches exceptions, converts them to events, and sends those events to a
   special exception stream.
 
-  (exceptions-to (email \"polito@vonbraun.com\")
-    (execute-on io-pool
+  (exception-stream (email \"polito@vonbraun.com\")
+    (async-queue! :graphite {:core-pool-size 128}
       graph))
 
   Streams often take multiple children and send an event to each using
@@ -99,7 +99,7 @@
   *also* during the evaluation of the child streams themselves, e.g. at the
   invocation time of exceptions itself. If we write
 
-  (exceptions (email ...)
+  (exception-stream (email ...)
     (rate 5 index))
 
   then (rate), when invoked, might need access to this variable immediately.
