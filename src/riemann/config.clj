@@ -28,6 +28,7 @@
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
         [riemann.campfire :only [campfire]]
+        [riemann.kairosdb :only [kairosdb]]
         [riemann.librato :only [librato-metrics]]
         [riemann.nagios :only [nagios]]
         [riemann.hipchat :only [hipchat]]
