@@ -31,8 +31,6 @@
     [com.boundary/high-scale-lib "1.0.3"]
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.4.1"]
-    ; TODO: remove incanter? It's no longer mandatory.
-    [incanter/incanter-core "1.5.4"]
     [interval-metrics "0.0.2"]
     [io.netty/netty "3.8.0.Final"]
     [log4j/apache-log4j-extras "1.0"]

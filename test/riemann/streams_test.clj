@@ -6,8 +6,7 @@
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
-            [riemann.logging :as logging]
-            incanter.stats)
+            [riemann.logging :as logging])
   (:import (java.util.concurrent Executor
                                  CountDownLatch)))
 
@@ -1017,26 +1016,26 @@
             {:time 3 :metric 0 :ttl 1}]))
 
 (deftest fold-interval-test
-         (test-stream-intervals 
-           (riemann.streams/fold-interval 1 :metric incanter.stats/sd)
+         (test-stream-intervals
+           (riemann.streams/fold-interval 1 :metric (partial apply +))
            [{:metric 2} 0.1
             {:metric 4} 0.2
             {:metric 2} 0.3
             {:metric 4} 1.0
             {:metric 100} 0.1
             {:metric 100} 1.0]
-           (em 1.1547005383792515 0.0)))
+           (em 12 200)))
 
 (deftest fold-interval-metric-test
-         (test-stream-intervals 
-           (riemann.streams/fold-interval-metric 1 incanter.stats/sd)
+         (test-stream-intervals
+           (riemann.streams/fold-interval-metric 1 (partial apply +))
            [{:metric 2} 0.1
             {:metric 4} 0.2
             {:metric 2} 0.3
             {:metric 4} 1.0
             {:metric 100} 0.1
             {:metric 100} 1.0]
-           (em 1.1547005383792515 0.0)))
+           (em 12 200)))
 
 (deftest changed-test
          (let [output (ref [])

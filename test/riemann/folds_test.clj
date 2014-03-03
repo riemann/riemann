@@ -3,8 +3,7 @@
   (:use riemann.folds
         riemann.time
         riemann.time.controlled
-        clojure.test)
-  (:require incanter.stats))
+        clojure.test))
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
