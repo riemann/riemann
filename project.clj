@@ -55,6 +55,7 @@
                    :email :email
                    :sns :sns
                    :graphite :graphite
+                   :kairosdb :kairosdb
                    :librato :librato
                    :hipchat :hipchat
                    :nagios :nagios
