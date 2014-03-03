@@ -57,52 +57,60 @@
 (defn ws-pubsub-handler
   "Subscribes to a pubsub channel and streams events back over the WS conn."
   [core stats ch hs]
-  (let [topic  (url-decode (last (split (:uri hs) #"/" 3)))
-        params (http-query-map (:query-string hs))
-        query  (params "query")
-        pred   (query/fun (query/ast query))
-        ; Subscribe persistently.
-        sub    (p/subscribe! (:pubsub core) topic
-                            (fn emit [event]
-                              (when (pred event)
-                                ; Send event to client, measuring write latency
-                                (let [t1 (System/nanoTime)]
-                                  (run-pipeline
-                                    (enqueue ch (event-to-json event))
-                                    ; When the write completes, measure latency
-                                    (fn measure [_]
-                                      (metrics/update!
-                                        (:out stats)
-                                        (- (System/nanoTime) t1)))))))
+  (if-not (:websocket? hs)
+    (warn "Ignoring non-websocket request to websocket server.")
+    (let [topic  (url-decode (last (split (:uri hs) #"/" 3)))
+          params (http-query-map (:query-string hs))
+          query  (params "query")
+          pred   (query/fun (query/ast query))
+          ; Subscribe persistently.
+          sub    (p/subscribe! (:pubsub core) topic
+                               (fn emit [event]
+                                 (when (pred event)
+                                   ; Send event to client, measuring write
+                                   ; latency
+                                   (let [t1 (System/nanoTime)]
+                                     (run-pipeline
+                                       (enqueue ch (event-to-json event))
+                                       {:error-handler (fn [_] (close ch))}
+                                       ; When the write completes, measure
+                                       ; latency
+                                       (fn measure [_]
+                                         (metrics/update!
+                                           (:out stats)
+                                           (- (System/nanoTime) t1)))
+                                       {:error-handler (fn [_] (close ch))}))))
 
-                             true)]
-    (info "New websocket subscription to" topic ":" query)
+                               true)]
+      (info "New websocket subscription to" topic ":" query)
 
-    ; When the channel closes, unsubscribe.
-    (on-closed ch (fn []
-                    (info "Closing websocket " (:remote-addr hs) topic query)
-                    (p/unsubscribe! (:pubsub core) sub)))
+      ; When the channel closes, unsubscribe.
+      (on-closed ch (fn []
+                      (info "Closing websocket " (:remote-addr hs) topic query)
+                      (p/unsubscribe! (:pubsub core) sub)))
 
-    ; Close channel on nil msg
-    (receive-all ch (fn [msg]
-                      (when-not msg
-                        ; Shut down channel
-                        (close ch))))))
+      ; Close channel on nil msg
+      (receive-all ch (fn [msg]
+                        (when-not msg
+                          ; Shut down channel
+                          (close ch)))))))
 
 (defn ws-index-handler
   "Queries the index for events and streams them to the client. If subscribe is
   true, also initiates a pubsub subscription to the index topic with that
   query."
   [core stats ch hs]
-  (let [params (http-query-map (:query-string hs))
-        query  (params "query")
-        ast    (query/ast query)]
-    (when-let [i (:index core)]
-      (doseq [event (index/search i ast)]
-        (enqueue ch (event-to-json event))))
-    (if (= (params "subscribe") "true")
-      (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index"))
-      (close ch))))
+  (if-not (:websocket? hs)
+    (warn "Ignoring non-websocket request to websocket server.")
+    (let [params (http-query-map (:query-string hs))
+          query  (params "query")
+          ast    (query/ast query)]
+      (when-let [i (:index core)]
+        (doseq [event (index/search i ast)]
+          (enqueue ch (event-to-json event))))
+      (if (= (params "subscribe") "true")
+        (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index"))
+        (close ch)))))
 
 (defn json-stream-response
   "Given a channel of events, returns a Ring HTTP response with a body
@@ -143,7 +151,7 @@
     ; Track connections
     (swap! (:conns stats) inc)
     (on-closed body #(swap! (:conns stats) dec))
-    
+
     (->> body
       json-channel
       (map* (fn handle [event]
@@ -161,24 +169,30 @@
 (defn ws-handler [core stats]
   "Returns a function which is called with new websocket connections.
   Responsible for routing requests to the appropriate handler."
-  (fn [ch req]
-    (info "Websocket connection from" (:remote-addr req)
-          (:uri req)
-          (:query-string req))
+  (fn handle [ch req]
+    (try
+      (info "Websocket connection from" (:remote-addr req)
+            (:uri req)
+            (:query-string req))
 
-    ; Stats
-    (when (:websocket? req)
-      (swap! (:conns stats) inc)
-      (on-closed ch #(swap! (:conns stats) dec)))
+      ; Stats
+      (when (:websocket? req)
+        (swap! (:conns stats) inc)
+        (on-closed ch #(swap! (:conns stats) dec)))
 
-    ; Route request
-    (condp re-matches (:uri req)
-      #"/events/?"       (put-events-handler @core stats ch req) 
-      #"/index/?"        (ws-index-handler @core stats ch req)
-      #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
-      (do
-        (info "Unknown URI " (:uri req) ", closing")
-        (close ch)))))
+      ; Route request
+      (condp re-matches (:uri req)
+        #"/events/?"       (put-events-handler @core stats ch req)
+        #"/index/?"        (ws-index-handler @core stats ch req)
+        #"/pubsub/[^/]+/?" (ws-pubsub-handler @core stats ch req)
+        (do
+          (info "Unknown URI " (:uri req) ", closing")
+          (close ch)))
+
+      (catch Throwable t
+        (do
+          (warn t "ws-handler caught; closing websocket connection.")
+          (close ch))))))
 
 (defrecord WebsocketServer [host port core server stats]
   ServiceEquiv

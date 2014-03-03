@@ -50,7 +50,7 @@
   [s]
   ; Is a service
   (is (satisfies? service/Service s))
-  
+
   ; Not present in current core
   (is (not-every? (comp #{s}) (:services @core)))
 
@@ -65,7 +65,7 @@
                       (apply!)
                       (is (some #{s1} (:services @core)))
                       (is (deref (:running s1)))
-                      
+
                       ; Now add an equivalent service
                       (let [s (service/thread-service :foo sleep)
                             s2 (service! s)]
@@ -204,3 +204,12 @@
            ; Send outside streams
            (pubsub/publish! (:pubsub @core) :test "hi")
            (is (= "hi" @received))))
+
+(deftest index-pubsub-test
+  (let [received (promise)
+        index (index)]
+    (subscribe "index" (partial deliver received))
+    (streams index)
+    (apply!)
+    (core/stream! @core {:service "foo"})
+    (is (= {:service "foo"} (deref received 500 :timeout)))))

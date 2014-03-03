@@ -57,7 +57,7 @@
    ["riemann.transport" "riemann.core" "riemann.pubsub"]
    (let [s1       (tcp-server)
          s2       (sse-server)
-         index    (index/index)
+         index    (wrap-index (index/index))
          pubsub   (pubsub/pubsub-registry)
          core     (transition!
                    (core)
@@ -95,8 +95,8 @@
                        (encode {:ok true}))]
 
              (try
-               (enqueue client {:host "localhost" 
-                                :port 5555 
+               (enqueue client {:host "localhost"
+                                :port 5555
                                 :message msg})
                (Thread/sleep 100)
                (finally
@@ -109,7 +109,7 @@
                              "riemann.core"
                              "riemann.pubsub"]
     (let [server (tcp-server server-opts)
-          index (index/index)
+          index (wrap-index (index/index))
           core (transition! (core) {:index index
                                     :services [server]
                                     :streams [index]})]

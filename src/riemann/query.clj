@@ -1,8 +1,9 @@
 (ns riemann.query
   "The query parser. Parses strings into ASTs, and converts ASTs to functions
   which match events."
-  (:use riemann.common)
-  (:use [slingshot.slingshot :only [throw+ try+]])
+  (:use riemann.common
+        [slingshot.slingshot :only [throw+ try+]])
+  (:require [clojure.core.cache :as cache])
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
            (org.antlr.runtime.tree BaseTree)
@@ -80,6 +81,11 @@
   [string]
   (node-ast (parse-string string)))
 
+(def fun-cache
+  "Speeds up the compilation of queries by caching map of ASTs to corresponding
+  functions."
+  (atom (cache/lru-cache-factory {} :threshold 64)))
+
 (defn fun
   "Transforms an AST into a fn [event] which returns true if the query matches
   that event. Example:
@@ -88,16 +94,23 @@
   (q {:metric 1}) => false
   (q {:metric 3}) => true"
   [ast]
-  (eval
-    (list 'fn ['event]
-      (list 'let '[host        (:host event)
-                   service     (:service event)
-                   state       (:state event)
-                   description (:description event)
-                   metric_f    (:metric_f event)
-                   metric      (:metric event)
-                   time        (:time event)
-                   tags        (:tags event)
-                   ttl         (:ttl event)
-                   member?     riemann.common/member?]
-        ast))))
+  (if-let [fun (cache/lookup @fun-cache ast)]
+    ; Cache hit
+    (do (swap! fun-cache cache/hit ast)
+        fun)
+    ; Cache miss
+    (let [fun (eval
+                (list 'fn ['event]
+                      (list 'let '[host        (:host event)
+                                   service     (:service event)
+                                   state       (:state event)
+                                   description (:description event)
+                                   metric_f    (:metric_f event)
+                                   metric      (:metric event)
+                                   time        (:time event)
+                                   tags        (:tags event)
+                                   ttl         (:ttl event)
+                                   member?     riemann.common/member?]
+                            ast)))]
+      (swap! fun-cache cache/miss ast fun)
+      fun)))

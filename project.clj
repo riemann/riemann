@@ -4,7 +4,7 @@
   :url "http://github.com/aphyr/riemann"
 ;  :warn-on-reflection true
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
-  :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods"]
+  :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-XX:+CMSClassUnloadingEnabled"]
   :repositories {
     "boundary-site" "http://maven.boundary.com/artifactory/repo"
   }
@@ -15,6 +15,7 @@
     [org.clojure/math.numeric-tower "0.0.2"]
     [org.clojure/tools.logging "0.2.6"]
     [org.clojure/tools.nrepl "0.2.3"]
+    [org.clojure/core.cache "0.6.3"]
     [org.clojure/java.classpath "0.2.1"]
     [clojure-complete "0.2.3"]
     [log4j/log4j "1.2.16" :exclusions [javax.mail/mail
@@ -52,7 +53,9 @@
                    :email :email
                    :sns :sns
                    :graphite :graphite
+                   :kairosdb :kairosdb
                    :librato :librato
+                   :hipchat :hipchat
                    :nagios :nagios
                    :time :time
                    :bench :bench

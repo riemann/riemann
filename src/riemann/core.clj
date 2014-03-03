@@ -1,12 +1,12 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
   (:use [riemann.time :only [unix-time]]
-        [riemann.common :only [localhost event]]
+        [riemann.common :only [deprecated localhost event]]
         clojure.tools.logging
         [riemann.instrumentation :only [Instrumented]])
   (:require riemann.streams
-            [riemann.service :as service]
-            [riemann.index :as index]
+            [riemann.service :as service :refer [Service ServiceEquiv]]
+            [riemann.index :as index :refer [Index]]
             [riemann.pubsub :as ps]
             [riemann.instrumentation :as instrumentation]
             clojure.set))
@@ -173,12 +173,64 @@
   (info "Hyperspace core shut down"))
 
 (defn update-index
-  "Updates this core's index with an event. Also publishes to the index pubsub
-  channel."
+  "Updates this core's index with an event."
   [core event]
-  (when ((:index core) event)
-    (when-let [registry (:pubsub core)]
-      (ps/publish! registry "index" event))))
+  (deprecated "update-index is redundant; wrap-index provides pubsub
+              integration now."
+              ((:index core) event)))
+
+(defn wrap-index
+  "Yield a wrapper to an index, exposing the same protocols as well
+   as IFn which will index an event. If a second argument is present
+   it should implement the PubSub interface and will be notified
+   when events are updated in the index."
+  ([source]
+     (wrap-index source nil))
+  ([source registry]
+     (reify
+       Object
+       (equals [this other]
+         (= source other))
+       Index
+       (clear [this]
+         (index/clear source))
+       (delete [this event]
+         (index/delete source event))
+       (delete-exactly [this event]
+         (index/delete-exactly source event))
+       (expire [this]
+         (index/expire source))
+       (search [this query-ast]
+         (index/search source query-ast))
+       (update [this event]
+         (index/update source event)
+         (when registry
+           (ps/publish! registry "index" event)))
+       (lookup [this host service]
+         (index/lookup source host service))
+
+       clojure.lang.Seqable
+       (seq [this]
+         (seq source))
+
+       ServiceEquiv
+       (equiv? [this other]
+         (service/equiv? source other))
+
+       Service
+       (conflict? [this other]
+         (service/conflict? source other))
+       (reload! [this new-core]
+         (service/reload! source new-core))
+       (start! [this]
+         (service/start! source))
+       (stop! [this]
+         (service/stop! source))
+
+       clojure.lang.IFn
+       (invoke [this event]
+         (index/update this event)))))
+
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the

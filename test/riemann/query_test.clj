@@ -151,7 +151,7 @@
             [{:host 2 :service 3}]))
 
 (deftest fast
-         (let [fun (fun (ast 
+         (let [fun (fun (ast
                       "host =~ \"api %\" and state = \"ok\" and metric > 0"))
                events (cycle [{:host "api 1" :state "ok" :metric 1.2}
                               {:host "other" :state "ok" :metric 1.2}
@@ -162,3 +162,8 @@
            (doseq [e (take 1000 events)]
              (fun e))
            (is (< (- (linear-time) t1) 0.05))))
+
+(deftest memory-test
+  (let [ast (ast "metric = 4")]
+      (dotimes [i 1e3]
+        (fun ast))))

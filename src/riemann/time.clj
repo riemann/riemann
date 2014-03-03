@@ -152,8 +152,7 @@
             (try
               (run task)
               (catch Throwable t
-                (warn "running task threw"
-                  (with-out-str (clojure.stacktrace/print-stack-trace t)))))
+                (warn t "running task threw")))
             (when-let [task' (succ task)]
               ; Schedule the next task.
               (schedule-sneaky! task')))
@@ -166,8 +165,7 @@
           ; No task available; park for a bit and try again.
           (LockSupport/parkNanos (ceil (* 1000000000 park-interval)))))
       (catch Throwable t
-        (warn "caught"
-              (with-out-str (clojure.stacktrace/print-stack-trace t)))))))
+        (warn t "riemann.time task threw")))))
 
 (defn stop!
   "Stops the task threadpool. Waits for threads to exit."
