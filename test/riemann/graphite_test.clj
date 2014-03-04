@@ -75,3 +75,22 @@
                :description "all clear, uh, situation normal"
                :metric 4
                :time (unix-time)})))
+
+(deftest graphite-decode-line
+  (is (= {:service "foo" :metric 1.0 :time 123}
+         (graphite-server/decode-graphite-line "foo 1.0 123" nil)))
+
+  (is (= {:service "foo" :metric 1.0 :time 123}
+         (graphite-server/decode-graphite-line "foo\t1.0\t123" nil)))
+
+  (is (= {:service "foo" :metric 1.0 :time 123}
+         (graphite-server/decode-graphite-line "foo  1.0  123" nil)))
+
+  (is (= {:service "foo" :metric 1.0 :time 123}
+         (graphite-server/decode-graphite-line "foo  1.0 \t 123" nil)))
+
+  (is (= {:ok :true, :service "exception"}
+         (graphite-server/decode-graphite-line "foo  1.0 " nil)))
+
+  (is (= {:service "foo" :metric 1.0 :time 123}
+         (graphite-server/decode-graphite-line "foo 1.0 123 random stuff after" nil))))
