@@ -18,7 +18,6 @@ PATH=/sbin:/usr/sbin:/bin:/usr/bin:/usr/local/bin
 DESC="Riemann"
 NAME=riemann
 DAEMON=/usr/bin/riemann
-DAEMON_ARGS="/etc/riemann/riemann.config"
 DAEMON_USER=riemann
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
@@ -28,6 +27,11 @@ SCRIPTNAME=/etc/init.d/$NAME
 
 # Read configuration variable file if it is present
 [ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+RIEMANN_PATH_CONF=${RIEMANN_PATH_CONF:-/etc/${NAME}}
+RIEMANN_CONFIG=${RIEMANN_CONFIG:-${RIEMANN_PATH_CONF}/riemann.config}
+
+DAEMON_OPTS="${RIEMANN_OPTS} ${RIEMANN_CONFIG}"
 
 # Load the VERBOSE setting and other rcS variables
 . /lib/init/vars.sh
@@ -50,7 +54,7 @@ do_start()
     return 1
   fi
   start-stop-daemon --start --quiet --chuid $DAEMON_USER --chdir / --make-pidfile --background --pidfile $PIDFILE --exec $DAEMON -- \
-    $DAEMON_ARGS \
+    $DAEMON_OPTS \
     || return 2
   # Add code here, if necessary, that waits for the process to be ready
   # to handle requests from services started subsequently which depend
