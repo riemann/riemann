@@ -7,7 +7,7 @@
             [riemann.index :as index]
             [riemann.core :refer [transition! core stop! wrap-index]]
             [riemann.transport.tcp :refer [tcp-server]]
-            [riemann.transport.graphite :refer [graphite-server]]))
+            [riemann.transport.graphite :as tg :refer [graphite-server]]))
 
 (logging/init)
 
@@ -78,19 +78,19 @@
 
 (deftest graphite-decode-line
   (is (= {:service "foo" :metric 1.0 :time 123}
-         (graphite-server/decode-graphite-line "foo 1.0 123" nil)))
+         (tg/decode-graphite-line "foo 1.0 123" nil)))
 
   (is (= {:service "foo" :metric 1.0 :time 123}
-         (graphite-server/decode-graphite-line "foo\t1.0\t123" nil)))
+         (tg/decode-graphite-line "foo\t1.0\t123" nil)))
 
   (is (= {:service "foo" :metric 1.0 :time 123}
-         (graphite-server/decode-graphite-line "foo  1.0  123" nil)))
+         (tg/decode-graphite-line "foo  1.0  123" nil)))
 
   (is (= {:service "foo" :metric 1.0 :time 123}
-         (graphite-server/decode-graphite-line "foo  1.0 \t 123" nil)))
+         (tg/decode-graphite-line "foo  1.0 \t 123" nil)))
 
   (is (= {:ok :true, :service "exception"}
-         (graphite-server/decode-graphite-line "foo  1.0 " nil)))
+         (tg/decode-graphite-line "foo  1.0 " nil)))
 
   (is (= {:service "foo" :metric 1.0 :time 123}
-         (graphite-server/decode-graphite-line "foo 1.0 123 random stuff after" nil))))
+         (tg/decode-graphite-line "foo 1.0 123 random stuff after" nil))))
