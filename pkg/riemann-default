@@ -3,3 +3,12 @@
 
 # Optional JAVA_OPTS
 # EXTRA_JAVA_OPTS=
+
+# Alternative path to config directory
+# RIEMANN_PATH_CONF=
+
+# Alternative path to config file
+# RIEMANN_CONFIG=
+
+# Additional options to pass to riemann on startup
+# RIEMANN_OPTS=
