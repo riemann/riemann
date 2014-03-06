@@ -1258,27 +1258,34 @@
                s (coalesce #(reset! out %))
                a1 {:service :a :state "one" :time 0}
                b1 {:service :b :state "one" :time 0}
-               a2 {:service :a :state "two" :time 0 :ttl 1}
+               a2 {:service :a :state "two" :time 3 :ttl 2}
                c1 {:service :c :state "one" :time 0}
                b2 {:service :b :state "two" :time 0}]
 
            (s a1)
+           (advance! 1.1)
            (is (= (set @out) #{a1}))
 
            (s b1)
+           (advance! 2.1)
            (is (= (set @out) #{a1 b1}))
 
            (s a2)
+           (advance! 3.1)
            (is (= (set @out) #{a2 b1}))
 
            ; Wait for ttl expiry of a2
-           (advance! 2)
-
            ; Should receive expired a2 once
+
+           ; a2 arrived at 3, expired at 5,
+           ; and the final expiry flush happens at 6
+           ; (due to the batching in coalesce)
            (s c1)
+           (advance! 6.1)
            (is (= (set @out) #{a2 b1 c1}))
            
            (s b2)
+           (advance! 7.1)
            (is (= (set @out) #{b2 c1}))))
 
 (deftest stable-test
