@@ -14,14 +14,15 @@
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
                                   shared-execution-handler]]
-        [clojure.string :only [split]]))
+        [clojure.string :only [split
+                               join]]))
 
 (defn decode-graphite-line
   "Decode a line coming from graphite.
   Graphite uses a simple scheme where each metric is given as a CRLF delimited
   line, space split with three items:
 
-  * The metric name
+  * The metric name (which might contain spaces)
   * The metric value (optionally NaN)
   * The timestamp
 
@@ -31,14 +32,15 @@
   graphite metrics have known patterns that you wish to extract more
   information (host, refined service name, tags) from"
   [line parser-fn]
-  (when-let [[service ^String metric ^String timestamp] (split line #" ")]
-    (when (not= metric "nan") ;; discard nan values
-      (try
-        (let [res {:service service
-                   :metric (Float. metric)
-                   :time (Long. timestamp)}]
-          (if parser-fn (merge res (parser-fn res)) res))
-        (catch Exception e {:ok :true :service "exception"})))))
+  (let [[timestamp metric & service-splits] (reverse (split line #" "))]
+    (let [service (join "_" (reverse service-splits))]
+      (when (not= metric "nan") ;; discard nan values
+        (try
+          (let [res {:service service
+                     :metric (Float. metric)
+                     :time (Long. timestamp)}]
+            (if parser-fn (merge res (parser-fn res)) res))
+          (catch Exception e {:ok :true :service "exception"}))))))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
