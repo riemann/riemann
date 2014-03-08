@@ -38,7 +38,7 @@
                      :metric (Float. metric)
                      :time (Long. timestamp)}]
             (if parser-fn (merge res (parser-fn res)) res))))
-  (catch Exception e {:ok :true :service "exception"})))
+  (catch Exception e {:ok :true :service "exception" :line line})))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
