@@ -60,20 +60,20 @@
   :files           A list of files to log to. If provided, a seq is expected
                    containing maps with a :path and an optional :layout key
                    which can be any of: :riemann, :json-event :json-eventv1
-  
+
   Example:
-  
+
   (init {:console false :file \"/var/log/riemann.log\"})"
   [& opts]
   ;; Reset loggers
   (let [{:keys [file
                 files
-                console
-                console-layout]} (if (and (= 1 (count opts))
-                                          (map? (first opts)))
-                                   (first opts)
-                                   (apply array-map opts))
-         console (or console true)
+                console-layout]
+         :as opts} (if (and (= 1 (count opts))
+                            (map? (first opts)))
+                     (first opts)
+                     (apply array-map opts))
+         console (get opts :console true)
          logger (doto (Logger/getRootLogger) (.removeAllAppenders))]
 
     (when console
