@@ -960,7 +960,7 @@
   This implementation of top is lazy, in the sense that it won't proactively
   expire events which are bumped from the top-k set--you have to wait for
   another event with the same host and service to arrive before child streams
-  will know it's expired." 
+  will know it's expired."
   ([k f top-stream]
      (top k f top-stream bit-bucket nil))
   ([k f top-stream bottom-stream]
@@ -1237,7 +1237,7 @@
 (defn scale
   "Passes on a changed version of each event by multiplying each
    metric with the given scale factor.
-  
+
   ; Convert bytes to kilobytes
   (scale 1/1024 index)"
   [factor & children]
@@ -1319,22 +1319,18 @@
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options (first children)
-        previous (ref
-                   (when (map? options)
-                     (:init options)))
+  (let [options  (first children)
+        previous (atom (list (when (map? options)
+                               (:init options))))
         children (if (map? options)
                    (rest children)
                    children)]
     (fn stream [event]
-      (when
-        (dosync
-          (let [cur (pred event)
-                old (deref previous)]
-            (when-not (= cur old)
-              (ref-set previous cur)
-              true)))
-        (call-rescue event children)))))
+      (let [cur  (pred event)
+            kept (swap! previous (comp (partial take 2)
+                                       #(conj % cur)))]
+        (when-not (every? (partial = cur) kept)
+          (call-rescue event children))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."
@@ -1629,10 +1625,10 @@
   as -. = events are passed to children, and - events are ignored.
 
        A spike           Flapping           Stable changes
-  |                 |                    |                    
-  |       -         |    -- -   ======   |      =====        
+  |                 |                    |
+  |       -         |    -- -   ======   |      =====
   |                 |        -           |           ========
-  |======= ======   |====  -  --         |======              
+  |======= ======   |====  -  --         |======
   +------------->   +---------------->   +------------------>
         time              time                  time
 
