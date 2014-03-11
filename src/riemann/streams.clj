@@ -1054,19 +1054,29 @@
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
-  service/host combination that passes through it (limited by :ttl). Every time
-  it receives an event, it passes on *all* events it remembers. When events
+  service/host combination that passes through it (limited by :ttl). Every second,
+  it passes on *all* events it remembers. When events
   expire, they are included in the emitted sequence of events *once*, and
   removed from the state table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
   to average the CPU use over several hosts."
-  [& children]
-  (coalesce-with-event
-    (fn keyfn [event]
-      [(:host event) (:service event)])
-    (fn drop [event events]
-      (call-rescue events children))))
+  [& [dt & children]]
+  (let [children (if (number? dt) children (cons dt children))
+        dt (if (number? dt) dt 1)
+        chm (java.util.concurrent.ConcurrentHashMap.)
+        callback (fn callback []
+                   (let [es (seq (.values chm))
+                         expired (filter expired? es)]
+                     (doseq [e expired
+                             :let [s (:service e)
+                                   h (:host e)]]
+                       (.remove chm [s h] e))
+                     (call-rescue es children)))
+        period-manager (periodically-until-expired dt callback)]
+    (fn [e]
+      (.put chm [(:service e) (:host e)] e)
+      (period-manager e))))
 
 (defn append
   "Conj events onto the given reference"
