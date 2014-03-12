@@ -58,6 +58,7 @@
                    :librato :librato
                    :hipchat :hipchat
                    :nagios :nagios
+                   :opentsdb :opentsdb
                    :time :time
                    :bench :bench
                    :focus :focus
