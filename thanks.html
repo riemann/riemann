@@ -58,7 +58,8 @@ layout: default
       <p>Ben Agricola (benagricola) added a maximum to the Flot view.</p>
 
       <p>Sebastian Blask (sblask) helped fix a bug in the logger which
-      prevented users from disabling console logging.</p>
+      prevented users from disabling console logging, and improved the Graphite
+      server's handling of malformed lines.</p>
 
       <p>Marc Falzon (falzm) fixed a typo in the howto.</p>
 
@@ -111,7 +112,8 @@ layout: default
       helped clean up a bunch of old issues, and fixed a bug causing the local
       hostname to throw when DNS failed, *and* helped with changes to the index
       supporting IFn. To make matters worse, he committed performance
-      improvements to streams/changed.</p>
+      improvements to streams/changed, sum-over-time, part-time-fast-interval,
+      mean-over-time, and several others.</p>
 
       <p>Gavin Sandy (gsandie) included hipchat in riemann.config.</p>
 
@@ -436,12 +438,14 @@ layout: default
 
       <p>Manos fixed a paren mismatch in the howto.</p>
 
-      <p>Pierre-Yves Ritschard (pyr) formalized the protocol for riemann servers and
-      split up the riemann.server namespace into distinct, modular transports. He
-      suppressed the unnecessary close-channel logging messages from the TCP server.
-      Pyr added streams/stream for composing streams together, and streams/split,
-      split*, and splitp for branching conditionals. And riemann-puppet-ring. And
-      riemann-mysql. As if that wasn't enough, he added debian package timestamps for snapshot builds. Jeez that guy's been busy! :D</p>
+      <p>Pierre-Yves Ritschard (pyr) formalized the protocol for riemann
+      servers and split up the riemann.server namespace into distinct, modular
+      transports. He suppressed the unnecessary close-channel logging messages
+      from the TCP server.  Pyr added streams/stream for composing streams
+      together, and streams/split, split*, and splitp for branching
+      conditionals. And riemann-puppet-ring. And riemann-mysql. As if that
+      wasn't enough, he added debian package timestamps for snapshot builds.
+      Jeez that guy's been busy! :D</p>
 
       <h2>0.1.5</h2>
 
