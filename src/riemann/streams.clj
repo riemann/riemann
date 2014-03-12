@@ -1079,14 +1079,13 @@
   "Conj events onto the given reference"
   [reference]
   (fn stream [event]
-    (dosync
-      (alter reference conj event))))
+    (swap! reference conj event)))
 
 (defn register
   "Set reference to the most recent event that passes through."
   [reference]
   (fn stream [event]
-    (dosync (ref-set reference event))))
+    (reset! reference event)))
 
 (defn forward
   "Sends an event through a client"
