@@ -811,11 +811,10 @@
   time .95'."
   [interval points & children]
   (part-time-fast interval
-                (fn setup [] (ref []))
-                (fn add [r event] (dosync (alter r conj event)))
+                (fn setup [] (atom []))
+                (fn add [r event] (swap! r conj event))
                 (fn finish [r start end]
-                  (let [samples (dosync
-                                  (folds/sorted-sample (deref r) points))]
+                  (let [samples (folds/sorted-sample @r points)]
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn counter
