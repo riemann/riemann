@@ -73,7 +73,6 @@
                   {:service "foo bar 0.999"})
                 "foo.bar.999")))
 
-(comment
 (deftest ^:graphite ^:integration graphite-test
          (let [g (graphite {:block-start true})]
            (g {:host "riemann.local"
@@ -95,4 +94,4 @@
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 4
-               :time (unix-time)}))))
+               :time (unix-time)})))
