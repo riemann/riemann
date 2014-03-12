@@ -31,14 +31,14 @@
   graphite metrics have known patterns that you wish to extract more
   information (host, refined service name, tags) from"
   [line parser-fn]
-  (when-let [[service ^String metric ^String timestamp] (split line #" ")]
-    (when (not= metric "nan") ;; discard nan values
-      (try
-        (let [res {:service service
-                   :metric (Float. metric)
-                   :time (Long. timestamp)}]
-          (if parser-fn (merge res (parser-fn res)) res))
-        (catch Exception e {:ok :true :service "exception"})))))
+  (try
+    (when-let [[service ^String metric ^String timestamp] (split line #"\s+")]
+      (when (not= metric "nan") ;; discard nan values
+          (let [res {:service service
+                     :metric (Float. metric)
+                     :time (Long. timestamp)}]
+            (if parser-fn (merge res (parser-fn res)) res))))
+  (catch Exception e {:ok :true :service "exception" :line line})))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
