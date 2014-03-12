@@ -14,7 +14,21 @@
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
                                   shared-execution-handler]]
-        [clojure.string :only [split]]))
+        [clojure.core.match :only [match]]
+        [clojure.string :only [split
+                               join]]
+        [clojure.tools.logging :only [warn]]))
+
+(defn call-parser-fn
+  "After error handling was done in decode-graphite-line, simply call
+  parser-fun if given"
+  [service metric timestamp parser-fn]
+  (let [result {:service service
+                :metric  metric
+                :time timestamp}]
+    (match parser-fn
+      nil result
+      _   (merge result (parser-fn result)))))
 
 (defn decode-graphite-line
   "Decode a line coming from graphite.
@@ -31,14 +45,17 @@
   graphite metrics have known patterns that you wish to extract more
   information (host, refined service name, tags) from"
   [line parser-fn]
-  (when-let [[service ^String metric ^String timestamp] (split line #" ")]
-    (when (not= metric "nan") ;; discard nan values
+  (match [(split line #" ")]
+    [[_ "nan" _]]
+      (warn "Got metric which is NaN")
+    [[service metric timestamp]]
       (try
-        (let [res {:service service
-                   :metric (Float. metric)
-                   :time (Long. timestamp)}]
-          (if parser-fn (merge res (parser-fn res)) res))
-        (catch Exception e {:ok :true :service "exception"})))))
+        (call-parser-fn service (Float. metric) (Long. timestamp) parser-fn)
+        (catch NumberFormatException e
+          (warn (join ["Got metric/timestamp in wrong format", line]))))
+    :else
+      (warn (join ["Got malformed line `" line "`"]))
+    ))
 
 (defn graphite-frame-decoder
   "A closure which yields a graphite frame-decoder. Taking an argument
@@ -73,12 +90,12 @@
                                       (gen-udp-handler
                                         core nil channel-group graphite-handler))
            pipeline-factory (channel-pipeline-factory
-                              frame-decoder  (DelimiterBasedFrameDecoder. 
+                              frame-decoder  (DelimiterBasedFrameDecoder.
                                                1024
                                                (Delimiters/lineDelimiter))
-                              ^:shared string-decoder (StringDecoder. 
+                              ^:shared string-decoder (StringDecoder.
                                                         CharsetUtil/UTF_8)
-                              ^:shared string-encoder (StringEncoder. 
+                              ^:shared string-encoder (StringEncoder.
                                                         CharsetUtil/UTF_8)
                               ^:shared executor shared-execution-handler
                               ^:shared graphite-decoder (graphite-frame-decoder
