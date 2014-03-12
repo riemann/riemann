@@ -854,11 +854,10 @@
   stream is called, but with summed metric."
   [& children]
   (deprecated "Use streams/counter"
-              (let [sum (ref 0)]
+              (let [sum (atom 0)]
                 (fn stream [event]
-                  (let [s (dosync
-                            (when-let [m (:metric event)]
-                              (commute sum + (:metric event))))
+                  (let [s (when-let [m (:metric event)]
+                            (swap! sum + (:metric event)))
                         event (assoc event :metric s)]
                     (call-rescue event children))))))
 
