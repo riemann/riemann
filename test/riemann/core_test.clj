@@ -181,7 +181,7 @@
                         (is (= final @old-core)))))))
 
 (deftest serialization
-         (let [out (ref [])
+         (let [out (atom [])
                server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/append out)
                core   (logging/suppress ["riemann.transport.tcp"
@@ -308,7 +308,7 @@
                         :state "expired"}))))
 
 (deftest percentiles
-         (let [out (ref [])
+         (let [out (atom [])
                server (riemann.transport.tcp/tcp-server)
                stream (riemann.streams/percentiles 1 [0 0.5 0.95 0.99 1]
                                                  (riemann.streams/append out))

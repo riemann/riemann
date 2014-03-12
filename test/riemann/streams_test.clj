@@ -18,7 +18,7 @@
 (defmacro run-stream
   "Applies inputs to stream, and returns outputs."
   [stream inputs]
-  `(let [out# (ref [])
+  `(let [out# (atom [])
          stream# (~@stream (append out#))]
      (doseq [e# ~inputs] (stream# e#))
      (deref out#)))
@@ -27,7 +27,7 @@
   "Applies a seq of alternating events and intervals (in seconds) between them
   to stream, returning outputs."
   [stream inputs-and-intervals]
-  `(let [out# (ref [])
+  `(let [out# (atom [])
          stream# (~@stream (append out#))
          start-time# (ref (unix-time))
          next-time# (ref (deref start-time#))]
@@ -50,7 +50,7 @@
   "Exposes a fake index, verifies that the given stream, taking inputs,
   forwards outputs to children"
   [sym stream inputs outputs]
-  `(let [out#    (ref [])
+  `(let [out#    (atom [])
          ~sym    (append out#)
          stream# ~stream]
      (doseq [e# ~inputs] (stream# e#))
@@ -74,7 +74,7 @@
   (vec (map (fn [m] {:metric m}) metrics)))
 
 (deftest combine-test
-         (let [r (ref nil)
+         (let [r (atom nil)
                sum (combine folds/sum (register r))
                min (combine folds/minimum (register r))
                max (combine folds/maximum (register r))
@@ -529,7 +529,7 @@
 
 
          (testing "tagged (one tag)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged "foo") (append r))
                         events [{}
                                 {:tags []}
@@ -541,7 +541,7 @@
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
          (testing "tagged-all (one tag)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged-all "foo") (append r))
                         events [{}
                                 {:tags []}
@@ -553,7 +553,7 @@
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
          (testing "tagged-any (one tag)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged-any "foo") (append r))
                         events [{}
                                 {:tags []}
@@ -565,7 +565,7 @@
                            [{:tags ["foo"]} {:tags ["foo" "bar"]}]))))
 
          (testing "tagged (multiple tags)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged ["foo" "bar"]) (append r))
                         events [{}
                                 {:tags []}
@@ -578,7 +578,7 @@
                            [{:tags ["foo" "bar"]} {:tags ["foo" "bar" "baz"]}]))))
 
          (testing "tagged-all (multiple tags)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged-all ["foo" "bar"]) (append r))
                         events [{}
                                 {:tags []}
@@ -591,7 +591,7 @@
                            [{:tags ["foo" "bar"]} {:tags ["foo" "bar" "baz"]}]))))
 
          (testing "tagged-any (multiple tags)"
-                  (let [r (ref [])
+                  (let [r (atom [])
                         s (where (tagged-any ["foo" "bar"]) (append r))
                         events [{}
                                 {:tags []}
@@ -659,7 +659,7 @@
                   (is (= nil ((where nil) :zoooom!)))))
 
 (deftest default-kv
-         (let [r (ref nil)
+         (let [r (atom nil)
                s (default :service "foo" (register r))]
            (s {:service nil})
            (is (= {:service "foo"} (deref r)))
@@ -671,7 +671,7 @@
            (is (= {:service "bar" :test "baz"} (deref r)))))
 
 (deftest default-map
-         (let [r (ref nil)
+         (let [r (atom nil)
                s (default {:service "foo" :state nil} (register r))]
            (s (event {:service nil}))
            (is (= "foo" (:service (deref r))))
@@ -1038,13 +1038,12 @@
            (em 12 200)))
 
 (deftest changed-test
-         (let [output (ref [])
-               r (changed :state
-                          (fn [event] (dosync (alter output conj event))))
-               r2 (changed :state {:init :ok} 
+         (let [output (atom [])
+               r (changed :state (append output))
+               r2 (changed :state {:init :ok}
                            (append output))
                states [:ok :bad :bad :ok :ok :ok :evil :bad]]
-           
+
            ; Apply states
            (doseq [state states]
              (r {:state state}))
@@ -1054,13 +1053,13 @@
                   (vec (map (fn [s] (:state s)) (deref output)))))
 
            ; Test with init
-           (dosync (ref-set output []))
+           (reset! output [])
            (doseq [state states]
              (r2 {:state state}))
-           
+
            (is (= [:bad :ok :evil :bad]
                   (vec (map (fn [s] (:state s)) (deref output)))))))
-           
+
 (deftest changed-state-test
          ; Each test stream keeps track of the first host/service it sees, and
          ; confirms that each subsequent event matches that host, and that
@@ -1412,7 +1411,7 @@
             [nil {:service "bar" :state "ok2"}]]))
 
 (deftest adjust-test
-  (let [out (ref nil)
+  (let [out (atom nil)
         s (adjust [:state str " 2"] (register out))]
 
     (s {})
@@ -1421,7 +1420,7 @@
     (s {:state "hey" :service "bar"})
     (is (= (deref out) {:state "hey 2" :service "bar"})))
 
-  (let [out (ref nil)
+  (let [out (atom nil)
         s (adjust #(assoc % :metric (count (:tags %)))
                   (register out))]
 

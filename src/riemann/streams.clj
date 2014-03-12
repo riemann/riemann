@@ -811,11 +811,10 @@
   time .95'."
   [interval points & children]
   (part-time-fast interval
-                (fn setup [] (ref []))
-                (fn add [r event] (dosync (alter r conj event)))
+                (fn setup [] (atom []))
+                (fn add [r event] (swap! r conj event))
                 (fn finish [r start end]
-                  (let [samples (dosync
-                                  (folds/sorted-sample (deref r) points))]
+                  (let [samples (folds/sorted-sample @r points)]
                     (doseq [event samples] (call-rescue event children))))))
 
 (defn counter
@@ -855,11 +854,10 @@
   stream is called, but with summed metric."
   [& children]
   (deprecated "Use streams/counter"
-              (let [sum (ref 0)]
+              (let [sum (atom 0)]
                 (fn stream [event]
-                  (let [s (dosync
-                            (when-let [m (:metric event)]
-                              (commute sum + (:metric event))))
+                  (let [s (when-let [m (:metric event)]
+                            (swap! sum + (:metric event)))
                         event (assoc event :metric s)]
                     (call-rescue event children))))))
 
@@ -883,15 +881,14 @@
   Passes on each event received, but with metric adjusted to the moving
   average. Does not take the time between events into account."
   [r & children]
-  (let [m (ref 0)
+  (let [m (atom 0)
         c-existing (- 1 r)
         c-new r]
     (fn stream [event]
       ; Compute new ewma
       (let [m (when-let [metric-new (:metric event)]
-                (dosync
-                  (ref-set m (+ (* c-existing (deref m))
-                                (* c-new metric-new)))))]
+                (swap! m (comp (partial + (* c-new metric-new))
+                               (partial * c-existing))))]
         (call-rescue (assoc event :metric m) children)))))
 
 (defn- top-update
@@ -1082,14 +1079,13 @@
   "Conj events onto the given reference"
   [reference]
   (fn stream [event]
-    (dosync
-      (alter reference conj event))))
+    (swap! reference conj event)))
 
 (defn register
   "Set reference to the most recent event that passes through."
   [reference]
   (fn stream [event]
-    (dosync (ref-set reference event))))
+    (reset! reference event)))
 
 (defn forward
   "Sends an event through a client"
