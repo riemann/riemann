@@ -881,15 +881,14 @@
   Passes on each event received, but with metric adjusted to the moving
   average. Does not take the time between events into account."
   [r & children]
-  (let [m (ref 0)
+  (let [m (atom 0)
         c-existing (- 1 r)
         c-new r]
     (fn stream [event]
       ; Compute new ewma
       (let [m (when-let [metric-new (:metric event)]
-                (dosync
-                  (ref-set m (+ (* c-existing (deref m))
-                                (* c-new metric-new)))))]
+                (swap! m (comp (partial + (* c-new metric-new))
+                               (partial * c-existing))))]
         (call-rescue (assoc event :metric m) children)))))
 
 (defn- top-update
