@@ -31,7 +31,7 @@
   GraphiteClient
   (open [this]
     (let [sock (Socket. host port)]
-      (assoc this 
+      (assoc this
              :socket sock
              :out (OutputStreamWriter. (.getOutputStream sock)))))
   (send-line [this line]
@@ -45,7 +45,7 @@
 (defrecord GraphiteUDPClient [^String host ^int port]
   GraphiteClient
   (open [this]
-    (assoc this 
+    (assoc this
            :socket (DatagramSocket.)
            :host host
            :port port))

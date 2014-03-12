@@ -65,7 +65,7 @@
           (handler @core stats message-event)
           (catch java.nio.channels.ClosedChannelException e
             (warn "channel closed"))))
-    
+
     (exceptionCaught [context ^ExceptionEvent exception-event]
       (let [cause (.getCause exception-event)]
         (when-not (instance? ClosedChannelException cause)

@@ -1,6 +1,8 @@
 (ns riemann.graphite-test
   (:use riemann.graphite
         [riemann.time :only [unix-time]]
+        [riemann.common :only [event]]
+        clojure.tools.logging
         clojure.test)
   (:require [riemann.logging :as logging]
             [riemann.client :as client]
@@ -36,6 +38,24 @@
        (finally
          (stop! core))))))
 
+(deftest parse-error-test
+  (logging/suppress
+    ["riemann.transport" "riemann.core" "riemann.pubsub" "riemann.graphite"]
+    (let [server    (graphite-server)
+          trap      (promise)
+          core      (transition! (core)
+                                 {:services [server]
+                                  :streams [(partial deliver trap)]})
+          client    (open (->GraphiteTCPClient "localhost" 2003))]
+      (try
+        (send-line client "too many spaces 1.23 456\n")
+        (send-line client "valid 1.34 456\n")
+        (is (= (deref trap 1000 :timeout)
+               (event {:service "valid" :metric 1.34 :time 456})))
+        (finally
+          (close client)
+          (stop! core))))))
+
 (deftest percentiles
          (is (= (graphite-path-percentiles
                   {:service "foo bar"})
@@ -53,6 +73,7 @@
                   {:service "foo bar 0.999"})
                 "foo.bar.999")))
 
+(comment
 (deftest ^:graphite ^:integration graphite-test
          (let [g (graphite {:block-start true})]
            (g {:host "riemann.local"
@@ -74,4 +95,4 @@
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 4
-               :time (unix-time)})))
+               :time (unix-time)}))))
