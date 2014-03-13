@@ -679,22 +679,20 @@
 
   Note: ignores event times currently--will change later."
   [interval & children]
-    (let [state (ref nil)
+    (let [state (atom nil)
           emit-dup (bound-fn emit-dup []
                      (call-rescue
                        (assoc (deref state) :time (unix-time))
                        children))
           peri (periodically-until-expired interval emit-dup)]
       (fn stream [event]
-        (dosync
-          (ref-set state event))
+        (reset! state event)
 
         (peri event)
         (when (expired? event)
           (call-rescue event children)
           ; Clean up
-          (dosync
-            (ref-set state nil))
+          (reset! state nil)
           ))))
 
 (defn ddt-real
