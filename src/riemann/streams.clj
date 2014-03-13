@@ -645,15 +645,15 @@
   event arriving. Inserted events have current time. Stops inserting when
   expired. Uses local times."
   ([interval update & children]
-   (let [last-event (ref nil)
+   (let [last-event (atom nil)
          fill (bound-fn fill []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
          new-deferrable (fn new-deferrable []
                           (every! interval interval fill))
-         deferrable (ref nil)]
+         deferrable (atom nil)]
      (fn stream [event]
        ; Record last event
-       (dosync (ref-set last-event event))
+       (reset! last-event event)
 
        (let [d (deref deferrable)]
          (if d
@@ -661,13 +661,13 @@
            (if (expired? event)
              (do
                (cancel d)
-               (dosync (ref-set deferrable nil)))
+               (reset! deferrable nil))
              (defer d interval))
            ; Create a deferrable
            (when-not (expired? event)
              (locking deferrable
                (when-not (deref deferrable)
-                 (dosync (ref-set deferrable (new-deferrable))))))))
+                 (reset! deferrable (new-deferrable)))))))
 
        ; And forward
        (call-rescue event children)))))
