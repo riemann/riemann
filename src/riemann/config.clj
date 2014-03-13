@@ -31,6 +31,7 @@
         [riemann.kairosdb :only [kairosdb]]
         [riemann.librato :only [librato-metrics]]
         [riemann.nagios :only [nagios]]
+        [riemann.opentsdb :only [opentsdb]]
         [riemann.hipchat :only [hipchat]]
         riemann.streams))
 
