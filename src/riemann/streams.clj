@@ -595,15 +595,14 @@
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn create [] (ref []))
+      (fn create [] (atom []))
       (fn add [r event]
-        (dosync
-          (if-let [ek (event-key event)]
-            (alter r conj event))))
+        (when-let [ek (event-key event)]
+          (swap! r conj event)))
       (fn finish [r start end]
-        (let [stat (dosync
-                    (folder (map event-key @r)))
-              event (assoc (last @r) event-key stat)]
+        (let [events @r
+              stat  (folder (map event-key events))
+              event (assoc (last events) event-key stat)]
           (call-rescue event children)))))
 
 (defn fold-interval-metric
@@ -621,7 +620,7 @@
          new-deferrable (fn new-deferrable [] (every! interval
                                                       interval
                                                       fill))
-         deferrable (ref (new-deferrable))]
+         deferrable (atom (new-deferrable))]
     (fn stream [event]
       (let [d (deref deferrable)]
         (if d
@@ -629,13 +628,13 @@
           (if (expired? event)
             (do
               (cancel d)
-              (dosync (ref-set deferrable nil)))
+              (reset! deferrable nil))
             (defer d interval))
           ; Create a deferrable
           (when-not (expired? event)
             (locking deferrable
               (when-not (deref deferrable)
-                (dosync (ref-set deferrable (new-deferrable))))))))
+                (reset! deferrable (new-deferrable)))))))
 
       ; And forward
       (call-rescue event children)))))
@@ -646,15 +645,15 @@
   event arriving. Inserted events have current time. Stops inserting when
   expired. Uses local times."
   ([interval update & children]
-   (let [last-event (ref nil)
+   (let [last-event (atom nil)
          fill (bound-fn fill []
                 (call-rescue (merge @last-event update {:time (unix-time)}) children))
          new-deferrable (fn new-deferrable []
                           (every! interval interval fill))
-         deferrable (ref nil)]
+         deferrable (atom nil)]
      (fn stream [event]
        ; Record last event
-       (dosync (ref-set last-event event))
+       (reset! last-event event)
 
        (let [d (deref deferrable)]
          (if d
@@ -662,13 +661,13 @@
            (if (expired? event)
              (do
                (cancel d)
-               (dosync (ref-set deferrable nil)))
+               (reset! deferrable nil))
              (defer d interval))
            ; Create a deferrable
            (when-not (expired? event)
              (locking deferrable
                (when-not (deref deferrable)
-                 (dosync (ref-set deferrable (new-deferrable))))))))
+                 (reset! deferrable (new-deferrable)))))))
 
        ; And forward
        (call-rescue event children)))))
@@ -680,22 +679,20 @@
 
   Note: ignores event times currently--will change later."
   [interval & children]
-    (let [state (ref nil)
+    (let [state (atom nil)
           emit-dup (bound-fn emit-dup []
                      (call-rescue
                        (assoc (deref state) :time (unix-time))
                        children))
           peri (periodically-until-expired interval emit-dup)]
       (fn stream [event]
-        (dosync
-          (ref-set state event))
+        (reset! state event)
 
         (peri event)
         (when (expired? event)
           (call-rescue event children)
           ; Clean up
-          (dosync
-            (ref-set state nil))
+          (reset! state nil)
           ))))
 
 (defn ddt-real
@@ -734,13 +731,12 @@
 (defn ddt-events
   "(ddt) between each pair of events."
   [& children]
-  (let [prev (ref nil)]
+  (let [prev (atom nil)]
     (fn stream [event]
       (when-let [m (:metric event)]
-        (let [prev-event (dosync
-                           (let [prev-event (deref prev)]
-                             (ref-set prev event)
-                             prev-event))]
+        (let [prev-event (let [prev-event @prev]
+                           (reset! prev event)
+                           prev-event)]
           (when prev-event
             (let [dt (- (:time event) (:time prev-event))]
               (when-not (zero? dt)
@@ -1300,13 +1296,12 @@
             (first fields)
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
-        table (ref {})]
+        table (atom {})]
      (fn stream [event]
        (let [fork-name (f event)
-             fork (dosync
-                    (or ((deref table) fork-name)
-                        ((alter table assoc fork-name (new-fork))
-                           fork-name)))]
+             fork (if-let [fork (@table fork-name)]
+                    fork
+                    ((swap! table assoc fork-name (new-fork)) fork-name))]
          (call-rescue event fork)))))
 
 (defn changed
