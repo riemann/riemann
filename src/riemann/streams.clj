@@ -620,7 +620,7 @@
          new-deferrable (fn new-deferrable [] (every! interval
                                                       interval
                                                       fill))
-         deferrable (ref (new-deferrable))]
+         deferrable (atom (new-deferrable))]
     (fn stream [event]
       (let [d (deref deferrable)]
         (if d
@@ -628,13 +628,13 @@
           (if (expired? event)
             (do
               (cancel d)
-              (dosync (ref-set deferrable nil)))
+              (reset! deferrable nil))
             (defer d interval))
           ; Create a deferrable
           (when-not (expired? event)
             (locking deferrable
               (when-not (deref deferrable)
-                (dosync (ref-set deferrable (new-deferrable))))))))
+                (reset! deferrable (new-deferrable)))))))
 
       ; And forward
       (call-rescue event children)))))
