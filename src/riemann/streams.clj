@@ -1296,13 +1296,12 @@
             (first fields)
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
-        table (ref {})]
+        table (atom {})]
      (fn stream [event]
        (let [fork-name (f event)
-             fork (dosync
-                    (or ((deref table) fork-name)
-                        ((alter table assoc fork-name (new-fork))
-                           fork-name)))]
+             fork (if-let [fork (@table fork-name)]
+                    fork
+                    ((swap! table assoc fork-name (new-fork)) fork-name))]
          (call-rescue event fork)))))
 
 (defn changed
