@@ -595,15 +595,14 @@
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn create [] (ref []))
+      (fn create [] (atom []))
       (fn add [r event]
-        (dosync
-          (if-let [ek (event-key event)]
-            (alter r conj event))))
+        (when-let [ek (event-key event)]
+          (swap! r conj event)))
       (fn finish [r start end]
-        (let [stat (dosync
-                    (folder (map event-key @r)))
-              event (assoc (last @r) event-key stat)]
+        (let [events @r
+              stat  (folder (map event-key events))
+              event (assoc (last events) event-key stat)]
           (call-rescue event children)))))
 
 (defn fold-interval-metric
