@@ -731,13 +731,12 @@
 (defn ddt-events
   "(ddt) between each pair of events."
   [& children]
-  (let [prev (ref nil)]
+  (let [prev (atom nil)]
     (fn stream [event]
       (when-let [m (:metric event)]
-        (let [prev-event (dosync
-                           (let [prev-event (deref prev)]
-                             (ref-set prev event)
-                             prev-event))]
+        (let [prev-event (let [prev-event @prev]
+                           (reset! prev event)
+                           prev-event)]
           (when prev-event
             (let [dt (- (:time event) (:time prev-event))]
               (when-not (zero? dt)
