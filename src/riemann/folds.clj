@@ -154,7 +154,9 @@
   [events]
   (when-let [e (some identity events)]
     (let [metrics (non-nil-metrics events)]
-      (assoc e :metric (/ (reduce + metrics) (clojure.core/count metrics))))))
+      (when (seq metrics)
+        (assoc e :metric (/ (reduce + metrics)
+                            (clojure.core/count metrics)))))))
 
 (defn median
   "Returns the median event from events, by metric."
