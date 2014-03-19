@@ -12,6 +12,8 @@
            (net.logstash.log4j JSONEventLayoutV1 JSONEventLayout)
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
+                                     SizeBasedTriggeringPolicy
+                                     FixedWindowRollingPolicy
                                      RollingFileAppender))
   (:import org.apache.commons.logging.LogFactory)
   (:require wall.hack))
@@ -60,15 +62,19 @@
   :files           A list of files to log to. If provided, a seq is expected
                    containing maps with a :path and an optional :layout key
                    which can be any of: :riemann, :json-event :json-eventv1
-
+  :logsize-rotate  If size(bytes) is specified rotate based on that size
+                   otherwise use default time based.
   Example:
 
-  (init {:console false :file \"/var/log/riemann.log\"})"
+  (init {:console false :file \"/var/log/riemann.log\"})
+    or
+  (init {:console false :file \"/var/log/riemann.log\" :logsize-rotate 1000000000})"
   [& opts]
   ;; Reset loggers
   (let [{:keys [file
                 files
-                console-layout]
+                console-layout
+                logsize-rotate]
          :as opts} (if (and (= 1 (count opts))
                             (map? (first opts)))
                      (first opts)
@@ -80,33 +86,67 @@
       (.addAppender logger (ConsoleAppender. (get-layout console-layout))))
 
     (when file
-      (let [rolling-policy (doto (TimeBasedRollingPolicy.)
-                             (.setActiveFileName file)
-                             (.setFileNamePattern
-                              (str file ".%d{yyyy-MM-dd}.gz"))
-                             (.activateOptions))
-            log-appender (doto (RollingFileAppender.)
-                           (.setRollingPolicy rolling-policy)
-                           (.setLayout (get-layout :riemann))
-                           (.activateOptions))]
-        (.addAppender logger log-appender)))
+      (if logsize-rotate
+        (let [rolling-policy (doto (FixedWindowRollingPolicy.)
+                               (.setActiveFileName file)
+                               (.setMaxIndex 5)
+                               (.setFileNamePattern
+                                (str file "%d{yyyy-MM-dd}.%i.gz"))
+                               (.activateOptions))
+              triggering-policy (doto (SizeBasedTriggeringPolicy.)
+                                  (.setMaxFileSize logsize-rotate)
+                                  (.activateOptions))
+              log-appender (doto (RollingFileAppender.)
+                             (.setRollingPolicy rolling-policy)
+                             (.setTriggeringPolicy triggering-policy)
+                             (.setLayout (get-layout :riemann))
+                             (.activateOptions))]
+          (.addAppender logger log-appender))
+
+        (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                               (.setActiveFileName file)
+                               (.setFileNamePattern
+                                (str file ".%d{yyyy-MM-dd}.gz"))
+                               (.activateOptions))
+              log-appender (doto (RollingFileAppender.)
+                             (.setRollingPolicy rolling-policy)
+                             (.setLayout (get-layout :riemann))
+                             (.activateOptions))]
+          (.addAppender logger log-appender))))
 
     (when files
       (doseq [{:keys [path layout]} files
               :let [layout (get-layout layout)]]
-        (let [rolling-policy (doto (TimeBasedRollingPolicy.)
-                             (.setActiveFileName path)
-                             (.setFileNamePattern
-                              (str path ".%d{yyyy-MM-dd}.gz"))
-                             (.activateOptions))
-            log-appender (doto (RollingFileAppender.)
-                           (.setRollingPolicy rolling-policy)
-                           (.setLayout layout)
-                           (.activateOptions))]
-        (.addAppender logger log-appender))))
+        (if logsize-rotate
+          (let [rolling-policy (doto (FixedWindowRollingPolicy.)
+                                 (.setActiveFileName file)
+                                 (.setMaxIndex 5)
+                                 (.setFileNamePattern
+                                  (str file "%d{yyyy-MM-dd}.%i.gz"))
+                                 (.activateOptions))
+                triggering-policy (doto (SizeBasedTriggeringPolicy.)
+                                    (.setMaxFileSize logsize-rotate)
+                                    (.activateOptions))
+                log-appender (doto (RollingFileAppender.)
+                               (.setRollingPolicy rolling-policy)
+                               (.setTriggeringPolicy triggering-policy)
+                               (.setLayout (get-layout :riemann))
+                               (.activateOptions))]
+            (.addAppender logger log-appender))
 
-    ;; Set levels.
-    (.setLevel logger Level/INFO)
+          (let [rolling-policy (doto (TimeBasedRollingPolicy.)
+                                 (.setActiveFileName path)
+                                 (.setFileNamePattern
+                                  (str path ".%d{yyyy-MM-dd}.gz"))
+                                 (.activateOptions))
+                log-appender (doto (RollingFileAppender.)
+                               (.setRollingPolicy rolling-policy)
+                               (.setLayout layout)
+                               (.activateOptions))]
+            (.addAppender logger log-appender)))))
+
+      ;; Set levels.
+      (.setLevel logger Level/INFO)
 
     (set-level "riemann.client" Level/DEBUG)
     (set-level "riemann.server" Level/DEBUG)
