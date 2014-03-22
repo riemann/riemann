@@ -231,7 +231,7 @@
   RejectedExecutionException if the underlying executor will not accept the
   event; e.g. if its queue is full. Use together with
   riemann.service/executor-service for reloadable asynchronous execution of
-  streams.
+  streams. See also: async-queue!, which may be simpler.
 
   (let [io-pool (service!
                   (executor-service
@@ -1022,6 +1022,35 @@
     (fn finish [[sent buffer] _ _]
       (when-not (empty? buffer)
         (call-rescue buffer children)))))
+
+(defn batch
+  "Batches up events into vectors, bounded both by size and by time. Once
+  either n events have accumulated, or dt seconds passed, flushes the current
+  batch to all child streams. Child streams should accept a sequence of
+  events."
+  [n dt & children]
+  (part-time-simple dt
+    ; First, the batch to conj onto. Second, a full batch, if ready
+    (constantly [[] nil])
+
+    ; Conj new elements into the batch, and spill over if necessary
+    ; when we overflow.
+    (fn add [[batch done] event]
+      (let [batch (conj batch event)]
+        (if (<= n (count batch))
+          ; Full!
+          [[] batch]
+          ; Not yet
+          [batch nil])))
+
+    ; If we're full, flush the buffer early.
+    (fn side-effects [[_ done] event]
+      (when done (call-rescue done children)))
+
+    ; And flush incomplete buffers once the time interval has elapsed
+    (fn flush [[batch _] start-time end-time]
+      (when (seq batch)
+        (call-rescue batch children)))))
 
 (defn coalesce-with-event
   "Helper for coalesce: calls (f current-event all-events) every time an event

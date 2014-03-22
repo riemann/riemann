@@ -1258,6 +1258,24 @@
                       [ e 0 e 0 e 1 e 1]
                       [[e] [e]       [e e]]))))
 
+(deftest batch-test
+  (testing "nothing"
+    (test-stream-intervals (batch 2 3) [] []))
+
+  (testing "incomplete batches"
+    (reset-time!)
+    (test-stream-intervals
+      (batch 2 3)
+      [:a 3 :b 1 :c 2 :d 3]
+      [[:a] [:b :c] [:d]]))
+
+  (testing "overflowing batches"
+    (reset-time!)
+    (test-stream-intervals
+      (batch 2 3)
+      [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
+      [[:a :b] [:c] [:d :e] [:f]])))
+
 (deftest coalesce-test
          (let [out (atom [])
                s (coalesce #(reset! out %))
