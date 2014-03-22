@@ -21,7 +21,7 @@
             [clojure.tools.nrepl.server :as repl])
   (:use clojure.tools.logging
         [clojure.java.io :only [file]]
-        riemann.client
+        [riemann.client :only [udp-client tcp-client multi-client]]
         riemann.email
         riemann.sns
         [riemann.plugin  :only [load-plugin load-plugins]]

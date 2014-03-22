@@ -2,7 +2,6 @@
   "Userland macros for testing snippets of Riemann config."
   (:use
    riemann.streams
-   riemann.client
    riemann.email
    riemann.sns
    [riemann.time :only [unix-time linear-time once! every!]])
