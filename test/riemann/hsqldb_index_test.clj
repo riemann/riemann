@@ -24,18 +24,15 @@
 (deftest translate-ast-for-tagged
   (let [query-ast (ast "tagged \"cat\"")
         translated-ast (translate-ast query-ast)]
-    (is (= '(= tag "cat") translated-ast))))
+    (is (= '() translated-ast))))
 
 (deftest translate-ast-for-not-equal
   (let [query-ast (ast "host != \"cat\"")
         translated-ast (translate-ast query-ast)]
     (is (= '(not (= host "cat")) translated-ast))))
 
-
-
-
-
-
-
-
+(deftest translate-ast-for-regexp
+  (let [query-ast (ast "host ~= \"cat.*\"")
+        translated-ast (translate-ast query-ast)]
+    (is (= '(not= (sqlfn "REGEXP_MATCHES" :host "cat.*") nil) translated-ast))))
 

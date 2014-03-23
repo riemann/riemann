@@ -8,11 +8,17 @@
   "Translate AST into korma-compatible format"
   [query-ast]
   (if (list? query-ast)
-    (condp = (first query-ast)
-      'when    (translate-ast (last query-ast))
-      'and     (cons 'and (map translate-ast (rest query-ast)))
-      'or      (cons 'or (map translate-ast (rest query-ast)))
-      'member? (list '= 'tag (second query-ast))
-      're-find query-ast
-      query-ast)
+    (let [[op & rest-ast] query-ast]
+      (condp = op
+        'when    (translate-ast (last rest-ast))
+        'and     (cons op (map translate-ast rest-ast))
+        'or      (cons op (map translate-ast rest-ast))
+        ; Ignore tags for now
+        'member? (list)
+        're-find (list 'not= (list 'sqlfn
+                       "REGEXP_MATCHES"
+                       (keyword (last rest-ast))
+                       (str (first rest-ast)))
+                       nil)
+        query-ast))
     query-ast))
