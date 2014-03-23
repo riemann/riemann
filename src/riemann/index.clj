@@ -77,9 +77,8 @@
       (search [this query-ast]
         "O(n) unless the query is for exactly a host and service"
         (if-let [[host service] (query-for-host-and-service query-ast)]
-          (if-let [e (.lookup this host service)]
-            (list e)
-            (list))
+          (when-let [e (.lookup this host service)]
+            (list e))
           (let [matching (query/fun query-ast)]
             (filter matching (.values hm)))))
 
