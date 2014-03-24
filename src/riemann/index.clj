@@ -37,6 +37,19 @@
 
 (def default-ttl 60)
 
+(defn query-for-host-and-service
+  "Check if the AST is only searching for the host and service"
+  [query-ast]
+  (if (and (list? query-ast)
+           (= 'and (first query-ast)))
+    (let [and-exprs (rest query-ast)]
+      (if (and (= 2 (count and-exprs))
+               (= 2 (count (filter #(= (first %) '=) and-exprs))))
+        (let [host    (first (filter #(= (second %) 'host) and-exprs))
+              service (first (filter #(= (second %) 'service) and-exprs))]
+          (if (and host service)
+            [(last host) (last service)]))))))
+
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"
   []
@@ -62,9 +75,13 @@
                 (.values hm)))
 
       (search [this query-ast]
-              "O(n), sadly."
-              (let [matching (query/fun query-ast)]
-                (filter matching (.values hm))))
+        "O(n) unless the query is for exactly a host and service"
+        (if-let [[host service] (query-for-host-and-service query-ast)]
+          (when-let [e (.lookup this host service)]
+            (list e))
+          (let [matching (query/fun query-ast)]
+            (filter matching (.values hm)))))
+
 
       (update [this event]
         (if (= "expired" (:state event))
