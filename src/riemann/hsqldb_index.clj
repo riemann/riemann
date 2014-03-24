@@ -75,7 +75,8 @@
 (def schema
   (concat
     ["DROP TABLE IF EXISTS \"events\";"
-     (str "CREATE TABLE \"events\" (\"key\" VARBINARY(2048) PRIMARY KEY, "
+     (str "CREATE TABLE \"events\" ("
+          "\"key\" VARBINARY(2048) PRIMARY KEY, "
           "\"time\" BIGINT, "
           "\"state\" VARCHAR(1024), "
           "\"service\" VARCHAR(1024), "
