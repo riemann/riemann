@@ -47,7 +47,8 @@
 
 (defn sql-where-join
   [op children]
-  {:statement (join (str " " op " ") (map #(str "(" (:statement %) ")") children))
+  {:statement (join (str " " op " ")
+                    (map #(str "(" (:statement %) ")") children))
    :args      (apply concat (map #(:args %) children))})
 
 (defn sql-where-not
