@@ -73,8 +73,20 @@
   (map #(format "CREATE INDEX \"events_%s\" ON \"events\" (\"%s\");" % %) columns))
 
 (def schema
-  (concat ["DROP TABLE IF EXISTS \"events\";"
-   "CREATE TABLE \"events\" (\"key\" VARBINARY(2048) PRIMARY KEY, \"time\" BIGINT, \"state\" VARCHAR(1024), \"service\" VARCHAR(1024), \"host\" VARCHAR(1024), \"description\" VARCHAR(1024), \"tags\" VARCHAR(1024) ARRAY DEFAULT ARRAY[], \"ttl\" FLOAT, \"attributes\" VARCHAR(1024), \"metric_sint64\" BIGINT, \"metric_f\" FLOAT, \"time\" BIGINT);"]
+  (concat
+    ["DROP TABLE IF EXISTS \"events\";"
+     (str "CREATE TABLE \"events\" (\"key\" VARBINARY(2048) PRIMARY KEY, "
+          "\"time\" BIGINT, "
+          "\"state\" VARCHAR(1024), "
+          "\"service\" VARCHAR(1024), "
+          "\"host\" VARCHAR(1024), "
+          "\"description\" VARCHAR(1024), "
+          "\"tags\" VARCHAR(1024) ARRAY DEFAULT ARRAY[], "
+          "\"ttl\" FLOAT, "
+          "\"attributes\" VARCHAR(1024), "
+          "\"metric_sint64\" BIGINT, "
+          "\"metric_f\" FLOAT, "
+          "\"time\" BIGINT);")]
    (schema-index-for :state :service :host :description :tags :ttl :metric_sint64 :metric_f)))
 
 (kc/defentity events
