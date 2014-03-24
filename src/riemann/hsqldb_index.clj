@@ -59,7 +59,7 @@
 
 
 (defn translate-ast
-  "Translate AST into korma-compatible format"
+  "Translate AST into SQL"
   [query-ast]
   (if (list? query-ast)
     (let [[op & rest-ast] query-ast]
