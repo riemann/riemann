@@ -9,30 +9,30 @@
 
 (deftest translate-ast-for-equals
   (let [query-ast (ast "host = nil")]
-    (is (= '(= :host nil) (translate-ast query-ast)))))
+    (is (= {:statement "\"host\" IS NULL", :args nil} (translate-ast query-ast)))))
 
 (deftest translate-ast-for-less-than
   (let [query-ast      (ast "metric_f < 3")
         translated-ast (translate-ast query-ast)]
-    (is (= '(< :metric_f 3) translated-ast))))
+    (is (= {:statement "\"metric_f\" < ?", :args '(3)} translated-ast))))
 
 (deftest translate-ast-for-and-and-less-then
   (let [query-ast (ast "host = nil and metric_f < 3")
         translated-ast (translate-ast query-ast)]
-    (is (= '(and (= :host nil) (< :metric_f 3)) translated-ast))))
+    (is (= {:statement "(\"host\" IS NULL) AND (\"metric_f\" < ?)", :args '(3)} translated-ast))))
 
 (deftest translate-ast-for-tagged
   (let [query-ast (ast "tagged \"cat\"")
         translated-ast (translate-ast query-ast)]
-    (is (= '() translated-ast))))
+    (is (= {:statement "POSITION_ARRAY(? IN \"tags\") != 0", :args '("cat")} translated-ast))))
 
 (deftest translate-ast-for-not-equal
   (let [query-ast (ast "host != \"cat\"")
         translated-ast (translate-ast query-ast)]
-    (is (= '(not (= :host "cat")) translated-ast))))
+    (is (=  {:statement "NOT (\"host\" = ?)", :args '("cat")} translated-ast))))
 
 (deftest translate-ast-for-regexp
   (let [query-ast (ast "host ~= \"cat.*\"")
         translated-ast (translate-ast query-ast)]
-    (is (= '(not= (sqlfn "REGEXP_MATCHES" :host "cat.*") nil) translated-ast))))
+    (is (= {:statement "REGEXP_SUBSTRING(\"host\",?) IS NOT NULL", :args '("cat.*")} translated-ast))))
 

@@ -31,11 +31,16 @@
     (sql-where (format "%s IS NULL" (quote-column column)))
     (sql-where-op "=" column value)))
 
-
 (defn sql-where-join
   [op children]
   {:statement (join (str " " op " ") (map #(str "(" (:statement %) ")") children))
    :args      (apply concat (map #(:args %) children))})
+
+(defn sql-where-not
+  [child]
+  {:statement (format "NOT (%s)" (:statement child))
+   :args      (:args child)})
+
 
 
 (defn translate-ast
@@ -47,6 +52,7 @@
         'when    (translate-ast (last rest-ast))
         'and     (sql-where-join "AND" (map translate-ast rest-ast))
         'or      (sql-where-join "OR" (map translate-ast rest-ast))
+        'not     (sql-where-not (translate-ast (last rest-ast)))
         'member? (sql-where (format "POSITION_ARRAY(? IN %s) != 0"
                                     (quote-column (second rest-ast)))
                             (str (first rest-ast)))
@@ -88,7 +94,7 @@
           "\"metric_sint64\" BIGINT, "
           "\"metric_f\" FLOAT, "
           "\"time\" BIGINT);")]
-   (schema-index-for :state :service :host :description :tags :ttl :metric_sint64 :metric_f)))
+   (schema-index-for :state :service :host :description :tags :ttl :metric_sint64 :metric_f :time)))
 
 (kc/defentity events
           (kc/table :events)
