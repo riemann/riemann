@@ -106,3 +106,7 @@
 (deftest is-query-for-host-and-service-with-more
   (let [ast (ast "host = nil and service = \"ser\" and metric > 5")]
     (is (= nil (query-for-host-and-service ast)))))
+
+(deftest is-query-for-host-and-host
+  (let [ast (ast "host = \"h1\" and host = \"h2\"")]
+    (is (= nil (query-for-host-and-service ast)))))

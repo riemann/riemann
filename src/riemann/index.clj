@@ -42,13 +42,13 @@
   [query-ast]
   (if (and (list? query-ast)
            (= 'and (first query-ast)))
-    (let [and-exprs              (rest query-ast)
-          [eq-exprs other-exprs] (split-with #(= (first %) '=) and-exprs)
-          eq-map                 (into {} (map (comp vec rest) eq-exprs))]
-      (if (and (every? #(contains? eq-map %) '(host service))
-               (= 2 (count eq-exprs))
-               (empty? other-exprs))
-        (map eq-map ['host 'service])))))
+    (let [and-exprs (rest query-ast)]
+      (if (and (= 2 (count and-exprs))
+               (= 2 (count (filter #(= (first %) '=) and-exprs))))
+        (let [host    (first (filter #(= (second %) 'host) and-exprs))
+              service (first (filter #(= (second %) 'service) and-exprs))]
+          (if (and host service)
+            [(last host) (last service)]))))))
 
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"
