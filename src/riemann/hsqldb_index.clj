@@ -36,10 +36,12 @@
 
 (defn sql-where-eq
   [column value]
-  (if (nil? value)
-    (sql-where (format "%s IS NULL" (quote-column column)))
-    (if (= 'metric column)
-      (sql-where-metric-op "=" value)
+  (if (= 'metric column)
+    (if (nil? value)
+      (sql-where (format "(%s IS NULL AND %s IS NULL)" (quote-column "metric_sint64") (quote-column "metric_f")))
+      (sql-where-metric-op "=" value))
+    (if (nil? value)
+      (sql-where (format "%s IS NULL" (quote-column column)))
       (sql-where-op "=" column value))))
 
 (defn sql-where-join
