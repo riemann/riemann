@@ -20,16 +20,27 @@
   {:statement statement
    :args      args})
 
+(defn sql-where-metric-op
+  [op value]
+  (sql-where (format "((%2$s IS NOT NULL AND %2$s %1$s ?) OR (%3$s IS NOT NULL AND %3$s %1$s ?))"
+                     op (quote-column "metric_sint64") (quote-column "metric_f"))
+             value value))
+
 (defn sql-where-op
   [op column value]
-  (sql-where (format "%s %s ?" (quote-column column) op)
-             value))
+  (if (= 'metric column)
+    (sql-where-metric-op op value)
+    (sql-where (format "%s %s ?" (quote-column column) op)
+               value)))
+
 
 (defn sql-where-eq
   [column value]
   (if (nil? value)
     (sql-where (format "%s IS NULL" (quote-column column)))
-    (sql-where-op "=" column value)))
+    (if (= 'metric column)
+      (sql-where-metric-op "=" value)
+      (sql-where-op "=" column value))))
 
 (defn sql-where-join
   [op children]

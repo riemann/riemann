@@ -12,14 +12,14 @@
     (is (= {:statement "\"host\" IS NULL", :args nil} (translate-ast query-ast)))))
 
 (deftest translate-ast-for-less-than
-  (let [query-ast      (ast "metric_f < 3")
+  (let [query-ast      (ast "metric < 3")
         translated-ast (translate-ast query-ast)]
-    (is (= {:statement "\"metric_f\" < ?", :args '(3)} translated-ast))))
+    (is (= {:statement "((\"metric_sint64\" IS NOT NULL AND \"metric_sint64\" < ?) OR (\"metric_f\" IS NOT NULL AND \"metric_f\" < ?))", :args '(3 3)} translated-ast))))
 
 (deftest translate-ast-for-and-and-less-then
-  (let [query-ast (ast "host = nil and metric_f < 3")
+  (let [query-ast (ast "host = nil and metric < 3")
         translated-ast (translate-ast query-ast)]
-    (is (= {:statement "(\"host\" IS NULL) AND (\"metric_f\" < ?)", :args '(3)} translated-ast))))
+    (is (= {:statement "(\"host\" IS NULL) AND (((\"metric_sint64\" IS NOT NULL AND \"metric_sint64\" < ?) OR (\"metric_f\" IS NOT NULL AND \"metric_f\" < ?)))", :args '(3 3)} translated-ast))))
 
 (deftest translate-ast-for-tagged
   (let [query-ast (ast "tagged \"cat\"")
