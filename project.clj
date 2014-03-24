@@ -42,7 +42,6 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
-    [org.clojure/java.jdbc "0.3.3"]
     [org.hsqldb/hsqldb "2.3.2"]
     [korma "0.3.0-RC5"]
   ]
