@@ -42,51 +42,51 @@
 
 (deftest hsqldb-update
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1})
-    (i {:host 2})
-    (i {:host 1 :service 3 :state :ok})
-    (i {:host 1 :service 3 :description "new"})
+    (i {:host "1"})
+    (i {:host "2"})
+    (i {:host "1" :service "3" :state :ok})
+    (i {:host "1" :service "3" :description "new"})
 
-    (is (= (set i)
-           #{{:host 1}
-             {:host 2}
-             {:host 1 :service 3 :description "new"}}))))
+    (is (= (set (map #(select-keys % [:host :service :description]) i))
+           #{{:host "1" :service nil :description nil}
+             {:host "2" :service nil :description nil}
+             {:host "1" :service "3" :description "new"}}))))
 
 (deftest hsqldb-delete
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1})
-    (i {:host 2})
-    (delete i {:host 1 :service 1})
-    (delete i {:host 2 :state :ok})
-    (is (= (set i)
-           #{{:host 1}}))))
+    (i {:host "1"})
+    (i {:host "2"})
+    (delete i {:host "1" :service "1"})
+    (delete i {:host "2" :state :ok})
+    (is (= (set (map #(select-keys % [:host]) i))
+           #{{:host "1"}}))))
 
 (deftest hsqldb-search
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1})
-    (i {:host 2 :service "meow"})
-    (i {:host 3 :service "mrrrow"})
-    (is (= (set (search i (ast "host >= 2 and not service =~ \"%r%\"")))
-           #{{:host 2 :service "meow"}}))))
+    (i {:host "1"})
+    (i {:host "2" :service "meow"})
+    (i {:host "3" :service "mrrrow"})
+    (is (= (set (map :host (search i (ast "host >= 2 and not service =~ \"%r%\""))))
+           #{"2"}))))
 
 (deftest hsqldb-expire
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1 :ttl 0 :time (- 1 (unix-time))})
-    (i {:host 2 :ttl 10 :time (unix-time)})
-    (i {:host 3 :ttl 20 :time (- (unix-time) 21)})
+    (i {:host "1" :ttl 0 :time (- 1 (unix-time))})
+    (i {:host "2" :ttl 10 :time (unix-time)})
+    (i {:host "3" :ttl 20 :time (- (unix-time) 21)})
 
     (let [expired (expire i)]
       (is (= (set (map (fn [e] (:host e))
                        expired))
-             #{1 3})))
+             #{"1" "3"})))
 
     (is (= (map (fn [e] (:host e)) i)
-           [2]))))
+           ["2"]))))
 
 (deftest hsqldb-read-index
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1 :service 1 :metric 5})
-    (i {:host 1 :service 2 :metric 7})
+    (i {:host "1" :service "1" :metric 5})
+    (i {:host "1" :service "2" :metric 7})
 
     (is (= 5 (:metric (lookup i 1 1))))
     (is (= 7 (:metric (lookup i 1 2))))))
