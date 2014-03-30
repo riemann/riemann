@@ -206,7 +206,7 @@
 
 (defn expire-events
   [db-spec]
-  (jdbc/delete! db-spec :events ["time + ttl < ?" (unix-time)]))
+  (jdbc/delete! db-spec :events ["time + ttl < ?" (long (unix-time))]))
 
 
 (defn hsqldb-index
