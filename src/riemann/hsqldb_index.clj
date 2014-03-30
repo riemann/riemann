@@ -2,11 +2,83 @@
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource))
   (:require [riemann.query :as query]
             [riemann.index :as index]
-            [clojure.java.jdbc :as jdbc])
+            [riemann.codec :as codec]
+            [riemann.common :as common]
+            [clojure.java.jdbc :as jdbc]
+            [cheshire.core :as json])
   (:use [riemann.time :only [unix-time]]
         riemann.service
-        [riemann.index :only [Index]]
+        [riemann.index :only [Index default-ttl]]
         [clojure.string :only [join]]))
+
+
+(def last-hsqldb-id
+  "The most recent hsqldb id"
+  (atom 0))
+
+(defn hsqldb-id
+  "Returns a new unique hsqldb id."
+  []
+  (swap! last-hsqldb-id inc))
+
+(def hsqldb-spec
+  {:classname         "org.hsqldb.jdbc.JDBCDriver"
+   :subprotocol       "hsqldb"
+   :subname           (str "mem:riemann-" (hsqldb-id))
+   :maximum-pool-size 20})
+
+(defn connection-pool
+  "Create a connection pool for the given database spec."
+  [{:keys [subprotocol subname classname user password
+           excess-timeout idle-timeout minimum-pool-size maximum-pool-size]
+    :or {excess-timeout (* 30 60)
+         idle-timeout (* 3 60 60)
+         minimum-pool-size 3
+         maximum-pool-size 15}
+    :as spec}]
+  {:datasource (doto (ComboPooledDataSource.)
+                 (.setDriverClass classname)
+                 (.setJdbcUrl (str "jdbc:" subprotocol ":" subname))
+                 (.setUser user)
+                 (.setPassword password)
+                 (.setMaxIdleTimeExcessConnections excess-timeout)
+                 (.setMaxIdleTime idle-timeout)
+                 (.setMinPoolSize minimum-pool-size)
+                 (.setMaxPoolSize maximum-pool-size))})
+
+
+(defn create-index-for-column-ddl
+  [table column & {:keys [entities] :or {entities identity}}]
+  (format "CREATE INDEX %s ON %s (%s)"
+          (jdbc/as-sql-name entities (str (name table) "_" (name column)))
+          (jdbc/as-sql-name entities table)
+          (jdbc/as-sql-name entities column)))
+
+(def table-index-columns
+  [:state :service :host :description :tags :ttl :metric_sint64 :metric_f :time])
+
+(def schema-statements
+  (concat
+    ["DROP TABLE IF EXISTS events"
+     (jdbc/create-table-ddl
+       :events
+       [:key            "VARBINARY(2048) PRIMARY KEY"]
+       [:time           "BIGINT"]
+       [:state          "VARCHAR(1024)"]
+       [:service        "VARCHAR(1024)"]
+       [:host           "VARCHAR(1024)"]
+       [:description    "VARCHAR(1024)"]
+       [:tags           "VARCHAR(1024) ARRAY DEFAULT ARRAY[]"]
+       [:ttl            "FLOAT"]
+       [:attributes     "VARCHAR(4096)"]
+       [:metric_sint64  "BIGINT"]
+       [:metric_f       "FLOAT"])]
+    (map #(create-index-for-column-ddl :events %) table-index-columns)))
+
+(defn create-schema!
+  [db-spec]
+  (doseq [sql schema-statements]
+    (jdbc/execute! db-spec [sql])))
 
 
 (defn quote-column
@@ -50,10 +122,10 @@
 
 (defn sql-where-not
   [child]
-  (apply sql-where (cons
-                     (format "NOT (%s)" (:statement child))
-                     (:params child))))
-
+  (apply sql-where
+         (cons
+           (format "NOT (%s)" (:statement child))
+           (:params child))))
 
 (defn translate-ast
   "Translate AST into SQL"
@@ -79,87 +151,28 @@
         query-ast))
     query-ast))
 
-(def hsqldb-spec
-       {:classname   "org.hsqldb.jdbc.JDBCDriver"
-        :subprotocol "hsqldb"
-        :subname     "memory:riemann"})
+(defn row-to-event
+  [row]
+  (let [metric      (if (:metric_sint64 row)
+                      (:metric_sint64 row)
+                      (:metric_f row))
+        attributes  (json/parse-string (:attributes row) keyword)
+        tags        (seq (.getArray (:tags row)))
+        event       (assoc (select-keys row codec/event-keys)
+                      :metric metric
+                      :tags   tags)]
+    (common/event (merge event attributes))))
 
-(defn connection-pool
-  "Create a connection pool for the given database spec."
-  [{:keys [subprotocol subname classname user password
-           excess-timeout idle-timeout minimum-pool-size maximum-pool-size]
-    :or {excess-timeout (* 30 60)
-         idle-timeout (* 3 60 60)
-         minimum-pool-size 3
-         maximum-pool-size 15}
-    :as spec}]
-  {:datasource (doto (ComboPooledDataSource.)
-                 (.setDriverClass classname)
-                 (.setJdbcUrl (str "jdbc:" subprotocol ":" subname))
-                 (.setUser user)
-                 (.setPassword password)
-                 (.setMaxIdleTimeExcessConnections excess-timeout)
-                 (.setMaxIdleTime idle-timeout)
-                 (.setMinPoolSize minimum-pool-size)
-                 (.setMaxPoolSize maximum-pool-size))})
-
-(defn delay-pool
-  "Return a delay for creating a connection pool for the given spec."
-  [spec]
-  (delay (connection-pool spec)))
-
-(defn get-connection
-  "Get a connection from the potentially delayed connection object."
-  [db]
-  (if-not db
-    (throw (Exception. "No valid DB connection selected."))
-    (if (delay? db)
-      @db
-      db)))
-
-
-(defn create-index-for-column-ddl
-  [table column & {:keys [entities] :or {entities identity}}]
-  (format "CREATE INDEX %s ON %s (%s)"
-          (jdbc/as-sql-name entities (str (name table) "_" (name column)))
-          (jdbc/as-sql-name entities table)
-          (jdbc/as-sql-name entities column)))
-
-(def default-connection
-  (delay-pool hsqldb-spec))
-
-(defn execute-query
-  [db-spec query]
-  (let [ast (query/ast query)
-        query (translate-ast ast)
-        sql (format "SELECT * FROM events WHERE %s" (:statement query))]
-    (jdbc/query db-spec (concat [sql] (:params query)))))
-
-(def table-index-columns
-  [:state :service :host :description :tags :ttl :metric_sint64 :metric_f :time])
-
-(def schema-statements
-  (concat
-    ["DROP TABLE IF EXISTS events"
-     (jdbc/create-table-ddl
-       :events
-       [:key "VARBINARY(2048) PRIMARY KEY"]
-       [:time "BIGINT"]
-       [:state "VARCHAR(1024)"]
-       [:service "VARCHAR(1024)"]
-       [:host "VARCHAR(1024)"]
-       [:description "VARCHAR(1024)"]
-       [:tags "VARCHAR(1024) ARRAY DEFAULT ARRAY[]"]
-       [:ttl "FLOAT"]
-       [:attributes "VARCHAR(2048)"]
-       [:metric_sint64 "BIGINT"]
-       [:metric_f "FLOAT"])]
-    (map #(create-index-for-column-ddl :events %) table-index-columns)))
-
-(defn create-schema!
+(defn find-all-events
   [db-spec]
-  (doseq [sql schema-statements]
-    (jdbc/execute! db-spec [sql])))
+  (jdbc/query db-spec "SELECT * FROM events" :row-fn row-to-event))
+
+
+(defn find-events
+  [db-spec query-ast]
+  (let [query (translate-ast query-ast)
+        sql (format "SELECT * FROM events WHERE %s" (:statement query))]
+    (jdbc/query db-spec (concat [sql] (:params query)) :row-fn row-to-event)))
 
 (defn primary-key-for-event
   "Provide the primary key for an event"
@@ -168,77 +181,71 @@
 
 (defn insert-event
   [db-spec event]
-  (let [event-with-key (assoc event :key (primary-key-for-event event))]
-    (jdbc/insert! db-spec :events event-with-key)))
+  (jdbc/with-db-transaction [t-con db-spec]
+    (let [primary-key       (primary-key-for-event event)
+          metric            (:metric event)
+          metric-column     (if (and (integer? metric) (<= Long/MIN_VALUE metric Long/MAX_VALUE))
+                              :metric_sint64
+                              :metric_f)
+          custom-attributes (apply dissoc event codec/event-keys)
+          event-for-insert  (assoc (select-keys event (disj codec/event-keys :metric))
+                              :key          primary-key
+                              :tags         (.createArrayOf (jdbc/db-find-connection t-con) "VARCHAR" (into-array (:tags event)))
+                              metric-column metric
+                              :attributes   (json/generate-string custom-attributes)
+                              :ttl          (or (:ttl event) default-ttl)
+                              :time         (long (or (:time event) (unix-time)))
+                              :state        (if (:state event) (name (:state event))))]
+      (jdbc/delete! t-con :events ["key = ?" primary-key])
+      (jdbc/insert! t-con :events event-for-insert))))
 
+(defn delete-event
+  [db-spec event]
+  (let [primary-key (primary-key-for-event event)]
+    (jdbc/delete! db-spec :events ["key = ?" primary-key])))
 
-; (kd/with-db conn
-;             (kc/insert events (kc/values {:service "testing2" :tags (kc/raw "ARRAY['t1', 't2']")})))
-
-; (kd/with-db conn
-;             (kc/exec-raw ["SELECT * from \"events\" where POSITION_ARRAY('co''ld' IN \"tags\") != 0"] :results))
-
-; (kd/with-db conn
-;             (kc/exec-raw ["INSERT INTO \"events\" (\"service\", \"tags\") VALUES ?, ?;" ["testing3" (.createArrayOf (j/connection) "VARCHAR" (into-array ["one" "tw'o"]))]]))
-
-; (kd/with-db conn
-;             (kc/insert events (kc/values {:service "sweet" :tags (.createArrayOf (j/connection) "VARCHAR" (into-array ["one" "'sweet'"]))})))
-
-; (seq (.getArray (:tags (first (kd/with-db conn
-;             (kc/exec-raw ["SELECT * from \"events\" where POSITION_ARRAY(? IN \"tags\") != 0" ["'sweet'"]] :results))))))
+(defn expire-events
+  [db-spec]
+  (jdbc/delete! db-spec :events ["time + ttl < ?" (unix-time)]))
 
 
 (defn hsqldb-index
   "Create a new HSQLDB backed index"
   []
-  (let [conn (delay-pool hsqldb-spec)]
+  (let [db-spec (connection-pool hsqldb-spec)]
+    (create-schema! db-spec)
     (reify
       Index
       (clear [this]
-        ;(kd/with-db conn (kc/delete events))
-        )
+        (jdbc/delete! db-spec :events))
 
       (delete [this event]
-        ; (kd/with-db conn
-        ;             (kc/delete events
-        ;                        (kc/where {:key (primary-key-for-event event)})))
-        )
+        (delete-event db-spec event))
 
       (delete-exactly [this event]
         ;(.remove hm [(:host event) (:service event)] event))
-        )
+        (.delete this event))
 
       (expire [this]
-        ;(filter
-        ;  (fn [{:keys [ttl time] :or {ttl index/default-ttl} :as state}]
-        ;    (let [age (- (unix-time) time)]
-        ;      (when (> age ttl)
-        ;        (delete this state)
-        ;        true)))
-        ;  ; (.values hm)))
-        ;  )
-        )
+        (expire-events db-spec))
 
       (search [this query-ast]
-        "O(n), sadly."
-        ; (let [matching (query/fun query-ast)]
-        ;   (filter matching (.values hm))))
-        )
+        "Super fast and indexed"
+        (find-events db-spec query-ast))
 
       (update [this event]
-        ;(if (= "expired" (:state event))
-        ;  (delete this event)
-        ;  ;(.put hm [(:host event) (:service event)] event))
-        )
+        (if (= "expired" (:state event))
+          (.delete this event)
+          (insert-event db-spec event)))
 
       (lookup [this host service]
-        ;(.get hm [host service])
-        )
+        (first (.search this (list 'and
+                                   (list '= 'host host)
+                                   (list '= 'service service)))))
 
       clojure.lang.Seqable
       (seq [this]
-        ; (seq (.values hm))
-        )
+        (find-all-events db-spec))
 
       ServiceEquiv
       (equiv? [this other] (= (class this) (class other)))
@@ -247,4 +254,5 @@
       (conflict? [this other] false)
       (reload! [this new-core])
       (start! [this])
-      (stop! [this]))))
+      (stop! [this]
+        (jdbc/execute! db-spec ["SHUTDOWN"])))))

@@ -43,7 +43,7 @@
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
     [org.hsqldb/hsqldb "2.3.2"]
-    [com.mchange/c3p0 "0.9.2.1"]
+    [com.mchange/c3p0 "0.9.5-pre7"]
     [org.clojure/java.jdbc "0.3.3"]
   ]
   :plugins [[codox "0.6.1"]
