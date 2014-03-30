@@ -71,7 +71,7 @@
 
 (deftest hsqldb-expire
   (let [i (wrap-index (hsqldb-index))]
-    (i {:host 1 :ttl 0 :time (unix-time)})
+    (i {:host 1 :ttl 0 :time (- 1 (unix-time))})
     (i {:host 2 :ttl 10 :time (unix-time)})
     (i {:host 3 :ttl 20 :time (- (unix-time) 21)})
 

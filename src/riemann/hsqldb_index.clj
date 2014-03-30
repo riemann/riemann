@@ -204,10 +204,11 @@
   (let [primary-key (primary-key-for-event event)]
     (jdbc/delete! db-spec :events ["key = ?" primary-key])))
 
-(defn expire-events
+(defn find-expired-events
   [db-spec]
-  (jdbc/delete! db-spec :events ["time + ttl < ?" (long (unix-time))]))
-
+  (jdbc/query db-spec
+              ["SELECT * FROM events WHERE ? - time > ttl" (long (unix-time))]
+              :row-fn row-to-event))
 
 (defn hsqldb-index
   "Create a new HSQLDB backed index"
@@ -227,7 +228,10 @@
         (.delete this event))
 
       (expire [this]
-        (expire-events db-spec))
+        (let [events (find-expired-events db-spec)]
+          (doseq [event events]
+            (.delete this event))
+        events))
 
       (search [this query-ast]
         "Super fast and indexed"
