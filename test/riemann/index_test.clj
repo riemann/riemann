@@ -75,7 +75,10 @@
     (time (dotimes [iter 10000]
             (do (doseq [event not-much]
                   (i event)))))
-    (println "expiring")
+    (println "querying:")
+    (time (dotimes [iter 10000]
+            (do (search i (ast (str "host = " (rand-int 100)))))))
+    (println "expiring:")
     (time (dotimes [iter 10000] (doall (expire i))))
     (clear i)
 
@@ -83,7 +86,10 @@
     (time (dotimes [iter 100]
             (do (doseq [event a-few]
                   (i event)))))
-    (println "expiring")
+    (println "querying:")
+    (time (dotimes [iter 100]
+            (do (search i (ast (str "host = " (rand-int 100)))))))
+    (println "expiring:")
     (time (dotimes [iter 100] (doall (expire i))))
     (clear i)
 
@@ -91,5 +97,8 @@
     (time (dotimes [iter 10]
             (do (doseq [event a-lot]
                   (i event)))))
-    (println "expiring")
+    (println "querying:")
+    (time (dotimes [iter 10]
+            (do (search i (ast (str "host = " (rand-int 100)))))))
+    (println "expiring:")
     (time (dotimes [iter 10] (doall (expire i))))))

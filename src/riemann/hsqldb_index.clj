@@ -236,7 +236,7 @@
     (reify
       Index
       (clear [this]
-        (jdbc/delete! db-spec :events))
+        (jdbc/delete! db-spec :events []))
 
       (delete [this event]
         (delete-event db-spec event))
