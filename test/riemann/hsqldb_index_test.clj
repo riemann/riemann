@@ -44,7 +44,7 @@
   (let [i (wrap-index (hsqldb-index))]
     (i {:host "1"})
     (i {:host "2"})
-    (i {:host "1" :service "3" :state :ok})
+    (i {:host "1" :service "3" :state "ok"})
     (i {:host "1" :service "3" :description "new"})
 
     (is (= (set (map #(select-keys % [:host :service :description]) i))
@@ -57,7 +57,7 @@
     (i {:host "1"})
     (i {:host "2"})
     (delete i {:host "1" :service "1"})
-    (delete i {:host "2" :state :ok})
+    (delete i {:host "2" :state "ok"})
     (is (= (set (map #(select-keys % [:host]) i))
            #{{:host "1"}}))))
 

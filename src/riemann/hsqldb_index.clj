@@ -194,8 +194,7 @@
                               metric-column metric
                               :attributes   (json/generate-string custom-attributes)
                               :ttl          (or (:ttl event) default-ttl)
-                              :time         (long (or (:time event) (unix-time)))
-                              :state        (if (:state event) (name (:state event))))]
+                              :time         (long (or (:time event) (unix-time))))]
       (jdbc/delete! t-con :events ["key = ?" primary-key])
       (jdbc/insert! t-con :events event-for-insert))))
 
