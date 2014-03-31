@@ -193,7 +193,6 @@
                               :tags         (.createArrayOf (jdbc/db-find-connection t-con) "VARCHAR" (into-array (:tags event)))
                               metric-column metric
                               :attributes   (json/generate-string custom-attributes)
-                              :ttl          (or (:ttl event) default-ttl)
                               :time         (long (or (:time event) (unix-time))))]
       (jdbc/delete! t-con :events ["key = ?" primary-key])
       (jdbc/insert! t-con :events event-for-insert))))
@@ -203,11 +202,31 @@
   (let [primary-key (primary-key-for-event event)]
     (jdbc/delete! db-spec :events ["key = ?" primary-key])))
 
+
+(defn delete-event-exactly
+  [db-spec event]
+  (jdbc/with-db-connection [db-con db-spec]
+    (let [primary-key       (primary-key-for-event event)
+          custom-attributes (apply dissoc event codec/event-keys)
+          sql-where         (sql-where-join "AND"
+                              [(sql-where-eq 'key primary-key)
+                               (sql-where-eq 'time (:time event))
+                               (sql-where-eq 'state (:state event))
+                               (sql-where-eq 'service (:service event))
+                               (sql-where-eq 'host (:host event))
+                               (sql-where-eq 'description (:description event))
+                               (sql-where-eq 'tags (.createArrayOf (jdbc/db-find-connection db-con) "VARCHAR" (into-array (:tags event))))
+                               (sql-where-eq 'ttl (:ttl event))
+                               (sql-where-eq 'attributes (json/generate-string custom-attributes))
+                               (sql-where-eq 'metric (:metric event))])]
+      (jdbc/delete! db-con :events ["key = ?" primary-key]))))
+
+
 (defn find-expired-events
   [db-spec]
-  (jdbc/query db-spec
-              ["SELECT * FROM events WHERE ? - time > ttl" (long (unix-time))]
-              :row-fn row-to-event))
+  (let [now (long (unix-time))
+        sql "SELECT * FROM events WHERE (ttl IS NOT NULL AND ? - time > ttl) OR (ttl IS NULL AND ? - time > ?)"]
+    (jdbc/query db-spec [sql now now default-ttl] :row-fn row-to-event)))
 
 (defn hsqldb-index
   "Create a new HSQLDB backed index"
@@ -223,8 +242,7 @@
         (delete-event db-spec event))
 
       (delete-exactly [this event]
-        ;(.remove hm [(:host event) (:service event)] event))
-        (.delete this event))
+        (delete-event-exactly db-spec event))
 
       (expire [this]
         (let [events (find-expired-events db-spec)]
