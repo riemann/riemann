@@ -55,7 +55,7 @@
           (jdbc/as-sql-name entities column)))
 
 (def table-index-columns
-  [:state :service :host :description :tags :ttl :metric_sint64 :metric_f :time])
+  [:state :service :host :tags :metric_sint64 :metric_f])
 
 (def schema-statements
   (concat
@@ -183,7 +183,6 @@
   [db-spec event]
   (jdbc/with-db-transaction [t-con db-spec]
     (let [primary-key       (primary-key-for-event event)
-
           metric            (:metric event)
           metric-column     (if (and (integer? metric) (<= Long/MIN_VALUE metric Long/MAX_VALUE))
                               :metric_sint64
@@ -228,7 +227,7 @@
     (reify
       Index
       (clear [this]
-        (jdbc/delete! db-spec :events []))
+        (jdbc/execute! db-spec ["TRUNCATE TABLE events"]))
 
       (delete [this event]
         (delete-event db-spec event))
@@ -237,10 +236,11 @@
         (delete-event-exactly db-spec event))
 
       (expire [this]
-        (let [events (find-expired-events db-spec)]
-          (doseq [event events]
-            (.delete this event))
-        events))
+        (jdbc/with-db-transaction [t-con db-spec]
+          (let [events (find-expired-events t-con)]
+            (doseq [event events]
+              (delete-event t-con event))
+            events)))
 
       (search [this query-ast]
         "Super fast and indexed"
