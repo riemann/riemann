@@ -165,7 +165,7 @@
 
 (defn find-all-events
   [db-spec]
-  (jdbc/query db-spec "SELECT * FROM events" :row-fn row-to-event))
+  (jdbc/query db-spec ["SELECT * FROM events"] :row-fn row-to-event))
 
 
 (defn find-events
@@ -183,6 +183,7 @@
   [db-spec event]
   (jdbc/with-db-transaction [t-con db-spec]
     (let [primary-key       (primary-key-for-event event)
+
           metric            (:metric event)
           metric-column     (if (and (integer? metric) (<= Long/MIN_VALUE metric Long/MAX_VALUE))
                               :metric_sint64
@@ -205,21 +206,12 @@
 
 (defn delete-event-exactly
   [db-spec event]
-  (jdbc/with-db-connection [db-con db-spec]
-    (let [primary-key       (primary-key-for-event event)
-          custom-attributes (apply dissoc event codec/event-keys)
-          sql-where         (sql-where-join "AND"
-                              [(sql-where-eq 'key primary-key)
-                               (sql-where-eq 'time (:time event))
-                               (sql-where-eq 'state (:state event))
-                               (sql-where-eq 'service (:service event))
-                               (sql-where-eq 'host (:host event))
-                               (sql-where-eq 'description (:description event))
-                               (sql-where-eq 'tags (.createArrayOf (jdbc/db-find-connection db-con) "VARCHAR" (into-array (:tags event))))
-                               (sql-where-eq 'ttl (:ttl event))
-                               (sql-where-eq 'attributes (json/generate-string custom-attributes))
-                               (sql-where-eq 'metric (:metric event))])]
-      (jdbc/delete! db-con :events ["key = ?" primary-key]))))
+  (jdbc/with-db-transaction [t-con db-spec]
+    (let [primary-key (primary-key-for-event event)]
+      (when-let [db-event (first (jdbc/query t-con ["SELECT * FROM events WHERE key = ?" primary-key] :row-fn row-to-event))]
+        (if (= event db-event)
+          (jdbc/delete! t-con :events ["key = ?" primary-key]))))))
+
 
 
 (defn find-expired-events
