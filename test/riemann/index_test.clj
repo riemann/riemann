@@ -92,7 +92,27 @@
             (do (doseq [event a-lot]
                   (i event)))))
     (println "expiring")
-    (time (dotimes [iter 10] (doall (expire i))))))
+    (time (dotimes [iter 10] (doall (expire i))))
+
+
+    (println "updating and expiring the same 100 events 10000 times (8 threads):")
+    (time (doall (pmap (fn [_] (dotimes [iter 10000]
+            (do (doseq [event not-much]
+                  (i event))))) (range 8))))
+    (clear i)
+
+    (println "updating and expiring the same 100000 events 100 times (8 threads):")
+    (time (doall (pmap (fn [_] (dotimes [iter 100]
+            (do (doseq [event a-few]
+                  (i event))))) (range 8))))
+    (clear i)
+
+    (println "updating and expiring the same 10000000 events 10 times (8 threads):")
+    (time (doall (pmap (fn [_] (dotimes [iter 10]
+            (do (doseq [event a-lot]
+                  (i event))))) (range 8))))
+
+    ))
 
 
 (deftest is-query-for-host-and-service-not-matching
