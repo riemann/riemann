@@ -1076,13 +1076,19 @@
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
-  service/host combination that passes through it (limited by :ttl). Every
-  second, it passes on *all* events it remembers. When events expire, they are
-  included in the emitted sequence of events *once*, and removed from the state
-  table thereafter.
+  service/host combination that passes through it (limited by :ttl). Every dt
+  seconds (default to 1 second), it passes on *all* events it remembers. When
+  events expire, they are included in the emitted sequence of events *once*,
+  and removed from the state table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
-  to average the CPU use over several hosts."
+  to average the CPU use over several hosts.
+
+  Every 10 seconds, print a sequence of events including all the events which
+  share the same :foo and :bar attributes:
+
+  (by [:foo :bar]
+    (coalesce 10 prn))"
   [& [dt & children]]
   (let [children (if (number? dt) children (cons dt children))
         dt (if (number? dt) dt 1)
