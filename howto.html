@@ -412,7 +412,7 @@ user=> (riemann.bin/reload!)
     (by :service
       (coalesce
         #(info %) ; Third, check the coalesced vector of events
-        (smap folds/max
+        (smap folds/maximum
           #(info %) ; Fourth, probe here to check the maximum calculation
           (with :host nil
             #(info %) ; Finally, check exactly what events are being applied
