@@ -1082,7 +1082,13 @@
   and removed from the state table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
-  to average the CPU use over several hosts."
+  to average the CPU use over several hosts.
+
+  Every 10 seconds, print a sequence of events including all the events which
+  share the same :foo and :bar attributes:
+
+  (by [:foo :bar]
+    (coalesce 10 prn))"
   [& [dt & children]]
   (let [children (if (number? dt) children (cons dt children))
         dt (if (number? dt) dt 1)
