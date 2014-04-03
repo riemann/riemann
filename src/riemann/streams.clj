@@ -183,7 +183,7 @@
 
   Passes on events, but with the *maximum* of all received metrics:
   (sreduce (fn [acc event] (assoc event :metric
-                                  (+ (:metric event) (:metric acc)))) ...)
+                                  (max (:metric event) (:metric acc)))) ...)
 
   Or, using riemann.folds, a simple moving average:
   (sreduce (fn [acc event] (folds/mean [acc event])) ...)"
