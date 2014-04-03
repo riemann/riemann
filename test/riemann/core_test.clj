@@ -307,6 +307,29 @@
                         :time 2
                         :state "expired"}))))
 
+(deftest ensures-event-times
+  (let [out (promise)
+        server (riemann.transport.tcp/tcp-server)
+        core   (logging/suppress
+                 ["riemann.core"
+                  "riemann.transport.tcp"
+                  "riemann.pubsub"]
+                 (transition! (core) {:services [server]
+                                      :streams  [(partial deliver out)]}))
+        client (riemann.client/tcp-client)
+        t1     (/ (System/currentTimeMillis) 1000)]
+    (try
+      (send-event client {:service "hi" :time nil})
+      (let [event (deref out 1000 :timeout)
+            t2    (/ (System/currentTimeMillis) 1000)]
+        (is (= "hi" (:service event)))
+        (is (<= t1 (:time event) t2)))
+      (finally
+        (close-client client)
+        (logging/suppress ["riemann.transport.tcp"
+                           "riemann.core"
+                           "riemann.pubsub"]
+                          (stop! core))))))
 (deftest percentiles
          (let [out (atom [])
                server (riemann.transport.tcp/tcp-server)
