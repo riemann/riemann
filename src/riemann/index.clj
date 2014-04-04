@@ -57,22 +57,22 @@
     (reify
       Index
       (clear [this]
-             (.clear hm))
+        (.clear hm))
 
       (delete [this event]
-              (.remove hm [(:host event) (:service event)]))
+        (.remove hm [(:host event) (:service event)]))
 
       (delete-exactly [this event]
-                      (.remove hm [(:host event) (:service event)] event))
+        (.remove hm [(:host event) (:service event)] event))
 
       (expire [this]
-              (filter
-                (fn [{:keys [ttl time] :or {ttl default-ttl} :as state}]
-                  (let [age (- (unix-time) time)]
-                    (when (> age ttl)
-                      (delete this state)
-                      true)))
-                (.values hm)))
+        (filter
+          (fn [{:keys [ttl time] :or {ttl default-ttl} :as state}]
+            (let [age (- (unix-time) time)]
+              (when (> age ttl)
+                (delete this state)
+                true)))
+          (.values hm)))
 
       (search [this query-ast]
         "O(n) unless the query is for exactly a host and service"
@@ -93,7 +93,7 @@
 
       clojure.lang.Seqable
       (seq [this]
-           (seq (.values hm)))
+        (seq (.values hm)))
 
       ServiceEquiv
       (equiv? [this other] (= (class this) (class other)))
