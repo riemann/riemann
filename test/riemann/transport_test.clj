@@ -21,8 +21,6 @@
   (:import (org.jboss.netty.buffer ChannelBuffers)
            (java.io IOException)))
 
-(riemann.logging/init)
-
 (deftest ws-put-events-test
          (riemann.logging/suppress
            ["riemann.transport"
@@ -57,10 +55,11 @@
    ["riemann.transport" "riemann.core" "riemann.pubsub"]
    (let [s1       (tcp-server)
          s2       (sse-server)
-         index    (wrap-index (index/index))
+         core     (core)
+         index    (wrap-index (index/index) (:pubsub core))
          pubsub   (pubsub/pubsub-registry)
          core     (transition!
-                   (core)
+                   core
                    {:index    index
                     :pubsub   pubsub
                     :services [s1 s2]
@@ -70,15 +69,17 @@
                         second
                         (partial re-matches #"data: (.*)\n\n")
                         formats/bytes->string)
-         response (http-request
-                   {:method :get
-                    :url    "http://127.0.0.1:5558/index?query=true"})]
+         response @(http-request
+                     {:method :get
+                      :url    "http://127.0.0.1:5558/index?query=true"})]
      (try
        (client/send-event client {:service "service1"})
        (client/send-event client {:service "service2"})
-       (Thread/sleep 500)
-       (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
-
+       (let [[r2 r1] (->> response
+                          :body
+                          (take* 2)
+                          (map* convert)
+                          channel->lazy-seq)]
          (is (#{"service1" "service2"} (get r1 "service")))
          (is (#{"service1" "service2"} (get r2 "service"))))
        (finally
