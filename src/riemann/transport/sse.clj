@@ -63,23 +63,21 @@
             {:strs [query]}        (http-query-map query-string)
             ast                    (query/ast query)]
 
-        ;; first send all known events
+        ; first send all known events
         (when index
           (doseq [event (index/search index ast)]
             (enqueue ch (event-to-server-sent-event event))))
 
+        ; now subscribe to the core
         (let [pred (query/fun ast)
               sub  (subscribe! pubsub "index" (sse-out stats ch pred) true)]
-
-          ;; now subscribe to the core
           (info "New SSE subscription to index for:" query)
 
-          (on-closed ch
-                     (fn []
-                       (info "Closing SSE channel " remote-addr query)
-                       (unsubscribe! pubsub sub)))
+          (on-closed ch (fn []
+                          (info "Closing SSE channel " remote-addr query)
+                          (unsubscribe! pubsub sub)))
 
-          (enqueue resp-ch {:status 200  :headers headers :body ch})))
+          (enqueue resp-ch {:status 200 :headers headers :body ch})))
       (sse-error-uri resp-ch uri))))
 
 (defrecord SSEServer [host port headers core server stats]
@@ -101,7 +99,7 @@
   (start! [this]
           (locking this
             (when-not @server
-              (reset! server (start-http-server 
+              (reset! server (start-http-server
                               (sse-handler core stats headers)
                               {:host host :port port}))
               (info "SSE server" host port "online"))))
@@ -156,8 +154,8 @@
            the same host, you will probably need to add an
            Access-Control-Allow-Origin header here"
   ([] (sse-server {}))
-  ([{:keys [host port headers] 
-     :or   {host    "127.0.0.1" 
+  ([{:keys [host port headers]
+     :or   {host    "127.0.0.1"
             port    5558
             headers {}}}]
      (SSEServer.
