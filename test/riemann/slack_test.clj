@@ -20,10 +20,10 @@
 
 (logging/init)
 
-(deftest ^:slack test_event
+(deftest ^:slack ^:integration test_event
   (let [slack_connect (slack account api-key user room)]
     (slack_connect {:host "localhost"
-         :service "good event test"
-         :description "Testing slack.com alerts from riemann"
-         :metric 42
-         :state "ok"})))
+                    :service "good event test"
+                    :description "Testing slack.com alerts from riemann"
+                    :metric 42
+                    :state "ok"})))
