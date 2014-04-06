@@ -1,6 +1,7 @@
 (ns riemann.config-test
   (:use riemann.config
         clojure.test
+        [riemann.common :only [event]]
         [riemann.index :only [Index]])
   (:require [riemann.core :as core]
             [riemann.pubsub :as pubsub]
@@ -135,29 +136,29 @@
 (deftest update-index-test
          (let [i (index)]
            (apply!)
-           (i {:service 1 :state "ok"})
-           (is (= (seq i) [{:service 1 :state "ok"}]))))
+           (i {:service 1 :state "ok" :time 0})
+           (is (= (seq i) [{:service 1 :state "ok" :time 0}]))))
 
 (deftest delete-from-index-test
          (let [i (index)
                delete (delete-from-index)
-               states [{:host 1 :state "ok"}
-                       {:host 2 :state "ok"}
-                       {:host 1 :state "bad"}]]
+               states [{:host 1 :state "ok" :time 0}
+                       {:host 2 :state "ok" :time 0}
+                       {:host 1 :state "bad" :time 0}]]
            (apply!)
            (dorun (map i states))
            (delete {:host 1 :state "definitely not seen before"})
-           (is (= (seq i) [{:host 2 :state "ok"}]))))
+           (is (= (seq i) [{:host 2 :state "ok" :time 0}]))))
 
 (deftest delete-from-index-fields
          (let [i (index)
                delete (delete-from-index [:host :state])]
            (apply!)
-           (i {:host 1 :state "foo"})
-           (i {:host 2 :state "bar"})
+           (i {:host 1 :state "foo" :time 0})
+           (i {:host 2 :state "bar" :time 0})
            (delete {:host 1 :state "not seen"})
            (delete {:host 2 :state "bar"})
-           (is (= (seq i) [{:host 1 :state "foo"}]))))
+           (is (= (seq i) [{:host 1 :state "foo" :time 0}]))))
 
 (deftest async-queue-test
          (let [out    (atom [])
@@ -181,8 +182,8 @@
       (streams/where (service "foo")
                      (streams/with :service "bar" reinject)))
     (apply!)
-    (core/stream! @core {:service "foo" :metric 2})
-    (is (= (deref event 10 :timeout) {:service "bar" :metric 2}))))
+    (core/stream! @core {:service "foo" :metric 2 :time 0})
+    (is (= (deref event 10 :timeout) {:service "bar" :metric 2 :time 0}))))
 
 (deftest subscribe-in-stream-test
          (let [received (promise)]
@@ -211,5 +212,5 @@
     (subscribe "index" (partial deliver received))
     (streams index)
     (apply!)
-    (core/stream! @core {:service "foo"})
-    (is (= {:service "foo"} (deref received 500 :timeout)))))
+    (core/stream! @core {:service "foo" :time 0})
+    (is (= {:service "foo" :time 0} (deref received 500 :timeout)))))
