@@ -4,7 +4,7 @@
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index, reinject) which operate on that core."
   (:require [riemann.core :as core]
-            [riemann.common :as common]
+            [riemann.common :as common :refer [event]]
             [riemann.service :as service]
             [riemann.transport.tcp        :as tcp]
             [riemann.transport.udp        :as udp]
