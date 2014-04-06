@@ -203,6 +203,10 @@
        (search [this query-ast]
          (index/search source query-ast))
        (update [this event]
+         (when-not (:time event)
+           (warn "trying to index event with no time")
+           (throw (ex-info "cannot index events with no time"
+                           {:event event})))
          (index/update source event)
          (when registry
            (ps/publish! registry "index" event)))
