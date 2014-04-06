@@ -33,6 +33,7 @@
         [riemann.nagios :only [nagios]]
         [riemann.opentsdb :only [opentsdb]]
         [riemann.hipchat :only [hipchat]]
+        [riemann.slack :only [slack]]
         riemann.streams))
 
 (def core "The currently running core."
