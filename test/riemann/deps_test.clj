@@ -2,12 +2,13 @@
   (:use riemann.deps
         riemann.index
         riemann.core
+        [riemann.common :only [event]]
         clojure.test))
 
 (defn context [events]
   (let [i (wrap-index (nbhm-index))]
     (doseq [e events]
-      (i e))
+      (i (event e)))
     i))
 
 (deftest hash-match

@@ -2,37 +2,49 @@
   (:use riemann.index
         riemann.core
         riemann.query
+        [riemann.common :only [event]]
         [riemann.time :only [unix-time]]
         clojure.test))
 
+(deftest missing-time-throws
+  (riemann.logging/suppress
+   ["riemann.core"]
+   (let [i (wrap-index (index))
+         e (event {:host 1 :service 2})]
+     (is (thrown-with-msg? clojure.lang.ExceptionInfo
+                           #"cannot index events with no time"
+                           (i {:host 1 :service 2})))
+     (i e)
+     (is (= (set i) #{e})))))
+
 (deftest nbhm-update
          (let [i (wrap-index (index))]
-           (i {:host 1})
-           (i {:host 2})
-           (i {:host 1 :service 3 :state :ok})
-           (i {:host 1 :service 3 :description "new"})
+           (i {:host 1 :time 0})
+           (i {:host 2 :time 0})
+           (i {:host 1 :service 3 :state :ok :time 0})
+           (i {:host 1 :service 3 :description "new" :time 0})
 
            (is (= (set i)
-                  #{{:host 1}
-                    {:host 2}
-                    {:host 1 :service 3 :description "new"}}))))
+                  #{{:host 1 :time 0}
+                    {:host 2 :time 0}
+                    {:host 1 :service 3 :description "new"  :time 0}}))))
 
 (deftest nhbm-delete
          (let [i (wrap-index (index))]
-           (i {:host 1})
-           (i {:host 2})
+           (i {:host 1 :time 0})
+           (i {:host 2 :time 0})
            (delete i {:host 1 :service 1})
            (delete i {:host 2 :state :ok})
            (is (= (set i)
-                  #{{:host 1}}))))
+                  #{{:host 1 :time 0}}))))
 
 (deftest nhbm-search
          (let [i (wrap-index (index))]
-           (i {:host 1})
-           (i {:host 2 :service "meow"})
-           (i {:host 3 :service "mrrrow"})
+           (i {:host 1 :time 0})
+           (i {:host 2 :service "meow" :time 0})
+           (i {:host 3 :service "mrrrow" :time 0})
            (is (= (set (search i (ast "host >= 2 and not service =~ \"%r%\"")))
-                  #{{:host 2 :service "meow"}}))))
+                  #{{:host 2 :service "meow" :time 0}}))))
 
 (deftest nhbm-expire
          (let [i (wrap-index (index))]
@@ -50,8 +62,8 @@
 
 (deftest nbhm-read-index
          (let [i (wrap-index (index))]
-           (i {:host 1 :service 1 :metric 5})
-           (i {:host 1 :service 2 :metric 7})
+           (i {:host 1 :service 1 :metric 5 :time 0})
+           (i {:host 1 :service 2 :metric 7 :time 0})
 
            (is (= 5 (:metric (lookup i 1 1))))
            (is (= 7 (:metric (lookup i 1 2))))))
