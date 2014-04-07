@@ -12,7 +12,7 @@
    (let [i (wrap-index (index))
          e (event {:host 1 :service 2})]
      (is (thrown-with-msg? clojure.lang.ExceptionInfo
-                           #"cannot index events with no time"
+                           #"^cannot index event.*$"
                            (i {:host 1 :service 2})))
      (i e)
      (is (= (set i) #{e})))))
