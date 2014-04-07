@@ -1370,6 +1370,53 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
   </div>
 </div>
 
+<h3>Generating events from within a stream</h3>
+<div class="row">
+  <div class="sixcol">
+    <p>
+    There are times where you will want to generate new events
+    from an existing stream. Most of the time, it is preferrable
+    to use <code>riemann.streams/with</code> to modifying fields
+    from an existing event, but there are cases where it would hinder
+    readability or it is just not possible, in these cases it is
+    preferrable to use <code>riemann.common/event</code>
+    </p>
+  </div>
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>In this example we are using with to work on existing event
+      to generate a new service:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(with (service "foo")
+  (coalesce
+    (smap folds/count
+      ;; generate a new event by modifying an existing one
+      (with {:host nil :service "total foos"}
+        index))))
+{% endhighlight %}
+  </div>  
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>In some cases we will want to generate a new event
+       entirely</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(fixed-time-window 60
+  (smap (fn [events]
+          (let [errors   (filter (comp #{"warning" "critical"} :state) events)
+                fraction (/ (count errors) events)]
+            (event {:service "error percent"
+                    :metric fraction})))
+    index))
+{% endhighlight %}
+  </div>  
+</div>
+
 <h2>Working with the dashboard</h2>
 
 <h3>Application specific host grouping</h3>
