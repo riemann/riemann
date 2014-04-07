@@ -146,8 +146,9 @@
   "Returns a function which takes a seq of events.
   Combines events with f, then forwards the result to children."
   [f & children]
-  (fn stream [events]
-    (call-rescue (f events) children)))
+  (deprecate "Combine is deprecated in favor of smap/smap*"
+             (fn stream [events]
+               (call-rescue (f events) children))))
 
 (defn smap*
   "Streaming map: less magic. Calls children with (f event).
@@ -251,7 +252,7 @@
   children with a vector of the last n events, from oldest to newest. Ignores
   event times. Example:
 
-  (moving-event-window 5 (combine folds/mean index))"
+  (moving-event-window 5 (smap folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
     (fn stream [event]
@@ -264,7 +265,7 @@
   calls children with a vector of those events, from oldest to newest. Ignores
   event times. Example:
 
-  (fixed-event-window 5 (combine folds/mean index))"
+  (fixed-event-window 5 (smap folds/mean index))"
   [n & children]
   (let [buffer (atom [])]
     (fn stream [event]
@@ -595,15 +596,15 @@
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn create [] (atom []))
-      (fn add [r event]
-        (when-let [ek (event-key event)]
-          (swap! r conj event)))
-      (fn finish [r start end]
-        (let [events @r
-              stat  (folder (map event-key events))
-              event (assoc (last events) event-key stat)]
-          (call-rescue event children)))))
+                  (fn create [] (atom []))
+                  (fn add [r event]
+                    (when-let [ek (event-key event)]
+                      (swap! r conj event)))
+                  (fn finish [r start end]
+                    (let [events @r
+                          stat  (folder (map event-key events))
+                          event (assoc (last events) event-key stat)]
+                      (call-rescue event children)))))
 
 (defn fold-interval-metric
   "Wrapping for fold-interval that assumes :metric as event-key."
