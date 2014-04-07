@@ -146,9 +146,9 @@
   "Returns a function which takes a seq of events.
   Combines events with f, then forwards the result to children."
   [f & children]
-  (deprecate "Combine is deprecated in favor of smap/smap*"
-             (fn stream [events]
-               (call-rescue (f events) children))))
+  (deprecated "Combine is deprecated in favor of smap/smap*"
+              (fn stream [events]
+                (call-rescue (f events) children))))
 
 (defn smap*
   "Streaming map: less magic. Calls children with (f event).
