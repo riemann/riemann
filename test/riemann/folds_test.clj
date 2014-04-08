@@ -24,13 +24,13 @@
 
               [{:metric 3} {:metric 1} {:metric 2}]
               [{:metric 1} {:metric 2} {:metric 3}]
-              
+
               [{:metric 6} {:metric 1} {:metric 2} {:metric 1} {:metric 1}]
               [{:metric 1} {:metric 1} {:metric 6}]))
 
 (defn test-fold-common
   [fold operator]
-  (are [es] (= (fold es) 
+  (are [es] (= (fold es)
                (assoc (first es)
                       :metric
                       (reduce operator (map :metric es))))
@@ -65,7 +65,7 @@
   (is (nil? (fold [])))
   (is (nil? (fold [nil {:service "foo"}])))
   (is (= {:service "foo"
-          :metric nil 
+          :metric nil
           :description "An event or metric was nil."}
          (fold [{:service "foo"} {:metric 2}])))
   (is (= {:service "foo"
@@ -88,8 +88,8 @@
          (test-fold-all quotient /)
 
          (testing "exceptions"
-                  (is (= (quotient [{:service "hi" :metric 1} 
-                                   {:metric 2} 
+                  (is (= (quotient [{:service "hi" :metric 1}
+                                   {:metric 2}
                                    {:metric 0}])
                          {:service "hi"
                           :metric nil
@@ -124,3 +124,7 @@
                 {:metric 2}))
          (is (= (count [{:metric 2} {:metric 3 :state "expired"} {:metric 4 :ttl 1 :time -3}])
                 {:metric 3})))
+
+(deftest empty-folds
+  (is (nil? (minimum [])))
+  (is (nil? (maximum []))))
