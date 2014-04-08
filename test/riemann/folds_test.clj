@@ -24,7 +24,7 @@
 
               [{:metric 3} {:metric 1} {:metric 2}]
               [{:metric 1} {:metric 2} {:metric 3}]
-              
+
               [{:metric 6} {:metric 1} {:metric 2} {:metric 1} {:metric 1}]
               [{:metric 1} {:metric 1} {:metric 6}]))
 
@@ -124,3 +124,16 @@
                 {:metric 2}))
          (is (= (count [{:metric 2} {:metric 3 :state "expired"} {:metric 4 :ttl 1 :time -3}])
                 {:metric 3})))
+
+(deftest minimum-test
+  (is (= nil          (minimum nil)))
+  (is (= nil          (minimum [{:metric nil}])))
+  (is (= {:metric 2}  (minimum [{:metric 2}])))
+  (is (= {:metric -4} (minimum [{:metric 2} {:metric 5} {:metric -4}
+                                {:metric 0}]))))
+(deftest maximum-test
+  (is (= nil          (maximum nil)))
+  (is (= nil          (maximum [{:metric nil}])))
+  (is (= {:metric 2}  (maximum [{:metric 2}])))
+  (is (= {:metric 5}  (maximum [{:metric 2} {:metric 5} {:metric -4}
+                                {:metric 0}]))))

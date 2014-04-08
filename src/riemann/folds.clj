@@ -163,15 +163,26 @@
   [events]
   (first (sorted-sample-extract events [0.5])))
 
+(defn extremum
+  "Returns an extreme event, by a comparison function over the metric."
+  [comparison events]
+  (reduce (fn [smallest event]
+            (cond (nil? (:metric event))                           smallest
+                  (nil? smallest)                                  event
+                  (comparison (:metric event) (:metric smallest))  event
+                  :else                                            smallest))
+          nil
+          events))
+
 (defn minimum
   "Returns the minimum event, by metric."
   [events]
-  (apply min-key :metric (filter #(and % (:metric %)) events)))
+  (extremum <= events))
 
 (defn maximum
   "Returns the maximum event, by metric."
   [events]
-  (apply max-key :metric (filter #(and % (:metric %)) events)))
+  (extremum >= events))
 
 (defn std-dev
   "calculates standard deviation across a seq of events"
