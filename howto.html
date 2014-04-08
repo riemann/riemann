@@ -333,6 +333,44 @@ user=> (riemann.bin/reload!)
 
 <h2>Debugging</h2>
 
+<h3>Printing events to the console or log</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Streams are just functions, so you can use any function that prints an
+    event to the console to see which events pass through a particular stream.
+    <code>prn</code> prints an object to the console, so adding
+    <code>prn</code> to any stream prints the events at that stream to the
+    console.</p>
+
+    <p>If you want to log to the logfile and/or console log, use <code>#(info
+      %)</code>, which is a shorthand for the anonymous function <code>(fn [x]
+    (info x))</code>. Note that <code>info</code> logs events a little
+  differently than <code>prn</code>, but you can use <code>pr-str</code> to
+  recover the clojure representation if desired.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  (where (service "bar")
+    ; Print event to console
+    prn
+
+    ; Print :foo, then the event
+    #(prn :foo %)
+
+    ; Log event to the console
+    #(info %)
+
+    ; Log event using the same representation as prn
+    #(info (pr-str %))
+
+    ; Log some specific fields
+    #(info (:service %) (:metric %))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Troubleshooting missing events</h3>
 
 <div class="row">
