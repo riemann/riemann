@@ -1,13 +1,13 @@
 (ns riemann.folds
   "Functions for combining states.
-  
+
   Folds usually come in two variants: a friendly version like sum, and a strict
   version like sum*. Strict variants will throw when one of their events is
   nil, missing a metric, or otherwise invalid. In typical use, however, you
   won't *have* all the necessary information to pass on an event. Friendly
   variants will do their best to ignore these error conditions where sensible,
   returning partially complete events or nil instead of throwing.
-  
+
   Called with an empty list, folds which would return a single event return
   nil."
   (:use [riemann.common])
@@ -34,7 +34,7 @@
   returns a 2-element seq of the smallest event and the biggest event, by
   metric. The first has a service which ends in \" 0\" and the second one ends
   in \" 1\".  Useful for extracting histograms and percentiles.
-  
+
   When s is empty, returns an empty list."
   [s points]
   (map (fn [point event]
@@ -61,7 +61,7 @@
 (defn fold
   "Fold with a reduction function over metrics. Ignores nil events and events
   with nil metrics.
-  
+
   If there are *no* non-nil events, returns nil."
   [f events]
   (when-let [e (some identity events)]
@@ -73,7 +73,7 @@
   If the first event has a nil :metric, or if any remaining event is nil, or
   has a nil metric, returns the first event, but with :metric nil and a
   :description of the error.
- 
+
   If the first event is nil, returns nil."
   [f events]
   (when-let [e (first events)]
@@ -166,12 +166,14 @@
 (defn minimum
   "Returns the minimum event, by metric."
   [events]
-  (apply min-key :metric (filter #(and % (:metric %)) events)))
+  (when (seq events)
+    (apply min-key :metric (filter #(and % (:metric %)) events))))
 
 (defn maximum
   "Returns the maximum event, by metric."
   [events]
-  (apply max-key :metric (filter #(and % (:metric %)) events)))
+  (when (seq events)
+    (apply max-key :metric (filter #(and % (:metric %)) events))))
 
 (defn std-dev
   "calculates standard deviation across a seq of events"
