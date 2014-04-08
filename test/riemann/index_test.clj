@@ -107,18 +107,23 @@
     (time (dotimes [iter 10] (doall (expire i))))))
 
 
-(deftest is-query-for-host-and-service-not-matching
-  (let [ast (ast "metric = 4")]
-    (is (= nil (query-for-host-and-service ast)))))
+(deftest query-for-host-and-service-test
+  (testing "not matching"
+    (let [ast (ast "metric = 4")]
+      (is (= nil (query-for-host-and-service ast)))))
 
-(deftest is-query-for-host-and-service-matching
-  (let [ast (ast "host = nil and service = \"ser\"")]
-    (is (= [nil "ser"] (query-for-host-and-service ast)))))
+  (testing "matching"
+    (let [ast (ast "host = nil and service = \"ser\"")]
+      (is (= [nil "ser"] (query-for-host-and-service ast)))))
 
-(deftest is-query-for-host-and-service-with-more
-  (let [ast (ast "host = nil and service = \"ser\" and metric > 5")]
-    (is (= nil (query-for-host-and-service ast)))))
+  (testing "with more"
+    (let [ast (ast "host = nil and service = \"ser\" and metric > 5")]
+      (is (= nil (query-for-host-and-service ast)))))
 
-(deftest is-query-for-host-and-host
-  (let [ast (ast "host = \"h1\" and host = \"h2\"")]
-    (is (= nil (query-for-host-and-service ast)))))
+  (testing "non-list sub-predicates"
+    (let [ast (ast "host = 2 and metric")]
+      (is (= nil (query-for-host-and-service ast)))))
+
+  (testing "two hosts"
+    (let [ast (ast "host = \"h1\" and host = \"h2\"")]
+      (is (= nil (query-for-host-and-service ast))))))
