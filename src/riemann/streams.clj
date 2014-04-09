@@ -171,6 +171,25 @@
       (when-not (nil? value)
         (call-rescue value children)))))
 
+(defn smapcat
+  "Streaming mapcat. Calls children with each event in (f event), which should
+  return a sequence. For instance, to set the state of any services with
+  metrics deviating from the mode to \"warning\", one might use coalesce to
+  aggregate all services, and smapcat to find the mode and assoc the proper
+  states; emitting a series of individual events to the index.
+  (coalesce
+    (smapcat (fn [events]
+               (let [freqs (frequencies (map :metric events))
+                     mode  (apply max-key freqs (keys freqs))]
+                 (map #(assoc % :state (if (= mode (:metric %))
+                                         \"ok\" \"warning\"))
+                      events)))
+      index))"
+  [f & children]
+  (fn stream [event]
+    (doseq [e (f event)]
+      (call-rescue e children))))
+
 (defn sreduce
   "Streaming reduce. Two forms:
 
