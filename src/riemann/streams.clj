@@ -142,13 +142,6 @@
           (call-rescue (expire event) [true-stream])
           (call-rescue event [false-stream]))))))
 
-(defn combine
-  "Returns a function which takes a seq of events.
-  Combines events with f, then forwards the result to children."
-  [f & children]
-  (deprecated "combine is deprecated in favor of smap or smap*"
-              (apply smap* f children)))
-
 (defn smap*
   "Streaming map: less magic. Calls children with (f event).
   Unlike smap, passes on nil results to children. Example:
@@ -169,6 +162,13 @@
     (let [value (f event)]
       (when-not (nil? value)
         (call-rescue value children)))))
+
+(defn combine
+  "Returns a function which takes a seq of events.
+  Combines events with f, then forwards the result to children."
+  [f & children]
+  (deprecated "combine is deprecated in favor of smap or smap*"
+              (apply smap* f children)))
 
 (defn smapcat
   "Streaming mapcat. Calls children with each event in (f event), which should
