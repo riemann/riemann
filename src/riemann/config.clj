@@ -32,6 +32,7 @@
         [riemann.librato :only [librato-metrics]]
         [riemann.nagios :only [nagios]]
         [riemann.opentsdb :only [opentsdb]]
+        [riemann.influxdb :only [influxdb]]
         [riemann.hipchat :only [hipchat]]
         [riemann.slack :only [slack]]
         riemann.streams))

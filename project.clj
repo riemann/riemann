@@ -42,6 +42,7 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
+    [capacitor "0.2.2"]
   ]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
@@ -53,6 +54,7 @@
                    :email :email
                    :sns :sns
                    :graphite :graphite
+                   :influxdb :influxdb
                    :kairosdb :kairosdb
                    :librato :librato
                    :hipchat :hipchat
