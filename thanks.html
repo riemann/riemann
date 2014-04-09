@@ -58,6 +58,9 @@ layout: default
       <p>senoctar fixed a bug in riemann-java-client which ignored custom
       attributes during event DSL creation.</p>
 
+      <p>Torbjörn Norinder (lwf) added pluggable storage backends to
+      riemann-dash.</p>
+
       <p>Zach Leslie (xaque208) fixed riemann-health's load average parsing on
       freebsd.</p>
 
@@ -68,7 +71,8 @@ layout: default
       and dropped network connections, and added an optimized path for queries
       for a particular host and service.</p>
 
-      <p>Pradeep Chhetri (pradeepchhetri) added an OpenTSDB client.</p>
+      <p>Pradeep Chhetri (pradeepchhetri) added an OpenTSDB and Influx
+      client.</p>
 
       <p>dgrnbrg changed (coalesce) to submit coalesced events downstream every
       dt seconds; a significant performance improvement.</p>
@@ -94,7 +98,8 @@ layout: default
 
       <p>Jorge Espada (jespada) fixed a broken link to the test suite from the
       docs and added riemann-aws-billing to riemann-tools. Jorge also added a
-      size-based log rotation option.</p>
+      size-based log rotation option, and changed the dashboard to use a
+      modifier key for editing views.</p>
 
       <p>Bobby Ryterski changed the RPM package to load bash options from
       /etc/sysconfig, instead of the debian-style /etc/default.</p>
@@ -108,7 +113,7 @@ layout: default
       <p>Tom Crayford (tcrayford) added a proper error message for a
       riemann-yava-client batching issue, and made RiemannReporter able to use
       any Riemann client. He also made a correction to streams/coalesce's
-      docstring.</p>
+      docstring, and fixed riemann-proc's escaping of grep args.</p>
 
       <p>Drew Michel (dmichell) added an apache httpd checker to
       riemann-tools.</p>
@@ -129,13 +134,16 @@ layout: default
 
       <p>Pierre Yves Ritschard (pyr) added a slew of new logging parameters,
       and added IFn and delete-on-expire support to the index. Pierre also
-      helped clean up a bunch of old issues, and fixed a bug causing the local
-      hostname to throw when DNS failed, *and* helped with changes to the index
-      supporting IFn. To make matters worse, he committed performance
-      improvements to streams/changed, sum-over-time, part-time-fast-interval,
-      mean-over-time, and several others.</p>
+      helped clean up a bunch of old issues, improved docstrings, and fixed a
+      bug causing the local hostname to throw when DNS failed, *and* helped
+      with changes to the index supporting IFn. To make matters worse, he
+      committed performance improvements to streams/changed, sum-over-time,
+      part-time-fast-interval, mean-over-time, and several other--followed by
+      new docs for creating events within streams, and better errors for events
+      indexed without a time.</p>
 
-      <p>Gavin Sandy (gsandie) included hipchat in riemann.config.</p>
+      <p>Gavin Sandy (gsandie) included hipchat in riemann.config, and wrote an
+      adapter for slack.com.</p>
 
       <p>Gergely Nagy (algernon) added regex support to the query engine and
       wrote a C client.</p>
@@ -147,8 +155,8 @@ layout: default
       longstanding bug in the dashboard; now it correctly expires events even
       when Riemann doesn't send expirations as a part of the query. Marc also
       adjusted the rendering of expired events in the dash, and helped update
-      the RPM and Debian packages, plus the clients page of riemann.io. Rock
-      on!</p>
+      the RPM and Debian packages, plus the clients page of riemann.io. He
+      updated the docstring for (coalesce) as well. Rock on!</p>
 
       <p>Fabien Wernli (faxm0dem) fixed a bug in riemann-dash which caused null
       metrics to be rendered as 0.</p>

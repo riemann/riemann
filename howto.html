@@ -333,6 +333,44 @@ user=> (riemann.bin/reload!)
 
 <h2>Debugging</h2>
 
+<h3>Printing events to the console or log</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Streams are just functions, so you can use any function that prints an
+    event to the console to see which events pass through a particular stream.
+    <code>prn</code> prints an object to the console, so adding
+    <code>prn</code> to any stream prints the events at that stream to the
+    console.</p>
+
+    <p>If you want to log to the logfile and/or console log, use <code>#(info
+      %)</code>, which is a shorthand for the anonymous function <code>(fn [x]
+    (info x))</code>. Note that <code>info</code> logs events a little
+  differently than <code>prn</code>, but you can use <code>pr-str</code> to
+  recover the clojure representation if desired.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  (where (service "bar")
+    ; Print event to console
+    prn
+
+    ; Print :foo, then the event
+    #(prn :foo %)
+
+    ; Log event to the console
+    #(info %)
+
+    ; Log event using the same representation as prn
+    #(info (pr-str %))
+
+    ; Log some specific fields
+    #(info (:service %) (:metric %))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Troubleshooting missing events</h3>
 
 <div class="row">
@@ -412,7 +450,7 @@ user=> (riemann.bin/reload!)
     (by :service
       (coalesce
         #(info %) ; Third, check the coalesced vector of events
-        (smap folds/max
+        (smap folds/maximum
           #(info %) ; Fourth, probe here to check the maximum calculation
           (with :host nil
             #(info %) ; Finally, check exactly what events are being applied
@@ -1368,6 +1406,53 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
   (email "ops@trioptimum.com"))))
 {% endhighlight %}
   </div>
+</div>
+
+<h3>Generating events from within a stream</h3>
+<div class="row">
+  <div class="sixcol">
+    <p>
+    There are times where you will want to generate new events
+    from an existing stream. Most of the time, it is preferrable
+    to use <code>riemann.streams/with</code> to modifying fields
+    from an existing event, but there are cases where it would hinder
+    readability or it is just not possible, in these cases it is
+    preferrable to use <code>riemann.common/event</code>
+    </p>
+  </div>
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>In this example we are using with to work on existing event
+      to generate a new service:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(with (service "foo")
+  (coalesce
+    (smap folds/count
+      ;; generate a new event by modifying an existing one
+      (with {:host nil :service "total foos"}
+        index))))
+{% endhighlight %}
+  </div>  
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>In some cases we will want to generate a new event
+       entirely</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(fixed-time-window 60
+  (smap (fn [events]
+          (let [errors   (filter (comp #{"warning" "critical"} :state) events)
+                fraction (/ (count errors) events)]
+            (event {:service "error percent"
+                    :metric fraction})))
+    index))
+{% endhighlight %}
+  </div>  
 </div>
 
 <h2>Working with the dashboard</h2>
