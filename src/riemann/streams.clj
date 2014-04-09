@@ -146,9 +146,8 @@
   "Returns a function which takes a seq of events.
   Combines events with f, then forwards the result to children."
   [f & children]
-  (deprecated "Combine is deprecated in favor of smap/smap*"
-              (fn stream [events]
-                (call-rescue (f events) children))))
+  (deprecated "combine is deprecated in favor of smap or smap*"
+              (apply smap* f children)))
 
 (defn smap*
   "Streaming map: less magic. Calls children with (f event).
@@ -177,6 +176,7 @@
   metrics deviating from the mode to \"warning\", one might use coalesce to
   aggregate all services, and smapcat to find the mode and assoc the proper
   states; emitting a series of individual events to the index.
+
   (coalesce
     (smapcat (fn [events]
                (let [freqs (frequencies (map :metric events))

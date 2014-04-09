@@ -74,25 +74,27 @@
   (vec (map (fn [m] {:metric m}) metrics)))
 
 (deftest combine-test
-         (let [r (atom nil)
-               sum (combine folds/sum (register r))
-               min (combine folds/minimum (register r))
-               max (combine folds/maximum (register r))
-               mean (combine folds/mean (register r))
-               median (combine folds/median (register r))
-               events [{:metric 1}
-                       {:metric 0}
-                       {:metric -2}]]
-           (sum events)
-           (is (= (deref r) {:metric -1}))
-           (min events)
-           (is (= (deref r) {:metric -2}))
-           (max events)
-           (is (= (deref r) {:metric 1}))
-           (mean events)
-           (is (= (deref r) {:metric -1/3}))
-           (median events)
-           (is (= (deref r) {:metric 0}))))
+  (logging/suppress
+    ["riemann.streams"]
+    (let [r (atom nil)
+          sum (combine folds/sum (register r))
+          min (combine folds/minimum (register r))
+          max (combine folds/maximum (register r))
+          mean (combine folds/mean (register r))
+          median (combine folds/median (register r))
+          events [{:metric 1}
+                  {:metric 0}
+                  {:metric -2}]]
+      (sum events)
+      (is (= (deref r) {:metric -1}))
+      (min events)
+      (is (= (deref r) {:metric -2}))
+      (max events)
+      (is (= (deref r) {:metric 1}))
+      (mean events)
+      (is (= (deref r) {:metric -1/3}))
+      (median events)
+      (is (= (deref r) {:metric 0})))))
 
 (deftest smap*-test
          (testing "passes nil values"
