@@ -1,19 +1,19 @@
 (ns ^{:doc    "Forwards events to HipChat"
       :author "Hubert Iwaniuk"}
   riemann.hipchat
-  (:use [clojure.string :only [join]])
   (:require [clj-http.client :as client]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [clojure.string :refer [join]]))
 
-(defn- set-message-colour [ev]
+(defn- message-colour [ev]
   "Set the colour to be used in the
   hipchat message."
-  (let [state (if-let [s (:state ev)] s (:state (first ev)))]
-    (condp = state
-      "ok"        "green"
-      "critical"  "red"
-      "error"     "red"
-      "yellow")))
+  (let [state (or (:state ev) (:state (first ev)))]
+    (get {"ok"        "green"
+          "critical"  "red"
+          "error"     "red"}
+         state
+         "yellow")))
 
 (def ^:private chat-url
   "https://api.hipchat.com/v1/rooms/message?format=json")
@@ -33,7 +33,7 @@
 
 (defn- format-event [{:keys [room_id from notify message] :as conf} event]
   "Creates an event suitable for posting to hipchat."
-  (merge {:color (set-message-colour event)}
+  (merge {:color (message-colour event)}
          conf
          (when-not message
            {:message (format-message (flatten [event]))})))
