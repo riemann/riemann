@@ -99,7 +99,7 @@
 
   :host       \"127.0.0.1\"
   :port       2003
-  :protocol   tcp or udp (tcp is default)
+  :protocol   :tcp or :udp (default :tcp)
   :parser-fn  an optional function given to decode-graphite-line"
   ([] (graphite-server {}))
   ([opts]
