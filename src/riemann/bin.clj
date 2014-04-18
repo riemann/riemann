@@ -6,6 +6,7 @@
             riemann.pubsub)
   (:use clojure.tools.logging
         [clojure.tools.cli :only [cli]]
+        [clojure.test :only [run-all-tests successful?]]
         [riemann.streams :only [testing-mode]])
   (:gen-class :name riemann.bin))
 
@@ -57,19 +58,29 @@
   [& argv]
   (let [[options args banner] (cli argv
                                    ["-t" "--test" "Run Riemann in testing mode" :flag true :default false]
+                                   ["-u" "--unit-test" "Run any Riemann tests you have defined" :flag true :default false]
                                    ["-h" "--help" "Show help" :default false :flag true])]
     (when (:help options)
       (println banner)
       (System/exit 0))
     (riemann.logging/init)
-    (binding [testing-mode (:test options)]
-      (try
-        (info "PID" (pid))
+
+    (if (:unit-test options)
+      (binding [testing-mode true]
         (reset! config-file (or (first args) "riemann.config"))
         (handle-signals)
-        (riemann.time/start!)
         (riemann.config/include @config-file)
-        (riemann.config/apply!)
-        nil
-        (catch Exception e
-          (error e "Couldn't start"))))))
+        (if (successful? (run-all-tests #"riemann\.config"))
+          (System/exit 0)
+          (System/exit 1)))
+      (binding [testing-mode (:test options)]
+        (try
+          (info "PID" (pid))
+          (reset! config-file (or (first args) "riemann.config"))
+          (handle-signals)
+          (riemann.time/start!)
+          (riemann.config/include @config-file)
+          (riemann.config/apply!)
+          nil
+          (catch Exception e
+            (error e "Couldn't start")))))))
