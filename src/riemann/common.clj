@@ -29,7 +29,9 @@
   "Wraps body in an implicit (do), and logs a deprecation notice when invoked."
   [comment & body]
   `(do
-     (info ~(str "Deprecated: " comment))
+     (info ~(str "Deprecated: "
+                 (format "<%s:%s> " *file* (:line (meta &form)))
+                 comment))
      ~@body))
 
 (def hostname-refresh-interval
