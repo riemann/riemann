@@ -1,6 +1,7 @@
 (ns riemann.folds-test
   (:refer-clojure :exclude [count])
-  (:use riemann.folds
+  (:use [riemann.common :only [event]]
+        riemann.folds
         riemann.time
         riemann.time.controlled
         clojure.test))
@@ -118,12 +119,16 @@
     (is (= 147.0 (Math/floor (:metric (std-dev [{:metric 600} {:metric nil} {:metric 470} {:metric 170} {:metric 430} {:metric 300}]))))))
 
 (deftest count-test
-         (is (= (count nil)
-                {:metric 0}))
-         (is (= (count [{:metric 2} {:metric 3}])
-                {:metric 2}))
-         (is (= (count [{:metric 2} {:metric 3 :state "expired"} {:metric 4 :ttl 1 :time -3}])
-                {:metric 3})))
+  (advance! 1)
+  (let [synthetic-event (count nil)
+        c-with-time (count [{:metric 5 :time 5} {:metric 3 :time 3}])
+        c2 (count [{:metric 2} {:metric 3}])
+        c3 (count [{:metric 2} {:metric 3 :state "expired"} {:metric 4 :ttl 1 :time -3}])]
+    (is (= synthetic-event (event {:metric 0})))
+    (is (= 1 (:time synthetic-event)))
+    (is (= c-with-time {:metric 2 :time 5}))
+    (is (= c2 {:metric 2}))
+    (is (= c3 {:metric 3}))))
 
 (deftest minimum-test
   (is (= nil          (minimum nil)))
