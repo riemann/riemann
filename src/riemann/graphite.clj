@@ -82,6 +82,17 @@
                                                 frac))))
       event)))
 
+(defn graphite-safe-timestamp
+  "Graphite expects timestamps in seconds, whereas Riemann is capable of working
+  with timestamps at millisecond resolution. If one sends Riemann a metric at
+  millisecond resolution, the cast to int will explode. This checks if we overflow
+  Integer/MAX_VALUE and divides by 1000 if so"
+  [event]
+  (let [timestamp (:time event)]
+    (if (> timestamp Integer/MAX_VALUE)
+      (int (/ timestamp 1000))
+      (int timestamp))))
+
 (defn graphite
   "Returns a function which accepts an event and sends it to Graphite.
   Silently drops events when graphite is down. Attempts to reconnect
@@ -139,6 +150,6 @@
         (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
                                                 (float (:metric event))
-                                                (int (:time event))])
+                                                (graphite-safe-timestamp event)])
                                      "\n")]
                      (send-line client string)))))))

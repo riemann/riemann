@@ -73,6 +73,11 @@
                   {:service "foo bar 0.999"})
                 "foo.bar.999")))
 
+(deftest safe-timestamp-test
+  (let [now (System/currentTimeMillis)]
+    (is (= (graphite-safe-timestamp {:time now})
+           (int (/ now 1000))))))
+
 (deftest ^:graphite ^:integration graphite-test
          (let [g (graphite {:block-start true})]
            (g {:host "riemann.local"
@@ -94,4 +99,11 @@
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 4
-               :time (unix-time)})))
+               :time (unix-time)}))
+
+         (let [g (graphite {:block-start true})]
+           (g {:host "long.timestamp.local"
+               :state "ok"
+               :description "all clear, uh, situation normal"
+               :metric 867.5309
+               :time (System/currentTimeMillis)})))
