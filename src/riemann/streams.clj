@@ -1139,10 +1139,12 @@
     (reset! reference event)))
 
 (defn forward
-  "Sends an event through a client"
+  "Sends an event or a collection of events through a Riemann client."
   [client]
-  (fn stream [event]
-    (riemann.client/send-event client event)))
+  (fn stream [es]
+    (if (map? es)
+      (riemann.client/send-event client es)
+      (riemann.client/send-events client es))))
 
 (defn match
   "Passes events on to children only when (f event) matches value, using
