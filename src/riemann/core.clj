@@ -41,7 +41,8 @@
         (try
           ; Take events from core and instrumented services
           (let [base (event {:host (localhost)
-                             :ttl  (* 2 interval)})
+                             ; Default TTL of 2 intervals, and convert ms to s.
+                             :ttl  (long (/ interval 500))})
                 events (mapcat instrumentation/events
                             (concat
                               [core
