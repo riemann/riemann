@@ -200,4 +200,5 @@
   [events]
   (let [events (remove nil? events)]
     (if-let [e (first events)]
-      (assoc e :metric (clojure.core/count events)) {:metric 0})))
+      (assoc e :metric (clojure.core/count events))
+      (event {:metric 0}))))
