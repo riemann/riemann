@@ -218,10 +218,18 @@
 
   Example:
 
-  (let [graph (async-queue! :graphite {:queue-size 100}
-                            (graphite {:host ...}))]
+  (let [downstream (batch 100 1/10
+                          (async-queue! :agg {:queue-size     1e3
+                                              :core-pool-size 4
+                                              :max-pool-size  32}
+                            (forward
+                              (riemann.client/tcp-client
+                                :host \"127.0.0.1\"))))]
     (streams
-      (where ... graph)))"
+      ...
+      ; Forward all events downstream to the aggregator.
+      (where (service #\"^riemann.*\")
+        downstream)))"
   [name threadpool-service-opts & children]
   (let [s (service! (service/threadpool-service name threadpool-service-opts))]
     (apply execute-on s children)))
