@@ -211,7 +211,7 @@ li {
 
 .video-container, table, img, div.highlight, code pre, p {
   display: block;
-  margin: 6px 0;
+  margin: 1em 0;
 }
 
 table {
