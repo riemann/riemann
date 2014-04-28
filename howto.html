@@ -1577,10 +1577,10 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
       <li>Hotspot. Modern JVMs aggressively optimize function calls via
       inlining, escape analysis, and other techniques. Asynchronous execution
       makes it harder for the JIT to identify optimization opportunities.
-      Because stream handoff is cheap in Riemann, we can use *lots* of streams
-      to solve problems instead of worrying about the handoff cost. This means
-      that Riemann's API can break problems into smaller, more composable
-      pieces.</li>
+      Because stream handoff is cheap in Riemann, we can use <i>lots</i> of
+      streams to solve problems instead of worrying about the handoff cost.
+      This means that Riemann's API can break problems into smaller, more
+      composable pieces.</li>
 
       <li>Predictability. It's easier to reason about Riemann stacktraces
       because they have the same structure as the source. It's easier to
@@ -1590,14 +1590,15 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
     </ol>
 
     <p>In practice, most Riemann streams are pure functions or only mutate
-    in-memory state; Riemann is typically *cpu-bound*. We have a threadpool, on
-    the order of num-processors, which runs an event through all streams in the
-    core. This makes Riemann quite fast--but when you make a blocking call to a
-    downstream service, sometimes the rules change. You *want* additional
-    parallelism for IO, or an explicit queue in between two streams. In keeping
-    with the Riemann philosphy of small, re-usable components, you can make
-    *any* stream asynchronous, with its own bounded queue, worker threadpool,
-    and performance metrics, via the `async-queue` stream.</p>
+    in-memory state; Riemann is typically <i>cpu-bound</i>. We have a
+    threadpool, on the order of num-processors, which runs an event through all
+    streams in the core. This makes Riemann quite fast--but when you make a
+    blocking call to a downstream service, sometimes the rules change. You
+    <i>want</i> additional parallelism for IO, or an explicit queue in between
+    two streams. In keeping with the Riemann philosphy of small, re-usable
+    components, you can make <i>any</i> stream asynchronous, with its own
+    bounded queue, worker threadpool, and performance metrics, via the
+    <code>async-queue!</code> stream.</p>
   </div>
 </div>
 
