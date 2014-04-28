@@ -1623,21 +1623,21 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
 
 <div class="row">
   <div class="sixcol">
-    <p>But if that link is slow, and we want to return *immediately*, we can
-    defer execution of that stream onto a threadpool via a fixed-size queue.
-    Because we acknowledge before the downstream server acknowledges, we might
-    falsely acknowledge a message. The semantics of the stream have changed;
-    we're gaining performance and insensitivity to downstream latency, but at
-    the cost of safety.</p>
+    <p>But if that link is slow, and we want to return <i>immediately</i>, we
+    can defer execution of that stream onto a threadpool via a fixed-size
+    queue.  Because we acknowledge before the downstream server acknowledges,
+    we might falsely acknowledge a message. The semantics of the stream have
+    changed; we're gaining performance and insensitivity to downstream latency,
+    but at the cost of safety.</p>
 
-    <p>We *bound* the number of in-flight operations to the downstream service
-    by specifying how many threads are allowed, and bound memory consumption
-    via the queue size. If the queue fills up, events passed to the async-queue
-    stream will immediately throw an exception informing you that the queue is
-    full; as with all exceptions in Riemann, you can explicitly catch them
-    using an exception handler stream, or allow Riemann to log the failure. As
-    with all Riemann streams, exceptions don't interfere with other child
-    streams.</p>
+    <p>We <i>bound</i> the number of in-flight operations to the downstream
+    service by specifying how many threads are allowed, and bound memory
+    consumption via the queue size. If the queue fills up, events passed to the
+    async-queue stream will immediately throw an exception informing you that
+    the queue is full; as with all exceptions in Riemann, you can explicitly
+    catch them using an exception handler stream, or allow Riemann to log the
+    failure. As with all Riemann streams, exceptions don't interfere with other
+    child streams.</p>
 
     <p>All async-queue services support hot config reloading (though they won't
     cleanly drain events between services if their parameters change), and come
@@ -1646,6 +1646,28 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
     to monitor events like "riemann executor rejected rate" with
     <code>changed-state</code> so you'll know when they start dropping
     events.</p>
+
+    <p>Note the bang (<code>!</code>) at the end of <code>async-queue</code>;
+    this function <i>is dangerous because it mutates state</i>. Async-queue
+    creates a threadpool and changes the Riemann core. You *don't* want to
+    create these dynamically, or you could wind up with hundreds or thousands
+    of queues and threadpools. Never put an async-queue inside of a
+    <code>by</code>, for example: <code>by</code> would create a new async
+    queue for each distinct host or service, etc. For safety, define your
+    async-queue streams in a let binding, and call them wherever needed in
+    <code>streams</code>. That way you'll know it's always the <i>same</i>
+    executor.</p>
+
+    <p>Remember, you can wrap <i>any</i> stream in this asynchronous layer.
+    Combining batching and async-queue can dramatically improve throughput;
+    sometimes by several orders of magnitude. Each has its cost: batching
+    increases latency, and async-queue means dropping events if the queue fills
+    up. As a transient event processor, Riemann emphasizes *dropping* old data
+    rather than getting backed up or shutting down entirely. Think of
+    async-queue like a safety valve; allowing you to still process requests by
+    shunting some of the incoming stream aside. If you want <i>guaranteed</i>
+    delivery over long timescales, use an on-disk queuing system like Kafka,
+    either in front of or behind Riemann.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1665,21 +1687,6 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
     (batch 100 1/10
       downstream)))
 {% endhighlight %}
-  </div>
-</div>
-
-<div class="row">
-  <div class="sixcol">
-    <p>Note the bang (<code>!</code>) at the end of <code>async-queue</code>;
-    this function <i>is dangerous because it mutates state</i>. Async-queue
-    creates a threadpool and changes the Riemann core. You *don't* want to
-    create these dynamically, or you could wind up with hundreds or thousands
-    of queues and threadpools. Never put an async-queue inside of a
-    <code>by</code>, for example: <code>by</code> would create a new async
-    queue for each distinct host or service, etc. For safety, define your
-    async-queue streams in a let binding, and call them wherever needed in
-    <code>streams</code>. That way you'll know it's always the <i>same</i>
-    executor.
   </div>
 </div>
 
@@ -1721,6 +1728,14 @@ list of tags for a given event. This query will return only "prod" and
 "webservers" hosts.</p>
 
 <h2>Integrating with other systems</h2>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Make sure to check the <a href="#asynchronous-streams">asynchronous
+      streams</a> docs; it may be appropriate to batch or defer events which
+    flow to downstream systems.</p>
+  </div>
+</div>
 
 <h3>Send email</h3>
 
