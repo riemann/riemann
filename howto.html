@@ -1554,6 +1554,134 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
   </div>  
 </div>
 
+<h3>Asynchronous streams</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>In Riemann, streams are expressed by <i>function composition</i>. Each
+    stream is a function that takes an event and does something with it. Child
+    streams are just functions too, so when an event propagates through
+    different layers of streams, it's actually just a series of function calls.
+    We do this for three reasons:</p>
+
+    <ol>
+      <li>Locality. When one function calls another, the event remains on the
+      stack--which is almost certainly in CPU cache. If streams were
+      asynchronous, we'd have to defer the event to some mutable shared state,
+      likely somewhere on the heap. That causes contention: the scheduler is,
+      to some degree or another, mutable state being accessed by multiple
+      threads, which may have to undergo expensive memory-safety operations. We
+      also avoid cache stalls in transfering that event and its processing
+      context into and out of some scheduler.</li>
+
+      <li>Hotspot. Modern JVMs aggressively optimize function calls via
+      inlining, escape analysis, and other techniques. Asynchronous execution
+      makes it harder for the JIT to identify optimization opportunities.
+      Because stream handoff is cheap in Riemann, we can use *lots* of streams
+      to solve problems instead of worrying about the handoff cost. This means
+      that Riemann's API can break problems into smaller, more composable
+      pieces.</li>
+
+      <li>Predictability. It's easier to reason about Riemann stacktraces
+      because they have the same structure as the source. It's easier to
+      predict when side effects will happen. And backpressure is trivially
+      built in; no need to reason about concurrency limits for each
+      stream.</li>
+    </ol>
+
+    <p>In practice, most Riemann streams are pure functions or only mutate
+    in-memory state; Riemann is typically *cpu-bound*. We have a threadpool, on
+    the order of num-processors, which runs an event through all streams in the
+    core. This makes Riemann quite fast--but when you make a blocking call to a
+    downstream service, sometimes the rules change. You *want* additional
+    parallelism for IO, or an explicit queue in between two streams. In keeping
+    with the Riemann philosphy of small, re-usable components, you can make
+    *any* stream asynchronous, with its own bounded queue, worker threadpool,
+    and performance metrics, via the `async-queue` stream.</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>For instance, the <code>forward</code> stream forwards events to another
+    Riemann server, and returns only when that server has acknowledged the
+    message. This provides backpressure and acknowledgement: a client knows
+    that its message was accepted not only by the local Riemann server, but also
+    by the downstream Riemann server.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (index)]
+  (streams
+    (forward (riemann.client/tcp-client :host "agg.riemann.prod"))
+    index))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>But if that link is slow, and we want to return *immediately*, we can
+    defer execution of that stream onto a threadpool via a fixed-size queue.
+    Because we acknowledge before the downstream server acknowledges, we might
+    falsely acknowledge a message. The semantics of the stream have changed;
+    we're gaining performance and insensitivity to downstream latency, but at
+    the cost of safety.</p>
+
+    <p>We *bound* the number of in-flight operations to the downstream service
+    by specifying how many threads are allowed, and bound memory consumption
+    via the queue size. If the queue fills up, events passed to the async-queue
+    stream will immediately throw an exception informing you that the queue is
+    full; as with all exceptions in Riemann, you can explicitly catch them
+    using an exception handler stream, or allow Riemann to log the failure. As
+    with all Riemann streams, exceptions don't interfere with other child
+    streams.</p>
+
+    <p>All async-queue services support hot config reloading (though they won't
+    cleanly drain events between services if their parameters change), and come
+    with internal metric events about their queue size, outstanding threads,
+    etc. They'll alert you via state changes if they get too full, so make sure
+    to monitor events like "riemann executor rejected rate" with
+    <code>changed-state</code> so you'll know when they start dropping
+    events.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (index)
+      downstream (async-queue!
+                    :agg-forwarder        ; A name for the forwarder
+                    {:queue-size     1e4  ; 10,000 events max
+                     :core-pool-size 1    ; Minimum 4 threads
+                     :max-pools-size 100} ; Maxium 100 threads
+                    (forward
+                      (riemann.client/tcp-client :host "127.0.0.1")))]
+  (streams
+    index
+    ; We'll accumulate batches of at most 100 events every 10th of a second
+    ; before sending those events downstream to the other Riemann node, via
+    ; the async queue.
+    (batch 100 1/10
+      downstream)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Note the bang (<code>!</code>) at the end of <code>async-queue</code>;
+    this function <i>is dangerous because it mutates state</i>. Async-queue
+    creates a threadpool and changes the Riemann core. You *don't* want to
+    create these dynamically, or you could wind up with hundreds or thousands
+    of queues and threadpools. Never put an async-queue inside of a
+    <code>by</code>, for example: <code>by</code> would create a new async
+    queue for each distinct host or service, etc. For safety, define your
+    async-queue streams in a let binding, and call them wherever needed in
+    <code>streams</code>. That way you'll know it's always the <i>same</i>
+    executor.
+  </div>
+</div>
+
 <h2>Working with the dashboard</h2>
 
 <h3>Application specific host grouping</h3>
