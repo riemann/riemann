@@ -24,7 +24,7 @@
   "Decode a line coming from graphite.
 
   Graphite uses a simple scheme where each metric is given as a CRLF delimited
-  line, space split with three items:
+  line, whitespace split (space, tab) with three items:
 
   * The metric name
   * The metric value (optionally NaN)
@@ -33,7 +33,7 @@
   Decode-graphite-line will yield a simple event with just a service, metric,
   and timestamp."
   [line]
-  (let [[service metric timestamp & garbage] (split line #" ")]
+  (let [[service metric timestamp & garbage] (split line #"\s+")]
     ; Validate format
     (cond garbage
           (throw+ "too many fields")
