@@ -1176,13 +1176,11 @@ can decide whether an event is worthy of an alert by tagging it:</p>
 (with :service "distinct hosts"
   ; Combine hosts and services
   (coalesce
-    ; Only one update per second.
-    (throttle 1 1
-      ; Turn lists of events into a single event with the count as its metric
-      (smap folds/count
-        ; Strip host field
-        (with :host nil
-          index)))))
+    ; Turn lists of events into a single event with the count as its metric
+    (smap folds/count
+      ; Strip host field
+      (with :host nil
+        index))))
 {% endhighlight %}
   </div>
 </div>
