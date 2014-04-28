@@ -292,42 +292,101 @@ sudo service riemann reload
   </div>
 </div>
 
-<h3>Connecting to the REPL</h3>
+<h3>Client backpressure, latency, and queues</h3>
 
 <div class="row">
   <div class="sixcol">
-    <p>Riemann has an nREPL server built in. You can enable this in your config
-    with:</p>
-  </div>
-  <div class="sixcol last">
-{% highlight clj %}
-(repl-server {:host "127.0.0.1"})
-{% endhighlight %}
-  </div>
-</div>
+    <p>Event processing in Riemann's model is synchronous (though there's lots
+    of asynchronous stuff going on internally). When you send an event to
+    Riemann, it flows through every top-level stream, and possibly those
+    streams children, and *their* children, and so forth. Once the event has
+    flowed through every stream, Riemann sends an acknowledgement back to the
+    client. This model enables *backpressure*: clients can use the
+    acknowledgements to avoid overwhelming Riemann with more events than it can
+    process.</p>
 
-<div class="row">
-  <div class="sixcol">
-    <p>You can then use Leiningen 2 to connect to it.</p>
-  </div>
-  <div class="sixcol last">
-{% highlight sh %}
-git clone git://github.com/aphyr/riemann.git
-cd riemann
-lein repl :connect 127.0.0.1:5557
-{% endhighlight %}
-  </div>
-</div>
+    <p>Riemann keeps track of some internal metrics, exposed as events, for
+    stream latency and TCP server latency. Stream latency is how long it took
+    for an event to flow through every stream. Server latency is how long it
+    took for an event to be picked up by Riemann's TCP server, decoded, handed
+    off to the streaming system, processed, and for the acknowledgement to be
+    sent back to the client.</p>
 
-<div class="row">
-  <div class="sixcol">
-    <p>You can reload the config by sending Riemann a SIGHUP, but you can also
-    do it from the REPL.</p>
-  </div>
-  <div class="sixcol last">
-{% highlight clj %}
-user=> (riemann.bin/reload!)
-{% endhighlight %}
+    <p>If you wait for an acknowledgement every time you send a message to
+    Riemann, each process will behave synchronously. This approach is just fine
+    when there are lots of clients sending requests infrequently, where
+    "infrequently" means, via Little's Law, that the typical period between
+    events is greater than the tcp server latency plus the round-trip network
+    time to Riemann itself.</p>
+
+    <p>Sometimes, though, you'll want to send events *faster* than that. You've
+    got a few options here.</p>
+
+    <p>If you ignore the acknowledgement messages, you can just shove events at
+    Riemann as fast as your runtime will let you. Those events will fill up a
+    queue in front of Riemann's streaming system. If that fills up, they'll
+    spill over into the Netty queue associated with the channel. If that fills
+    up, they'll spill over into the TCP buffer on the Riemann box, and by
+    extension, the queues in the network and the sending node. At some point
+    TCP backpressure will come into play, but understanding that interaction
+    can be complex.</p>
+
+    <p>Doing this kind of infinitely-asynchronous send will manifest as high
+    memory consumption on the Riemann node (to store all those queued
+    operations), and correspondingly high wait times for events. If events
+    arrive *too* far delayed, they may no longer be valid by the time they
+    arrive, and you'll start seeing services expire. It's like sending a
+    message via a courier who gets stuck in a waiting room and dies en
+    route.</p>
+
+    <p>You can detect this (and alert on it) by watching the service called
+    "riemann netty execution-handler queue size"; if it starts getting above a
+    thousand events or so, you're likely overloading Riemann. This queue size
+    is directly related to the latency distribution given by "riemann streams
+    latency 0.5" and friends, and "riemann streams rate". The higher the
+    latency, and the higher the throughput, the larger the queue.</p>
+
+    <p>So: infinite asynchrony is a problem. You want *some* degree of
+    asynchrony, especially when Riemann processes faster than the time it takes
+    to send events over the network. But too much and you'll crash into finite
+    resource limits. We need *backpressure*: bounds on the number of
+    outstanding asynchronous requests, or the rate at which we send them.</p>
+
+    <p>One option is simply to spin up more threads and have each send
+    synchronously.  Depending on the client's design, you may be able to have
+    many threads concurrently sending operations over the same connection.
+    Riemann-java-client and riemann-clojure-client, for instance, will
+    interleave operations from multiple threads on a single network connection.
+    If threads are cheap in your runtime, or you don't need very many (on the
+    JVM, more than 10K IO threads is probably a warning sign), this is
+    perfectly fine. If you're running in Erlang or Haskell, threads are dirt
+    cheap; fire away.</p>
+
+    <p>If threads in your runtime are more expensive, or you don't have them at
+    all--say, node.js--you can emulate them using other asynchronous
+    constructs.  Riemann-java-client and riemann-clojure-client, for instance,
+    have async-send functions that return promises; you can dereference those
+    promises to find out whether Riemann acknowledged the message. Deref'ing
+    blocks until acknowledgement occurs, or throws an exception if something in
+    the network or Riemann went wrong. You can specify a timeout for deref; if
+    the timeout is zero, you get a nonblocking check ("did it go through
+    yet?"). Fixed timeouts are useful for retries of idempotent operations.
+    "Allow this much time, then send again". Same semantics as any other
+    asynchronous or stateful construct in Clojure.</p>
+
+    <p>The important thing for *backpressure*, if you're emulating threads
+    using asynchronous objects, coroutines, continuations, fibers, callbacks,
+    or what-have-you, is that you a.) eventually dereference the results of the
+    send, and b.) only allow a fixed number of outstanding asynchronous
+    requests.  Riemann-java-client automatically throws (or returns promises
+    which throw) when you try to send more than a few thousand concurrent
+    messages, forcing you to implement backpressure and flow control logic. You
+    can tune this option if you like, but it's there to protect you against
+    unbounded resource consumption on either Riemann's side or the client.</p>
+
+    <p>Different clients and different languages will expose these constructs
+    in different ways, but you'll find the same core ideas of limited
+    asynchrony, queuing, and backpressure in every networked system.</p>
   </div>
 </div>
 
@@ -459,6 +518,46 @@ user=> (riemann.bin/reload!)
 {% endhighlight %}
   </div>
 </div>
+
+<h3>Connecting to the REPL</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann has an nREPL server built in. You can enable this in your config
+    with:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(repl-server {:host "127.0.0.1"})
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can then use Leiningen 2 to connect to it.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight sh %}
+git clone git://github.com/aphyr/riemann.git
+cd riemann
+lein repl :connect 127.0.0.1:5557
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can reload the config by sending Riemann a SIGHUP, but you can also
+    do it from the REPL.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+user=> (riemann.bin/reload!)
+{% endhighlight %}
+  </div>
+</div>
+
 
 <h2>Instrumenting your systems</h2>
 
@@ -1581,7 +1680,6 @@ view.</p>
        (changed :state
                 (forward client)))))
 {% endhighlight %}
-
 
 <h2>Contributing to Riemann</h2>
 
