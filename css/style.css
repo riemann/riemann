@@ -184,7 +184,7 @@ h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {
 h1 a:hover, h2 a:hover, h3 a:hover {
   text-decoration: underline;
 }
-h2 { 
+h2 {
   font-size: 32px;
   line-height: 38px;
 }
@@ -193,8 +193,20 @@ h3 {
   line-height: 28px;
 }
 
-p {
+p, li {
   line-height: 134%;
+}
+
+ol {
+  list-style: decimal outside;
+}
+
+ul {
+  list-style: disc outside;
+}
+
+li {
+  margin: 1em 0 1em 40px;
 }
 
 .video-container, table, img, div.highlight, code pre, p {
