@@ -895,7 +895,10 @@
 (defn ewma-timeless
   "Exponential weighted moving average. Constant space and time overhead.
   Passes on each event received, but with metric adjusted to the moving
-  average. Does not take the time between events into account."
+  average. Does not take the time between events into account. R is the ratio
+  between successive events: r=1 means always return the most recent metric;
+  r=1/2 means the current event counts for half, the previous event for 1/4,
+  the previous event for 1/8, and so on."
   [r & children]
   (let [m (atom 0)
         c-existing (- 1 r)
