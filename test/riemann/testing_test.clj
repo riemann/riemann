@@ -40,11 +40,11 @@
 
 
 (streams
- (where (not (service #"^riemann"))
+ (where (not (service #"^riemann "))
         (probe :not-riemann)))
 
 (config-test where-test next-core
              [{:service "database"}
-              {:service "riemann"}]
+              {:service "riemann "}]
              (is (= (:not-riemann @probe-values)
                     [{:service "database"}])))
