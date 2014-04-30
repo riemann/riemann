@@ -907,6 +907,42 @@
                                (partial * c-existing))))]
         (call-rescue (assoc event :metric m) children)))))
 
+(defn ewma
+  "Exponential weighted moving average. Constant space and time overhead.
+  Passes on each event received, but with metric adjusted to the moving
+  average. Takes into account the time between events."
+  [halflife & children]
+  (let [m (atom {:metric 0})
+        r (expt Math/E (/ (Math/log 1/2) halflife))
+        c-existing r
+        c-new (- 1 r)]
+    (fn stream [event]
+      ; Compute new ewma
+      (swap! m (fn [x]
+        (let [time-new (or (:time event) 0)
+              time-old (or (:time x) time-new)
+              time-diff (- time-new time-old)
+              metric-old (:metric x)
+              m-new (when-let [metric-new (:metric event)]
+                (cond
+                  (pos? time-diff)
+                    (merge x {:time time-new
+                              :metric (+ (* c-new metric-new)
+                                         (* metric-old
+                                            (expt c-existing time-diff)))})
+                  (neg? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* (* c-new metric-new)
+                                            (expt c-existing
+                                                  (Math/abs time-diff))))})
+                  (zero? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* c-new metric-new))})))]
+              (call-rescue (merge event m-new) children)
+              (or m-new x)))))))
+
 (defn- top-update
   "Helper for top atomic state updates."
   [[smallest top] k f event]
