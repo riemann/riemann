@@ -21,3 +21,13 @@
        (let []
          (testing "expected values"
            ~@assertions)))))
+
+(defmacro config-test [name core data & assertions]
+  `(deftest ~name
+     (reset! probe-values {})
+     (binding [testing-mode true]
+       (doseq [stream# (get (deref ~core) :streams)
+               input# ~data]
+         (stream# input#))
+       (testing "expected values"
+         ~@assertions))))
