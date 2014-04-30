@@ -1,4 +1,4 @@
-(defproject riemann "0.2.5-SNAPSHOT"
+(defproject riemann "0.2.5"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
@@ -11,7 +11,7 @@
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
-    [org.clojure/clojure "1.5.1"]
+    [org.clojure/clojure "1.6.0"]
     [org.clojure/math.numeric-tower "0.0.4"]
     [org.clojure/tools.logging "0.2.6"]
     [org.clojure/tools.nrepl "0.2.3"]
@@ -26,7 +26,7 @@
     [aleph "0.3.2"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
-    [clj-librato "0.0.4-SNAPSHOT"]
+    [clj-librato "0.0.4"]
     [clj-time "0.6.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.4"]
@@ -37,7 +37,7 @@
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.7.7"]
-    [riemann-clojure-client "0.2.10-SNAPSHOT"]
+    [riemann-clojure-client "0.2.10"]
     [slingshot "0.10.3"]
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]

@@ -94,6 +94,7 @@ this should make for a faster and easier-to-use Riemann. Happy monitoring!
 - Tests renamed to modern lein style, e.g. riemann.streams-test
 - CMSClassUnloadingEnabled added to aggressive JVM opts
 - Fixed a few bugs in the SSE transport tests
+- clojure 1.6.0
 - algo.generic 0.1.2
 - math.numeric-tower 0.0.4
 - core.cache 0.6.3
