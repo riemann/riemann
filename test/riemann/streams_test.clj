@@ -249,7 +249,14 @@
          ; Functions
          (test-stream (match identity 2)
                       [1 2 3]
-                      [2]))
+                      [2])
+  ; Nils
+  (test-stream (match :host nil)
+               [{}
+                {:host nil}
+                {:host :foo}]
+               [{}
+                {:host nil}]))
 
 (deftest tag-test
          ; Single tag

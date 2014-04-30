@@ -180,7 +180,12 @@
   ; Falls back to object equality
   java.lang.Object
   (match [pred object]
-         (= pred object)))
+         (= pred object))
+
+  ; Nils match nils only.
+  nil
+  (match [_ object]
+    (nil? object)))
 
 ; Vector set operations
 (defn member?
