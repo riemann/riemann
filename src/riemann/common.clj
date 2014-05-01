@@ -163,6 +163,11 @@
   (when string
     (re-find re string)))
 
+(defn map-matches?
+  "Does the given map pattern match obj?"
+  [pat obj]
+    (every? (fn [[k v]] (match v (get obj k))) pat))
+
 ; Matching
 (extend-protocol Match
   ; Regexes are matched against strings.
@@ -176,6 +181,16 @@
   java.util.concurrent.Callable
   (match [f obj]
          (f obj))
+
+  ; Map types 
+  clojure.lang.PersistentArrayMap
+  (match [pat obj] (map-matches? pat obj))
+
+  clojure.lang.PersistentHashMap
+  (match [pat obj] (map-matches? pat obj))
+
+  clojure.lang.PersistentTreeMap
+  (match [pat obj] (map-matches? pat obj))
 
   ; Falls back to object equality
   java.lang.Object
