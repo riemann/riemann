@@ -788,6 +788,41 @@
            (s {:metric 1})
            (is (= @i 2))))
 
+(deftest pipe-test
+  (testing "One stage"
+    (test-stream
+      (pipe !)
+      [1 2 3]
+      [1 2 3]))
+
+  (testing "Chained stages"
+    (test-stream
+      (pipe ! (smap inc !) (smap (partial * 2) !))
+      [1 2 3]
+      [4 6 8]))
+
+  (testing "Multiple markers"
+    (test-stream
+      (pipe - (splitp < metric
+                      0.9 (with :state :critical -)
+                      0.5 (with :state :warning  -)
+                          (with :state :ok       -))
+            (smap identity -))
+      [{:metric 0.1}
+       {:metric 0.7}
+       {:metric 1.0}]
+      [{:metric 0.1 :state :ok}
+       {:metric 0.7 :state :warning}
+       {:metric 1.0 :state :critical}]))
+
+  (testing "Rebinding a marker"
+    (test-stream
+      (pipe - (let [! -
+                    - clojure.core/-]
+                (smap - !)))
+      [-1 0 1]
+      [1 0 -1])))
+
 (deftest fill-in-test
          (test-stream-intervals
            (fill-in 0.01 {:metric 0})

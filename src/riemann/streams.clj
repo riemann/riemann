@@ -1356,6 +1356,66 @@
                          (distinct (concat tags (:tags event)))))
            children)))
 
+(defmacro pipe
+  "Sometimes, you want to have a stream split into several paths, then
+  recombine those paths after some transformation. Pipe lets you write
+  these topologies easily.
+
+  We might express a linear stream in Riemann, in which a -> b -> c -> d, as
+
+  (a (b (c d)))
+
+  With pipe, we write
+
+  (pipe ↧ (a ↧)
+          (b ↧)
+          (c ↧)
+          d)
+
+  The first argument ↧ is a *marker* for points where events should flow down
+  into the next stage. A delightful list of marker symbols you might enjoy is
+  available at http://www.alanwood.net/unicode/arrows.html.
+
+  What makes pipe more powerful than the standard Riemann composition rules is
+  that the marker may appear *multiple times* in a stage, and *at any depth in
+  the expression*. For instance, we might want to categorize events based on
+  their metric, and send all those events into the same throttled email stream.
+
+  (let [throttled-emailer (throttle 100 1 (email \"ops@rickenbacker.mil\"))]
+    (splitp < metric
+      0.9 (with :state :critical throttled-emailer)
+      0.5 (with :state :warning  throttled-emailer)
+          (with :state :ok       throttled-emailer)))
+
+  But with pipe, we can write:
+
+  (pipe - (splitp < metric
+                  0.9 (with :state :critical -)
+                  0.5 (with :state :warning  -)
+                      (with :state :ok       -))
+          (throttle 100 1 (email \"ops@rickenbacker.mil\")))
+
+  So pipe lets us do three things:
+
+  0. *Flatten* a deeply nested expression, like Clojure's -> and ->>.
+
+  1. *Omit or simplify* the names for each stage, when we care more about the
+  *structure* of the streams than giving them full descriptions.
+
+  2. Write the stream in the *order in which events flow*.
+
+  Pipe rewrites its stages as a let binding in reverse order; binding each
+  stage to the placeholder in turn. The placeholder must be a compile-time
+  symbol, and obeys the usual let-binding rules about variable shadowing; you
+  can rebind the marker lexically within any stage using let, etc. Yep, this is
+  a swiss arrow in disguise; ssshhhhhhh. ;-)"
+  [marker & stages]
+  `(let [~@(->> stages
+                reverse
+                (interpose marker)
+                (cons marker))]
+         ~marker))
+
 (defmacro by
   "Splits stream by field.
   Every time an event arrives with a new value of field, this macro invokes
