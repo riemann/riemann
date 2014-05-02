@@ -250,6 +250,14 @@
          (test-stream (match identity 2)
                       [1 2 3]
                       [2])
+         
+         ; Maps
+         (test-stream (match identity {:state #"^mi", :host "other"})
+                      [{}
+                       {:state "migas"}
+                       {:state "migas", :host "other"}]
+                      [{:state "migas", :host "other"}])
+
   ; Nils
   (test-stream (match :host nil)
                [{}
