@@ -895,7 +895,10 @@
 (defn ewma-timeless
   "Exponential weighted moving average. Constant space and time overhead.
   Passes on each event received, but with metric adjusted to the moving
-  average. Does not take the time between events into account."
+  average. Does not take the time between events into account. R is the ratio
+  between successive events: r=1 means always return the most recent metric;
+  r=1/2 means the current event counts for half, the previous event for 1/4,
+  the previous event for 1/8, and so on."
   [r & children]
   (let [m (atom 0)
         c-existing (- 1 r)
@@ -906,6 +909,42 @@
                 (swap! m (comp (partial + (* c-new metric-new))
                                (partial * c-existing))))]
         (call-rescue (assoc event :metric m) children)))))
+
+(defn ewma
+  "Exponential weighted moving average. Constant space and time overhead.
+  Passes on each event received, but with metric adjusted to the moving
+  average. Takes into account the time between events."
+  [halflife & children]
+  (let [m (atom {:metric 0})
+        r (expt Math/E (/ (Math/log 1/2) halflife))
+        c-existing r
+        c-new (- 1 r)]
+    (fn stream [event]
+      ; Compute new ewma
+      (swap! m (fn [x]
+        (let [time-new (or (:time event) 0)
+              time-old (or (:time x) time-new)
+              time-diff (- time-new time-old)
+              metric-old (:metric x)
+              m-new (when-let [metric-new (:metric event)]
+                (cond
+                  (pos? time-diff)
+                    (merge x {:time time-new
+                              :metric (+ (* c-new metric-new)
+                                         (* metric-old
+                                            (expt c-existing time-diff)))})
+                  (neg? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* (* c-new metric-new)
+                                            (expt c-existing
+                                                  (Math/abs time-diff))))})
+                  (zero? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* c-new metric-new))})))]
+              (call-rescue (merge event m-new) children)
+              (or m-new x)))))))
 
 (defn- top-update
   "Helper for top atomic state updates."
@@ -1316,6 +1355,66 @@
                   (assoc event :tags
                          (distinct (concat tags (:tags event)))))
            children)))
+
+(defmacro pipe
+  "Sometimes, you want to have a stream split into several paths, then
+  recombine those paths after some transformation. Pipe lets you write
+  these topologies easily.
+
+  We might express a linear stream in Riemann, in which a -> b -> c -> d, as
+
+  (a (b (c d)))
+
+  With pipe, we write
+
+  (pipe ↧ (a ↧)
+          (b ↧)
+          (c ↧)
+          d)
+
+  The first argument ↧ is a *marker* for points where events should flow down
+  into the next stage. A delightful list of marker symbols you might enjoy is
+  available at http://www.alanwood.net/unicode/arrows.html.
+
+  What makes pipe more powerful than the standard Riemann composition rules is
+  that the marker may appear *multiple times* in a stage, and *at any depth in
+  the expression*. For instance, we might want to categorize events based on
+  their metric, and send all those events into the same throttled email stream.
+
+  (let [throttled-emailer (throttle 100 1 (email \"ops@rickenbacker.mil\"))]
+    (splitp < metric
+      0.9 (with :state :critical throttled-emailer)
+      0.5 (with :state :warning  throttled-emailer)
+          (with :state :ok       throttled-emailer)))
+
+  But with pipe, we can write:
+
+  (pipe - (splitp < metric
+                  0.9 (with :state :critical -)
+                  0.5 (with :state :warning  -)
+                      (with :state :ok       -))
+          (throttle 100 1 (email \"ops@rickenbacker.mil\")))
+
+  So pipe lets us do three things:
+
+  0. *Flatten* a deeply nested expression, like Clojure's -> and ->>.
+
+  1. *Omit or simplify* the names for each stage, when we care more about the
+  *structure* of the streams than giving them full descriptions.
+
+  2. Write the stream in the *order in which events flow*.
+
+  Pipe rewrites its stages as a let binding in reverse order; binding each
+  stage to the placeholder in turn. The placeholder must be a compile-time
+  symbol, and obeys the usual let-binding rules about variable shadowing; you
+  can rebind the marker lexically within any stage using let, etc. Yep, this is
+  a swiss arrow in disguise; ssshhhhhhh. ;-)"
+  [marker & stages]
+  `(let [~@(->> stages
+                reverse
+                (interpose marker)
+                (cons marker))]
+         ~marker))
 
 (defmacro by
   "Splits stream by field.

@@ -249,7 +249,22 @@
          ; Functions
          (test-stream (match identity 2)
                       [1 2 3]
-                      [2]))
+                      [2])
+         
+         ; Maps
+         (test-stream (match identity {:state #"^mi", :host "other"})
+                      [{}
+                       {:state "migas"}
+                       {:state "migas", :host "other"}]
+                      [{:state "migas", :host "other"}])
+
+  ; Nils
+  (test-stream (match :host nil)
+               [{}
+                {:host nil}
+                {:host :foo}]
+               [{}
+                {:host nil}]))
 
 (deftest tag-test
          ; Single tag
@@ -781,6 +796,41 @@
            (s {:metric 1})
            (is (= @i 2))))
 
+(deftest pipe-test
+  (testing "One stage"
+    (test-stream
+      (pipe !)
+      [1 2 3]
+      [1 2 3]))
+
+  (testing "Chained stages"
+    (test-stream
+      (pipe ! (smap inc !) (smap (partial * 2) !))
+      [1 2 3]
+      [4 6 8]))
+
+  (testing "Multiple markers"
+    (test-stream
+      (pipe - (splitp < metric
+                      0.9 (with :state :critical -)
+                      0.5 (with :state :warning  -)
+                          (with :state :ok       -))
+            (smap identity -))
+      [{:metric 0.1}
+       {:metric 0.7}
+       {:metric 1.0}]
+      [{:metric 0.1 :state :ok}
+       {:metric 0.7 :state :warning}
+       {:metric 1.0 :state :critical}]))
+
+  (testing "Rebinding a marker"
+    (test-stream
+      (pipe - (let [! -
+                    - clojure.core/-]
+                (smap - !)))
+      [-1 0 1]
+      [1 0 -1])))
+
 (deftest fill-in-test
          (test-stream-intervals
            (fill-in 0.01 {:metric 0})
@@ -1152,6 +1202,60 @@
          (test-stream (ewma-timeless 1/2)
                       (em 1   1   1   1     1    )
                       (em 1/2 3/4 7/8 15/16 31/32)))
+
+(deftest ewma-test
+  (let [output1 (atom [])
+        output2 (atom [])
+        output5 (atom [])
+        seconds 50
+        s1 (ewma 1
+          (fn [event] (swap! output1 conj event)))
+        s2 (ewma 2
+          (fn [event] (swap! output2 conj event)))
+        s5 (ewma 5
+          (fn [event] (swap! output5 conj event)))]
+
+    ; Generate enough events to allow the means to converge
+    (dotimes [n seconds]
+      (s1 {:metric 1 :time (inc n)})
+      (s2 {:metric 1 :time (inc n)})
+      (s5 {:metric 1 :time (inc n)}))
+
+    ; Verify that the means have converged
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 10 @output1))))
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 15 @output2))))
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 40 @output5))))
+
+    ; Verify halflives with spaced out :metric 0 events
+    (s1 {:metric 0 :time (+ 1 seconds)})
+    (s1 {:metric 0 :time (+ 2 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output1)))))
+    (is (approx-equal 1/4 (:metric (last @output1))))
+
+    (s2 {:metric 0 :time (+ 2 seconds)})
+    (s2 {:metric 0 :time (+ 4 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output2)))))
+    (is (approx-equal 1/4 (:metric (last @output2))))
+
+    (s5 {:metric 0 :time (+ 5 seconds)})
+    (s5 {:metric 0 :time (+ 10 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output5)))))
+    (is (approx-equal 1/4 (:metric (last @output5)))))
+
+  ; Verify that metrics are weighted by :time, regardless of order of arrival
+  (test-stream-intervals (ewma 1)
+    [{:metric 1 :time 0} 1
+     {:metric 1 :time 2} 1
+     {:metric 1 :time 1} 1]
+    [{:metric 0.5 :time 0}
+     {:metric 0.625 :time 2}
+     {:metric 0.875 :time 2}]))
 
 (deftest top-test
   (let [e (fn [s m & tags] {:service s :metric m :tags tags})
