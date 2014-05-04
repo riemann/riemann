@@ -1505,6 +1505,162 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
   </div>
 </div>
 
+
+<h3>Understanding the Riemann stream model</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Streams are functions that take an event. There's a subtle distinction
+    here: we use the term "stream" to describe both the stream <i>itself</i>,
+    but also the functions that <i>generate</i> those streams. Remember, in
+    Lisp, <code>(fun arg1 arg2)</code> means "Call <code>fun</code> with
+    <code>arg1</code> and <code>arg2</code>".</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+; A function that generates a stream
+rate
+
+; Calling the rate function with the arguments `5` and `index`
+; returns a stream: a function that accepts events, computes
+; a rate every five seconds, and sends rate events to the index.
+(rate 5 index)
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann usually calls your streams with events <i>for you</i>. That's
+    what the <code>streams</code> function in <code>riemann.config</code>
+    means: "here are some functions that you should call when new events
+    arrive".</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+; Generate a rate stream, then pass that stream to the `streams` function,
+; which tells Riemann to remember that stream and call it with each event as
+; an argument.
+(streams
+  (rate 5 index))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>When a new event arrives, Riemann takes each function you've specified
+    using `streams` and calls it with that event. Here's the source of
+    <code>riemann.core/stream!</code>.</p>
+
+    <p>That's it. Riemann's entire streaming model is just a function call and
+    some careful API design. All the functions in <code>riemann.streams</code>,
+    like <code>where</code>, <code>rate</code>, <code>with</code>, etc.  take
+    streams as arguments and create new streams which call them, usually
+    transforming the events they receive in some way.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(defn stream!
+  "Applies an event to the streams in this core."
+   [core event]
+     (instrumentation/measure-latency (:streaming-metric core)
+         (doseq [stream (:streams core))
+           (stream event))))
+{% endhighlight %}
+  </div>
+</div>
+
+<h3>Calling streams yourself</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>If you use Riemann's built-in stream-generating functions, you don't
+    have to worry about calling streams yourself; Riemann does it for you. But
+    sometimes, you want to write your own streams, and will need to call some
+    child streams yourself.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "cat")
+  (fn [event]
+    (let [event (assoc event :state "meowing")]
+      ; What now???)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You might try creating a new stream and calling it with the event, but
+    this will probably behave weirdly. In this example, every time a new event
+    arrives, we create a <i>fresh</i> rate stream, with completely new state,
+    and send our event to it. We probably wanted to send each event to the
+    <i>same</i> rate stream.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "cat")
+  (fn [event]
+    (let [event (assoc event :state "meowing")]
+      ((rate 5 index) event))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>If we're writing a new function to generate streams, we might have our
+    downstream children passed in as an argument; see any function in <a
+    href="https://github.com/aphyr/riemann/blob/master/src/riemann/streams.clj">riemann.streams</a>
+  for an example. If we're just defining a one-off stream inline, we can
+  <i>bind</i> the child to a variable using <code>let</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "cat")
+  (let [downstream (rate 5 index)]
+    (fn [event]
+      (let [event (assoc event :state "meowing")]
+        (downstream event)))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>If we want to call <i>multiple</i> downstream children, use
+    <code>sdo</code> to wrap them up into a single stream.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "cat")
+  (let [downstream (sdo (rate 5 index)
+                        prn)]
+    (fn [event]
+      (let [event (assoc event :state "meowing")]
+        (downstream event)))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Even easier, in this particular case, is to use a general-purpose
+    transformation stream like <code>smap</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service "cat")
+  (smap (fn [event]
+          (let [event (assoc event :state "meowing")]
+            (downstream event)))
+    (rate 5 index)
+    prn))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Generating events from within a stream</h3>
 <div class="row">
   <div class="sixcol">
@@ -1513,31 +1669,9 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
     from an existing stream. Most of the time, it is preferrable
     to use <code>riemann.streams/with</code> to modifying fields
     from an existing event, but there are cases where it would hinder
-    readability or it is just not possible, in these cases it is
-    preferrable to use <code>riemann.common/event</code>
+    readability or it is just not possible. In that case, use
+    <code>riemann.common/event</code>.
     </p>
-  </div>
-</div>
-<div class="row">
-  <div class="sixcol">
-    <p>In this example we are using with to work on existing event
-      to generate a new service:</p>
-  </div>
-  <div class="sixcol last">
-{% highlight clj %}
-(with (service "foo")
-  (coalesce
-    (smap folds/count
-      ;; generate a new event by modifying an existing one
-      (with {:host nil :service "total foos"}
-        index))))
-{% endhighlight %}
-  </div>  
-</div>
-<div class="row">
-  <div class="sixcol">
-    <p>In some cases we will want to generate a new event
-       entirely</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1545,11 +1679,12 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
   (smap (fn [events]
           (let [errors   (filter (comp #{"warning" "critical"} :state) events)
                 fraction (/ (count errors) events)]
+            ; Build a new event using a map of fields and values.
             (event {:service "error percent"
                     :metric fraction})))
     index))
 {% endhighlight %}
-  </div>  
+  </div>
 </div>
 
 <h3>Asynchronous streams</h3>
