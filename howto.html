@@ -755,11 +755,19 @@ client << {service: "thumbnailer rate",
   <div class="sixcol last">
 {% highlight clj %}
 (let [index (index)
-      aggregate (rate 5 index)]
-  (where (service "http req rate")
-    aggregate)
-  (where (service "0mq req rate")
-    (scale 2 aggregate)))
+      ; every 5s, aggregate everything submitted to this stream and forward
+      ; the result to the index
+      aggregate (rate 5
+        (with :service "aggregated req rate" index))]
+
+  (streams
+    (where (service "http req rate")
+      index      ; save the individual value to the index
+      aggregate) ; and also submit it for aggregation
+
+    (where (service "0mq req rate")
+      index                  ; save the individual value to the index
+      (scale 2 aggregate)))) ; and submit the doubled value for aggregation
 {% endhighlight %}
   </div>
 </div>
