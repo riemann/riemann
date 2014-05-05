@@ -748,18 +748,22 @@ client << {service: "thumbnailer rate",
     the stream to a variable. In Clojure, <code>(let [x 1 y 2] ...)</code>
     assigns <code>x</code> to <code>1</code> and <code>y</code> to
     <code>2</code> everywhere inside the <code>let</code> expression. Since
-    streams are values, you can bind them to variables too. For instance, this
-    code has two paths--one for http and one for 0mq--which flow into the same
-    rate stream, and from there to the index.</p>
+    streams are values, you can bind them to variables too. In this example, we
+    create a single rate stream and send events to it along multiple paths.</p>
+
+    <p>In versions newer than 0.2.5, you can use the <code>pipe</code> stream
+    instead.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
-(let [index (index)
-      aggregate (rate 5 index)]
-  (where (service "http req rate")
-    aggregate)
-  (where (service "0mq req rate")
-    (scale 2 aggregate)))
+; Create a stream for the total rate, and name it `aggregate`
+(let [aggregate (rate 5 (with :service "req rate" index))]
+  ; Return a stream which splits up events based on their service
+  (splitp = service
+    ; HTTP requests pass straight to the aggregate stream
+    "http req rate" aggregate
+    ; But we'll double the metrics for 0mq requests
+    "0mq req rate"  (scale 2 aggregate)))
 {% endhighlight %}
   </div>
 </div>
