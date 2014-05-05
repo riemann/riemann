@@ -48,17 +48,19 @@
 
 (deftest nhbm-expire
          (let [i (wrap-index (index))]
-           (i {:host 1 :ttl 0 :time (unix-time)})
+           (i {:host 1 :ttl 0 :time  (dec (unix-time))})
            (i {:host 2 :ttl 10 :time (unix-time)})
            (i {:host 3 :ttl 20 :time (- (unix-time) 21)})
+           ; Default TTLs
+           (i {:host 4 :ttl nil :time (unix-time)})
+           (i {:host 5 :ttl nil :time (- (unix-time) default-ttl 1)})
 
            (let [expired (expire i)]
-             (is (= (set (map (fn [e] (:host e))
-                              expired))
-                    #{1 3})))
+             (is (= (set (map :host expired))
+                    #{1 3 5})))
 
-           (is (= (map (fn [e] (:host e)) i)
-                  [2]))))
+           (is (= (set (map :host i))
+                  #{2 4}))))
 
 (deftest nbhm-read-index
          (let [i (wrap-index (index))]

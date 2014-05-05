@@ -68,10 +68,11 @@
 
       (expire [this]
         (filter
-          (fn [{:keys [ttl time] :or {ttl default-ttl} :as state}]
-            (let [age (- (unix-time) time)]
-              (when (> age ttl)
-                (delete this state)
+          (fn [event]
+            (let [age (- (unix-time) (:time event))
+                  ttl (or (:ttl event) default-ttl)]
+              (when (< ttl age)
+                (delete-exactly this event)
                 true)))
           (.values hm)))
 
