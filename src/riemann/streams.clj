@@ -775,11 +775,11 @@
     (apply ddt-events args)))
 
 (defn rate
-  "Take the sum of every event over interval seconds and divide by the interval
-  size. Emits one event every interval seconds. Starts as soon as an event is
-  received, stops when an expired event arrives. Uses the most recently
-  received event with a metric as a template. Event ttls decrease constantly if
-  no new events arrive."
+  "Take the sum of every event's metric over interval seconds and divide by the
+  interval size. Emits one event every interval seconds. Starts as soon as an
+  event is received, stops when an expired event arrives. Uses the most
+  recently received event with a metric as a template. Event ttls decrease
+  constantly if no new events arrive."
   [interval & children]
   (assert (< 0 interval))
   (let [last-event (atom nil)
