@@ -540,6 +540,15 @@
                                 {:metric 2}]
                                [{:metric 2}]))
 
+         (testing "using sets as predicates"
+                  (test-stream (where (service "service1" "service2"))
+                               [{:service "service1"}
+                                {:service "service2"}
+                                {:service "service-doesnt-match"}]
+                               [{:service "service1"}
+                                {:service "service2"}]))
+
+
          (testing "variable"
                   ; Verify that the macro allows variables to be used in
                   ; predicates.

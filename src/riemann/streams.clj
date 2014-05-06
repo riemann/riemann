@@ -1630,6 +1630,12 @@
   ; Match a event where the host begins with web
   (where (host #\"^web\") ...)
 
+
+  ; Match an event where the service is in a set of services
+  (where (service #{\"service-foo\" \"service-bar\"}) ...)
+  ; which is equivalent to
+  (where (service \"service-foo\" \"service-bar\") ...)
+
   If a child begins with (else ...), the else's body is executed when expr is
   false. For instance:
 
