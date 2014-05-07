@@ -127,7 +127,7 @@
                            "all" ".deb")
         deb-file (file (:root project) "target" deb-file-name)]
     (write (str deb-file ".md5")
-           (str (md5 deb-file) " " deb-file-name))))
+           (str (md5 deb-file) "  " deb-file-name))))
 
 (defn fatdeb
   ([project] (fatdeb project true))
