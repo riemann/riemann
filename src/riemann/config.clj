@@ -24,6 +24,8 @@
         [riemann.client :only [udp-client tcp-client multi-client]]
         riemann.email
         riemann.sns
+        riemann.testing
+        clojure.test
         [riemann.plugin  :only [load-plugin load-plugins]]
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]

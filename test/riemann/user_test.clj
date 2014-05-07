@@ -23,7 +23,6 @@ FOR TESTING PURPOSES ONLY."
               (~'logging/init)
               (~'instrumentation {:enabled? false})
               (~'periodically-expire)
-              (~'streams ~@conf)
               (when-let [idx# (:index @~'core)]
                 (~'riemann.index/clear idx#))
               (~'apply!)))))

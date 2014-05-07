@@ -42,6 +42,9 @@
             [clojure.set :as set])
   (:import (java.util.concurrent Executor)))
 
+
+(def ^:dynamic testing-mode false)
+(def probe-values (atom {}))
 (def  infinity (/  1.0 0))
 (def -infinity (/ -1.0 0))
 
@@ -1247,6 +1250,15 @@
         true))))
 
 (def tagged "Alias for tagged-all" tagged-all)
+
+(defn probe
+  "Stores all events passed to it under the provided key"
+  [key & children]
+  (fn probe-events [event]
+    (when testing-mode
+      (swap! probe-values #(merge-with concat %1 {key [event]})))
+    (call-rescue event children)
+    true))
 
 (defn expired
   "Passes on events with :state \"expired\"."

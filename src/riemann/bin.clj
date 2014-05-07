@@ -4,11 +4,14 @@
             riemann.logging
             riemann.time
             riemann.pubsub)
-  (:use clojure.tools.logging)
+  (:use clojure.tools.logging
+        [clojure.tools.cli :only [cli]]
+        [clojure.test :only [run-all-tests successful?]]
+        [riemann.streams :only [testing-mode]])
   (:gen-class :name riemann.bin))
 
 (def config-file
-  "The configuration file loaded by the bin tool" 
+  "The configuration file loaded by the bin tool"
   (atom nil))
 
 (def reload-lock (Object.))
@@ -53,14 +56,31 @@
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   [& argv]
-  (riemann.logging/init)
-  (try
-    (info "PID" (pid))
-    (reset! config-file (or (first argv) "riemann.config"))
-    (handle-signals)
-    (riemann.time/start!)
-    (riemann.config/include @config-file)
-    (riemann.config/apply!)
-    nil
-    (catch Exception e
-      (error e "Couldn't start"))))
+  (let [[options args banner] (cli argv
+                                   ["-t" "--test" "Run Riemann in testing mode" :flag true :default false]
+                                   ["-u" "--unit-test" "Run any Riemann tests you have defined" :flag true :default false]
+                                   ["-h" "--help" "Show help" :default false :flag true])]
+    (when (:help options)
+      (println banner)
+      (System/exit 0))
+    (riemann.logging/init)
+
+    (if (:unit-test options)
+      (binding [testing-mode true]
+        (reset! config-file (or (first args) "riemann.config"))
+        (handle-signals)
+        (riemann.config/include @config-file)
+        (if (successful? (run-all-tests #"riemann\.config"))
+          (System/exit 0)
+          (System/exit 1)))
+      (binding [testing-mode (:test options)]
+        (try
+          (info "PID" (pid))
+          (reset! config-file (or (first args) "riemann.config"))
+          (handle-signals)
+          (riemann.time/start!)
+          (riemann.config/include @config-file)
+          (riemann.config/apply!)
+          nil
+          (catch Exception e
+            (error e "Couldn't start")))))))

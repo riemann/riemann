@@ -334,7 +334,20 @@
                   (is (true? ((tagged-any ["meow" "bark"])
                                 {:tags ["meow" "moo"]})))
                   (is (nil? ((tagged-any ["meow" "bar"])
-                               {:tags ["moo"]})))))
+                             {:tags ["moo"]})))))
+
+(deftest probe-test
+         (binding [testing-mode true]
+                  (test-stream (probe :foo)
+                               [1 2 3 4]
+                               [1 2 3 4]))
+         (test-stream (probe :bar)
+                      [1 2 3 4]
+                      [1 2 3 4])
+         (testing "stored values"
+                  (is (=  [1 2 3 4]
+                          (:foo @probe-values)))
+                  (is (nil? (:bar @probe-values)))))
 
 (deftest split*-test
          (testing "with one branch"
