@@ -1657,8 +1657,7 @@ rate
 {% highlight clj %}
 (where (service "cat")
   (smap (fn [event]
-          (let [event (assoc event :state "meowing")]
-            (downstream event)))
+          (assoc event :state "meowing"))
     (rate 5 index)
     prn))
 {% endhighlight %}
