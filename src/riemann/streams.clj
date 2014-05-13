@@ -1512,19 +1512,21 @@
 
   (within [0 1] (fn [event] do-something))"
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/within is deprecated; use (where (< x metric y))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn without
   "Passes on events only when their metric falls outside the given (inclusive)
   range."
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when-not (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/without is deprecated; use (where (not (< x metric y)))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when-not (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn over
   "Passes on events only when their metric is greater than x"
