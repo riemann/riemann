@@ -1254,11 +1254,21 @@
   (apply match :state "expired" children))
 
 (defn with
-  "Transforms an event by associng a set of new k:v pairs, and passes the
-  result to children. Use:
+  "Constructs a copy of each incoming event with new values for the given keys,
+  and passes the resulting event on to each child stream. As everywhere in
+  Riemann, events are immutable; only this stream's children will see this
+  version of the event.
 
+  If you only want to set *default* values, use `default`. If you want to
+  update values for a key based on the *current value* of that field in each
+  event, use `adjust`. If you want to update events using arbitrary functions,
+  use `smap`.
+
+  ; Print each event, but with service \"foo\"
   (with :service \"foo\" prn)
-  (with {:service \"foo\" :state \"broken\"} prn)"
+
+  ; Print each event, but with no host and state \"broken\".
+  (with {:host nil :state \"broken\"} prn)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -1279,11 +1289,12 @@
           (call-rescue e children))))))
 
 (defn default
-  "Transforms an event by associng a set of new key:value pairs, wherever the
-  event has a nil value for that key. Passes the result on to children. Use:
+  "Like `with`, but does not override existing (i.e. non-nil) values. Useful
+  when you want to fill in default values for events that might come in without
+  them.
 
-  (default :service \"foo\" prn)
-  (default {:service \"jrecursive\" :state \"chicken\"} prn)"
+  (default :ttl 300 index)
+  (default {:service \"jrecursive\" :state \"chicken\"} index)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
