@@ -541,7 +541,7 @@
                                [{:metric 2}]))
 
          (testing "using sets as predicates"
-                  (test-stream (where (service "service1" "service2"))
+                  (test-stream (where (service #{"service1" "service2"}))
                                [{:service "service1"}
                                 {:service "service2"}
                                 {:service "service-doesnt-match"}]
