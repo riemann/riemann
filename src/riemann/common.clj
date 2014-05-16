@@ -77,9 +77,11 @@
 (defn iso8601->unix
   "Transforms ISO8601 strings to unix timestamps."
   [iso8601]
-  (->> iso8601
-    (clj-time.format/parse (:date-time-parser clj-time.format/formatters))
-    (clj-time.coerce/to-long)))
+  (-> (->> iso8601
+          (clj-time.format/parse (:date-time-parser clj-time.format/formatters))
+          (clj-time.coerce/to-long))
+      (/ 1000)
+      long))
 
 ; Events
 (defn post-load-event
