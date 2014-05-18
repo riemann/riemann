@@ -208,6 +208,51 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>Securing traffic using TLS</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can use Riemann across any TCP or UDP VPN, or an SSH tunnel. Riemann
+    also supports bidirectional TLS auth as a part of its TCP protocol.</p>
+
+    <p>Before you can use TLS, you need a CA, server key and cert, and a client
+    key and cert. Refer to <a
+    href="https://github.com/aphyr/less-awful-ssl">less-awful-ssl</a> and <a
+    href="https://github.com/OpenVPN/easy-rsa">easy-rsa</a> for more
+    details.</p>
+
+    <p>Then, in riemann.config, add a new (or repurpose an existing) TCP server
+    for TLS.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(tcp-server {:host "0.0.0.0"
+             :port 5554
+             :tls? true
+             :key "riemann_server.pkcs8"
+             :cert "riemann_server.crt"
+             :ca-cert "ca.crt"})
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Refer to your client's documentation or source for the client TLS
+    options.  In riemann-clojure-client, try something like:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(riemann/tcp-client {:host "1.2.3.4"
+                     :port 5554
+                     :tls? true
+                     :key "riemann_client.pkcs8"
+                     :cert "riemann_client.crt"
+                     :ca-cert "ca.crt"})
+{% endhighlight %}
+  </div>
+</div>
+
 <div class="row">
 <h3>Overriding Riemann functions</h3>
 
@@ -1959,42 +2004,6 @@ view.</p>
     (by [:host :service]
        (changed :state
                 (forward client)))))
-{% endhighlight %}
-
-<h3>Connect to Riemann server using secured connection</h3>
-
-<p>One simple solution is to use VPN or SSH Tunnel as secured channel
-between Riemann Server and Riemann Client. In case, they are not an
-option, like your application is running on Heroku, you can use TLS
-for communication between server and client.</p>
-
-<p>Both Riemann Clojure and Java client support TLS client using TCP connection.</p>
-
-<p>Before you can use TLS, you need get CA, Server Key and Cert,
-Client Key and Cert. Refer
-to <a href="https://github.com/aphyr/less-awful-ssl">less-awful-ssl</a>
-and <a href="https://github.com/OpenVPN/easy-rsa">easy-rsa</a> for more details.</p>
-
-<p>Configure Riemann Server to accept TLS connection: </p>
-
-{% highlight clj %}
-(tcp-server {:host "0.0.0.0"
-             :port 5554
-             :tls? true
-             :key "riemann_server.pkcs8"
-             :cert "riemann_server.crt"
-             :ca-cert "ca.crt"})
-{% endhighlight %}
-
-<p>Use Riemann Clojure Client connect to Riemann Server using TLS: </p>
-
-{% highlight clj %}
-(riemann/tcp-client {:host "1.2.3.4"
-                     :port 5554
-                     :tls? true
-                     :key "riemann_client.pkcs8"
-                     :cert "riemann_client.crt"
-                     :ca-cert "ca.crt"})
 {% endhighlight %}
 
 <h2>Contributing to Riemann</h2>
