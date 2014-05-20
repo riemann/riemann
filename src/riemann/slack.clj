@@ -37,6 +37,9 @@
                                                 :fields [{:title "Host"
                                                           :value (slack_format (or (:host event) "-"))
                                                           :short true}
+                                                          {:title "Service"
+                                                          :value (slack_format (or (:service event) "-"))
+                                                          :short true}
                                                           {:title "Metric"
                                                            :value (or (:metric event) "-")
                                                            :short true}
