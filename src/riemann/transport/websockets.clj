@@ -28,7 +28,7 @@
         [lamina.api            :only [bridge-join]]
         [interval-metrics.measure :only [measure-latency]]
         [clojure.java.io       :only [reader]]
-        [clojure.tools.logging :only [info warn]]
+        [clojure.tools.logging :only [info warn debug]]
         [clj-http.util         :only [url-decode]]
         [clojure.string        :only [split]])
   (:import (java.io OutputStream
@@ -171,7 +171,7 @@
   Responsible for routing requests to the appropriate handler."
   (fn handle [ch req]
     (try
-      (info "Websocket connection from" (:remote-addr req)
+      (debug "Websocket connection from" (:remote-addr req)
             (:uri req)
             (:query-string req))
 
