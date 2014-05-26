@@ -9,6 +9,7 @@ pom.xml
 .*.swp
 *.log
 .lein-repl-history
+.nrepl-port
 lib
 classes
 build
