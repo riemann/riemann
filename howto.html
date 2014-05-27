@@ -190,6 +190,34 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>What protocol should I use to talk to Riemann?</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Use the Riemann TCP protocol. If you have to, and know what you're
+    doing, back off to UDP, HTTP, or Graphite.</p>
+
+    <p>Use UDP if you <i>intend</i> to have the OS and network discard data
+    automtically, instead of application-level flow control. Don't use UDP "for
+    speed"; it's designed to drop data, it will drop data, and you'll spend a
+    long time trying to figure out <a
+    href="https://github.com/etsy/statsd/issues/245">why your stats are
+    wrong</a>. UDP may be appropriate for sampling events where discarding
+    large parts of the datastream is OK, but if different nodes drop packets at
+    different rates you'll introduce sampling bias. If you don't understand
+    what this means, don't use UDP.</p>
+
+    <p>Use HTTP only if a TCP client is unavailable; it introduces significant
+    encoding and state machine overhead, takes more bytes on the wire, and
+    can't represent the full range of Riemann events.</p>
+
+    <p>Use the Graphite server and other compatibility shims only for interop
+    with legacy systems. The graphite protocol can only represent a small
+    subset of the Riemann data model; you'll have to do additional work to
+    reconstruct meaningful events.</p>
+  </div>
+</div>
+
 <div class="row">
   <h3>Change the log file</h3>
 
