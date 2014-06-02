@@ -8,11 +8,41 @@
   "Escape message according to slack formatting spec."
   (escape message {\< "&lt;" \> "&gt;" \& "&amp;"}))
 
-(defn- default-formatter [events]
+(defn default-formatter [events]
   {:text (str "*Host:* " (:host events)
               " *State:* " (:state events)
               " *Description:* " (:description events)
               " *Metric:* " (:metric events))})
+
+(defn extended-formatter [events]
+  {:text "This event requires your attention!",
+   :attachments
+   [{:fallback
+     (slack-escape
+       (str
+         "*Description:* "
+         (:description events)
+         " *Host:* "
+         (:host events)
+         " *Metric:* "
+         (:metric events)
+         " *State:* "
+         (:state events))),
+     :text (slack-escape (or (:description events) "")),
+     :pretext "Event properties:",
+     :color
+     (case (:state events) "ok" "good" "critical" "danger" "warning"),
+     :fields
+     [{:title "Host",
+       :value (slack-escape (or (:host events) "-")),
+       :short true}
+      {:title "Service",
+       :value (slack-escape (or (:service events) "-")),
+       :short true}
+      {:title "Metric", :value (or (:metric events) "-"), :short true}
+      {:title "State",
+       :value (slack-escape (or (:state events) "-")),
+       :short true}]}]})
 
 (defn slack
   "Posts events into a slack.com channel using Incoming Webhooks.
