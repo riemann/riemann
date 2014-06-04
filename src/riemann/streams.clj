@@ -61,8 +61,7 @@
             (> age ttl)))))
 
 (defmacro call-rescue
-  "Call each child (children), in order, with event.
-  Rescues and logs any failure."
+  "Call each child stream with event, in order. Rescues and logs any failure."
   [event children]
   `(do
      (doseq [child# ~children]
