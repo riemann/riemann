@@ -618,15 +618,6 @@ sudo service riemann reload
         index)))
 {% endhighlight %}
 
-{% highlight sh %}
-$ riemann test riemann.config
-loading bin
-
-Testing riemann.config-test
-
-Ran 1 tests containing 1 assertions.
-0 failures, 0 errors.
-{% endhighlight %}
   </div>
 </div>
 
@@ -663,6 +654,16 @@ Ran 1 tests containing 1 assertions.
            {:index [{:service "test"
             :time    1
             :ttl     3}]}))))
+{% endhighlight %}
+
+{% highlight sh %}
+$ riemann test riemann.config
+loading bin
+
+Testing riemann.config-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
 {% endhighlight %}
   </div>
 </div>
