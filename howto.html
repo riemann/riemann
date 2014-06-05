@@ -681,7 +681,9 @@ Ran 1 tests containing 1 assertions.
   </div>
   <div class="sixcol last">
 {% highlight clj %}
-(repl-server {:host "127.0.0.1"})
+(streams
+  (rate 5
+    (io (email "foo@bar.com"))))
 {% endhighlight %}
   </div>
 </div>
