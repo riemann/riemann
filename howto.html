@@ -592,6 +592,99 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>Writing tests</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann 0.2.6 (unreleased) has integrated support for building fast,
+    repeatable tests into your config itself, including virtualized time and
+    scheduler side effects and suppressing unwanted IO during test runs.</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>In your streams, use <code>riemann.test/tap</code> to declare named
+    points where you'd like to observe events. For instance, we might want to
+    track any events flowing into the index, so we'd surround it with a tap and
+    call that tap <code>:index</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (default :ttl 3 (tap :index (index)))]
+  (streams
+    (expired #(prn "Expired" %))
+      (where (not (service #"^riemann "))
+        index)))
+{% endhighlight %}
+
+{% highlight sh %}
+$ riemann test riemann.config
+loading bin
+
+Testing riemann.config-test
+
+Ran 1 tests containing 1 assertions.
+0 failures, 0 errors.
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Then, we can inject events into the config's streams to see what
+    happens. Define tests in any config file using <code>tests</code> and
+    <code>deftest</code>.</p>
+
+    <p><code>(inject! events)</code> returns a map of tap names to a vector of
+    the events that arrived at that tap. Time is always reset to zero at the
+    beginning of each test, and is automatically advanced to each event time
+    just prior to event arrival. You may manually advance the clock using
+    <code>riemann.time.controlled/advance!</code>. Scheduled operations
+    like rate, rollup, etc will take effect atomically as the virtual clock
+    advances.</p>
+
+    <p>Under the hood, <code>tests</code> expands to a new ns declaration based
+    on the current namespace--if the current namespace is <code>foo</code>,
+    tests take place in <code>foo-test</code>. <code>tests</code> automatically
+    refers clojure.test's <code>is</code> and <code>are</code>, plus
+    riemann.test's version of <code>deftest</code> and <code>inject!</code> for
+    inserting events into the config's streams.</p>
+
+    <p>You can define regular clojure tests too; no need to call `inject`.
+    Every namespace ending in "-test" is eligible for testing.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(tests
+  (deftest index-test
+    (is (= (inject! [{:service "test"
+                      :time    1}])
+           {:index [{:service "test"
+            :time    1
+            :ttl     3}]}))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Some streams may have *side effects*, like sending events over the
+    network or emitting emails. You can suppress those side effects by wrapping
+    them in a <code>test/io</code> stream, which forwards events to its
+    children normally in production, but ignores them in test mode.</p>
+
+    <p>Note that <code>tap</code> and <code>io</code> are eliminated at
+    compile-time during production mode, so there's zero performance penalty;
+    won't count against your Hotspot inlining budget, etc.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(repl-server {:host "127.0.0.1"})
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Connecting to the REPL</h3>
 
 <div class="row">
@@ -621,8 +714,8 @@ lein repl :connect 127.0.0.1:5557
 
 <div class="row">
   <div class="sixcol">
-    <p>You can reload the config by sending Riemann a SIGHUP, but you can also
-    do it from the REPL.</p>
+    <p>you can reload the config by sending riemann a sighup, but you can also
+    do it from the repl.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
