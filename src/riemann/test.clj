@@ -1,13 +1,16 @@
 (ns riemann.test
   "Fast, end-to-end, repeatable testing for entire Riemann configs. Provides a
   `tap` macro which taps the event stream and (in testing mode) records all
-  events that flow through that stream. Provides macros like deftest and
-  special pattern-matching forms for making assertions about the event
-  streams."
+  events that flow through that stream. Provides a variant of deftest that
+  initiates controlled time and sets up a fresh result set for taps, and a
+  function `inject!` to apply events to streams and see what each tap
+  received."
   (:require [riemann.time.controlled :as time.controlled]
             [riemann.time :as time]
             [riemann.streams :as streams]
             [clojure.test :as test]))
+
+; ugggggggh state is the worst
 
 (def ^:dynamic *testing*
   "Are we currently in test mode?"
