@@ -652,8 +652,8 @@ sudo service riemann reload
     (is (= (inject! [{:service "test"
                       :time    1}])
            {:index [{:service "test"
-            :time    1
-            :ttl     3}]}))))
+                     :time    1
+                     :ttl     3}]}))))
 {% endhighlight %}
 
 {% highlight sh %}
