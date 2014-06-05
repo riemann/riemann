@@ -1,11 +1,13 @@
 (ns riemann.test
   "Fast, end-to-end, repeatable testing for entire Riemann configs. Provides a
   `tap` macro which taps the event stream and (in testing mode) records all
-  events that flow through that stream, which can be extracted and used with
-  clojure.test to verify configs."
+  events that flow through that stream. Provides macros like deftest and
+  special pattern-matching forms for making assertions about the event
+  streams."
   (:require [riemann.time.controlled :as time.controlled]
             [riemann.time :as time]
-            [riemann.streams :as streams]))
+            [riemann.streams :as streams]
+            [clojure.test :as test]))
 
 (def ^:dynamic *testing*
   "Are we currently in test mode?"
@@ -15,8 +17,14 @@
   "A map of tap names to atoms of vectors of captured events." nil)
 
 (def ^:dynamic *taps*
-  "A map of tap names to information about the taps; e.g. file and line number,
-  for preventing collisions." nil)
+  "An atom to a map of tap names to information about the taps; e.g. file and
+  line number, for preventing collisions." nil)
+
+(def ^:dynamic *streams*
+  "The current sequence of streams. This is global so test writers can simply
+  call (inject! events) without looking up the streams from their core every
+  time."
+  nil)
 
 (defn tap-stream
   "Called by `tap` to construct a stream which records events in *results*
@@ -109,28 +117,59 @@
              *taps*    (atom {})]
      ~@body))
 
-(defn run-test!
+(defn inject!
   "Takes a sequence of streams, initiates controlled time and resets the
   scheduler, applies a sequence of events to those streams, and returns a map
   of tap names to the events each tap received. Absolutely NOT threadsafe;
-  riemann.time.controlled is global."
-  [streams events]
-  (binding [*results* (fresh-results @*taps*)]
-    ; Set up time
-    (time.controlled/with-controlled-time!
-      (time.controlled/reset-time!)
+  riemann.time.controlled is global. Streams may be omitted, in which case
+  inject! applies events to the *streams* dynamic var."
+  ([events]
+   (inject! *streams* events))
+  ([streams events]
+   (binding [*results* (fresh-results @*taps*)]
+     ; Set up time
+     (time.controlled/with-controlled-time!
+       (time.controlled/reset-time!)
 
-      ;; Apply events
-      (doseq [e events]
-        (when-let [t (:time e)]
-          (time.controlled/advance! t))
+       ;; Apply events
+       (doseq [e events]
+         (when-let [t (:time e)]
+           (time.controlled/advance! t))
 
-        (doseq [stream streams]
-          (stream e)))
+         (doseq [stream streams]
+           (stream e)))
 
-      ;; Return captured events
-      (->> *results*
-           (reduce (fn [results [tap-name results-atom]]
-                     (assoc! results tap-name @results-atom))
-                   (transient {}))
-           persistent!))))
+       ;; Return captured events
+       (->> *results*
+            (reduce (fn [results [tap-name results-atom]]
+                      (assoc! results tap-name @results-atom))
+                    (transient {}))
+            persistent!)))))
+
+(defmacro deftest
+  "Like clojure.test deftest, but establishes a fresh time context and a fresh
+  set of tap results for the duration of the body.
+
+  (deftest my-tap
+    (let [rs (test/inject! [{:time 2 :service \"bar\"}])]
+      (is (= 1 (count (:some-tap rs))))))"
+  [name & body]
+  `(test/deftest ~name
+     (binding [*results* (fresh-results @*taps*)]
+       (time.controlled/with-controlled-time!
+         (time.controlled/reset-time!)
+
+         ~@body))))
+
+(defmacro tests
+  "Declares a new namespace named [ns]-test, requires some clojure.test and
+  riemann.test helpers, and evaluates body in the context of that namespace.
+  Restores the original namespace afterwards."
+  [& body]
+  (let [old-ns (ns-name *ns*)
+        new-ns (symbol (str old-ns "-test"))]
+    `(do (ns ~new-ns
+           ~'(:require [riemann.test :refer [deftest inject!]]
+                       [clojure.test :refer [is are]]))
+         ~@body
+         (ns ~old-ns))))

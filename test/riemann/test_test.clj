@@ -22,7 +22,7 @@
          (use 'riemann.test 'riemann.streams 'clojure.test)
          (let [downstream (promise)
                s (rate 5 (tap :cask (partial deliver downstream)))]
-           (is (= (run-test! [s]
+           (is (= (run! [s]
                              [{:time 0 :metric 0}
                               {:time 1 :metric 1}
                               {:time 2 :metric 2}
@@ -39,5 +39,5 @@
          (use 'riemann.test 'riemann.streams 'clojure.test)
          (let [downstream (promise)
                s (sdo (io (partial deliver downstream)))]
-           (run-test! [s] [{:time 2 :metric 0}])
+           (run! [s] [{:time 2 :metric 0}])
            (is (nil? (deref downstream 0 nil))))))))

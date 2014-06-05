@@ -1,8 +1,9 @@
 (ns riemann.bin
   "Main function."
-  (:require riemann.config
+  (:require [riemann.config :as config]
             riemann.logging
             riemann.time
+            [riemann.test :as test]
             riemann.pubsub)
   (:use clojure.tools.logging)
   (:gen-class :name riemann.bin))
@@ -52,15 +53,31 @@
 (println "loading bin")(flush)
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
-  [& argv]
-  (riemann.logging/init)
-  (try
-    (info "PID" (pid))
-    (reset! config-file (or (first argv) "riemann.config"))
-    (handle-signals)
-    (riemann.time/start!)
-    (riemann.config/include @config-file)
-    (riemann.config/apply!)
-    nil
-    (catch Exception e
-      (error e "Couldn't start"))))
+  ([]
+   (-main "riemann.config"))
+  ([config]
+   (-main "start" config))
+  ([command config]
+   (riemann.logging/init)
+   (case command
+     "start" (try
+               (info "PID" (pid))
+               (reset! config-file config)
+               (handle-signals)
+               (riemann.time/start!)
+               (riemann.config/include @config-file)
+               (riemann.config/apply!)
+               nil
+               (catch Exception e
+                 (error e "Couldn't start")))
+
+     "test" (try
+              (test/with-test-env
+                (reset! config-file config)
+                (riemann.config/include @config-file)
+                (binding [test/*streams* (:streams @config/next-core)]
+                  (let [results (clojure.test/run-all-tests #".*-test")]
+                    (if (and (zero? (:error results))
+                             (zero? (:fail results)))
+                      (System/exit 0)
+                      (System/exit 1)))))))))

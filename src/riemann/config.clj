@@ -11,14 +11,15 @@
             [riemann.transport.websockets :as websockets]
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
-            [riemann.repl]
-            [riemann.index]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
             [riemann.graphite :as graphite-client]
             [riemann.logstash :as logstash-client]
-            [clojure.tools.nrepl.server :as repl])
+            [clojure.tools.nrepl.server :as repl]
+            [riemann.repl]
+            [riemann.index]
+            [riemann.test :as test :refer [tap io tests]])
   (:use clojure.tools.logging
         [clojure.java.io :only [file]]
         [riemann.client :only [udp-client tcp-client multi-client]]
@@ -44,7 +45,6 @@
 
 (def graphite #'graphite-client/graphite)
 (def logstash #'logstash-client/logstash)
-
 
 (defn kwargs-or-map
   "Takes a sequence of arguments like
