@@ -3,6 +3,7 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index, reinject) which operate on that core."
+  (:import (java.io File))
   (:require [riemann.core :as core]
             [riemann.common :as common :refer [event]]
             [riemann.service :as service]
