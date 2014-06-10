@@ -316,9 +316,18 @@
     (catch clojure.lang.LispReader$ReaderException e
       (throw (logging/nice-syntax-error e file)))))
 
+
+(defn- is-config-file?
+  [file]
+  (let [filename (.getName file)]
+    (and (.isFile file)
+         (or (.matches filename ".*\\.clj$")
+             (.matches filename ".*\\.config$")))))
+
 (defn include
   "Include another config file or directory. If the path points to a
-   directory, all files within it will be loaded recursively.
+   directory, all files with names ending in `.config` or `.clj` within
+   it will be loaded recursively.
 
   ; Relative to the current config file, or cwd
   (include \"foo.clj\")
@@ -332,6 +341,6 @@
               *ns* (find-ns 'riemann.config)]
       (if (.isDirectory file)
         (doseq [f (file-seq file)]
-          (when (.isFile f)
+          (when (is-config-file? f)
             (load-file (.toString f))))
         (load-file path)))))
