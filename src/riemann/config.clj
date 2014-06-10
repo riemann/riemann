@@ -317,8 +317,9 @@
       (throw (logging/nice-syntax-error e file)))))
 
 
-(defn- is-config-file?
-  [file]
+(defn- config-file?
+  "Is the given File a configuration file?"
+  [^File file]
   (let [filename (.getName file)]
     (and (.isFile file)
          (or (.matches filename ".*\\.clj$")
@@ -341,6 +342,6 @@
               *ns* (find-ns 'riemann.config)]
       (if (.isDirectory file)
         (doseq [f (file-seq file)]
-          (when (is-config-file? f)
+          (when (config-file? f)
             (load-file (.toString f))))
         (load-file path)))))
