@@ -3,7 +3,7 @@ lein: lein2
 jdk:
   - openjdk7
   - oraclejdk7
-  - openjdk6
+  - oraclejdk8
 branches:
   except:
     - gh-pages
