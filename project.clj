@@ -17,7 +17,6 @@
     [org.clojure/tools.nrepl "0.2.3"]
     [org.clojure/core.cache "0.6.3"]
     [org.clojure/java.classpath "0.2.2"]
-    [clojure-complete "0.2.3"]
     [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
@@ -32,7 +31,7 @@
     [com.boundary/high-scale-lib "1.0.4"]
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.7.5"]
-    [interval-metrics "0.0.2"]
+    [interval-metrics "1.0.0"]
     [io.netty/netty "3.8.0.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
