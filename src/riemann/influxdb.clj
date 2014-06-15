@@ -3,19 +3,6 @@
   (:require [capacitor.core :as influx])
   (:use [clojure.string :only [split join]]))
 
-(defn influxdb-metric-name
-  "Constructs a metric-name for an event."
-  [event]
-  (let [service (:service event)
-        split-service (if service (split service #" ") [])]
-     (join "." split-service)))
-
-(defn influxdb-series-name
-  "Constructs a series-name for an event."
-  [event]
-  (let [service (:service event)]
-     (str \" service \")))
-
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
   Use:
@@ -43,7 +30,7 @@
     (when (:metric event)
       (when (:service event)
         (when (:host event)
-          (influx/post-points client (influxdb-series-name event) [{ :name (influxdb-metric-name event)
-                                                                     :host (:host event)
-                                                                     :state (:state event)
-                                                                     :value (:metric event) }])))))))
+          (influx/post-points client (:service event) [{ :name (:service event)
+                                                         :host (:host event)
+                                                         :state (:state event)
+                                                         :value (:metric event) }])))))))
