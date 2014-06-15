@@ -1,2 +1,2 @@
-V	160529190215Z		EC5A248EAF446405	unknown	/C=US/ST=Califorya/O=Riemann/OU=Test/CN=Riemann root CA
-V	140530190626Z		EC5A248EAF446406	unknown	/C=US/ST=Califorya/L=San Francisco/O=Riemann/OU=Test/CN=Riemann Server
+V	170603011121Z		8D22210F12A51585	unknown	/C=US/ST=California/O=Riemann/OU=Test/CN=test.riemann.io
+V	150604011211Z		8D22210F12A51586	unknown	/C=US/ST=California/L=San Francisco/O=Riemann/OU=Test Server/CN=server.test.riemann.io

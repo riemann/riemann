@@ -3,6 +3,7 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index, reinject) which operate on that core."
+  (:import (java.io File))
   (:require [riemann.core :as core]
             [riemann.common :as common :refer [event]]
             [riemann.service :as service]
@@ -11,14 +12,15 @@
             [riemann.transport.websockets :as websockets]
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
-            [riemann.repl]
-            [riemann.index]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
             [riemann.graphite :as graphite-client]
             [riemann.logstash :as logstash-client]
-            [clojure.tools.nrepl.server :as repl])
+            [clojure.tools.nrepl.server :as repl]
+            [riemann.repl]
+            [riemann.index]
+            [riemann.test :as test :refer [tap io tests]])
   (:use clojure.tools.logging
         [clojure.java.io :only [file]]
         [riemann.client :only [udp-client tcp-client multi-client]]
@@ -44,7 +46,6 @@
 
 (def graphite #'graphite-client/graphite)
 (def logstash #'logstash-client/logstash)
-
 
 (defn kwargs-or-map
   "Takes a sequence of arguments like
@@ -316,9 +317,19 @@
     (catch clojure.lang.LispReader$ReaderException e
       (throw (logging/nice-syntax-error e file)))))
 
+
+(defn- config-file?
+  "Is the given File a configuration file?"
+  [^File file]
+  (let [filename (.getName file)]
+    (and (.isFile file)
+         (or (.matches filename ".*\\.clj$")
+             (.matches filename ".*\\.config$")))))
+
 (defn include
   "Include another config file or directory. If the path points to a
-   directory, all files within it will be loaded recursively.
+   directory, all files with names ending in `.config` or `.clj` within
+   it will be loaded recursively.
 
   ; Relative to the current config file, or cwd
   (include \"foo.clj\")
@@ -332,6 +343,6 @@
               *ns* (find-ns 'riemann.config)]
       (if (.isDirectory file)
         (doseq [f (file-seq file)]
-          (when (.isFile f)
+          (when (config-file? f)
             (load-file (.toString f))))
         (load-file path)))))

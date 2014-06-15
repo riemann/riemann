@@ -61,8 +61,7 @@
             (> age ttl)))))
 
 (defmacro call-rescue
-  "Call each child (children), in order, with event.
-  Rescues and logs any failure."
+  "Call each child stream with event, in order. Rescues and logs any failure."
   [event children]
   `(do
      (doseq [child# ~children]
@@ -777,7 +776,7 @@
 (defn rate
   "Take the sum of every event's metric over interval seconds and divide by the
   interval size. Emits one event every interval seconds. Starts as soon as an
-  event is received, stops when an expired event arrives. Uses the most
+  event is received, stops when the most recent event expires. Uses the most
   recently received event with a metric as a template. Event ttls decrease
   constantly if no new events arrive."
   [interval & children]
@@ -1254,11 +1253,21 @@
   (apply match :state "expired" children))
 
 (defn with
-  "Transforms an event by associng a set of new k:v pairs, and passes the
-  result to children. Use:
+  "Constructs a copy of each incoming event with new values for the given keys,
+  and passes the resulting event on to each child stream. As everywhere in
+  Riemann, events are immutable; only this stream's children will see this
+  version of the event.
 
+  If you only want to set *default* values, use `default`. If you want to
+  update values for a key based on the *current value* of that field in each
+  event, use `adjust`. If you want to update events using arbitrary functions,
+  use `smap`.
+
+  ; Print each event, but with service \"foo\"
   (with :service \"foo\" prn)
-  (with {:service \"foo\" :state \"broken\"} prn)"
+
+  ; Print each event, but with no host and state \"broken\".
+  (with {:host nil :state \"broken\"} prn)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -1279,11 +1288,12 @@
           (call-rescue e children))))))
 
 (defn default
-  "Transforms an event by associng a set of new key:value pairs, wherever the
-  event has a nil value for that key. Passes the result on to children. Use:
+  "Like `with`, but does not override existing (i.e. non-nil) values. Useful
+  when you want to fill in default values for events that might come in without
+  them.
 
-  (default :service \"foo\" prn)
-  (default {:service \"jrecursive\" :state \"chicken\"} prn)"
+  (default :ttl 300 index)
+  (default {:service \"jrecursive\" :state \"chicken\"} index)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -1501,35 +1511,39 @@
 
   (within [0 1] (fn [event] do-something))"
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/within is deprecated; use (where (< x metric y))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn without
   "Passes on events only when their metric falls outside the given (inclusive)
   range."
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when-not (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/without is deprecated; use (where (not (< x metric y)))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when-not (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn over
   "Passes on events only when their metric is greater than x"
   [x & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when (< x m)
-        (call-rescue event children)))))
+  (deprecated "streams/over is deprecated in favor of (where (< x metric))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when (< x m)
+                    (call-rescue event children))))))
 
 (defn under
   "Passes on events only when their metric is smaller than x"
   [x & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when (> x m)
-        (call-rescue event children)))))
+  (deprecated "streams/under is deprecated in favor of (where (< metric x))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when (> x m)
+                    (call-rescue event children))))))
 
 (defn- where-test [k v]
   (condp some [k]
