@@ -11,11 +11,10 @@
      (join "." split-service)))
 
 (defn influxdb-series-name
-  "Constructs a series-name for an event by picking the first word of the 
-   service field of an event."
+  "Constructs a series-name for an event."
   [event]
   (let [service (:service event)]
-    (first (if service (split service #" ")))))
+     (str \" service \")))
 
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
