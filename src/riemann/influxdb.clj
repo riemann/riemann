@@ -1,7 +1,6 @@
 (ns riemann.influxdb
   "Forwards events to InfluxDB"
-  (:require [capacitor.core :as influx])
-  (:use [clojure.string :only [split join]]))
+  (:require [capacitor.core :as influx]))
 
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
