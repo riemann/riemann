@@ -1126,6 +1126,19 @@
            (is (= [:bad :ok :evil :bad]
                   (vec (map (fn [s] (:state s)) (deref output)))))))
 
+(deftest changed-with-previous-test
+         (let [output (atom [])
+               r (changed :state {:preserve :prev_state :init :ok} (append output))
+               states [:ok :bad :bad :ok :ok :ok :evil :bad]]
+
+           ; Apply states
+           (doseq [state states]
+             (r {:state state}))
+
+           ; Check output
+           (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
+                  (vec (map (fn [s] [(:prev_state s) (:state s)]) (deref output)))))))
+
 (deftest changed-state-test
          ; Each test stream keeps track of the first host/service it sees, and
          ; confirms that each subsequent event matches that host, and that

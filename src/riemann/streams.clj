@@ -1474,7 +1474,8 @@
   "Passes on events only when (f event) differs from that of the previous
   event. Options:
 
-  :init   The initial value to assume for (pred event).
+  :init     The initial value to assume for (pred event).
+  :preserve Preserve the previous value in an attribute with this key.
 
   ; Print all state changes
   (changed :state prn)
@@ -1482,14 +1483,21 @@
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
 
+  ; Pass along previous state.
+  (changed :state {:preserve :prev_state} prn) ; →  #riemann.codec.Event{… :prev_state \"nil\"}
+
   Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options  (first children)
-        previous (atom (list (when (map? options)
+  (let [options  (if (map? (first children))
+                     (first children)
+                     {:init nil
+                      :preserve nil})
+        preserve (:preserve options)
+        previous (atom (list (when (not (nil? (:init options)))
                                (:init options))))
-        children (if (map? options)
+        children (if (map? (first children))
                    (rest children)
                    children)]
     (fn stream [event]
@@ -1497,7 +1505,11 @@
             kept (swap! previous (comp (partial take 2)
                                        #(conj % cur)))]
         (when-not (every? (partial = cur) kept)
-          (call-rescue event children))))))
+          (if preserve
+              ;; pass the previous value along
+              (call-rescue (assoc event preserve (second kept)) children)
+              ;; they don't want the previous value
+              (call-rescue event children)))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."
