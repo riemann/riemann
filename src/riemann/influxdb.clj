@@ -5,9 +5,8 @@
 
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
-  Use:
-  
-  ;; For giving series name as the combination of :host and :service separated by dot.
+
+  ;; For giving series name as the concatenation of :host and :service fields with dot separator.
 
   (influxdb {:host \"play.influxdb.org\" :port 8086 :series \"host.service\"})
 
@@ -21,8 +20,7 @@
 
   :password       Password of the corresponding user.
  
-  :series         Name of the InfluxDB time-series."
-
+  :series         Name of the InfluxDB's time-series."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 8086
@@ -34,10 +32,10 @@
         client (influx/make-client opts)]
     (fn [event]
       (let [series (join "." (map (fn [e] (e event)) (vec (map (fn [k] (keyword k)) (split (:series opts) #"\.")))))]
-      (when (:metric event)
-        (when (:service event)
-          (when (:host event)
-            (influx/post-points client series [{ :name (:service event)
-                                                 :host (:host event)
-                                                 :state (:state event)
-                                                 :value (:metric event) }]))))))))
+        (when (:metric event)
+          (when (:service event)
+            (when (:host event)
+              (influx/post-points client series [{ :name (:service event)
+                                                   :host (:host event)
+                                                   :state (:state event)
+                                                   :value (:metric event) }]))))))))
