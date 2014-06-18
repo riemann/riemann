@@ -3,12 +3,17 @@
   (:require [capacitor.core :as influx])
   (:use [clojure.string :only [join split]]))
 
+(defn influxdb-series
+  "Constructs a series name for an event."
+  [opts event]
+  (if (nil? ((:series opts) event)) "riemann-events" ((:series opts) event))) 
+  
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
 
   ;; For giving series name as the concatenation of :host and :service fields with dot separator.
 
-  (influxdb {:host \"play.influxdb.org\" :port 8086 :series \"host.service\"})
+  (influxdb {:host \"play.influxdb.org\" :port 8086 :series #(str (:host %) \".\" (:service %))})
 
   Options:
 
@@ -28,14 +33,12 @@
                      :username "root"
                      :password "root"
                      :db "riemann"
-                     :series "service"} opts)
+                     :series :service} opts)
         client (influx/make-client opts)]
     (fn [event]
-      (let [series (join "." (map (fn [e] (e event)) (vec (map (fn [k] (keyword k)) (split (:series opts) #"\.")))))]
-        (when (:metric event)
-          (when (:service event)
-            (when (:host event)
-              (influx/post-points client series [{ :name (:service event)
-                                                   :host (:host event)
-                                                   :state (:state event)
-                                                   :value (:metric event) }]))))))))
+      (when (:metric event)
+        (when (:service event)
+          (influx/post-points client (influxdb-series opts event) [{ :name (:service event)
+                                                                     :host (if (nil? (:host event)) "" (:host event))
+                                                                     :state (:state event)
+                                                                     :value (:metric event) }]))))))
