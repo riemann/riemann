@@ -6,8 +6,8 @@
 (defn influxdb-series
   "Constructs a series name for an event."
   [opts event]
-  (if (nil? ((:series opts) event)) "riemann-events" ((:series opts) event))) 
-  
+  ((:series opts) event))
+ 
 (defn influxdb
   "Returns a function which accepts an event and sends it to InfluxDB.
 
@@ -25,7 +25,8 @@
 
   :password       Password of the corresponding user.
  
-  :series         Name of the InfluxDB's time-series."
+  :series         Name of the InfluxDB's time-series. Default value is :service field of event,
+                  incase that is nil, \"riemann-events\" will be the default name."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 8086
@@ -38,7 +39,7 @@
     (fn [event]
       (when (:metric event)
         (when (:service event)
-          (influx/post-points client (influxdb-series opts event) [{ :name (:service event)
-                                                                     :host (if (nil? (:host event)) "" (:host event))
-                                                                     :state (:state event)
-                                                                     :value (:metric event) }]))))))
+          (influx/post-points client (if-let [series (influxdb-series opts event)] series "riemann-events") [{ :name (:service event)
+                                                                                                               :host (if-let [hostname (:host event)] hostname "") 
+                                                                                                               :state (:state event)
+                                                                                                               :value (:metric event) }]))))))
