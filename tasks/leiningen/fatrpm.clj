@@ -192,7 +192,7 @@
 
         ; MD5
         (write (str dest ".md5")
-               (str (md5 dest) " " (.getName rpm)))))))
+               (str (md5 dest) "  " (.getName rpm)))))))
 
 (defn fatrpm
   ([project] (fatrpm project true))
