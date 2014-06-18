@@ -1140,6 +1140,16 @@
            (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
                   @output))))
 
+(deftest changed-with-exception-test
+        (logging/suppress 
+          "riemann.streams"
+           (let [exceptions (atom [])]
+             (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
+               (run-stream (changed :state (fn [x]
+                                             (throw (Throwable. "boo!"))))
+                           [(riemann.common/event {:state :critical})]))
+             (is (= 1 (count @exceptions))))))
+
 (deftest changed-state-test
          ; Each test stream keeps track of the first host/service it sees, and
          ; confirms that each subsequent event matches that host, and that

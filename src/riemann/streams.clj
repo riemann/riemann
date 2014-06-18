@@ -1505,9 +1505,16 @@
           (dorun
             (map 
               (fn [child arity]
-                (if (= 1 arity)
-                    (child event)
-                    (child (second kept) event))
+                (try
+                  (if (= 1 arity)
+                      (child event)
+                      (child (second kept) event))
+                  (catch Throwable e
+                    (warn e (str child " threw"))
+                    (if-let [ex-stream *exception-stream*]
+                      (ex-stream (exception->event e)))
+                  )
+                )
               )
               children
               child-arities
