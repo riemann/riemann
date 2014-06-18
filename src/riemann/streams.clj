@@ -1474,42 +1474,45 @@
   "Passes on events only when (f event) differs from that of the previous
   event. Options:
 
-  :init     The initial value to assume for (pred event).
-  :preserve Preserve the previous value in an attribute with this key.
+  :init   The initial value to assume for (pred event).
 
   ; Print all state changes
   (changed :state prn)
 
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
-
-  ; Pass along previous state.
-  (changed :state {:preserve :prev_state} prn) ; →  #riemann.codec.Event{… :prev_state \"nil\"}
+  
+  ; Receive the previous event, in addition to the current event
+  (changed state (fn [prev-evt evt]
+                   (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
 
   Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options  (if (map? (first children))
-                     (first children)
-                     {:init nil
-                      :preserve nil})
-        preserve (:preserve options)
-        previous (atom (list (when (not (nil? (:init options)))
-                               (:init options))))
-        children (if (map? (first children))
+  (let [options  (first children)
+        previous (atom (list (when (map? options)
+                               {pred (:init options)})))
+        children (if (map? options)
                    (rest children)
-                   children)]
+                   children)
+        child-arities (map #(alength (.getParameterTypes (first (.getDeclaredMethods (class %))))) children)]
+    
     (fn stream [event]
-      (let [cur  (pred event)
-            kept (swap! previous (comp (partial take 2)
-                                       #(conj % cur)))]
-        (when-not (every? (partial = cur) kept)
-          (if preserve
-              ;; pass the previous value along
-              (call-rescue (assoc event preserve (second kept)) children)
-              ;; they don't want the previous value
-              (call-rescue event children)))))))
+      (let [kept (swap! previous (comp (partial take 2)
+                                       #(conj % event)))]
+        (when-not (every? (partial = (pred event)) (map pred kept))
+          (dorun
+            (map 
+              (fn [child arity]
+                (if (= 1 arity)
+                    (child event)
+                    (child (second kept) event))
+              )
+              children
+              child-arities
+            )
+          ))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."

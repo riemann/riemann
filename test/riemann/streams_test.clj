@@ -1128,7 +1128,8 @@
 
 (deftest changed-with-previous-test
          (let [output (atom [])
-               r (changed :state {:preserve :prev_state :init :ok} (append output))
+               pred :state
+               r (changed pred {:init :ok} #(swap! output conj [(pred %) (pred %2)]))
                states [:ok :bad :bad :ok :ok :ok :evil :bad]]
 
            ; Apply states
@@ -1137,7 +1138,7 @@
 
            ; Check output
            (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
-                  (vec (map (fn [s] [(:prev_state s) (:state s)]) (deref output)))))))
+                  @output))))
 
 (deftest changed-state-test
          ; Each test stream keeps track of the first host/service it sees, and
