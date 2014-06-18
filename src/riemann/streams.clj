@@ -1483,7 +1483,7 @@
   (changed :state {:init \"ok\"} prn)
   
   ; Receive the previous event, in addition to the current event
-  (changed state (fn [prev-evt evt]
+  (changed :state (fn [prev-evt evt]
                    (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
 
   Note that f can be an arbitrary function:
