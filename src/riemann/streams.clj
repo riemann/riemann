@@ -1481,10 +1481,11 @@
 
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
-  
+
   ; Receive the previous event, in addition to the current event
-  (changed :state (fn [prev-evt evt]
-                   (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
+  (changed :state
+           (fn [prev-evt evt]
+             (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
 
   Note that f can be an arbitrary function:
 
@@ -1496,14 +1497,20 @@
         children (if (map? options)
                    (rest children)
                    children)
-        child-arities (map #(alength (.getParameterTypes (first (.getDeclaredMethods (class %))))) children)]
-    
+        child-arities (map #(-> %
+                                class
+                                .getDeclaredMethods
+                                first
+                                .getParameterTypes
+                                alength)
+                           children)]
+
     (fn stream [event]
       (let [kept (swap! previous (comp (partial take 2)
                                        #(conj % event)))]
         (when-not (every? (partial = (pred event)) (map pred kept))
           (dorun
-            (map 
+            (map
               (fn [child arity]
                 (try
                   (if (= 1 arity)
@@ -1512,14 +1519,9 @@
                   (catch Throwable e
                     (warn e (str child " threw"))
                     (if-let [ex-stream *exception-stream*]
-                      (ex-stream (exception->event e)))
-                  )
-                )
-              )
+                      (ex-stream (exception->event e))))))
               children
-              child-arities
-            )
-          ))))))
+              child-arities)))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."
