@@ -367,16 +367,18 @@
                                   "riemann.pubsub"]
                                  (stop! core))))))
 
-(deftest transition-wrapped-index
-  (let [first-index (wrap-index (index))
-        first-core  (logging/suppress ["riemann.core" "riemann.pubsub"]
-                                      (transition! (core) {:index first-index}))
-        second-index (wrap-index (index))
-        second-core  (logging/suppress ["riemann.core" "riemann.pubsub"]
-                                       (transition! (core) {:index second-index}))]
 
-    (first-index {:service 1 :state "ok" :time 0})
-    (is (= (seq first-index) [{:service 1 :state "ok" :time 0}]))
+(deftest merge-cores-merges-indexes
+  (testing "reusing the index with an unwrapped index"
+    (let [first-core  {:index (index)}
+          second-core {:index (index)}
+          merged-core (merge-cores first-core second-core)]
+      (is (= (:index first-core) (:index merged-core)))))
 
-    (transition! first-core second-core)
-    (is (= (seq second-index) [{:service 1 :state "ok" :time 0}]))))
+  (testing "reusing the index with a wrapped index"
+    (let [first-core  {:index (wrap-index (index))}
+          second-core {:index (wrap-index (index))}
+          merged-core (merge-cores first-core second-core)]
+      (is (= (:index first-core) (:index merged-core)))))
+
+  )
