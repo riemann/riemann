@@ -4,7 +4,8 @@
         riemann.query
         [riemann.common :only [event]]
         [riemann.time :only [unix-time]]
-        clojure.test))
+        clojure.test)
+  (:require [riemann.service :as service]))
 
 (deftest missing-time-throws
   (riemann.logging/suppress
@@ -129,3 +130,21 @@
   (testing "two hosts"
     (let [ast (ast "host = \"h1\" and host = \"h2\"")]
       (is (= nil (query-for-host-and-service ast))))))
+
+(deftest service-interface
+  (testing "service equivelance of indexes"
+    (let [one-index (index)
+          two-index (index)]
+      (is (service/equiv? one-index two-index))))
+
+  (testing "service equivelance of wrapped indexes"
+    (let [one-index (wrap-index (index))
+          two-index (wrap-index (index))]
+      (is (service/equiv? one-index two-index))))
+
+  (testing "service equivelance of wrapped to unwrapped index"
+    (let [one-index (wrap-index (index))
+          two-index (index)]
+      (is (service/equiv? one-index two-index))))
+
+  )
