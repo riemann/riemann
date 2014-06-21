@@ -180,15 +180,15 @@
               integration now."
               ((:index core) event)))
 
-; Provides an accessor for an inner index
+; Provides an accessor for a source index
 (defprotocol WrappedIndex
-  (inner [this]))
+  (source [this]))
 
-(defn- get-inner-index
+(defn- unwrap
   "Get the inner index of a wrapped index"
   [wrapped]
   (if (instance? riemann.core.WrappedIndex wrapped)
-    (inner wrapped)
+    (source wrapped)
     wrapped))
 
 (defn wrap-index
@@ -202,9 +202,9 @@
      (reify
        Object
        (equals [this other]
-         (= source (get-inner-index other)))
+         (= source (unwrap other)))
        WrappedIndex
-       (inner [this]
+       (source [this]
          source)
        Index
        (clear [this]
@@ -233,11 +233,11 @@
 
        ServiceEquiv
        (equiv? [this other]
-         (service/equiv? source (get-inner-index other)))
+         (service/equiv? source (unwrap other)))
 
        Service
        (conflict? [this other]
-         (service/conflict? source (get-inner-index other)))
+         (service/conflict? source (unwrap other)))
        (reload! [this new-core]
          (service/reload! source new-core))
        (start! [this]
