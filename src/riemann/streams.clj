@@ -1491,19 +1491,12 @@
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options  (first children)
-                 ; Prev value, prev event
-        previous (atom [(when (map? options) (:init options)) nil])
-        children (if (map? options)
+  (let [options  (if (map? (first children)) (first children) {})
+        children (if (map? (first children))
                    (rest children)
                    children)
-        child-arities (map #(-> %
-                                class
-                                .getDeclaredMethods
-                                first
-                                .getParameterTypes
-                                alength)
-                           children)]
+        ; Prev value, prev event
+        previous (atom [(:init options) nil])]
 
     (fn stream [event']
       (let [value'                 (pred event')
@@ -1511,18 +1504,10 @@
         (if-not (compare-and-set! previous prev [value' event'])
           (recur event')
           (when-not (= value value')
-            (dorun
-              (map (fn [child arity]
-                     (try
-                       (if (= 1 arity)
-                         (child event')
-                         (child event event'))
-                       (catch Throwable e
-                         (warn e (str child " threw"))
-                         (if-let [ex-stream *exception-stream*]
-                           (ex-stream (exception->event e))))))
-              children
-              child-arities))))))))
+            (call-rescue (if (:pairs? options)
+                           [event event']
+                           event')
+                         children)))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."

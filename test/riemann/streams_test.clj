@@ -1113,24 +1113,15 @@
     (testing ":state with :init"
       (test-stream (changed :state {:init :ok})
                    (states [:ok :bad :bad :ok :ok :evil :bad])
-                   (states [:bad :ok :evil :bad]))))
+                   (states [:bad :ok :evil :bad])))
 
     (testing "with previous event and arbitrary fn"
-      (let [output (atom [])
-            pred (fn [x] (:state x))
-            r (changed pred {:init :ok} #(swap! output conj [(pred %) (pred %2)]))
-            states [:ok :bad :bad :ok :ok :ok :evil :bad]]
-
-        ; Apply states
-        (doseq [state states]
-          (r {:state state}))
-
-        ; Check output
-        (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
-               @output)))))
+      (test-stream (changed #(:state %) {:init :ok, :pairs? true})
+                   (states [:ok :bad :bad :ok :ok :evil :bad])
+                   (partition 2 1 (states [:ok :bad :ok :evil :bad]))))))
 
 (deftest changed-with-exception-test
-        (logging/suppress 
+        (logging/suppress
           "riemann.streams"
            (let [exceptions (atom [])]
              (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
