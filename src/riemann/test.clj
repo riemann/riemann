@@ -172,7 +172,9 @@
   (let [old-ns (ns-name *ns*)
         new-ns (symbol (str old-ns "-test"))]
     `(do (ns ~new-ns
-           ~'(:require [riemann.test :refer [deftest inject!]]
+           ~'(:require [riemann.test :refer [deftest inject! io tap]]
+                       [riemann.streams :refer :all]
+                       [riemann.folds :as folds]
                        [clojure.test :refer [is are]]))
          ~@body
          (ns ~old-ns))))
