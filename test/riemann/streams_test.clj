@@ -3,6 +3,8 @@
         [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
+        [riemann.test :refer [run-stream run-stream-intervals test-stream 
+                              with-test-stream test-stream-intervals]]
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
@@ -14,53 +16,6 @@
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
-
-(defmacro run-stream
-  "Applies inputs to stream, and returns outputs."
-  [stream inputs]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))]
-     (doseq [e# ~inputs] (stream# e#))
-     (deref out#)))
-
-(defmacro run-stream-intervals
-  "Applies a seq of alternating events and intervals (in seconds) between them
-  to stream, returning outputs."
-  [stream inputs-and-intervals]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))
-         start-time# (ref (unix-time))
-         next-time# (ref (deref start-time#))]
-     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
-       (stream# e#)
-       (when interval#
-         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
-         (advance! (deref next-time#))))
-     (let [result# (deref out#)]
-       ; close stream
-       (stream# {:state "expired" :time (unix-time)})
-       result#)))
-
-(defmacro test-stream
-  "Verifies that the given stream, taking inputs, forwards outputs to children."
-  [stream inputs outputs]
-  `(is (~'= ~outputs (run-stream ~stream ~inputs))))
-
-(defmacro with-test-stream
-  "Exposes a fake index, verifies that the given stream, taking inputs,
-  forwards outputs to children"
-  [sym stream inputs outputs]
-  `(let [out#    (atom [])
-         ~sym    (append out#)
-         stream# ~stream]
-     (doseq [e# ~inputs] (stream# e#))
-     (is (~'= (deref out#) ~outputs))))
-
-(defmacro test-stream-intervals
-  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
-  outputs to chldren."
-  [stream inputs-and-intervals outputs]
-  `(is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
 (defn evs
   "Generate events based on the given event, with given metrics"

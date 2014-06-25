@@ -11,6 +11,7 @@
             [clojure.test :as test]))
 
 ; ugggggggh state is the worst
+;  and yet necessary
 
 (def ^:dynamic *testing*
   "Are we currently in test mode?"
@@ -178,3 +179,50 @@
                        [clojure.test :refer [is are]]))
          ~@body
          (ns ~old-ns))))
+
+(defmacro run-stream
+  "Applies inputs to stream, and returns outputs."
+  [stream inputs]
+  `(let [out# (atom [])
+         stream# (~@stream (streams/append out#))]
+     (doseq [e# ~inputs] (stream# e#))
+     (deref out#)))
+
+(defmacro run-stream-intervals
+  "Applies a seq of alternating events and intervals (in seconds) between them
+  to stream, returning outputs."
+  [stream inputs-and-intervals]
+  `(let [out# (atom [])
+         stream# (~@stream (streams/append out#))
+         start-time# (ref (time/unix-time))
+         next-time# (ref (deref start-time#))]
+     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
+       (stream# e#)
+       (when interval#
+         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
+         (time.controlled/advance! (deref next-time#))))
+     (let [result# (deref out#)]
+       ; close stream
+       (stream# {:state "expired" :time (time/unix-time)})
+       result#)))
+
+(defmacro test-stream
+  "Verifies that the given stream, taking inputs, forwards outputs to children."
+  [stream inputs outputs]
+  `(test/is (~'= ~outputs (run-stream ~stream ~inputs))))
+
+(defmacro with-test-stream
+  "Exposes a fake index, verifies that the given stream, taking inputs,
+  forwards outputs to children"
+  [sym stream inputs outputs]
+  `(let [out#    (atom [])
+         ~sym    (streams/append out#)
+         stream# ~stream]
+     (doseq [e# ~inputs] (stream# e#))
+     (test/is (~'= (deref out#) ~outputs))))
+
+(defmacro test-stream-intervals
+  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
+  outputs to chldren."
+  [stream inputs-and-intervals outputs]
+  `(test/is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
