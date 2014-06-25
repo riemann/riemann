@@ -127,7 +127,7 @@
 (defn dpkg
   "Convert given package directory to a .deb."
   [project deb-dir]
-  (print (:err (sh "dpkg" "--build"
+  (print (:err (sh "fakeroot" "dpkg" "--build"
                    (str deb-dir)
                    (str (file (:root project) "target")))))
   (let [deb-file-name (str (:name project) "_"
