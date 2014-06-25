@@ -675,6 +675,10 @@ Ran 1 tests containing 1 assertions.
     them in a <code>test/io</code> stream, which forwards events to its
     children normally in production, but ignores them in test mode.</p>
 
+    <p><code>io</code> suppresses events, which means that <code>(io (tap
+    :foo))</code> will never see anything. Always place taps *outside*
+  <code>io</code> expressions.</p>
+
     <p>Note that <code>tap</code> and <code>io</code> are eliminated at
     compile-time during production mode, so there's zero performance penalty;
     won't count against your Hotspot inlining budget, etc.</p>
