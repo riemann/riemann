@@ -173,7 +173,7 @@
   (let [old-ns (ns-name *ns*)
         new-ns (symbol (str old-ns "-test"))]
     `(do (ns ~new-ns
-           ~'(:require [riemann.test :refer [deftest inject! io tap]]
+           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream]]
                        [riemann.streams :refer :all]
                        [riemann.folds :as folds]
                        [clojure.test :refer [is are]]))
@@ -185,26 +185,32 @@
   [stream inputs]
   `(let [out# (atom [])
          stream# (~@stream (streams/append out#))]
-     (doseq [e# ~inputs] (stream# e#))
+     (time.controlled/reset-time!)
+     (doseq [e# ~inputs] 
+       (when-let [t# (:time e#)]
+         (time.controlled/advance! t#))
+       (stream# e#))
      (deref out#)))
 
 (defmacro run-stream-intervals
   "Applies a seq of alternating events and intervals (in seconds) between them
   to stream, returning outputs."
   [stream inputs-and-intervals]
-  `(let [out# (atom [])
-         stream# (~@stream (streams/append out#))
-         start-time# (ref (time/unix-time))
-         next-time# (ref (deref start-time#))]
-     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
-       (stream# e#)
-       (when interval#
-         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
-         (time.controlled/advance! (deref next-time#))))
-     (let [result# (deref out#)]
-       ; close stream
-       (stream# {:state "expired" :time (time/unix-time)})
-       result#)))
+  `(do
+     (time.controlled/reset-time!)
+     (let [out# (atom [])
+           stream# (~@stream (streams/append out#))
+           start-time# (ref (time/unix-time))
+           next-time# (ref (deref start-time#))]
+       (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
+         (stream# e#)
+         (when interval#
+           (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
+           (time.controlled/advance! (deref next-time#))))
+       (let [result# (deref out#)]
+         ; close stream
+         (stream# {:state "expired" :time (time/unix-time)})
+         result#))))
 
 (defmacro test-stream
   "Verifies that the given stream, taking inputs, forwards outputs to children."

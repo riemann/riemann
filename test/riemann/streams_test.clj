@@ -916,7 +916,6 @@
 
 (deftest ddt-interval-test
          (testing "Quick burst without crossing interval"
-                  (reset-time!)
                   (is (= (map :metric (run-stream-intervals 
                                         (ddt 0.1)
                                         [{:metric 1} nil
@@ -925,7 +924,6 @@
                          [])))
 
          (testing "1 event per interval"
-                  (reset-time!)
                   (test-stream-intervals
                     (ddt 1)
                     ; Note that the swap occurs just prior to events at time 1.
@@ -936,7 +934,6 @@
                      {:time 2 :metric -5}]))
         
          (testing "n events per interval"
-                  (reset-time!)
                   (test-stream-intervals 
                     (ddt 1)
                     [{:time 0 :metric -1} 1/100
@@ -948,7 +945,6 @@
                      {:time 4/2 :metric -4}]))
 
          (testing "emits zeroes when no events arrive in an interval"
-                  (reset-time!)
                   (test-stream-intervals (ddt 2)
                                          [{:time 0 :metric 0} 1
                                           {:time 1 :metric 1} 2
@@ -1329,13 +1325,11 @@
          ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]] 
 
          (testing "expired events"
-                  (reset-time!)
                   (test-stream-intervals
                     (rollup 2 3)
                     [ 1 0 {:state "expired"} 0 :a 1 :b 1 :c 1 ]
                     [[1] [{:state "expired"}]              [:a :b :c]])
 
-                  (reset-time!)
                   (let [e {:state "expired"}]
                     (test-stream-intervals
                       (rollup 2 2)
@@ -1347,14 +1341,12 @@
     (test-stream-intervals (batch 2 3) [] []))
 
   (testing "incomplete batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 3 :b 1 :c 2 :d 3]
       [[:a] [:b :c] [:d]]))
 
   (testing "overflowing batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
@@ -1443,7 +1435,6 @@
                                 [{:x 1 :time 1}])
 
          ; Triggers after dt seconds with new events.
-         (reset-time!)
          (test-stream-intervals (stable 10 :x)
                                 [{:x 0 :time 0} 1
                                  {:x 0 :time 1} 4
