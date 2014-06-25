@@ -1104,27 +1104,14 @@
            (em 12 200)))
 
 (deftest changed-test
-         (let [output (atom [])
-               r (changed :state (append output))
-               r2 (changed :state {:init :ok}
-                           (append output))
-               states [:ok :bad :bad :ok :ok :ok :evil :bad]]
+  (let [states (partial map (partial hash-map :state))]
+    (test-stream (changed :state)
+                 (states [:ok :bad :bad :ok :ok :ok :evil :bad])
+                 (states [:ok :bad :ok :evil :bad]))
 
-           ; Apply states
-           (doseq [state states]
-             (r {:state state}))
-
-           ; Check output
-           (is (= [:ok :bad :ok :evil :bad]
-                  (vec (map (fn [s] (:state s)) (deref output)))))
-
-           ; Test with init
-           (reset! output [])
-           (doseq [state states]
-             (r2 {:state state}))
-
-           (is (= [:bad :ok :evil :bad]
-                  (vec (map (fn [s] (:state s)) (deref output)))))))
+    (test-stream (changed :state {:init :ok})
+                 (states [:ok :bad :bad :ok :ok :evil :bad])
+                 (states [:bad :ok :evil :bad]))))
 
 (deftest changed-with-previous-test
          (let [output (atom [])
@@ -1185,7 +1172,9 @@
            (doseq [event events]
              (s event))
            (is (= 6 (deref i)))))
+
 (deftest within-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (within [1 2]
                          (fn [e] (dosync (alter output conj e))))
@@ -1193,9 +1182,10 @@
                expect [1 1.5 2]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest without-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (without [1 2]
                          (fn [e] (dosync (alter output conj e))))
@@ -1203,9 +1193,10 @@
                expect [0.5 2.5]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest over-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (over 1.5
                          (fn [e] (dosync (alter output conj e))))
@@ -1213,9 +1204,10 @@
                expect [2 2.5]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest under-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (under 1.5
                          (fn [e] (dosync (alter output conj e))))
@@ -1223,7 +1215,7 @@
                expect [0.5 1]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)
