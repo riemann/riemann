@@ -86,6 +86,11 @@
           (file dir "DEBIAN" "postinst"))
     (.setExecutable (file dir "DEBIAN" "postinst") true false)
 
+    ; Prerm
+    (copy (file (:root project) "pkg" "deb" "prerm.sh")
+          (file dir "DEBIAN" "prerm"))
+    (.setExecutable (file dir "DEBIAN" "prerm") true false)
+
     ; Postrm
     (copy (file (:root project) "pkg" "deb" "postrm.sh")
           (file dir "DEBIAN" "postrm"))

@@ -6,3 +6,5 @@ if [ -x "/etc/init.d/riemann" ]; then
     update-rc.d riemann defaults >/dev/null
   fi
 fi
+
+invoke-rc.d riemann start
