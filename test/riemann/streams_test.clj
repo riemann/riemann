@@ -1105,27 +1105,29 @@
 
 (deftest changed-test
   (let [states (partial map (partial hash-map :state))]
-    (test-stream (changed :state)
-                 (states [:ok :bad :bad :ok :ok :ok :evil :bad])
-                 (states [:ok :bad :ok :evil :bad]))
+    (testing ":state"
+      (test-stream (changed :state)
+                   (states [:ok :bad :bad :ok :ok :ok :evil :bad])
+                   (states [:ok :bad :ok :evil :bad])))
 
-    (test-stream (changed :state {:init :ok})
-                 (states [:ok :bad :bad :ok :ok :evil :bad])
-                 (states [:bad :ok :evil :bad]))))
+    (testing ":state with :init"
+      (test-stream (changed :state {:init :ok})
+                   (states [:ok :bad :bad :ok :ok :evil :bad])
+                   (states [:bad :ok :evil :bad]))))
 
-(deftest changed-with-previous-test
-         (let [output (atom [])
-               pred :state
-               r (changed pred {:init :ok} #(swap! output conj [(pred %) (pred %2)]))
-               states [:ok :bad :bad :ok :ok :ok :evil :bad]]
+    (testing "with previous event and arbitrary fn"
+      (let [output (atom [])
+            pred (fn [x] (:state x))
+            r (changed pred {:init :ok} #(swap! output conj [(pred %) (pred %2)]))
+            states [:ok :bad :bad :ok :ok :ok :evil :bad]]
 
-           ; Apply states
-           (doseq [state states]
-             (r {:state state}))
+        ; Apply states
+        (doseq [state states]
+          (r {:state state}))
 
-           ; Check output
-           (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
-                  @output))))
+        ; Check output
+        (is (= [[:ok :bad] [:bad :ok] [:ok :evil] [:evil :bad]]
+               @output)))))
 
 (deftest changed-with-exception-test
         (logging/suppress 

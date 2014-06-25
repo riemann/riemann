@@ -1492,8 +1492,8 @@
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
   (let [options  (first children)
-        previous (atom (list (when (map? options)
-                               {pred (:init options)})))
+                 ; Prev value, prev event
+        previous (atom [(when (map? options) (:init options)) nil])
         children (if (map? options)
                    (rest children)
                    children)
@@ -1505,23 +1505,24 @@
                                 alength)
                            children)]
 
-    (fn stream [event]
-      (let [kept (swap! previous (comp (partial take 2)
-                                       #(conj % event)))]
-        (when-not (every? (partial = (pred event)) (map pred kept))
-          (dorun
-            (map
-              (fn [child arity]
-                (try
-                  (if (= 1 arity)
-                      (child event)
-                      (child (second kept) event))
-                  (catch Throwable e
-                    (warn e (str child " threw"))
-                    (if-let [ex-stream *exception-stream*]
-                      (ex-stream (exception->event e))))))
+    (fn stream [event']
+      (let [value'                 (pred event')
+            [value event :as prev] @previous]
+        (if-not (compare-and-set! previous prev [value' event'])
+          (recur event')
+          (when-not (= value value')
+            (dorun
+              (map (fn [child arity]
+                     (try
+                       (if (= 1 arity)
+                         (child event')
+                         (child event event'))
+                       (catch Throwable e
+                         (warn e (str child " threw"))
+                         (if-let [ex-stream *exception-stream*]
+                           (ex-stream (exception->event e))))))
               children
-              child-arities)))))))
+              child-arities))))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."
