@@ -2,16 +2,15 @@
   "Forwards events to Stackdriver."
   (:require [clj-http.client :as client]
             [cheshire.core :refer [generate-string]])
-  (:use [clojure.string :only [join split]]))
+  (:use [clojure.string :only [replace]]))
 
 (def gateway-url "https://custom-gateway.stackdriver.com/v1/custom")
 
 (defn metric-name
   "Constructs a metric-name for an event."
   [opts event]
-  (let [service ((:name opts) event)
-        split-service (if service (split service #" ") [])]
-     (join "." split-service)))
+  (let [service ((:name opts) event)]
+     (replace service #"\s+" ".")))
 
 (defn generate-datapoint
   "Generate datapoint from an event."
