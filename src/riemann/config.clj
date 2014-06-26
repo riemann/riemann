@@ -35,6 +35,7 @@
         [riemann.influxdb :only [influxdb]]
         [riemann.hipchat :only [hipchat]]
         [riemann.slack :only [slack]]
+        [riemann.stackdriver :only [stackdriver]]
         riemann.streams))
 
 (def core "The currently running core."
