@@ -36,9 +36,9 @@
                       :name :service } opts)]
     (fn [event]
       (when (:metric event))
-      (let [data-point {:timestamp (-> (System/currentTimeMillis) (quot 1000))
+      (let [post-data { :timestamp (-> (System/currentTimeMillis) (quot 1000))
                         :proto_version 1
-                        :data (generate-datapoint opts event)}
-            json-data (generate-string data-point)]
+                        :data (generate-datapoint opts event) }
+            json-data (generate-string post-data)]
         (when (:metric event)
           (post-datapoint (:api-key opts) gateway-url json-data))))))
