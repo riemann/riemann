@@ -16,8 +16,7 @@
 (defn generate-datapoint
   "Generate datapoint from an event."
   [opts event]
-  (let [host (:host event)
-        value (:metric event)  
+  (let [value (:metric event)  
         service (metric-name opts event)]
     {:name service
      :value value
