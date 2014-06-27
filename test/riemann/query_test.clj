@@ -25,7 +25,7 @@
               "state = 0"  '(= state 0)
               "state = 1"  '(= state 1)
               "state = -1" '(= state -1)
-              
+
               ; Floats
               "state = 1."      '(= state 1.)
               "state = 0.0"     '(= state 0.0)
@@ -59,7 +59,7 @@
               "not host = 1"                '(not (= host 1))
               "host = 1 and state = 2"      '(and (= host 1) (= state 2))
               "host = 1 or state = 2"       '(or (= host 1) (= state 2))
-              
+
               ; Grouping
               "(host = 1)"                  '(= host 1)
               "((host = 1))"                '(= host 1)
