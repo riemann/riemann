@@ -32,13 +32,14 @@
 (defn stackdriver
   "Returns a function which accepts an event and sends it to Stackdriver."
   [opts]
-  (let [opts (merge { :api-key "stackdriver-api-key"
-                      :name :service } opts)]
+  (let [ts (atom 0)
+        opts (merge {:api-key "stackdriver-api-key"
+                     :name :service} opts)]
     (fn [event]
       (when (:metric event))
-      (let [post-data { :timestamp (-> (System/currentTimeMillis) (quot 1000))
-                        :proto_version 1
-                        :data (generate-datapoint opts event) }
+      (let [post-data {:timestamp (swap! ts #(max (inc %) (riemann.time/unix-time)))
+                       :proto_version 1
+                       :data (generate-datapoint opts event)}
             json-data (generate-string post-data)]
         (when (:metric event)
           (post-datapoint (:api-key opts) gateway-url json-data))))))
