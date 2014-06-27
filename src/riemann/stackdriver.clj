@@ -1,6 +1,7 @@
 (ns riemann.stackdriver
   "Forwards events to Stackdriver."
-  (:require [clj-http.client :as client]
+  (:require riemann.time
+            [clj-http.client :as client]
             [cheshire.core :refer [generate-string]])
   (:use [clojure.string :only [replace]]))
 
