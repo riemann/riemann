@@ -13,9 +13,9 @@
   (let [service ((:name opts) event)]
      (replace service #"\s+" ".")))
 
-(defmulti generate-datapoint (fn [opts event] (class event)))
+(defmulti generate-datapoint (fn [opts event] (sequential? event)))
 
-(defmethod generate-datapoint riemann.codec.Event
+(defmethod generate-datapoint false
   [opts event]
   (let [value (:metric event)
         service (metric-name opts event)]
@@ -23,7 +23,7 @@
      :value (if (nil? value) 0 value)
      :collected_at (long (:time event))}))
 
-(defmethod generate-datapoint clojure.lang.PersistentVector
+(defmethod generate-datapoint true
   [opts event]
   (mapv
    #(let [value (:metric %)
