@@ -13,14 +13,24 @@
   (let [service ((:name opts) event)]
      (replace service #"\s+" ".")))
 
-(defn generate-datapoint
-  "Generate datapoint from an event."
+(defmulti generate-datapoint (fn [opts event] (class event)))
+
+(defmethod generate-datapoint riemann.codec.Event
   [opts event]
-  (let [value (:metric event)  
+  (let [value (:metric event)
         service (metric-name opts event)]
     {:name service
-     :value value
+     :value (if (nil? value) 0 value)
      :collected_at (long (:time event))}))
+
+(defmethod generate-datapoint clojure.lang.PersistentVector
+  [opts event]
+  (mapv
+   #(let [value (:metric %)
+          service (metric-name opts %)]
+     {:name service
+      :value (if (nil? value) 0 value)
+      :collected_at (long (:time %))}) event))
 
 (defn post-datapoint
   "Post the riemann metrics datapoints."
@@ -37,10 +47,8 @@
         opts (merge {:api-key "stackdriver-api-key"
                      :name :service} opts)]
     (fn [event]
-      (when (:metric event))
-      (let [post-data {:timestamp (swap! ts #(max (inc %) (riemann.time/unix-time)))
+      (let [post-data {:timestamp (swap! ts #(max (inc %) (long (riemann.time/unix-time))))
                        :proto_version 1
                        :data (generate-datapoint opts event)}
             json-data (generate-string post-data)]
-        (when (:metric event)
-          (post-datapoint (:api-key opts) gateway-url json-data))))))
+        (post-datapoint (:api-key opts) gateway-url json-data)))))

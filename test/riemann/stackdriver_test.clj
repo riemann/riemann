@@ -7,7 +7,7 @@
 (logging/init)
 
 (deftest ^:stackdriver ^:integration stackdriver-test
-         (let [k (stackdriver {:block-start true})]
+         (let [k (stackdriver {:api-key "stackdriver-test-key"})]
            (k {:host "riemann.local"
                :service "stackdriver test"
                :state "ok"
@@ -15,16 +15,30 @@
                :metric -2
                :time (unix-time)}))
 
-         (let [k (stackdriver {:block-start true})]
+         (let [k (stackdriver {:api-key "stackdriver-test-key"})]
            (k {:service "stackdriver test"
                :state "ok"
                :description "all clear, uh, situation normal"
                :metric 3.14159
                :time (unix-time)}))
 
-         (let [k (stackdriver {:block-start true})]
+         (let [k (stackdriver {:api-key "stackdriver-test-key"})]
            (k {:host "no-service.riemann.local"
                :state "ok"
                :description "Missing service, not transmitted"
                :metric 4
-               :time (unix-time)})))
+               :time (unix-time)}))
+
+         (let [k (stackdriver {:api-key "stackdriver-test-key"})]
+           (k [
+               {:host "no-service.riemann.local"
+                :state "ok"
+                :description "Missing service, not transmitted"
+                :metric 4
+                :time (unix-time)},
+               {:host "no-service.riemann.local"
+                :state "ok"
+                :description "Missing service, not transmitted"
+                :metric 4
+                :time (unix-time)}
+              ])))
