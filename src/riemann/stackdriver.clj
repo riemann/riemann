@@ -13,24 +13,14 @@
   (let [service ((:name opts) event)]
      (replace service #"\s+" ".")))
 
-(defmulti generate-datapoint (fn [opts event] (sequential? event)))
-
-(defmethod generate-datapoint false
-  [opts event]
-  (let [value (:metric event)
-        service (metric-name opts event)]
-    {:name service
-     :value (if (nil? value) 0 value)
-     :collected_at (long (:time event))}))
-
-(defmethod generate-datapoint true
-  [opts event]
-  (mapv
-   #(let [value (:metric %)
-          service (metric-name opts %)]
-     {:name service
-      :value (if (nil? value) 0 value)
-      :collected_at (long (:time %))}) event))
+(defn generate-datapoint
+  [opts event-or-events]
+  (let [events (if (sequential? event-or-events) event-or-events (list event-or-events))]
+    (map (fn [event]
+      {:name (metric-name opts event)
+       :value (:metric event)
+       :collected_at (long (:time event))})
+    events)))
 
 (defn post-datapoint
   "Post the riemann metrics datapoints."
@@ -49,6 +39,6 @@
     (fn [event]
       (let [post-data {:timestamp (swap! ts #(max (inc %) (long (riemann.time/unix-time))))
                        :proto_version 1
-                       :data (generate-datapoint opts event)}
+                       :data (generate-datapoint opts (remove (comp nil? :metric) event))}
             json-data (generate-string post-data)]
         (post-datapoint (:api-key opts) gateway-url json-data)))))
