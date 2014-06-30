@@ -8,12 +8,13 @@
 (def gateway-url "https://custom-gateway.stackdriver.com/v1/custom")
 
 (defn metric-name
-  "Constructs a metric-name for an event."
+  "Constructs a metric name from an event."
   [opts event]
   (let [service ((:name opts) event)]
      (replace service #"\s+" ".")))
 
 (defn generate-datapoint
+  "Accepts riemann event/events and converts it into equivalent stackdriver datapoint."
   [opts event-or-events]
   (let [events (if (sequential? event-or-events) event-or-events (list event-or-events))]
     (map (fn [event]
@@ -31,7 +32,7 @@
     (client/post uri http-options)))
 
 (defn stackdriver
-  "Returns a function which accepts an event and sends it to Stackdriver."
+  "Returns a function which accepts an event/events and sends it to Stackdriver."
   [opts]
   (let [ts (atom 0)
         opts (merge {:api-key "stackdriver-api-key"
