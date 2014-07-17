@@ -1482,22 +1482,32 @@
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
 
+  ; Receive the previous event, in addition to the current event
+  (changed :state
+           (fn [prev-evt evt]
+             (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
+
   Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options  (first children)
-        previous (atom (list (when (map? options)
-                               (:init options))))
-        children (if (map? options)
+  (let [options  (if (map? (first children)) (first children) {})
+        children (if (map? (first children))
                    (rest children)
-                   children)]
-    (fn stream [event]
-      (let [cur  (pred event)
-            kept (swap! previous (comp (partial take 2)
-                                       #(conj % cur)))]
-        (when-not (every? (partial = cur) kept)
-          (call-rescue event children))))))
+                   children)
+        ; Prev value, prev event
+        previous (atom [(:init options) nil])]
+
+    (fn stream [event']
+      (let [value'                 (pred event')
+            [value event :as prev] @previous]
+        (if-not (compare-and-set! previous prev [value' event'])
+          (recur event')
+          (when-not (= value value')
+            (call-rescue (if (:pairs? options)
+                           [event event']
+                           event')
+                         children)))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."

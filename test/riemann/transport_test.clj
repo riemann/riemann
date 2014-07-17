@@ -26,8 +26,8 @@
            ["riemann.transport"
             "riemann.core"
             "riemann.pubsub"]
-           (let [server (ws-server)
-                 uri    "http://127.0.0.1:5556/events"
+           (let [server (ws-server {:port 15556})
+                 uri    "http://127.0.0.1:15556/events"
                  core   (transition! (core) {:services [server]})]
              ; Two simple events
              (let [res (http/put uri
@@ -53,8 +53,8 @@
 (deftest sse-subscribe-events-test
   (riemann.logging/suppress
    ["riemann.transport" "riemann.core" "riemann.pubsub"]
-   (let [s1       (tcp-server)
-         s2       (sse-server)
+   (let [s1       (tcp-server {:port 15555})
+         s2       (sse-server {:port 15558})
          core     (core)
          index    (wrap-index (index/index) (:pubsub core))
          pubsub   (pubsub/pubsub-registry)
@@ -64,14 +64,14 @@
                     :pubsub   pubsub
                     :services [s1 s2]
                     :streams  [index]})
-         client   (client/tcp-client)
+         client   (client/tcp-client {:port 15555})
          convert  (comp json/parse-string
                         second
                         (partial re-matches #"data: (.*)\n\n")
                         formats/bytes->string)
          response @(http-request
                      {:method :get
-                      :url    "http://127.0.0.1:5558/index?query=true"})]
+                      :url    "http://127.0.0.1:15558/index?query=true"})]
      (try
        (client/send-event client {:service "service1"})
        (client/send-event client {:service "service2"})
@@ -89,7 +89,7 @@
          (riemann.logging/suppress ["riemann.transport"
                                     "riemann.core"
                                     "riemann.pubsub"]
-           (let [server (udp-server)
+           (let [server (udp-server {:port 15555})
                  core   (transition! (core) {:services [server]})
                  client (wait-for-result (udp-socket {}))
                  msg (ChannelBuffers/wrappedBuffer
@@ -97,7 +97,7 @@
 
              (try
                (enqueue client {:host "localhost"
-                                :port 5555
+                                :port 15555
                                 :message msg})
                (Thread/sleep 100)
                (finally
@@ -131,11 +131,13 @@
   (let [server {:tls? true
                 :key "test/data/tls/server.pkcs8"
                 :cert "test/data/tls/server.crt"
-                :ca-cert "test/data/tls/demoCA/cacert.pem"}
+                :ca-cert "test/data/tls/demoCA/cacert.pem"
+                :port 15555}
         client {:tls? true
                 :key "test/data/tls/client.pkcs8"
                 :cert "test/data/tls/client.crt"
-                :ca-cert "test/data/tls/demoCA/cacert.pem"}]
+                :ca-cert "test/data/tls/demoCA/cacert.pem"
+                :port 15555}]
     ; Works with valid config
     (test-tcp-client client server)
 
@@ -163,12 +165,12 @@
          (riemann.logging/suppress ["riemann.transport"
                                     "riemann.core"
                                     "riemann.pubsub"]
-            (let [server (tcp-server)
+            (let [server (tcp-server {:port 15555})
                   core   (transition! (core) {:services [server]})
                   client (wait-for-result
                            (aleph.tcp/tcp-client
                              {:host "localhost"
-                              :port 5555
+                              :port 15555
                               :frame (finite-block :int32)}))]
 
               (try

@@ -366,3 +366,19 @@
                                   "riemann.core"
                                   "riemann.pubsub"]
                                  (stop! core))))))
+
+
+(deftest merge-cores-merges-indexes
+  (testing "reusing the index with an unwrapped index"
+    (let [first-core  {:index (index)}
+          second-core {:index (index)}
+          merged-core (merge-cores first-core second-core)]
+      (is (= (:index first-core) (:index merged-core)))))
+
+  (testing "reusing the index with a wrapped index"
+    (let [first-core  {:index (wrap-index (index))}
+          second-core {:index (wrap-index (index))}
+          merged-core (merge-cores first-core second-core)]
+      (is (= (:index first-core) (:index merged-core)))))
+
+  )
