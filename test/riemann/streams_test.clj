@@ -3,6 +3,8 @@
         [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
+        [riemann.test :refer [run-stream run-stream-intervals test-stream 
+                              with-test-stream test-stream-intervals]]
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
@@ -14,53 +16,6 @@
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
-
-(defmacro run-stream
-  "Applies inputs to stream, and returns outputs."
-  [stream inputs]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))]
-     (doseq [e# ~inputs] (stream# e#))
-     (deref out#)))
-
-(defmacro run-stream-intervals
-  "Applies a seq of alternating events and intervals (in seconds) between them
-  to stream, returning outputs."
-  [stream inputs-and-intervals]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))
-         start-time# (ref (unix-time))
-         next-time# (ref (deref start-time#))]
-     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
-       (stream# e#)
-       (when interval#
-         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
-         (advance! (deref next-time#))))
-     (let [result# (deref out#)]
-       ; close stream
-       (stream# {:state "expired" :time (unix-time)})
-       result#)))
-
-(defmacro test-stream
-  "Verifies that the given stream, taking inputs, forwards outputs to children."
-  [stream inputs outputs]
-  `(is (~'= ~outputs (run-stream ~stream ~inputs))))
-
-(defmacro with-test-stream
-  "Exposes a fake index, verifies that the given stream, taking inputs,
-  forwards outputs to children"
-  [sym stream inputs outputs]
-  `(let [out#    (atom [])
-         ~sym    (append out#)
-         stream# ~stream]
-     (doseq [e# ~inputs] (stream# e#))
-     (is (~'= (deref out#) ~outputs))))
-
-(defmacro test-stream-intervals
-  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
-  outputs to chldren."
-  [stream inputs-and-intervals outputs]
-  `(is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
 (defn evs
   "Generate events based on the given event, with given metrics"
@@ -961,7 +916,6 @@
 
 (deftest ddt-interval-test
          (testing "Quick burst without crossing interval"
-                  (reset-time!)
                   (is (= (map :metric (run-stream-intervals 
                                         (ddt 0.1)
                                         [{:metric 1} nil
@@ -970,7 +924,6 @@
                          [])))
 
          (testing "1 event per interval"
-                  (reset-time!)
                   (test-stream-intervals
                     (ddt 1)
                     ; Note that the swap occurs just prior to events at time 1.
@@ -981,7 +934,6 @@
                      {:time 2 :metric -5}]))
         
          (testing "n events per interval"
-                  (reset-time!)
                   (test-stream-intervals 
                     (ddt 1)
                     [{:time 0 :metric -1} 1/100
@@ -993,7 +945,6 @@
                      {:time 4/2 :metric -4}]))
 
          (testing "emits zeroes when no events arrive in an interval"
-                  (reset-time!)
                   (test-stream-intervals (ddt 2)
                                          [{:time 0 :metric 0} 1
                                           {:time 1 :metric 1} 2
@@ -1374,13 +1325,11 @@
          ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]] 
 
          (testing "expired events"
-                  (reset-time!)
                   (test-stream-intervals
                     (rollup 2 3)
                     [ 1 0 {:state "expired"} 0 :a 1 :b 1 :c 1 ]
                     [[1] [{:state "expired"}]              [:a :b :c]])
 
-                  (reset-time!)
                   (let [e {:state "expired"}]
                     (test-stream-intervals
                       (rollup 2 2)
@@ -1392,14 +1341,12 @@
     (test-stream-intervals (batch 2 3) [] []))
 
   (testing "incomplete batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 3 :b 1 :c 2 :d 3]
       [[:a] [:b :c] [:d]]))
 
   (testing "overflowing batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
@@ -1488,7 +1435,6 @@
                                 [{:x 1 :time 1}])
 
          ; Triggers after dt seconds with new events.
-         (reset-time!)
          (test-stream-intervals (stable 10 :x)
                                 [{:x 0 :time 0} 1
                                  {:x 0 :time 1} 4
