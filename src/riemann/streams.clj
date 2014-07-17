@@ -1540,20 +1540,18 @@
 (defn over
   "Passes on events only when their metric is greater than x"
   [x & children]
-  (deprecated "streams/over is deprecated in favor of (where (< x metric))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when (< x m)
-                    (call-rescue event children))))))
+  (fn stream [event]
+    (when-let [m (:metric event)]
+      (when (< x m)
+        (call-rescue event children)))))
 
 (defn under
   "Passes on events only when their metric is smaller than x"
   [x & children]
-  (deprecated "streams/under is deprecated in favor of (where (< metric x))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when (> x m)
-                    (call-rescue event children))))))
+  (fn stream [event]
+    (when-let [m (:metric event)]
+      (when (> x m)
+        (call-rescue event children)))))
 
 (defn- where-test [k v]
   (condp some [k]
