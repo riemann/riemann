@@ -1,3 +1,60 @@
+# Version 0.2.6
+
+Improvements to ease of use, expanded integration with other monitoring tools,
+and important bugfixes. Most importantly, we've added two new features: the
+`pipe` stream, which makes it easy to split and recombine events through a
+cascading series of streams, and riemann.test infrastructure for writing
+repeatable tests for your config's streams. There's also new support for two
+new services: stackdriver and Shinken, and a change to the officially supported
+JDK versions.
+
+## Bugfixes
+
+- Fixed a bug introduced in 0.2.5 (due to a change in Clojure's destructuring
+  bind defaults for maps) which caused exceptions when expiring events without
+  a TTL.
+- JSON-decoded events from the HTTP PUT endpoint now have correct timestamps;
+  they were 1000x too large.
+- Package md5sums now have two spaces.
+- Equivalent indexes are no longer wiped between reloads.
+- `(where (tagged "foo"))` now fully qualifies its expanded form; works when
+  `tagged-any` or `tagged-all` isn't in the invoking namespace.
+
+## Deprecations and API changes
+
+- `streams/within` and `streams/without` are deprecated; bounds logic was
+  ambiguous. Use `(where (< 1 metric 2))` etc.
+- config/include now only loads .clj and .config files when given a directory.
+  Now you can mix resources and other files into those directories.
+- JDK6 is no longer supported, though it'll probably keep working for a while.
+- JDK8 is now supported.
+
+## New features
+
+- streams/pipe: Easily create n->m->l-wide manifolds of streams.
+- Testing configs! See the howto or 6ea82e07 for details.
+- Stackdriver integration.
+- Shinken integration.
+- streams/changed now takes a `:pairs?` option, which emits `[old-event
+  new-event]` pairs when the predicate value changes.
+
+## Improvements
+
+- You can now match `nil` in `where`, `split`, and other Match expressions.
+- You can now match maps in `where`, `split`, etc: given a map of keys to Match
+  predicates, asserts that for all keys in the predicate map, the corresponding
+  value in the target map matches the predicate's value.
+- Slack integration can take a custom formatter function.
+- Influxdb configurable service names.
+- Docstring improvements for `streams/ewma`, `rate`, `with`, and `default`.
+- Websocket conn logs are now `debug`, not `info`.
+
+## Internals
+
+- Clojure.complete is no longer required.
+- Interval-metrics 1.0.0
+- streams-test/run-stream is now a part of riemann.test, and advances time.
+
 # Version 0.2.5
 
 All kinds of goodies! We're long overdue for a release, with five new service
