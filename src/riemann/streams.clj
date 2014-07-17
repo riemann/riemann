@@ -1549,9 +1549,9 @@
   (condp some [k]
     ; Tagged checks that v is a member of tags.
     #{'tagged 'tagged-all} (list 'when (list :tags 'event)
-                             (list 'tagged-all? (list 'flatten [v]) 'event))
+                             (list `tagged-all? (list 'flatten [v]) 'event))
     #{'tagged-any} (list 'when (list :tags 'event)
-                     (list 'tagged-any? (list 'flatten [v]) 'event))
+                     (list `tagged-any? (list 'flatten [v]) 'event))
     ; Otherwise, match.
     (list 'riemann.common/match v (list (keyword k) 'event))))
 
