@@ -2,8 +2,8 @@
   "Forwards events to Stackdriver."
   (:require riemann.time
             [clj-http.client :as client]
-            [cheshire.core :refer [generate-string]])
-  (:use [clojure.string :only [replace]]))
+            [cheshire.core :refer [generate-string]]
+            [clojure.string :as str]))
 
 (def gateway-url "https://custom-gateway.stackdriver.com/v1/custom")
 
@@ -11,7 +11,7 @@
   "Constructs a metric name from an event."
   [opts event]
   (let [service ((:name opts) event)]
-     (replace service #"\s+" ".")))
+     (str/replace service #"\s+" ".")))
 
 (defn generate-datapoint
   "Accepts riemann event/events and converts it into equivalent stackdriver datapoint."
