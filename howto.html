@@ -923,9 +923,6 @@ client << {service: "thumbnailer rate",
     <code>2</code> everywhere inside the <code>let</code> expression. Since
     streams are values, you can bind them to variables too. In this example, we
     create a single rate stream and send events to it along multiple paths.</p>
-
-    <p>In versions newer than 0.2.5, you can use the <code>pipe</code> stream
-    instead.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -937,6 +934,27 @@ client << {service: "thumbnailer rate",
     "http req rate" aggregate
     ; But we'll double the metrics for 0mq requests
     "0mq req rate"  (scale 2 aggregate)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Even easier: use the <code>pipe</code> stream, which compiles to the
+    same code as the `let` expression above:</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+; Within the pipe expression, - marks where events flow to the next stage
+(pipe -
+  ; The first stage is to split up events by their service
+  (splitp = service
+    ; HTTP requests pass straight through
+    "http req rate" -
+    ; But we'll double the metrics for 0mq requests
+    "0mq req rate" (scale 2 -))
+  ; The second stage is to compute a rate and index it.
+  (rate 5 (with :service "req rate" index)))
 {% endhighlight %}
   </div>
 </div>
