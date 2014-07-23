@@ -1482,12 +1482,12 @@
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
 
-  ; Receive the previous event, in addition to the current event
-  (changed :state
-           (fn [prev-evt evt]
-             (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
+  ; Receive the previous event, in addition to the current event, as a vector.
+  (changed :state {:pairs? true}
+           (fn [[event event']]
+             (prn \"changed from\" (:state event) \"to\" (:state event'))))
 
-  Note that f can be an arbitrary function:
+  ; Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
