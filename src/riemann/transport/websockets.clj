@@ -4,8 +4,6 @@
   (:require [riemann.query         :as query]
             [riemann.index         :as index]
             [riemann.pubsub        :as p]
-            [aleph.formats         :as formats]
-            [gloss.core            :as gloss]
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics]
             [org.httpkit.server    :as http])
@@ -33,14 +31,6 @@
          (map url-decode
               (mapcat (fn [kv] (split kv #"=" 2))
                       (split string #"&")))))
-
-(defn split-lines
-  "Takes a channel of bytes and returns a channel of utf8 strings, split out by
-  \n."
-  [ch]
-  (formats/decode-channel
-    (gloss/string :utf-8 :delimiters ["\n"])
-    ch))
 
 (defn ws-pubsub-handler
   "Subscribes to a pubsub channel and streams events back over the WS conn."
