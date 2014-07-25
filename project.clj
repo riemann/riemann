@@ -22,7 +22,8 @@
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [net.logstash.log4j/jsonevent-layout "1.5"]
-    [aleph "0.3.2"]
+    [http-kit "2.1.18"]
+    [aleph     "0.3.2"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
     [clj-librato "0.0.4"]
