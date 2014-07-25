@@ -9,7 +9,7 @@
   (:gen-class :name riemann.bin))
 
 (def config-file
-  "The configuration file loaded by the bin tool" 
+  "The configuration file loaded by the bin tool"
   (atom nil))
 
 (def reload-lock (Object.))
@@ -50,7 +50,6 @@
       (get (re-find #"^(\d+).*" name) 1)
       (catch Exception e name))))
 
-(println "loading bin")(flush)
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   ([]
