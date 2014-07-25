@@ -22,8 +22,7 @@
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [net.logstash.log4j/jsonevent-layout "1.5"]
-    [http-kit "2.1.18"]
-    [aleph     "0.3.2"]
+    [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
     [clj-librato "0.0.4"]
@@ -42,11 +41,12 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
-    [capacitor "0.2.2"]
-  ]
+    [capacitor "0.2.2"
+     :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
-  :profiles {:dev {:dependencies [[criterium "0.4.3"]]}}
+  :profiles {:dev {:dependencies [[criterium "0.4.3"]
+                                  [aleph     "0.3.2"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
