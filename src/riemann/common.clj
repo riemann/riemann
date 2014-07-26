@@ -5,8 +5,7 @@
            (java.io InputStream)
            [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
            [java.net InetAddress])
-  (:require gloss.io
-            clj-time.core
+  (:require clj-time.core
             clj-time.format
             clj-time.coerce
             clojure.set
@@ -17,7 +16,6 @@
         [clojure.java.shell :only [sh]]
         clojure.tools.logging
         riemann.codec
-        gloss.core
         clojure.math.numeric-tower))
 
 (defprotocol Match
@@ -184,7 +182,7 @@
   (match [f obj]
          (f obj))
 
-  ; Map types 
+  ; Map types
   clojure.lang.PersistentArrayMap
   (match [pat obj] (map-matches? pat obj))
 
