@@ -3,8 +3,7 @@
   (:require [riemann.query         :as query]
             [riemann.index         :as index]
             [riemann.pubsub        :as p]
-            [aleph.formats         :as formats]
-            [gloss.core            :as gloss]
+            [org.httpkit.server    :as http]
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics])
   (:use [riemann.common        :only [event-to-json ensure-event-time]]
@@ -12,8 +11,6 @@
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
         [riemann.time          :only [unix-time]]
-        [aleph.http            :only [start-http-server,wrap-ring-handler]]
-        [lamina.api            :only [bridge-join]]
         [interval-metrics.measure :only [measure-latency]]
         [clojure.java.io       :only [reader]]
         [clojure.tools.logging :only [info warn]]
@@ -115,9 +112,7 @@
   (start! [this]
           (locking this
             (when-not @server
-              (reset! server (start-http-server (wrap-ring-handler (http-handler core))
-                                                {:host host
-                                                 :port port}))
+              (reset! server (http/run-server (http-handler core) {:host host :port port}))
               (info "HTTP server" host port "online"))))
 
   (stop! [this]
@@ -161,9 +156,6 @@
 
   Options:
   :host   The address to listen on (default 127.0.0.1)
-          Currently does nothing; this option depends on an incomplete
-          feature in Aleph, the underlying networking library. Aleph will
-          currently bind to all interfaces, regardless of this value.
   :post   The port to listen on (default 5558)
 
   All output is in json, and lists are structured as
@@ -186,7 +178,7 @@
                 'offset' - offset of first item to return
                 'limit'  - max number to return (defualt is 250)
 
-  GET /events/{hostname}/{eventname} - a single event
+  GET /events/{hostname}/{service} - a single event
   "
   ([] (http-server {}))
   ([opts]
