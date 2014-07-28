@@ -1,6 +1,5 @@
 (ns riemann.pool-test
   (:use riemann.pool
-        [slingshot.slingshot :only [try+]]
         clojure.test))
 
 (deftest claim-release-test
@@ -10,16 +9,20 @@
                a  (claim pool)
                b  (claim pool)
                ; Pool is empty; should throw
-               c  (try+ (claim pool 2/1000)
-                        (catch [:type :riemann.pool/timeout]
-                          {:keys [message]}
-                          message))
+               c  (try (claim pool 2/1000)
+                       (catch Exception e
+                         (when-let [{:keys [type]} (ex-data e)]
+                           (if (= type :riemann.pool/timeout)
+                             (.getMessage e)))))
                a' (release pool a)
                ; Should re-acquire a
                d  (claim pool)
                ; Empty
-               e  (try+ (claim pool)
-                        (catch [:type :riemann.pool/timeout] _ :timeout))
+               e  (try (claim pool)
+                       (catch Exception e
+                         (when-let [{:keys [type]} (ex-data e)]
+                           (if (= type :riemann.pool/timeout)
+                             :timeout))))
                b' (release pool b)
                ; Re-acquire b
                f  (claim pool)]
@@ -108,7 +111,7 @@
                       {:size size
                        :regenerate-interval 0.1})]
 
-           (let [workers 
+           (let [workers
                  (map (fn [_]
                         (future
                           (dotimes [i 100]
@@ -127,7 +130,7 @@
 
            ; Some of the time, multiple retries were needed.
            (is (< @invalidations (+ size @opens)))
-           
+
            ; The pool should have made progress.
            (is (< 0 @got-client))
 
@@ -136,10 +139,10 @@
 
            ; Every invalidated client was closed.
            (is (= @closes @invalidations))
-          
+
            ; The number of open clients did not exceed size.
            (is (<= 0 (- @opens @closes) size))
-           
+
            ; Invalidations occurred.
            (is (< 0 @invalidations))
 
@@ -150,7 +153,7 @@
            ; (except for up to size futures in progress).
            (is (<= 0
                    (- @open-attempts @invalidations @open-failures)
-                   size))                   
+                   size))
 
            ; Far fewer clients were opened than used.
            (is (< @opens (/ @got-client 5)))

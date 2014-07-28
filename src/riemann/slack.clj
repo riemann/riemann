@@ -1,7 +1,7 @@
 (ns riemann.slack
   "Post alerts to slack.com"
-  (:require [clj-http.client :as client]
-            [cheshire.core :as json])
+  (:require [org.httpkit.client :as client]
+            [cheshire.core      :as json])
   (:use [clojure.string :only [escape join upper-case]]))
 
 (defn slack-escape [message]
@@ -85,6 +85,7 @@
            icon (:icon result (or icon ":warning:"))
            channel (:channel result channel)
            username (:username result username)]
+       ;; fire and forget
        (client/post (str "https://" account ".slack.com/services/hooks/incoming-webhook?token=" token)
                     {:form-params
                      {:payload (json/generate-string

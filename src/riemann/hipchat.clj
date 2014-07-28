@@ -1,7 +1,7 @@
 (ns ^{:doc    "Forwards events to HipChat"
       :author "Hubert Iwaniuk"}
   riemann.hipchat
-  (:require [clj-http.client :as client]
+  (:require [org.httpkit.client :as client]
             [cheshire.core :as json]
             [clojure.string :refer [join]]))
 
@@ -42,11 +42,9 @@
   "POST to the HipChat API."
   [token {:keys [room_id from message notify] :as conf} event]
   (client/post (str chat-url "&auth_token=" token)
-               {:form-params           (format-event (assoc conf :message_format "text") event)
-                :socket-timeout        5000
-                :conn-timeout          5000
-                :accept                :json
-                :throw-entire-message? true}))
+               {:form-params    (format-event (assoc conf :message_format "text") event)
+                :timeout        5000
+                :headers        {"Accept" "application/json"}}))
 
 (defn hipchat
   "Creates a HipChat adapter. Takes your HipChat authentication token,

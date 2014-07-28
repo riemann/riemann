@@ -4,7 +4,7 @@
   (:import [java.util Date]
            (java.io InputStream)
            [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
-           [java.net InetAddress])
+           [java.net InetAddress URLDecoder])
   (:require clj-time.core
             clj-time.format
             clj-time.coerce
@@ -311,3 +311,7 @@
             (dec (:i summed))
             (:i summed))]
     (truncate s cutoff)))
+
+(defn url-decode
+  [input]
+  (URLDecoder/decode input "UTF-8"))

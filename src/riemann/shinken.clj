@@ -1,6 +1,6 @@
 (ns riemann.shinken
   "Forwards events to Shinken."
-  (:require [clj-http.client :as http]))
+  (:require [org.httpkit.client :as http]))
 
 (defn- post
   "POST to Shinken."

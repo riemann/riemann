@@ -1,6 +1,6 @@
 (ns riemann.pagerduty
   "Forwards events to Pagerduty"
-  (:require [clj-http.client :as client])
+  (:require [org.httpkit.client :as client])
   (:require [cheshire.core :as json]))
 
 (def ^:private event-url
@@ -9,13 +9,12 @@
 (defn- post
   "POST to the PagerDuty events API."
   [request]
+  ;; fire and forget
   (client/post event-url
                {:body (json/generate-string request)
-                :socket-timeout 5000
-                :conn-timeout 5000
-                :content-type :json
-                :accept :json
-                :throw-entire-message? true}))
+                :timeout 5000
+                :headers {"Content-Type" "application/json"
+                          "Accept"       "application/json"}}))
 
 (defn- format-event
   "Formats an event for PD. event-type is one of :trigger, :acknowledge,

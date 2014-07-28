@@ -15,7 +15,6 @@
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
                                   shared-execution-handler]]
-        [slingshot.slingshot :only [try+ throw+]]
         [clojure.string :only [split
                                join]]
         [clojure.tools.logging :only [warn]]))
@@ -36,27 +35,27 @@
   (let [[service metric timestamp & garbage] (split line #"\s+")]
     ; Validate format
     (cond garbage
-          (throw+ "too many fields")
+          (throw (ex-info "too many fields" {:type ::too-many-fields}))
 
           (= "" service)
-          (throw+ "blank line")
+          (throw (ex-info "blank line" {:type ::blank-line}))
 
           (not metric)
-          (throw+ "no metric")
+          (throw (ex-info "no metric" {:type ::no-metric}))
 
           (not timestamp)
-          (throw+ "no timestamp")
+          (throw (ex-info "no timestamp" {:type ::no-timestamp}))
 
           (re-find #"(?i)nan" metric)
-          (throw+ "NaN metric"))
+          (throw (ex-info "NaN metric" {:type ::nan-metric})))
 
     ; Parse numbers
     (let [metric (try (Double. metric)
                       (catch NumberFormatException e
-                        (throw+ "invalid metric")))
+                        (throw (ex-info "invalid metric" {:type ::invalid-metric}))))
           timestamp (try (Long. timestamp)
                          (catch NumberFormatException e
-                           (throw+ "invalid timestamp")))]
+                           (throw (ex-info "invalid timestamp" {:type ::invalid-timestamp}))))]
 
       ; Construct event
       (->Event nil
@@ -80,11 +79,11 @@
   (let [parser-fn (or parser-fn identity)]
     (proxy [OneToOneDecoder] []
       (decode [context channel message]
-        (try+
+        (try
           (-> message
               decode-graphite-line
               parser-fn)
-          (catch Object e
+          (catch Exception e
             (throw (RuntimeException.
                      (str "Graphite server parse error (" e "): "
                           (pr-str message))))))))))

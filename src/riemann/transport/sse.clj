@@ -10,7 +10,6 @@
             [riemann.service          :refer [Service ServiceEquiv]]
             [riemann.time             :refer [unix-time]]
             [clojure.tools.logging    :refer [info]]
-            [clj-http.util            :refer [url-decode]]
             [clojure.string           :refer [split]]))
 
 (def event-to-server-sent-event
@@ -22,7 +21,7 @@
   "Converts a URL query string into a map."
   [string]
   (apply hash-map
-         (map url-decode
+         (map common/url-decode
               (mapcat (fn [kv] (split kv #"=" 2))
                       (split string #"&")))))
 

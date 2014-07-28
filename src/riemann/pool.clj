@@ -1,7 +1,6 @@
 (ns riemann.pool
   "A generic thread-safe resource pool."
-  (:use clojure.tools.logging
-        [slingshot.slingshot :only [throw+]])
+  (:use clojure.tools.logging)
   (:import [java.util.concurrent LinkedBlockingQueue TimeUnit]))
 
 ; THIS IS A MUTABLE STATE OF AFFAIRS. WHICH IS TO SAY, IT IS FUCKING TERRIBLE.
@@ -33,25 +32,28 @@
   (claim [this timeout]
          (let [timeout (* 1000 (or timeout 0))]
            (or
-             (try
-               (.poll ^LinkedBlockingQueue queue timeout TimeUnit/MILLISECONDS)
-               (catch java.lang.InterruptedException e
-                 nil))
-             (throw+
-               {:type ::timeout
-                :message (str "Couldn't claim a resource from the pool within "
-                              timeout " ms")}))))
+            (try
+              (.poll ^LinkedBlockingQueue queue timeout TimeUnit/MILLISECONDS)
+              (catch java.lang.InterruptedException e
+                nil))
+            (do
+              (throw
+               (ex-info
+                (str "Couldn't claim a resource from the pool within "
+                     timeout " ms")
+                {:type ::timeout}))))))
+
 
   (release [this thingy]
-           (when thingy
-             (.put ^LinkedBlockingQueue queue thingy)))
+    (when thingy
+      (.put ^LinkedBlockingQueue queue thingy)))
 
   (invalidate [this thingy]
-              (when thingy
-                (try (close thingy)
-                  (catch Throwable t
-                    (warn t "Closing" thingy "threw")))
-                (future (grow this)))))
+    (when thingy
+      (try (close thingy)
+           (catch Throwable t
+             (warn t "Closing" thingy "threw")))
+      (future (grow this)))))
 
 (defn fixed-pool
   "A fixed pool of thingys. (open) is called to generate a thingy. (close

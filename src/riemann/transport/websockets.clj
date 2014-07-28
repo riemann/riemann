@@ -7,7 +7,7 @@
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics]
             [org.httpkit.server    :as http])
-  (:use [riemann.common        :only [event-to-json ensure-event-time]]
+  (:use [riemann.common        :only [event-to-json ensure-event-time url-decode]]
         [riemann.core          :only [stream!]]
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
@@ -15,7 +15,6 @@
         [interval-metrics.measure :only [measure-latency]]
         [clojure.java.io       :only [reader]]
         [clojure.tools.logging :only [info warn debug]]
-        [clj-http.util         :only [url-decode]]
         [clojure.string        :only [split]])
   (:import (java.io OutputStream
                     BufferedWriter

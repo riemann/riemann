@@ -1,8 +1,7 @@
 (ns riemann.transport.graphite-test
   (:use clojure.test
         [riemann.common :only [event]]
-        riemann.transport.graphite
-        [slingshot.slingshot :only [try+]])
+        riemann.transport.graphite)
   (:require [riemann.logging :as logging]))
 
 (deftest decode-graphite-line-success-test
@@ -24,8 +23,8 @@
          (decode-graphite-line "name  456      789"))))
 
 (deftest decode-graphite-line-failure-test
-  (let [err #(try+ (decode-graphite-line %)
-                   (catch Object e e))]
+  (let [err #(try (decode-graphite-line %)
+                  (catch Exception e (.getMessage e)))]
     (is (= (err "") "blank line"))
     (is (= (err "name nan 456") "NaN metric"))
     (is (= (err "name metric 456") "invalid metric"))

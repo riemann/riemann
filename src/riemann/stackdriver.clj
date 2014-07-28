@@ -1,7 +1,7 @@
 (ns riemann.stackdriver
   "Forwards events to Stackdriver."
   (:require riemann.time
-            [clj-http.client :as client]
+            [org.httpkit.client :as client]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]))
 
@@ -27,8 +27,9 @@
   "Post the riemann metrics datapoints."
   [api-key uri data]
   (let [http-options {:body data
-                      :content-type :json
-                      :headers {"x-stackdriver-apikey" api-key}}]
+                      :headers {"x-stackdriver-apikey" api-key
+                                "Content-Type" "application/json"}}]
+    ;; fire and forget
     (client/post uri http-options)))
 
 (defn stackdriver

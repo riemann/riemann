@@ -1,8 +1,7 @@
 (ns riemann.transport
   "Functions used in several transports. Some netty parts transpire
   here since netty is the preferred method of providing transports"
-  (:use [slingshot.slingshot :only [try+]]
-        [riemann.core        :only [stream!]]
+  (:use [riemann.core        :only [stream!]]
         [riemann.common      :only [decode-msg]]
         [riemann.codec       :only [encode-pb-msg]]
         [riemann.index       :only [search]]
@@ -94,7 +93,7 @@
   (execution-handler))
 
 (defonce instrumentation
-  (let [^OrderedMemoryAwareThreadPoolExecutor executor 
+  (let [^OrderedMemoryAwareThreadPoolExecutor executor
         (.getExecutor shared-execution-handler)
         svc "riemann netty execution-handler "]
 
@@ -110,7 +109,7 @@
 (defn handle
   "Handles a msg with the given core."
   [core msg]
-  (try+
+  (try
     ;; Send each event/state to each stream
     (doseq [event (:states msg)] (stream! core event))
     (doseq [event (:events msg)] (stream! core event))
@@ -126,7 +125,8 @@
       {:ok true})
 
     ;; Some kind of error happened
-    (catch [:type :riemann.query/parse-error] {:keys [message]}
-      {:ok false :error (str "parse error: " message)})
-    (catch Exception ^Exception e
-      {:ok false :error (.getMessage e)})))
+    (catch Exception e
+      (let [{:keys [type message]} (ex-data e)]
+        (if (= type :riemann.query/parse-error)
+          {:ok false :error (str "parse error: " message)}
+          {:ok false :error (.getMessage e)})))))

@@ -2,7 +2,7 @@
   (:use clojure.test)
   (:require [riemann.logging :as logging]
             [riemann.slack :as slack]
-            [clj-http.client :as client]))
+            [org.httpkit.client :as client]))
 
 
 (def api-key (System/getenv "SLACK_API_KEY"))

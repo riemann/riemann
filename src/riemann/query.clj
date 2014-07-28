@@ -1,8 +1,7 @@
 (ns riemann.query
   "The query parser. Parses strings into ASTs, and converts ASTs to functions
   which match events."
-  (:use riemann.common
-        [slingshot.slingshot :only [throw+ try+]])
+  (:use riemann.common)
   (:require [clojure.core.cache :as cache])
   (:import (org.antlr.runtime ANTLRStringStream
                               CommonTokenStream)
@@ -21,8 +20,9 @@
                   parser (QueryParser. tokens)]
       (.getTree (.expr parser)))
     (catch Throwable e
-      (throw+ {:type ::parse-error
-               :message (.getMessage (.getCause e))}))))
+      (throw (ex-info "cannot parse antlr tree nodes"
+              {:type ::parse-error
+               :message (.getMessage (.getCause e))}) ))))
 
 (defn- make-regex
   "Convert a string like \"foo%\" into /^foo.*$/"
@@ -73,8 +73,9 @@
                 (if (or (number? term)
                         (string? term))
                   term
-                  (throw+ {:type ::parse-error
-                           :message (str "invalid term \"" n "\"")})))))))
+                  (throw (ex-info (str "invalid term \"" n "\"")
+                          {:type ::parse-error
+                           :message (str "invalid term \"" n "\"")}))))))))
 
 (defn ast
   "The expression AST for a given string"
