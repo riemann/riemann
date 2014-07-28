@@ -89,9 +89,9 @@
                    (index/search index (query/ast query)))]
       (json-response 200 (paged-items items offset limit)))
     (catch [:type :riemann.query/parse-error] {:keys [message]}
-      (json-response 400 {:message (str "'query' parameter is not a valid query detail:" message)}))
+      (json-response 400 {:error (str "'query' parameter is not a valid query detail:" message)}))
     (catch IllegalArgumentException e
-      (json-response 400 {:message (.getMessage e)}))))
+      (json-response 400 {:error (.getMessage e)}))))
 
 (defn http-get-events-by-host [core req host]
   (try
@@ -101,13 +101,13 @@
           items  (filter #(= (:host %) host) (:index core))]
       (json-response 200 (paged-items items offset limit)))
     (catch IllegalArgumentException e
-      (json-response 400 {:message (.getMessage e)}))))
+      (json-response 400 {:error (.getMessage e)}))))
 
 (defn http-get-events-by-host-service [core req host service]
   (let [event (index/lookup (:index core) host service)]
     (if-not (nil? event)
       (json-response 200 (event-with-iso8601-time event))
-      (json-response 404 {:message "no such event"}))))
+      (json-response 404 {:error "no such event"}))))
 
 (defn ws-pubsub-handler
   "Subscribes to a pubsub channel and streams events back over the WS conn."
@@ -142,28 +142,32 @@
   true, also initiates a pubsub subscription to the index topic with that
   query."
   [core stats ch hs actions]
-  (if-not (http/websocket? ch)
-    (warn "Ignoring non-websocket request to websocket server.")
+  (try+
     (let [params (http-query-map (:query-string hs))
           query  (params "query")
           ast    (query/ast query)]
-      (when-let [i (:index core)]
-        (doseq [event (index/search i ast)]
-          (http/send! ch (event-to-json event))))
-      (if (= (params "subscribe") "true")
-        (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index") actions)
-        (http/close ch)))))
-
+    (when-let [i (:index core)]
+      (doseq [event (index/search i ast)]
+        (http/send! ch (event-to-json event))))
+    (if (= (params "subscribe") "true")
+      (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index") actions)
+      (http/close ch)))
+    (catch [:type :riemann.query/parse-error] {:keys [message]}
+      ; send 400 (bad request + close the channel)
+      (http/send! ch (json-response 400 {:error (str "invalid 'query' parameter, details:" message)}) true))))
 
 (defn http-index-handler
   [core stats ch req]
-  (let [parts (drop 1 (uri-parts (:uri req)))] ; drop the 'index' bit
+  (let [parts (drop 1 (uri-parts (:uri req))) ; drop the 'index' bit
+        method (:request-method req)]
     (http/send! ch
-                (condp re-matches (:uri req)
-                  #"/index/?"            (http-get-events core req)
-                  #"/index/[^/]+"        (http-get-events-by-host core req (first parts))
-                  #"/index/[^/]+/[^/]+"  (http-get-events-by-host-service core req (first parts) (second parts))
-                  {:status 404 :body "unknown uri"})
+                (cond
+                  (= method :get) (condp re-matches (:uri req)
+                                    #"/index/?"            (http-get-events core req)
+                                    #"/index/[^/]+"        (http-get-events-by-host core req (first parts))
+                                    #"/index/[^/]+/[^/]+"  (http-get-events-by-host-service core req (first parts) (second parts))
+                                    {:status 404 :body "unknown uri"})
+                  :else (json-response 405 {:error (str "method " method " is not accepted")}))
                 true ; send close .. this is http not sockets
                 )))
 
@@ -233,7 +237,7 @@
     (http/with-channel req ch
       (try
         (let [actions (atom [])]
-          (debug "Websocket connection from" (:remote-addr req)
+          (debug (if (http/websocket? ch) "Websocket" "HTTP") " connection from" (:remote-addr req)
                  (:uri req)
                  (:query-string req))
 
@@ -254,12 +258,14 @@
 
             (do
               (info "Unknown URI " (:uri req) ", closing")
-              (http/send! ch (json-response 404 (str "no such uri")) true))))
+              (http/send! ch (json-response 404 {:error (str "no such uri")}) true))))
 
         (catch Throwable t
           (do
             (warn t "ws-handler caught; closing websocket connection.")
-            (http/close ch)))))))
+            (http/send! ch
+                        (json-response 500
+                                       {:error (str "Internal server error, detail:" (.getMessage t))}) true)))))))
 
 (defrecord WebsocketServer [host port core server stats]
   ServiceEquiv
@@ -360,6 +366,8 @@
   /pubsub/{topic}
           'query' - riemann query to select events from the topic
 
+  Errors are reported single json object with the key 'error'. Note that
+  the connection will be terminated.
 
   Plain HTTP:
 
@@ -388,7 +396,19 @@
                 'offset' - offset of first item to return
                 'limit'  - max number to return (defualt is 250)
 
-  GET /index/{hostname}/{service} - a single event"
+  GET /index/{hostname}/{service} - a single event
+
+  Errors are reported using standard http status codes, the response
+  body should still be in json and contain a 'error' attribute
+  with some details of the issue.
+
+    2xx - success
+    4xx - client error, specificaly
+          400 - bad request, invalid or missing parameter
+          404 - what you asked for doesn't exist
+          405 - what you asked todo isn't supported
+    5xx - some interval error, this bug either way you might have to
+          look at the riemann log/console output to get a better idea"
   ([] (ws-server {}))
   ([opts]
    (WebsocketServer.
