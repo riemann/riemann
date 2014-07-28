@@ -21,7 +21,4 @@
 
 ; test that settings and formatting work
 (deftest camp-settings
-  (is (= (cf-settings
-                      campfire_api_token true campfire_domain) campfire-settings))
-  (is (= (campfire_message test-event)
-                        test-campfire_message)))
+  (is (= (format-message test-event) test-campfire_message)))

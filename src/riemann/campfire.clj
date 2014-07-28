@@ -1,24 +1,43 @@
 (ns riemann.campfire
   "Forwards events to Campfire"
   (:use [clojure.string :only [join upper-case]])
-  (:require [clj-campfire.core :as cf]))
+  (:require [org.httpkit.client :as http]
+            [cheshire.core :as json]))
 
-(defn cf-settings
-  "Setup settings for campfire. Required information is your api-token, ssl connection
-  true or false, and your campfire sub-domain."
-  [token ssl sub-domain]
-  {:api-token token, :ssl ssl, :sub-domain sub-domain})
+(defn url-for
+  [settings action]
+  (format "http%s://%s.campfirenow.com/%s"
+          (if (:ssl settings) "s" "")
+          (:subdomain settings)
+          action))
 
-(defn room
-  "Sets up the room to send events too. Pass in the settings created with cf-settings
-  and the room name"
+(defn json-parse
+  [s]
+  (json/parse-string s true))
+
+(defn get-room
   [settings room-name]
-  (cf/room-by-name settings room-name))
+  (->> @(http/get (url-for settings "rooms.json")
+                  {:basic-auth [(:token settings) "X"]})
+       :body
+       json-parse
+       (filter #(= (:name %) room-name))
+       first
+       :name))
 
-(defn campfire_message
+(defn post-message
+  [settings room s]
+  (->> @(http/post (url-for settings (format "room/%s/speak.json" room))
+                   {:body (json/generate-string
+                           {:message {:body s :type "TextMessage"}})
+                    :basic-auth [(:token settings) "X"]
+                    :headers {"Content-Type" "application/json"}})))
+
+(defn format-message
   "Formats an event into a string"
-  [e]
-  (str (join " " ["Riemann alert on" (str (:host e)) "-" (str (:service e)) "is" (upper-case (str (:state e))) "- Description:" (str (:description e))])))
+  [{:keys [host service state description]}]
+  (format "Riemann alert on %s - %s is %s - Description: %s"
+          host service (upper-case (name state)) description))
 
 (defn campfire
   "Creates an adaptor to forward events to campfire. The campfire event will
@@ -31,6 +50,7 @@
         camp)))"
   [token ssl sub-domain room-name]
   (fn [e]
-    (let [message_string (campfire_message e)
-          settings (cf-settings token ssl sub-domain)]
-      (cf/message (room settings room-name) message_string))))
+    (let [s        (format-message e)
+          settings {:api-token token :ssl ssl :sub-domain sub-domain}
+          room     (get-room settings room-name)]
+      (post-message settings room s))))

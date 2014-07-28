@@ -37,7 +37,6 @@
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.7.7"]
     [riemann-clojure-client "0.2.10"]
-    [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
     [capacitor "0.2.2"
