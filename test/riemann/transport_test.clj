@@ -77,6 +77,7 @@
          response (http/get "http://127.0.0.1:15558/index?query=true")]
      (client/send-event client {:service "service1"})
      (client/send-event client {:service "service2"})
+     (Thread/sleep 300)
      (stop! core)
      (let [[r2 r1] (->> (s/split (:body @response) #"\n\n")
                         (remove empty?)
