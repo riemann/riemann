@@ -1,7 +1,10 @@
-#!/bin/sh
-# Fakeroot and lein don't get along, so we set ownership after the fact.
-chown -R root:root /usr/lib/riemann
-chown root:root /usr/bin/riemann
-chown riemann:riemann /var/log/riemann
-chown -R riemann:riemann /etc/riemann
-chown root:root /etc/init.d/riemann
+#!/bin/sh -e
+
+# Start riemann on boot
+if [ -x "/etc/init.d/riemann" ]; then
+  if [ ! -e "/etc/init/riemann.conf" ]; then
+    update-rc.d riemann defaults >/dev/null
+  fi
+fi
+
+invoke-rc.d riemann start
