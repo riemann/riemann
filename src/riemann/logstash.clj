@@ -106,7 +106,6 @@
                 :regenerate-interval  (:reconnect-interval opts)})]
 
     (fn [event]
-      (when (:metric event)
-        (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (event-to-json (merge event {:source (:host event)}))]
-                     (send-line client (str string "\n"))))))))
+      (with-pool [client pool (:claim-timeout opts)]
+                 (let [string (event-to-json (merge event {:source (:host event)}))]
+                   (send-line client (str string "\n")))))))
