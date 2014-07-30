@@ -117,3 +117,17 @@
   (is (= (truncate-bytes "あいう" 4) "あ"))
   (is (= (truncate-bytes "あいう" 9) "あいう"))
   (is (= (truncate-bytes "あいう" 10) "あいう")))
+
+(deftest event-with-iso8601-time-test
+  (let [events (map #(event-with-iso8601-time {:time %})
+                    [1366074418
+                     1366009618
+                     1366049218
+                     1365984000])]
+    (is (= events [
+                    {:time "2013-04-16T01:06:58.000Z"}
+                    {:time "2013-04-15T07:06:58.000Z"}
+                    {:time "2013-04-15T18:06:58.000Z"}
+                    {:time "2013-04-15T00:00:00.000Z"}
+                    ]))
+    ))
