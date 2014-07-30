@@ -14,24 +14,22 @@
     (java.util.concurrent TimeUnit
                           Executors)
     (com.aphyr.riemann Proto$Msg)
-    (org.jboss.netty.channel ChannelPipelineFactory ChannelPipeline)
-    (org.jboss.netty.channel.group ChannelGroup DefaultChannelGroup)
-    (org.jboss.netty.buffer ChannelBufferInputStream)
-    (org.jboss.netty.util DefaultObjectSizeEstimator)
-    (org.jboss.netty.handler.codec.oneone OneToOneDecoder
-                                          OneToOneEncoder)
-    (org.jboss.netty.handler.codec.protobuf ProtobufDecoder
+    (io.netty.channel ChannelInitializer Channel ChannelHandler)
+    (io.netty.channel.group ChannelGroup DefaultChannelGroup)
+    (io.netty.buffer ByteBufInputStream)
+    (io.netty.handler.codec MessageToMessageDecoder
+                            MessageToMessageEncoder)
+    (io.netty.handler.codec.protobuf ProtobufDecoder
                                             ProtobufEncoder)
-    (org.jboss.netty.handler.execution ExecutionHandler
-                                       OrderedMemoryAwareThreadPoolExecutor)))
+    (io.netty.util.concurrent DefaultEventExecutorGroup ImmediateEventExecutor)))
 
 (defn channel-group
   "Make a channel group with a given name."
   [name]
-  (DefaultChannelGroup. name))
+  (DefaultChannelGroup. name (ImmediateEventExecutor/INSTANCE)))
 
 (defmacro channel-pipeline-factory
-  "Constructs an instance of a Netty ChannelPipelineFactory from a list of
+  "Constructs an instance of a Netty ChannelInitializer from a list of
   names and expressions which return handlers. Handlers with :shared metadata
   on their names are bound once and re-used in every invocation of
   getPipeline(), other handlers will be evaluated each time.
@@ -45,16 +43,18 @@
   (let [handlers (partition 2 names-and-exprs)
         shared (filter (comp :shared meta first) handlers)
         forms (map (fn [[h-name h-expr]]
-                        `(.addLast ~(str h-name)
-                                   ~(if (:shared (meta h-name))
-                                     h-name
-                                     h-expr)))
+                     `(.addLast ~(when-let [e (:executor (meta h-name))]
+                                   e)
+                                ~(str h-name)
+                                ~(if (:shared (meta h-name))
+                                   h-name
+                                   h-expr)))
                    handlers)]
     `(let [~@(apply concat shared)]
-       (reify ChannelPipelineFactory
-         (getPipeline [this]
-                      (doto (org.jboss.netty.channel.Channels/pipeline)
-                        ~@forms))))))
+       (proxy [ChannelInitializer] []
+         (initChannel [~'ch]
+           (doto (.pipeline ~'ch)
+             ~@forms))))))
 
 (defn protobuf-decoder
   "Decodes protobufs to Msg objects"
@@ -69,43 +69,41 @@
 (defn msg-decoder
   "Netty decoder for Msg protobuf objects -> maps"
   []
-  (proxy [OneToOneDecoder] []
-    (decode [context channel message]
-            (decode-msg message))))
+  (proxy [MessageToMessageDecoder] []
+    (decode [context message out]
+      (.add out (decode-msg message)))
+    (isSharable [] true)))
 
 (defn msg-encoder
   "Netty encoder for maps -> Msg protobuf objects"
   []
-  (proxy [OneToOneEncoder] []
-    (encode [context channel message]
-            (encode-pb-msg message))))
+  (proxy [MessageToMessageEncoder] []
+    (encode [context message out]
+      (.add out (encode-pb-msg message)))
+    (isSharable [] true)))
 
-(defn execution-handler
+(defn event-executor
   "Creates a new netty execution handler."
   []
-  (ExecutionHandler.
-    (OrderedMemoryAwareThreadPoolExecutor.
-      16       ; Core pool size
-      1048576  ; 1MB per channel queued
-      10485760 ; 10MB total queued
-      )))
+  (DefaultEventExecutorGroup. 100))
 
-(defonce ^ExecutionHandler shared-execution-handler
-  (execution-handler))
+(defonce ^DefaultEventExecutorGroup shared-event-executor
+  (event-executor))
 
 (defonce instrumentation
-  (let [^OrderedMemoryAwareThreadPoolExecutor executor 
-        (.getExecutor shared-execution-handler)
-        svc "riemann netty execution-handler "]
+  (let [^DefaultEventExecutorGroup executor shared-event-executor
+        svc "riemann netty event-executor "]
 
     (reify Instrumented
       (events [this]
-              (let [base {:state "ok" :time (unix-time)}]
-                (map (partial merge base)
-                     [{:service (str svc "queue size")
-                       :metric  (.. executor getQueue size)}
-                      {:service (str svc "threads active")
-                       :metric (.. executor getActiveCount)}]))))))
+        (comment (let [base {:state "ok" :time (unix-time)}]
+                   (map (partial merge base)
+                        [{:service (str svc "queue size")
+                          :metric  (.. executor getQueue size)}
+                         {:service (str svc "threads active")
+                          :metric (.. executor getActiveCount)}])))
+        []
+        ))))
 
 (defn handle
   "Handles a msg with the given core."

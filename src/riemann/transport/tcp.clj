@@ -5,26 +5,20 @@
            [java.util.concurrent Executors]
            [java.nio.channels ClosedChannelException]
            (javax.net.ssl SSLContext)
-           [org.jboss.netty.bootstrap ServerBootstrap]
-           [org.jboss.netty.buffer ChannelBuffers]
-           [org.jboss.netty.channel ChannelHandler
-                                    ChannelFuture
-                                    ChannelFutureListener
-                                    ChannelHandlerContext
-                                    ChannelPipeline
-                                    ChannelPipelineFactory
-                                    Channels
-                                    ChannelStateEvent
-                                    ExceptionEvent
-                                    MessageEvent
-                                    SimpleChannelHandler]
-           [org.jboss.netty.channel.group ChannelGroup]
-           [org.jboss.netty.channel.socket.nio NioServerSocketChannelFactory]
-           [org.jboss.netty.handler.codec.frame LengthFieldBasedFrameDecoder
-                                                LengthFieldPrepender]
-           [org.jboss.netty.handler.execution
-            OrderedMemoryAwareThreadPoolExecutor]
-           [org.jboss.netty.handler.ssl SslHandler])
+           [io.netty.bootstrap ServerBootstrap]
+           [io.netty.buffer ByteBufUtil]
+           [io.netty.channel Channel
+                             ChannelOption
+                             ChannelHandler
+                             ChannelHandlerContext
+                             ChannelFutureListener
+                             ChannelInboundHandlerAdapter]
+           [io.netty.channel.group ChannelGroup]
+           [io.netty.handler.codec LengthFieldBasedFrameDecoder
+                                   LengthFieldPrepender]
+           [io.netty.handler.ssl SslHandler]
+           [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
+           [io.netty.channel.nio NioEventLoopGroup])
   (:require [less.awful.ssl :as ssl]
             [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
@@ -32,12 +26,12 @@
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]
-        [riemann.transport :only [handle 
+        [riemann.transport :only [handle
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
                                   msg-encoder
-                                  shared-execution-handler
+                                  shared-event-executor
                                   channel-group
                                   channel-pipeline-factory]]))
 
@@ -52,42 +46,38 @@
 
 (defn gen-tcp-handler
   "Wraps netty boilerplate for common TCP server handlers. Given a reference to
-  a core, a channel group, and a handler fn, returns a SimpleChannelHandler
+  a core, a channel group, and a handler fn, returns a ChannelInboundHandlerAdapter
   which calls (handler core message-event) with each received message."
   [core stats ^ChannelGroup channel-group handler]
-  (proxy [SimpleChannelHandler] []
-    (channelOpen [context ^ChannelStateEvent state-event]
-      (.add channel-group (.getChannel state-event)))
+  (proxy [ChannelInboundHandlerAdapter] []
+    (channelActive [ctx]
+      (.add channel-group (.channel ctx)))
 
-    (messageReceived [^ChannelHandlerContext context
-                      ^MessageEvent message-event]
-        (try
-          (handler @core stats message-event)
-          (catch java.nio.channels.ClosedChannelException e
-            (warn "channel closed"))))
+    (channelRead [^ChannelHandlerContext ctx ^Object message]
+      (try
+        (handler @core stats ctx message)
+        (catch java.nio.channels.ClosedChannelException e
+          (warn "channel closed"))))
 
-    (exceptionCaught [context ^ExceptionEvent exception-event]
-      (let [cause (.getCause exception-event)]
-        (when-not (instance? ClosedChannelException cause)
-          (warn (.getCause exception-event) "TCP handler caught")
-          (.close (.getChannel exception-event)))))))
+    (exceptionCaught [^ChannelHandlerContext ctx ^Throwable cause]
+      (warn cause "TCP handler caught")
+      (.close (.channel ctx)))
+    (isSharable [] true)))
 
 (defn tcp-handler
-  "Given a core and a MessageEvent, applies the message to core and writes a
+  "Given a core, a channel, and a message, applies the message to core and writes a
   response back on this channel."
-  [core stats ^MessageEvent e]
-  (let [msg (.getMessage e)
-        t1  (:decode-time msg)]
-    (.. e
-      getChannel
+  [core stats ^ChannelHandlerContext ctx ^Object message]
+  (let [t1 (:decode-time message)]
+    (.. ctx
       ; Actually handle request
-      (write (handle core msg))
+      (writeAndFlush (handle core message))
       ; Record time from parse to write completion
       (addListener
         (reify ChannelFutureListener
           (operationComplete [this fut]
-                             (metrics/update! stats
-                                              (- (System/nanoTime) t1))))))))
+            (metrics/update! stats
+                             (- (System/nanoTime) t1))))))))
 
 (defrecord TCPServer [^String host
                       ^int port
@@ -107,7 +97,7 @@
                (= host (:host other))
                (= port (:port other))
                (= equiv (:equiv other))))
-  
+
   Service
   (conflict? [this other]
              (and (instance? TCPServer other)
@@ -120,36 +110,31 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [boss-pool (Executors/newCachedThreadPool)
-                    worker-pool (Executors/newCachedThreadPool)
-                    bootstrap (ServerBootstrap.
-                                (NioServerSocketChannelFactory.
-                                  boss-pool
-                                  worker-pool))]
+              (let [boss-group (EpollEventLoopGroup.)
+                    worker-group (EpollEventLoopGroup.)
+                    bootstrap (ServerBootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
-                  (.setPipelineFactory pipeline-factory)
-                  (.setOption "readWriteFair" true)
-                  (.setOption "tcpNoDelay" true)
-                  (.setOption "reuseAddress" true)
-                  (.setOption "child.tcpNoDelay" true)
-                  (.setOption "child.reuseAddress" true)
-                  (.setOption "child.keepAlive" true))
+                  (.group boss-group worker-group)
+                  (.channel EpollServerSocketChannel)
+                  (.option ChannelOption/SO_REUSEADDR true)
+                  (.option ChannelOption/TCP_NODELAY true)
+                  (.childOption ChannelOption/SO_REUSEADDR true)
+                  (.childOption ChannelOption/TCP_NODELAY true)
+                  (.childOption ChannelOption/SO_KEEPALIVE true)
+                  (.childHandler pipeline-factory))
 
                 ; Start bootstrap
-                (->> (InetSocketAddress. host port)
-                     (.bind bootstrap)
-                     (.add channel-group))
+                (.add channel-group (.channel (.bind bootstrap (InetSocketAddress. host port))))
                 (info "TCP server" host port "online")
 
                 ; fn to close server
-                (reset! killer 
+                (reset! killer
                         (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
-                          (.releaseExternalResources bootstrap)
-                          (.shutdown worker-pool)
-                          (.shutdown boss-pool)
+                          (-> worker-group .shutdownGracefully .awaitUninterruptibly)
+                          (-> boss-group .shutdownGracefully .awaitUninterruptibly)
                           (info "TCP server" host port "shut down")))))))
 
   (stop! [this]
@@ -183,7 +168,9 @@
     (doto (.setUseClientMode false)
           (.setNeedClientAuth true))
     SslHandler.
-    (doto (.setEnableRenegotiation false))))
+    ; TODO: Where did this go in 4.0.21?
+    ; (doto (.setEnableRenegotiation false))
+    ))
 
 (defn cpf
   "A channel pipeline factory for a TCP server."
@@ -194,29 +181,21 @@
                ssl                 (ssl-handler ssl-context)
                int32-frame-decoder (int32-frame-decoder)
       ^:shared int32-frame-encoder (int32-frame-encoder)
-      ^:shared executor            shared-execution-handler
       ^:shared protobuf-decoder    (protobuf-decoder)
       ^:shared protobuf-encoder    (protobuf-encoder)
       ^:shared msg-decoder         (msg-decoder)
       ^:shared msg-encoder         (msg-encoder)
-      ^:shared handler             (gen-tcp-handler 
-                                     core
-                                     stats
-                                     channel-group
-                                     tcp-handler))
+      ^{:shared true :executor shared-event-executor} handler
+      (gen-tcp-handler core stats channel-group tcp-handler))
     (channel-pipeline-factory
                int32-frame-decoder (int32-frame-decoder)
       ^:shared int32-frame-encoder (int32-frame-encoder)
-      ^:shared executor            shared-execution-handler
-      ^:shared protobuf-decoder    (protobuf-decoder)
-      ^:shared protobuf-encoder    (protobuf-encoder)
-      ^:shared msg-decoder         (msg-decoder)
-      ^:shared msg-encoder         (msg-encoder)
-      ^:shared handler             (gen-tcp-handler 
-                                     core
-                                     stats
-                                     channel-group
-                                     tcp-handler))))
+      ^:shared protobuf-decoder (protobuf-decoder)
+      ^:shared protobuf-encoder (protobuf-encoder)
+      ^:shared msg-decoder (msg-decoder)
+      ^:shared msg-encoder (msg-encoder)
+      ^{:shared true :executor shared-event-executor} handler
+      (gen-tcp-handler core stats channel-group tcp-handler))))
 
 (defn tcp-server
   "Create a new TCP server. Doesn't start until (service/start!). Options:
@@ -224,12 +203,12 @@
   :port             The port to listen on. (default 5554 with TLS, or 5555 std)
   :core             An atom used to track the active core for this server
   :channel-group    A global channel group used to track all connections.
-  :pipeline-factory A ChannelPipelineFactory for creating new pipelines.
-  
+  :pipeline-factory A ChannelInitializer for creating new pipelines.
+
   TLS options:
   :tls?             Whether to enable TLS
   :key              A PKCS8-encoded private key file
-  :cert             The corresponding public certificate 
+  :cert             The corresponding public certificate
   :ca-cert          The certificate of the CA which signed this key"
   ([]
    (tcp-server {}))
@@ -239,7 +218,7 @@
          host          (get opts :host "127.0.0.1")
          port          (get opts :port (if (:tls? opts) 5554 5555))
          channel-group (get opts :channel-group
-                            (channel-group 
+                            (channel-group
                               (str "tcp-server " host ":" port)))
          equiv         (select-keys opts [:tls? :key :cert :ca-cert])
          ; Use the supplied pipeline factory...

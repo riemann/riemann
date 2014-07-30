@@ -32,7 +32,7 @@
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.7.5"]
     [interval-metrics "1.0.0"]
-    [io.netty/netty "3.8.0.Final"]
+    [io.netty/netty-all "4.0.21.Final"]
     [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
     [org.slf4j/slf4j-log4j12 "1.7.7"]
