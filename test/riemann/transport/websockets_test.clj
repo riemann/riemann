@@ -9,7 +9,7 @@
         clojure.test))
 
 (def empty-core {:index (index)})
-(def empty-request  {:query-string nil})
+(def empty-request  {:query-string nil :request-method :get})
 
 (defn request-with [key value]
   (let [query-string (str (name key) "=" (url-encode (str value)))]

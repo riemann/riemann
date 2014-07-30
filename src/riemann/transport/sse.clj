@@ -16,7 +16,7 @@
 (def event-to-server-sent-event
   "Prepare an event for sending out on the wire."
   (comp (partial format "data: %s\n\n")
-        common/event-to-json))
+        common/event->json))
 
 (defn http-query-map
   "Converts a URL query string into a map."

@@ -117,16 +117,16 @@
         [[:time (unix-time)]
          [:state "expired"]]))
 
-(defn event-with-iso8601-time
+(defn event->structure
   "change the event's time from a unix ts to a iso8601 time"
   [event]
   (assoc event :time (unix-to-iso8601 (:time event))))
 
-(defn event-to-json
+(defn event->json
   "Convert an event to a JSON string."
   [event]
   (json/generate-string
-    (event-with-iso8601-time event)))
+    (event->structure event)))
 
 (defn ensure-event-time
   "Ensures an event has a timestamp."

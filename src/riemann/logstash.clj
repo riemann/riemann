@@ -108,5 +108,5 @@
     (fn [event]
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (event-to-json (merge event {:source (:host event)}))]
+                   (let [string (event->json (merge event {:source (:host event)}))]
                      (send-line client (str string "\n"))))))))

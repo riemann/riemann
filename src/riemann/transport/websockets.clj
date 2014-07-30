@@ -7,7 +7,7 @@
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics]
             [org.httpkit.server    :as http])
-  (:use [riemann.common        :only [event-to-json ensure-event-time event-with-iso8601-time]]
+  (:use [riemann.common        :only [event->json ensure-event-time event->structure]]
         [riemann.core          :only [stream!]]
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service       :only [Service ServiceEquiv]]
@@ -64,7 +64,7 @@
 
 (defn paged-items
   [items offset limit]
-  {:items (map event-with-iso8601-time (apply-paging items offset limit))})
+  {:items (map event->structure (apply-paging items offset limit))})
 
 (defn uri-parts [uri]
   "returns a sequence of decoded uri parts.
@@ -106,7 +106,7 @@
 (defn http-get-events-by-host-service [core req host service]
   (let [event (index/lookup (:index core) host service)]
     (if-not (nil? event)
-      (json-response 200 (event-with-iso8601-time event))
+      (json-response 200 (event->structure event))
       (json-response 404 {:error "no such event"}))))
 
 (defn ws-pubsub-handler
@@ -124,7 +124,7 @@
                                  (when (pred event)
                                    ;; http-kit's send does not provide a way
                                    ;; to measure output latency
-                                   (http/send! ch (event-to-json event))))
+                                   (http/send! ch (event->json event))))
                                true)]
       (info "New websocket subscription to" topic ":" query)
 
@@ -148,7 +148,7 @@
           ast    (query/ast query)]
     (when-let [i (:index core)]
       (doseq [event (index/search i ast)]
-        (http/send! ch (event-to-json event))))
+        (http/send! ch (event->json event))))
     (if (= (params "subscribe") "true")
       (ws-pubsub-handler core stats ch (assoc hs :uri "/pubsub/index") actions)
       (http/close ch)))

@@ -119,7 +119,7 @@
   (is (= (truncate-bytes "あいう" 10) "あいう")))
 
 (deftest event-with-iso8601-time-test
-  (let [events (map #(event-with-iso8601-time {:time %})
+  (let [events (map #(event->structure {:time %})
                     [1366074418
                      1366009618
                      1366049218
