@@ -43,11 +43,16 @@
     :body (json/encode body)
     })
 
-(defn apply-paging [s offset limit]
-  (take limit (drop offset s)))
+(defn apply-paging [events offset limit]
+  "sorts and chops the collection of events"
+  (->> events
+       (sort-by (fn [event] [(:host event) (:service event)]))
+       (drop offset)
+       (take limit)
+       (map event->structure)))
 
 (defn integer-param
-  "grab and prase a value from a map, with optional predicate"
+  "grab and parse a value from a map, with optional predicate"
   ([params key default] (let [key-name (name key)]
                           (if (contains? params key-name)
                             (try
@@ -62,20 +67,15 @@
                                  (throw (IllegalArgumentException. (str "parameter " (name key) " is not valid")))
                                  ))))
 
-(defn paged-items
-  [items offset limit]
-  {:items (map event->structure (apply-paging items offset limit))})
 
-(defn uri-parts [uri]
+(defn path-fragments [uri]
   "returns a sequence of decoded uri parts.
 
   (uri-parts \"/thing/that/foo\")
-  > (\"thing\" \"that\" \"foo\"
-
-   is limited to first, second, third and the rest (ie max 4)
+  > (\"thing\" \"that\" \"foo\")
   "
   (drop 1 ; first element will be "" matching the chars 'before' '/'
-        (map url-decode (split uri #"/" 5)))) ; note 5 limits it to /first/second/third/rest
+        (map url-decode (split uri #"/"))))
 
 (defn http-get-events [core req]
   (try+
@@ -84,30 +84,14 @@
           limit  (integer-param params :limit 250 pos?)
           query  (get params "query")
           index  (:index core)
-          items  (if (nil? query)
-                   index
-                   (index/search index (query/ast query)))]
-      (json-response 200 (paged-items items offset limit)))
+          events (index/search index (if (nil? query)
+                                       true
+                                       (query/ast query)))]
+      (json-response 200 {:items (apply-paging events offset limit)}))
     (catch [:type :riemann.query/parse-error] {:keys [message]}
       (json-response 400 {:error (str "'query' parameter is not a valid query detail:" message)}))
     (catch IllegalArgumentException e
       (json-response 400 {:error (.getMessage e)}))))
-
-(defn http-get-events-by-host [core req host]
-  (try
-    (let [params (http-query-map (:query-string req))
-          offset (integer-param params :offset 0)
-          limit  (integer-param params :limit 250)
-          items  (filter #(= (:host %) host) (:index core))]
-      (json-response 200 (paged-items items offset limit)))
-    (catch IllegalArgumentException e
-      (json-response 400 {:error (.getMessage e)}))))
-
-(defn http-get-events-by-host-service [core req host service]
-  (let [event (index/lookup (:index core) host service)]
-    (if-not (nil? event)
-      (json-response 200 (event->structure event))
-      (json-response 404 {:error "no such event"}))))
 
 (defn ws-pubsub-handler
   "Subscribes to a pubsub channel and streams events back over the WS conn."
@@ -158,15 +142,13 @@
 
 (defn http-index-handler
   [core stats ch req]
-  (let [parts (drop 1 (uri-parts (:uri req))) ; drop the 'index' bit
+  (let [parts (drop 1 (path-fragments (:uri req))) ; drop the 'index' bit
         method (:request-method req)]
     (http/send! ch
-                (cond
-                  (= method :get) (condp re-matches (:uri req)
-                                    #"/index/?"            (http-get-events core req)
-                                    #"/index/[^/]+"        (http-get-events-by-host core req (first parts))
-                                    #"/index/[^/]+/[^/]+"  (http-get-events-by-host-service core req (first parts) (second parts))
-                                    {:status 404 :body "unknown uri"})
+                (condp = method
+                  :get (condp re-matches (:uri req)
+                         #"/index/?" (http-get-events core req)
+                         {:status 404 :body "unknown uri"})
                   :else (json-response 405 {:error (str "method " method " is not accepted")}))
                 true ; send close .. this is http not sockets
                 )))
@@ -374,29 +356,23 @@
   output is in json, and lists are structured as
 
   {
-     \"items\":[
+     \"events\":[
         {\"host\":\"host\", \"service\":\"load\"},
         {\"host\":\"host\", \"service\":\"cpu\"},
      ]
   }
-
-  lists can be paged using query parameters 'offset' and 'limit'
-  but it should be noted that because of the nature of the internal
-  index of riemann no guarantees on ordering. It is expected that
-  the http style interface is used more for debugging and manual
-  introspection than for system integration.
 
   GET /index - list of all events in the index
                 query parameters:
                 'offset' - offset of first item to return
                 'limit'  - max number to return (defualt is 250)
                 'query'  - riemann query to match events against
-  GET /index/{hostname} - list of all events for a single host
-                query parameters:
-                'offset' - offset of first item to return
-                'limit'  - max number to return (defualt is 250)
 
-  GET /index/{hostname}/{service} - a single event
+  The order of the events is host/service to allow 'offset' and
+  'limit' to behave sanely. But despit this bare in mind the result
+  is a snapshot of the index, and it may (is quite likely to have)
+  changed by the time you make the next request for the next page of
+  events.
 
   Errors are reported using standard http status codes, the response
   body should still be in json and contain a 'error' attribute
@@ -406,9 +382,9 @@
     4xx - client error, specificaly
           400 - bad request, invalid or missing parameter
           404 - what you asked for doesn't exist
-          405 - what you asked todo isn't supported
-    5xx - some interval error, this bug either way you might have to
-          look at the riemann log/console output to get a better idea"
+          405 - what you asked to do isn't supported
+    5xx - some interval error, check the riemann log for more information"
+
   ([] (ws-server {}))
   ([opts]
    (WebsocketServer.
