@@ -163,14 +163,19 @@ sudo service riemann reload
 
 <div class="row">
   <div class="sixcol">
-    <p>To change the address that the dashboard binds to, see <a href="https://github.com/aphyr/riemann-dash">riemann-dash's README</a>.</p>
+    <p>To change the address that the dashboard binds to, <a href="https://github.com/aphyr/riemann-dash">edit riemann-dash's config.rb</a>.</p>
   </div>
+  <div class="sixcol last">
+{% highlight rb %}
+set :bind, "1.2.3.4"
+{% endhighlight %}
 </div>
 
 <div class="row">
   <div class="sixcol">
     <p>Riemann-dash only serves some JS code and a small piece of
-    configuration; the browser connects directly to Riemann's websocket server
+    configuration; when you open riemann-dash in the browser, it'll open
+    connections from your browser to the Riemann server's websocket interface
     to receive events. To connect the dashboard to a remote Riemann server,
     double-click the text box in the top right of the dashboard, and change the
     address from <code>127.0.0.1:5556</code> to your Riemann server's host and
@@ -178,6 +183,10 @@ sudo service riemann reload
     to that address and begin displaying events. Hit <code>s</code> to save the
     new dash config; the dashboard will connect to that address every time you
     load the page.</p>
+
+    <p>Riemann-dash is not the only dashboard for Riemann; Riemann decouples
+    data processing and visualization. Opening the Riemann server from your
+    browser *won't* work.</p>
 
     <p>If the dashboard is unable to connect to the Riemann websocket server,
     you'll see an alert pop up every few seconds. Check that the server is
