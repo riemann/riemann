@@ -33,15 +33,20 @@
   to (str service \" \" point). For instance, (sorted-sample events [0 1])
   returns a 2-element seq of the smallest event and the biggest event, by
   metric. The first has a service which ends in \" 0\" and the second one ends
-  in \" 1\".  Useful for extracting histograms and percentiles.
+  in \" 1\". If the points is a map, eg (sorted-sample events {0 \".min\" 1
+  \".max\"}, the the values will be appened to the service name directly.
+  Useful for extracting histograms and percentiles.
   
   When s is empty, returns an empty list."
   [s points]
-  (map (fn [point event]
-         (assoc event :service
-                (str (:service event) " " point)))
-       points
-       (sorted-sample-extract s points)))
+  (let [[points pnames] (if (vector? points)
+                         [points (map #(str " " %) points)]
+                         (apply map vector points))]
+    (map (fn [pname event]
+           (assoc event :service
+                  (str (:service event) pname)))
+         pnames
+         (sorted-sample-extract s points))))
 
 (defn non-nil-metrics
   "Given a sequence of events, returns a compact sequence of their
