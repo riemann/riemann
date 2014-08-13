@@ -9,7 +9,7 @@
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
 
-(deftest sorted-sample-test
+(deftest sorted-sample-extract-test
          (are [es e] (= (sorted-sample-extract es [0 0.5 1]) e)
               []
               []
@@ -29,9 +29,39 @@
               [{:metric 6} {:metric 1} {:metric 2} {:metric 1} {:metric 1}]
               [{:metric 1} {:metric 1} {:metric 6}]))
 
+(deftest sorted-sample-test
+         (are [es e] (= (sorted-sample es [0 0.5 1]) e)
+              []
+              []
+
+              [{:metric nil}]
+              []
+
+              [{:metric 1}]
+              [{:metric 1 :service " 0"} {:metric 1 :service " 0.5"} {:metric 1 :service " 1"}]
+
+              [{:metric 2} {:metric 1}]
+              [{:metric 1 :service " 0"} {:metric 2 :service " 0.5"} {:metric 2 :service " 1"}]
+
+              [{:metric 3} {:metric 1} {:metric 2}]
+              [{:metric 1 :service " 0"} {:metric 2 :service " 0.5"} {:metric 3 :service " 1"}]
+
+              [{:metric 6} {:metric 1} {:metric 2} {:metric 1} {:metric 1}]
+              [{:metric 1 :service " 0"} {:metric 1 :service " 0.5"} {:metric 6 :service " 1"}])
+
+         (are [es e] (= (sorted-sample es {0 " min" 0.5 " median" 1 " max"}) e)
+              [{:metric 2} {:metric 1}]
+              [{:metric 1 :service " min"} {:metric 2 :service " median"} {:metric 2 :service " max"}]
+
+              [{:metric 3} {:metric 1} {:metric 2}]
+              [{:metric 1 :service " min"} {:metric 2 :service " median"} {:metric 3 :service " max"}]
+
+              [{:metric 6} {:metric 1} {:metric 2} {:metric 1} {:metric 1}]
+              [{:metric 1 :service " min"} {:metric 1 :service " median"} {:metric 6 :service " max"}]))
+
 (defn test-fold-common
   [fold operator]
-  (are [es] (= (fold es) 
+  (are [es] (= (fold es)
                (assoc (first es)
                       :metric
                       (reduce operator (map :metric es))))
@@ -66,7 +96,7 @@
   (is (nil? (fold [])))
   (is (nil? (fold [nil {:service "foo"}])))
   (is (= {:service "foo"
-          :metric nil 
+          :metric nil
           :description "An event or metric was nil."}
          (fold [{:service "foo"} {:metric 2}])))
   (is (= {:service "foo"
@@ -89,8 +119,8 @@
          (test-fold-all quotient /)
 
          (testing "exceptions"
-                  (is (= (quotient [{:service "hi" :metric 1} 
-                                   {:metric 2} 
+                  (is (= (quotient [{:service "hi" :metric 1}
+                                   {:metric 2}
                                    {:metric 0}])
                          {:service "hi"
                           :metric nil
