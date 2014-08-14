@@ -38,6 +38,7 @@
         [riemann.hipchat :only [hipchat]]
         [riemann.slack :only [slack]]
         [riemann.stackdriver :only [stackdriver]]
+        [riemann.shinken :only [shinken]]
         riemann.streams))
 
 (def core "The currently running core."
