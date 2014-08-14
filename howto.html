@@ -542,8 +542,11 @@ set :bind, "1.2.3.4"
     be dropped <i>before</i> arriving at the streaming system. Check:</p>
 
     <ul>
-      <li>Riemann clients are sending to the correct Riemann host and port.</li>
-      <li>Riemann is listening to that host and port. Check <code>(tcp-server)</code> and <code>netstat -lntp | grep riemann</code>.</li>
+      <li>Riemann clients are sending to the correct Riemann host and
+      port.</li> <li>Riemann is listening to that host and port. Double-check
+      the config (e.g. <code>(tcp-server)</code> options), that the appropriate
+      server startup message appears in the Riemann logs, and that and
+      <code>netstat -lntp | grep riemann</code> shows the port bound.</li>
       <li>The network can relay packets from the client machine to the Riemann
       server. Use <code>telnet some.host 5555</code> or <code>nmap -sT
         some.host -P 5555</code>.</li>
