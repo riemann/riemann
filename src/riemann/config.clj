@@ -39,6 +39,7 @@
         [riemann.slack :only [slack]]
         [riemann.stackdriver :only [stackdriver]]
         [cemerick.pomegranate :only [add-dependencies]]
+        [riemann.shinken :only [shinken]]
         riemann.streams))
 
 (def core "The currently running core."

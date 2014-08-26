@@ -57,7 +57,8 @@
   ([config]
    (-main "start" config))
   ([command config]
-   (riemann.logging/init)
+   (when (nil? (System/getProperty "log4j.configuration"))
+     (riemann.logging/init))
    (case command
      "start" (try
                (info "PID" (pid))
