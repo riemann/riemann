@@ -1482,12 +1482,12 @@
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
 
-  ; Receive the previous event, in addition to the current event
-  (changed :state
-           (fn [prev-evt evt]
-             (prn \"changed from\" (:state prev-evt) \"to\" (:state evt))))
+  ; Receive the previous event, in addition to the current event, as a vector.
+  (changed :state {:pairs? true}
+           (fn [[event event']]
+             (prn \"changed from\" (:state event) \"to\" (:state event'))))
 
-  Note that f can be an arbitrary function:
+  ; Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
@@ -1540,20 +1540,18 @@
 (defn over
   "Passes on events only when their metric is greater than x"
   [x & children]
-  (deprecated "streams/over is deprecated in favor of (where (< x metric))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when (< x m)
-                    (call-rescue event children))))))
+  (fn stream [event]
+    (when-let [m (:metric event)]
+      (when (< x m)
+        (call-rescue event children)))))
 
 (defn under
   "Passes on events only when their metric is smaller than x"
   [x & children]
-  (deprecated "streams/under is deprecated in favor of (where (< metric x))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when (> x m)
-                    (call-rescue event children))))))
+  (fn stream [event]
+    (when-let [m (:metric event)]
+      (when (> x m)
+        (call-rescue event children)))))
 
 (defn- where-test [k v]
   (condp some [k]

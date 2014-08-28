@@ -1,4 +1,4 @@
-(defproject riemann "0.2.6-SNAPSHOT"
+(defproject riemann "0.2.6"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/aphyr/riemann"
@@ -22,10 +22,11 @@
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [net.logstash.log4j/jsonevent-layout "1.5"]
-    [aleph "0.3.2"]
+    [com.cemerick/pomegranate "0.3.0"]
+    [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
-    [clj-librato "0.0.4"]
+    [clj-librato "0.0.5"]
     [clj-time "0.6.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.4"]
@@ -41,11 +42,12 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
-    [capacitor "0.2.2"]
-  ]
+    [capacitor "0.2.2"
+     :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
-  :profiles {:dev {:dependencies [[criterium "0.4.3"]]}}
+  :profiles {:dev {:dependencies [[criterium "0.4.3"]
+                                  [aleph     "0.3.2"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
@@ -64,6 +66,7 @@
                    :focus :focus
                    :slack :slack
                    :stackdriver :stackdriver
+                   :shinken :shinken
                    :all (fn [_] true)}
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]

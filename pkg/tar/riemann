@@ -3,18 +3,23 @@ top="$(dirname "$0")/.."
 
 JAR="$top/lib/riemann.jar"
 CONFIG="$top/etc/riemann.config"
+COMMAND="start"
 AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
 
 usage()
 {
   cat << EOF
-usage: $0 [-a] [java options ...] [config-file]
+usage: $0 [-a] [java options ...] [command] [config-file]
 
 Runs Riemann with the given configuration file.
 
 OPTIONS:
   -h    Show this message
   -a    Adds some default aggressive, nonportable JVM optimization flags.
+
+COMMANDS:
+  start    Start the Riemann server (this is the default)
+  test     Run the configuration tests
 
   Any unrecognized options (e.g. -XX:+UseParNewGC) will be passed on to java.
 EOF
@@ -33,10 +38,13 @@ for arg in "$@"; do
     -*)
       OPTS="$OPTS $arg"
       ;;
+    test|start)
+      COMMAND="$arg"
+      ;;
     *)
       CONFIG="$arg"
      ;;
   esac
 done
 
-exec java $OPTS -jar "$JAR" "$CONFIG"
+exec java $OPTS -jar "$JAR" "$COMMAND" "$CONFIG"
