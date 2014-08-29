@@ -25,7 +25,7 @@
 (defn keenio
   "Creates a keen adapter. Takes your Keen project id and write key, and
   returns a function that accepts an event and sends it to Keen IO. The full
-  event will sent.
+  event will be sent.
 
 (streams
   (let [kio (keenio \"COLLECTION_NAME\", \"PROJECT_ID\" \"WRITE_KEY\")]
