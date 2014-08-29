@@ -10,8 +10,8 @@
   "POST to Keen IO."
   [collection project-id write-key request]
 
-  (def final-event-url
-    (str event-url project-id "/events/" collection))
+  (let [final-event-url
+    (str event-url project-id "/events/" collection)]
 
   (client/post final-event-url
                {:body (json/generate-string request)
@@ -20,7 +20,7 @@
                 :conn-timeout 5000
                 :content-type :json
                 :accept :json
-                :throw-entire-message? true}))
+                :throw-entire-message? true})))
 
 (defn keenio
   "Creates a keen adapter. Takes your Keen project id and write key, and
@@ -28,7 +28,7 @@
   event will be sent.
 
 (streams
-  (let [kio (keenio \"COLLECTION_NAME\", \"PROJECT_ID\" \"WRITE_KEY\")]
+  (let [kio (keenio \"COLLECTION_NAME\" \"PROJECT_ID\" \"WRITE_KEY\")]
     (where (state \"error\") kio)))"
 
   [collection project-id, write-key]
