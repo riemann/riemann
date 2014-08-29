@@ -29,6 +29,7 @@
         [riemann.plugin  :only [load-plugin load-plugins]]
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
+        [riemann.keenio :only [keenio]]
         [riemann.campfire :only [campfire]]
         [riemann.kairosdb :only [kairosdb]]
         [riemann.librato :only [librato-metrics]]
