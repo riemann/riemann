@@ -30,7 +30,6 @@
   (streams
     (let [kio (keenio \"COLLECTION_NAME\" \"PROJECT_ID\" \"WRITE_KEY\")]
       (where (state \"error\") kio)))"
-
   [collection project-id write-key]
   (fn [event]
     (post collection project-id write-key event)))
