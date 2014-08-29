@@ -6,12 +6,12 @@
 (def ^:private event-url
   "https://api.keen.io/3.0/projects/")
 
-(defn- post
+(defn post
   "POST to Keen IO."
   [collection project-id write-key request]
 
   (let [final-event-url
-    (str event-url project-id "/events/" collection)]
+       (str event-url project-id "/events/" collection)]
 
   (client/post final-event-url
                {:body (json/generate-string request)
@@ -27,10 +27,10 @@
   returns a function that accepts an event and sends it to Keen IO. The full
   event will be sent.
 
-(streams
-  (let [kio (keenio \"COLLECTION_NAME\" \"PROJECT_ID\" \"WRITE_KEY\")]
-    (where (state \"error\") kio)))"
+  (streams
+    (let [kio (keenio \"COLLECTION_NAME\" \"PROJECT_ID\" \"WRITE_KEY\")]
+      (where (state \"error\") kio)))"
 
-  [collection project-id, write-key]
+  [collection project-id write-key]
   (fn [event]
     (post collection project-id write-key event)))
