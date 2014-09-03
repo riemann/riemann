@@ -237,7 +237,7 @@ set :bind, "1.2.3.4"
 (logging/init {:file "/path/to/some/riemann.log"})
 {% endhighlight %}
 
-    <p>If you'd prefer to only log to the console, just leave out :file</p>
+    <p>If you'd prefer to only log to stdout, just leave out :file</p>
 
 {% highlight clj %}
 (logging/init)
@@ -474,33 +474,34 @@ set :bind, "1.2.3.4"
 
 <h2>Debugging</h2>
 
-<h3>Printing events to the console or log</h3>
+<h3>Printing events to stdout or the log</h3>
 
 <div class="row">
   <div class="sixcol">
     <p>Streams are just functions, so you can use any function that prints an
-    event to the console to see which events pass through a particular stream.
-    <code>prn</code> prints an object to the console, so adding
-    <code>prn</code> to any stream prints the events at that stream to the
-    console.</p>
+    event to stdout to see which events pass through a particular stream.
+    <code>prn</code> prints an object to stdout, so adding <code>prn</code> to
+    any stream prints the events at that stream to the console.</p>
 
-    <p>If you want to log to the logfile and/or console log, use <code>#(info
-      %)</code>, which is a shorthand for the anonymous function <code>(fn [x]
-    (info x))</code>. Note that <code>info</code> logs events a little
-  differently than <code>prn</code>, but you can use <code>pr-str</code> to
-  recover the clojure representation if desired.</p>
+    <p>If you're running Riemann as a daemon, it probably won't have a stdout
+    to print to. To write to the logfile (which is *also*, by default, printed
+    to stdout), use <code>#(info %)</code>, which is a shorthand for the
+    anonymous function <code>(fn [x] (info x))</code>. Note that
+    <code>info</code> logs events a little differently than <code>prn</code>,
+    but you can use <code>pr-str</code> to recover the clojure representation
+    if desired.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
 (streams
   (where (service "bar")
-    ; Print event to console
+    ; Print event to stdout
     prn
 
     ; Print :foo, then the event
     #(prn :foo %)
 
-    ; Log event to the console
+    ; Log event to the logfile and stdout
     #(info %)
 
     ; Log event using the same representation as prn
