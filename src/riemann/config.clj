@@ -38,6 +38,8 @@
         [riemann.hipchat :only [hipchat]]
         [riemann.slack :only [slack]]
         [riemann.stackdriver :only [stackdriver]]
+        [cemerick.pomegranate :only [add-dependencies]]
+        [riemann.shinken :only [shinken]]
         riemann.streams))
 
 (def core "The currently running core."
@@ -326,6 +328,36 @@
     (and (.isFile file)
          (or (.matches filename ".*\\.clj$")
              (.matches filename ".*\\.config$")))))
+
+(defn local-repo
+  "Sets the location of the local maven repository used
+   by `depend` to load plugins"
+  [path]
+  (reset! riemann.plugin/repo path))
+
+(defmacro depend
+  "Pull in specified dependencies. This combines pulling dependencies with
+   aether and loading a plugin.
+
+   The option map is fed to com.cemerick.pomegranate/add-dependencies and
+   accepts an optional :exit-on-failure keyword defaulting to true which
+   indicates whether riemann should bail out when failing to load a plugin
+   as well as an option :alias parameter which will be forward to `load-plugin`
+
+   To prefer https, only the clojars repository is registered by default."
+  [plugin artifact version options]
+  `(let [options# (merge {:coordinates '[[~artifact ~version]]
+                          :local-repo (deref riemann.plugin/repo)
+                          :exit-on-failure true
+                          :repositories {"clojars" "https://clojars.org/repo"}}
+                         ~options)]
+     (try
+       (apply add-dependencies (apply concat options#))
+       (load-plugin ~plugin (select-keys options# [:alias]))
+       (catch Exception e#
+         (error "could not load plugin" (name ~plugin) ":" (.getMessage e#))
+         (when (:exit-on-failure options#)
+           (System/exit 0))))))
 
 (defn include
   "Include another config file or directory. If the path points to a

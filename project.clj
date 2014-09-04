@@ -22,6 +22,7 @@
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [net.logstash.log4j/jsonevent-layout "1.5"]
+    [com.cemerick/pomegranate "0.3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]

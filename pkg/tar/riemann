@@ -4,7 +4,7 @@ top="$(dirname "$0")/.."
 JAR="$top/lib/riemann.jar"
 CONFIG="$top/etc/riemann.config"
 COMMAND="start"
-AGGRESSIVE_OPTS="-XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
+AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
 
 usage()
 {
