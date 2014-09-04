@@ -763,11 +763,15 @@
                   (call-rescue (assoc event :metric diff) children))))))))))
 
 (defn ddt
-  "Differentiate metrics with respect to time. With no args, emits an event for
-  each one received, but with metric equal to the difference between the
-  current event and the previous one, divided by the difference in their times.
-  If the first argument is a number n, emits a rate-of-change event every n
-  seconds instead, until expired. Skips events without metrics."
+  "Differentiate metrics with respect to time. Takes an optional number
+  followed by child streams. If the first argument is a number n, emits a
+  rate-of-change event every n seconds, until expired. If the first argument is
+  not number, emits an event for each event received, but with metric equal to
+  the difference between the current event and the previous one, divided by the
+  difference in their times. Skips events without metrics.
+
+  (ddt 5 graph index)
+  (ddt graph index)"
   [& args]
   (if (number? (first args))
     (apply ddt-real args)
