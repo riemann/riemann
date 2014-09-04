@@ -15,6 +15,7 @@
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
                                   shared-execution-handler]]
+        [riemann.common :only [get-hostname]]
         [slingshot.slingshot :only [try+ throw+]]
         [clojure.string :only [split
                                join]]
@@ -85,9 +86,18 @@
               decode-graphite-line
               parser-fn)
           (catch Object e
-            (throw (RuntimeException.
-                     (str "Graphite server parse error (" e "): "
-                          (pr-str message))))))))))
+            (str "Graphite server parse error (" e "): " (pr-str message))
+            ;construct parse error event
+            (let [time_millis (System/currentTimeMillis)
+                  hostname (nth (get-hostname [time_millis "unknown"]) 1)]
+            (->Event hostname                                    ; host
+                     "riemann.parse_error"                       ; service
+                     "warning"                                   ; state
+                     (get (:environment &throw-context) 'line)   ; desc
+                     1                                           ; metric
+                     nil                                         ; tags
+                     (quot time_millis 1000)                     ; time
+                     nil))))))))                                 ; ttl
 
 (defn graphite-handler
   "Given a core and a MessageEvent, applies the message to core."
