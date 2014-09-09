@@ -32,6 +32,7 @@
         [riemann.campfire :only [campfire]]
         [riemann.kairosdb :only [kairosdb]]
         [riemann.librato :only [librato-metrics]]
+        [riemann.logentries :only [logentries]]
         [riemann.nagios :only [nagios]]
         [riemann.opentsdb :only [opentsdb]]
         [riemann.influxdb :only [influxdb]]
