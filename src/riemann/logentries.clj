@@ -85,5 +85,4 @@
 
     (fn [event]
       (with-pool [client pool claim-timeout]
-        (info "Event message: " (event-to-le-format event))
         (send-line client (event-to-le-format event))))))
