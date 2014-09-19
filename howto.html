@@ -706,6 +706,11 @@ Ran 1 tests containing 1 assertions.
     <p>Note that <code>tap</code> and <code>io</code> are eliminated at
     compile-time during production mode, so there's zero performance penalty;
     won't count against your Hotspot inlining budget, etc.</p>
+
+    <p> Note also that the test framework doesn't actually run a core,
+    so functions that require one, (like 
+    <code>riemann.config/reinject</code>), can't work from within the test
+    framework.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
