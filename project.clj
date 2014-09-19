@@ -67,6 +67,7 @@
                    :slack :slack
                    :stackdriver :stackdriver
                    :shinken :shinken
+                   :blueflood :blueflood
                    :all (fn [_] true)}
   :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
