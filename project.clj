@@ -66,6 +66,7 @@
                    :focus :focus
                    :slack :slack
                    :stackdriver :stackdriver
+		   :xymon :xymon
                    :shinken :shinken
                    :all (fn [_] true)}
   :javac-options     ["-target" "1.6" "-source" "1.6"]
