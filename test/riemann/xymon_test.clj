@@ -7,7 +7,7 @@
 (logging/init)
 
 (deftest ^:xymon ^:integration xymon-test
-         (let [k (xymon)]
+         (let [k (xymon nil)]
            (k {:host "riemann.local"
                :service "xymon test"
                :state "green"
@@ -15,14 +15,14 @@
                :metric -2
                :time (unix-time)}))
 
-         (let [k (xymon)]
+         (let [k (xymon nil)]
            (k {:service "xymon test"
                :state "green"
                :description "all clear, uh, situation normal"
                :metric 3.14159
                :time (unix-time)}))
 
-         (let [k (xymon)]
+         (let [k (xymon nil)]
            (k {:host "riemann.local"
 	       :service "xymon test"
                :state "ok"
@@ -30,7 +30,7 @@
                :metric 3.14159
                :time (unix-time)}))
 
-         (let [k (xymon)]
+         (let [k (xymon nil)]
            (k {:host "no-service.riemann.local"
                :state "ok"
                :description "Missing service, not transmitted"
