@@ -1,9 +1,10 @@
 (ns riemann.xymon
   "Forwards events to Xymon"
-  (:require '[clojure.java.io :as io]
-            '[clojure.string :refer [replace]])
-  (:import '(java.net Socket))
-  (:use '[riemann.common])
+  (:refer-clojure :exclude [replace])
+  (:require [clojure.java.io :as io])
+  (:import (java.net Socket))
+  (:use [riemann.common]
+	[clojure.string :only [split join replace]])
   )
 
 (defn format-line
