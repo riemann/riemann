@@ -6,9 +6,13 @@
 
 (defn format-line
   "Formats an event "
-  [event]
-  (str "status" (when (and (not= "" (:ttl event)) (not= nil (:ttl event))) (str "+" (:ttl event))) " " (replace (:host event) #"\." ",") "." (replace (:service event) #"(\.| )" "_")" " (:state event) " " (:description event) "\n" )
-  )
+  [{:keys [ttl host service state description]
+    :or {host "" service "" description "" state "unknown"}}]
+  (let [ttl-prefix (if ttl (str "+" ttl) "")
+        host       (s/replace host "." ",")
+        service    (s/replace service #"(\.| )" "_")]
+    (format "status%s %s.%s %s %s\n"
+            ttl-prefix host service state description)))
 
 (defn send-line
   "Connects to Xymon server, sends line, then closes the connection"
