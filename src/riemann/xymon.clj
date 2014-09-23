@@ -1,7 +1,8 @@
 (ns riemann.xymon
   "Forwards events to Xymon"
-  (:require [clojure.java.io :as io]
-            [clojure.string  :as s])
+  (:require [clojure.java.io       :as io]
+            [clojure.string        :as s]
+            [clojure.tools.logging :refer [error]])
   (:import java.net.Socket))
 
 (defn format-line
@@ -18,10 +19,13 @@
   "Connects to Xymon server, sends line, then closes the connection.
    This is a blocking operation and should happen on a separate thread."
   [opts line]
-  (with-open [sock   (Socket. (:host opts) (:port opts))
-              writer (io/writer sock)]
-    (.write writer line)
-    (.flush writer)))
+  (try
+    (with-open [sock   (Socket. (:host opts) (:port opts))
+                writer (io/writer sock)]
+      (.write writer line)
+      (.flush writer))
+    (catch Exception e
+      (error e "could not reach xymon host"))))
 
 (defn xymon
   "Returns a function which accepts an event and sends it to Xymon.
