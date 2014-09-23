@@ -27,19 +27,14 @@
   "Returns a function which accepts an event and sends it to Xymon.
    Silently drops events when xymon is down. Attempts to reconnect
    automatically every five seconds. Use:
-   
+
    (xymon {:host \"127.0.0.1\" :port 1984})
-   
-   
+
    "
   [opts]
   (let [opts (merge {:host "127.0.0.1"
-                     :port 1984
-                     } opts)
-        ]
-    
-    (fn [event]
-      (when (:state event)
-        	(when (:service event)
-           (let [statusmessage (format-line event)]
-             (send-line opts statusmessage)))))))
+                     :port 1984} opts)]
+    (fn [{:keys [state service] :as event}]
+      (when (and state service)
+        (let [statusmessage (format-line event)]
+          (send-line opts statusmessage))))))
