@@ -15,15 +15,13 @@
             ttl-prefix host service state description)))
 
 (defn send-line
-  "Connects to Xymon server, sends line, then closes the connection"
-  	[opts line]
-  	(with-open [sock (Socket. (:host opts) (:port opts))
-               writer (io/writer sock)
-               ]
-              		(.write writer line)
-              		(.flush writer)
-              	)
-  )
+  "Connects to Xymon server, sends line, then closes the connection.
+   This is a blocking operation and should happen on a separate thread."
+  [opts line]
+  (with-open [sock   (Socket. (:host opts) (:port opts))
+              writer (io/writer sock)]
+    (.write writer line)
+    (.flush writer)))
 
 (defn xymon
   "Returns a function which accepts an event and sends it to Xymon.
