@@ -706,6 +706,11 @@ Ran 1 tests containing 1 assertions.
     <p>Note that <code>tap</code> and <code>io</code> are eliminated at
     compile-time during production mode, so there's zero performance penalty;
     won't count against your Hotspot inlining budget, etc.</p>
+
+    <p> Note also that the test framework doesn't actually run a core,
+    so functions that require one, (like 
+    <code>riemann.config/reinject</code>), can't work from within the test
+    framework.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -913,6 +918,16 @@ client << {service: "thumbnailer rate",
 </div>
 
 <h2>Working with streams</h2>
+
+<h3>Example configs</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>The Guardian has published <a
+      href="https://github.com/guardian/riemann-config/blob/master/main.clj">their
+    Riemann config files</a>, which may be a useful guide to advanced use.</p>
+  </div>
+</div>
 
 <h3>Split streams</h3>
 
@@ -2042,6 +2057,29 @@ rate
 </div>
 
 <h2>Working with the dashboard</h2>
+
+<h3>Find out what services are in the index</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Some producers, like collectd, spew a huge volume of service into
+    Riemann, which can make it tough to figure out which service to use. You
+    can dump every service from the Riemann index with a client in your
+    favorite language, though. Just issue a query (e.g. <code>true</code> for
+    all events, though this might be slow), and extract the fields you're
+    interested in.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight sh %}
+gem install riemann-client
+irb -r riemann/client
+{% endhighlight %}
+
+{% highlight rb %}
+Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.each { |x| puts x }
+{% endhighlight %}
+  </div>
+<div>
 
 <h3>Application specific host grouping</h3>
 <p>
