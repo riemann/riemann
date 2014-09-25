@@ -41,6 +41,7 @@
         [riemann.stackdriver :only [stackdriver]]
         [cemerick.pomegranate :only [add-dependencies]]
         [riemann.shinken :only [shinken]]
+	[riemann.xymon :only [xymon]]
         riemann.streams))
 
 (def core "The currently running core."

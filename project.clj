@@ -66,6 +66,7 @@
                    :focus :focus
                    :slack :slack
                    :stackdriver :stackdriver
+		   :xymon :xymon
                    :shinken :shinken
                    :blueflood :blueflood
                    :all (fn [_] true)}
