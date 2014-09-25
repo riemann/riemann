@@ -281,10 +281,10 @@
   "An ExecutorServiceService based on a ThreadPoolExecutor with core and
   maximum threadpool sizes, and a LinkedBlockingQueue of a given size. Options:
 
-  :core-pool-size             Default 0
-  :max-pool-size              Default 4
-  :keep-alive-time            Default 5
-  :keep-alive-unit            Default SECONDS
+  :core-pool-size             Default 1
+  :max-pool-size              Default 128
+  :keep-alive-time            Default 10
+  :keep-alive-unit            Default MILLISECONDS
   :queue-size                 Default 1000"
   ([name] (threadpool-service name {}))
   ([name {:keys [core-pool-size
