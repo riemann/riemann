@@ -1,5 +1,6 @@
 (ns riemann.mailgun-test
   (:require [riemann.mailgun :as mailgun]
+            [riemann.common :refer [body]]
             [clj-http.client :as client]
             [clojure.test :refer [deftest testing is are]]))
 
@@ -16,12 +17,12 @@
         sandbox "mail.relay"
         service-key "testkey"
         recipient "somedude@somewhere.com"
-        default-body-result "At Wed Dec 31 16:02:03 PST 1969\ntest host testservice  (17)\nTags: []\nCustom Attributes: {}\n\n"
-        default-subject-result "test host testservice"
         event {:service "testservice"
                :host "test host"
                :time 123
                :metric 17}
+        default-body-result (body [event])
+        default-subject-result "test host testservice"
         mailer (mailgun/mailgun {:sandbox sandbox
                                  :service-key service-key})
         email (mailer recipient)]
