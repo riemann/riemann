@@ -1,8 +1,7 @@
-;(ns riemann.mailgun
-  ;"Forwards events to Mailgun"
-  ;(:require [clj-http.client :as client]))
-(use 'aleph.http)
-(use '[riemann.common :only [body subject]])
+(ns riemann.mailgun
+  "Forwards events to Mailgun"
+  (:require [clj-http.client :as client]
+            [riemann.common :refer [body subject]]))
 
 (def ^:private event-url
   "https://api.mailgun.net/v2/%s/messages")
@@ -10,10 +9,8 @@
 (defn- post
   "POST to the Mailgun events API."
   [mgun-opts msg-opts]
-  (sync-http-request
-    {:method :post
-     :url (format event-url (:sandbox mgun-opts))
-     :basic-auth ["api" (:service-key mgun-opts)]
+  (client/post (format event-url (:sandbox mgun-opts))
+    {:basic-auth ["api" (:service-key mgun-opts)]
      :form-params
      {:from (format (:from msg-opts) (:sandbox mgun-opts))
       :to (:to msg-opts)
