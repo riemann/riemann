@@ -129,15 +129,29 @@
 
 (deftest index-test
          (let [i (index)]
-           (is (satisfies? Index i))
-           (is (= i (:index @next-core)))
-           (is (nil? (:index @core)))))
+           (testing "ensure the index creation helper creates the index properly"
+             (is (satisfies? Index i))
+             (is (= i (:index @next-core)))
+             (is (nil? (:index @core))))
+           (testing "ensure the index is applied to the core properly during initial load"
+             (apply!)
+             (is (identical? i (:index @core))))
+           (testing "ensure we have the proper reference to the index after a reload"
+             (let [i' (index)]
+               (is (identical? i' (:index @next-core)))
+               (is (not (identical? i' (:index @core))))
+               (apply!)
+               (is (identical? i' (:index @core)))))))
 
 (deftest update-index-test
          (let [i (index)]
            (apply!)
            (i {:service 1 :state "ok" :time 0})
-           (is (= (seq i) [{:service 1 :state "ok" :time 0}]))))
+           (is (= (seq i) [{:service 1 :state "ok" :time 0}]))
+           (testing "Ensure that accessible index persists reloads"
+             (let [i' (index)]
+               (apply!)
+               (is (= (seq i') [{:service 1 :state "ok" :time 0}]))))))
 
 (deftest delete-from-index-test
          (let [i (index)
