@@ -39,6 +39,7 @@
         [riemann.hipchat :only [hipchat]]
         [riemann.slack :only [slack]]
         [riemann.stackdriver :only [stackdriver]]
+        [riemann.cloudwatch :only [cloudwatch]]
         [cemerick.pomegranate :only [add-dependencies]]
         [riemann.shinken :only [shinken]]
 	[riemann.xymon :only [xymon]]
