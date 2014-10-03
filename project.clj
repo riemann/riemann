@@ -42,6 +42,7 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
+    [amazonica "0.2.26"]
     [capacitor "0.2.2"
      :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
@@ -65,6 +66,7 @@
                    :bench :bench
                    :focus :focus
                    :slack :slack
+                   :cloudwatch :cloudwatch
                    :stackdriver :stackdriver
 		   :xymon :xymon
                    :shinken :shinken
