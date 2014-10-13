@@ -43,6 +43,7 @@
         [cemerick.pomegranate :only [add-dependencies]]
         [riemann.shinken :only [shinken]]
 	[riemann.xymon :only [xymon]]
+        [riemann.mailgun :only [mailgun]]
         riemann.streams))
 
 (def core "The currently running core."
