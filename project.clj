@@ -13,16 +13,12 @@
     [org.clojure/algo.generic "0.1.2"]
     [org.clojure/clojure "1.6.0"]
     [org.clojure/math.numeric-tower "0.0.4"]
-    [org.clojure/tools.logging "0.2.6"]
+    [org.clojure/tools.logging "0.3.1"]
     [org.clojure/tools.nrepl "0.2.3"]
     [org.clojure/core.cache "0.6.3"]
     [org.clojure/java.classpath "0.2.2"]
-    [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
-                                       javax.jms/jms
-                                       com.sun.jdmk/jmxtools
-                                       com.sun.jmx/jmxri]]
-    [net.logstash.log4j/jsonevent-layout "1.5"]
     [com.cemerick/pomegranate "0.3.0"]
+    [org.spootnik/logconfig "0.7.3"]
     [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
@@ -34,9 +30,7 @@
     [com.amazonaws/aws-java-sdk "1.7.5"]
     [interval-metrics "1.0.0"]
     [io.netty/netty "3.8.0.Final"]
-    [log4j/apache-log4j-extras "1.0"]
     [org.antlr/antlr "3.2"]
-    [org.slf4j/slf4j-log4j12 "1.7.7"]
     [riemann-clojure-client "0.2.10"]
     [slingshot "0.10.3"]
     [clj-campfire "2.2.0"]
