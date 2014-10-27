@@ -79,13 +79,16 @@
   "
   ([account_name token username channel] (slack {:account account_name, :token token}
                                                 {:username username, :channel channel}))
-  ([{:keys [account token]} {:keys [username channel icon formatter] :or {formatter default-formatter}}]
+  ([{:keys [webhook_uri account token]}
+    {:keys [username channel icon formatter] :or {formatter default-formatter}}]
    (fn [events]
      (let [{:keys [text attachments] :as result} (formatter events)
            icon (:icon result (or icon ":warning:"))
            channel (:channel result channel)
            username (:username result username)]
-       (client/post (str "https://" account ".slack.com/services/hooks/incoming-webhook?token=" token)
+       (client/post (if webhook_uri
+                      webhook_uri
+                      (str "https://" account ".slack.com/services/hooks/incoming-webhook?token=" token))
                     {:form-params
                      {:payload (json/generate-string
                                  (merge
