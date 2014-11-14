@@ -17,15 +17,15 @@
 (deftest ^:opsgenie ^:integration test-resolve
   (let [og (opsgenie service-key recipients)]
     ((:resolve og) {:host "localhost"
-                  :service "opsgenie notification"
-                  :description "Testing resolving event"
-                  :metric 42
-                  :state "ok"})))
+                    :service "opsgenie notification"
+                    :description "Testing resolving event"
+                    :metric 42
+                    :state "ok"})))
 
 (deftest ^:opsgenie ^:integration test-trigger
   (let [og (opsgenie service-key recipients)]
     ((:trigger og) {:host "localhost"
-                  :service "opsgenie notification"
-                  :description "Testing triggering event"
-                  :metric 20
-                  :state "error"})))
+                    :service "opsgenie notification"
+                    :description "Testing triggering event"
+                    :metric 20
+                    :state "error"})))
