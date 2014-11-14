@@ -18,12 +18,23 @@
                  :throw-entire-message? true}))
 
 (defn- message
+  "Generate description based on event.
+  Because service might be quite long and opsgenie limits message, it
+  pulls more important info into beginning of the string"
+  [event]
+  (str (:host event)
+       ": [" (:state event) "] "
+       (:service event)))
+
+(defn- description
   "Generate message based on event"
   [event]
-  (str (:host event) " "
-       (:service event) " is "
-       (:state event) " ("
-       (:metric event) ")"))
+  (str
+   "Host: " (:host event)
+   " \nService: " (:service event)
+   " \nState: " (:state event)
+   " \nMetric: " (:metric event)
+   " \nDescription: " (:description event)))
 
 (defn- api-alias
   "Generate OpsGenie alias based on event"
@@ -36,6 +47,7 @@
   [api-key event recipients]
   (post alerts-url (json/generate-string
                     {:message (message event)
+                     :description (description event)
                      :apiKey api-key
                      :alias (api-alias event)
                      :recipients recipients})))
