@@ -2081,41 +2081,6 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   </div>
 <div>
 
-<h3>Application specific host grouping</h3>
-<p>
-It is generally desirable to group all the hosts for a specific service into a
-single dashboard view. For example, all the web servers are in single view while
-all the database servers are in another view.
-</p>
-
-<p>
-This is usually not an issue when you are sending custom metrics using Riemann
-client. However, there are cases where you are using something that you do not
-control how the metrics are being sent. i.e., Riemann-tools.
-</p>
-
-<p>
-Since Riemann-tools scripts are application agnostic, in order for the
-dashboard view to group hosts, we must inject some application specific
-information into the tags field. Tags is a collection of arbitrary strings.
-In the case of Riemann-tools scripts you can pass in arbitrary strings on the
-command line.
-</p>
-
-<p>
-  <code>riemann-health --host 127.0.0.1 --tag "prod" --tag "webserver"</code>
-</p>
-
-<p>In this case, the above health check will include two extra tags "prod" and
-"webserver". On the dashboard side, you can create a grid view which contains
-the following query: </p>
-
-<p><code>(tagged "prod" and tagged "webserver")</code></p>
-
-<p>The tagged keyword in the query ensures that the given tag is present in the
-list of tags for a given event. This query will return only "prod" and
-"webservers" hosts.</p>
-
 <h2>Integrating with other systems</h2>
 
 <div class="row">
