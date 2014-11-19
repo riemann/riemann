@@ -2200,12 +2200,12 @@ confirmation message with either an acknowledgement or an error. Check the `ok`
 boolean in the message; if false, message.error will be a descriptive
 string.</p>
 
-<p>Because protocol buffers is strongly typed, the metric of an event is
-represented as one of metric_d (floating point 64-bit), metric_f (floating
-point 32-bit), or metric_sint64 (64-bit signed integer). Your client should emit
-and consume all of these types. For compatibility with older versions of
-Riemann, you may *also* emit a metric_f alongside the normal type; newer
-versions of Riemann will prefer the higher-resolution types.</p>
+<p>Because protocol buffers is a strongly typed protocol, the metric of an
+event is represented as one of metric_d (floating point 64-bit), metric_f
+(floating point 32-bit), or metric_sint64 (64-bit signed integer). Your client
+should emit and consume all of these types. For compatibility with older
+versions of Riemann, you may *also* emit a metric_f alongside the normal type;
+newer versions of Riemann will prefer the higher-resolution types.</p>
 
 <p>Events are uniquely identified by host and service. Both allow null.
 Event.time is the time in unix epoch seconds and is optional. The server will
