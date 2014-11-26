@@ -1951,9 +1951,15 @@
 
   (project [(service \"enqueues\")
             (service \"dequeues\")]
-    (fn [[enq deq]]
-      (prn (/ (:metric enq)
-              (:metric deq)))))"
+    (smap folds/quotient
+      (with :service \"enqueues per dequeue\"
+        ...)))
+
+  Here we've combined separate events--enqueues and dequeues--into a single
+  event, using the folds/quotient function, which divides the first event's
+  metric by the second. Then we assigned a new service name to that resulting
+  event, and could subsequently filter based on the metric, assign different
+  states, graph, alert, etc."
   [basis & children]
   (let [wrapped (mapv (fn [expr] `(where ~expr)) basis)]
     `(project* ~wrapped ~@children)))
