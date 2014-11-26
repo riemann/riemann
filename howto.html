@@ -1454,6 +1454,30 @@ can decide whether an event is worthy of an alert by tagging it:</p>
   </div>
 </div>
 
+<h3>Combine events from different hosts and services</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Events arrive <i>independently</i> in Riemann, but each describes the
+    state of a service on some host over some <i>window</i> of time. Often, you
+    want to know how two services relate to one another right now. Riemann
+    provides two streams for this type of aggregation: coalesce and
+    project.</p>
+
+    <p>Use <a href="api/riemann.streams.html#var-project">project</a> when you
+    want to combine a fixed number of events, identified by arbitrary
+    predicates. For instance, you might want to know the ratio of <i>used</i>
+    gigabytes to <i>total</i> disk capacity, or the difference between
+    <i>enqueues</i> and <i>dequeues</i> in a queue.</p>
+
+    <p>Use <a href="api/riemann.streams.html#var-coalesce">coalesce</a> to get
+    snapshot of the most recent event from <i>every</i> host and service that
+    passes through that coalesce stream. Coalesce helps answer questions like
+    "what fraction of my API servers are running the most recent version", or
+    "what's the median queue depth across all queues in a given broker?"</p>
+  </div>
+</div>
+
 <h3>Change units</h3>
 
 <div class="row">
