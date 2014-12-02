@@ -49,12 +49,16 @@
   Takes your account name, webhook token, bot username and channel name.
   Returns a function that will post a message into slack.com channel:
 
-  (def credentials {:account \"some_org\", :token \"53CR3T\"}
+  (def credentials {:account \"some_org\", :token \"53CR3T\"})
   (def slacker (slack credentials {:username \"Riemann bot\"
                                    :channel \"#monitoring\"
                                    :icon \":smile:\"}))
 
   (by [:service] slacker)
+
+  Hint: token is the last part of the webhook URL that Slack gives you.
+  https://hooks.slack.com/services/QWERSAFG0/AFOIUYTQ48/120984SAFJSFR
+  Token in this case would be 120984SAFJSFR
 
   You can also supply a custom formatter for formatting events into Slack
   messages. Formatter result may contain:
