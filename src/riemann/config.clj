@@ -43,8 +43,9 @@
         [riemann.cloudwatch :only [cloudwatch]]
         [cemerick.pomegranate :only [add-dependencies]]
         [riemann.shinken :only [shinken]]
-	[riemann.xymon :only [xymon]]
+        [riemann.xymon :only [xymon]]
         [riemann.mailgun :only [mailgun]]
+        [riemann.twilio :only [twilio]]
         riemann.streams))
 
 (def core "The currently running core."
