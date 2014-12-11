@@ -15,7 +15,9 @@
   (release [pool thingy]
     "Returns a thingy to the pool.")
   (invalidate [pool thingy]
-    "Tell the pool a thingy is no longer valid."))
+    "Tell the pool a thingy is no longer valid.")
+  (is-empty? [pool]
+    "Tells if the pool is empty."))
 
 (defrecord FixedQueuePool [queue open close regenerate-interval]
   Pool
@@ -51,7 +53,9 @@
                 (try (close thingy)
                   (catch Throwable t
                     (warn t "Closing" thingy "threw")))
-                (future (grow this)))))
+                (future (grow this))))
+  (is-empty? [this]
+          (if (= (.size ^LinkedBlockingQueue queue) 0) true false)))
 
 (defn fixed-pool
   "A fixed pool of thingys. (open) is called to generate a thingy. (close
@@ -104,7 +108,9 @@
   [[thingy pool timeout] & body]
   ; Destructuring bind could change nil to a, say, vector, and cause
   ; unbalanced claim/release.
-  `(let [thingy# (claim ~pool ~timeout)
+  `(info "Pool empty? " (is-empty? ~pool))
+  `(when (not (is-empty? ~pool))
+  (let [thingy# (claim ~pool ~timeout)
          ~thingy thingy#]
      (try
        (let [res# (do ~@body)]
@@ -112,4 +118,4 @@
          res#)
        (catch Throwable t#
          (invalidate ~pool thingy#)
-         (throw t#)))))
+         (throw t#))))))
