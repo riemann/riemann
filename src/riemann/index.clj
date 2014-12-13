@@ -51,6 +51,16 @@
           (if (and host service)
             [(last host) (last service)]))))))
 
+(defn query-with-limits
+  "Check if the query is limited"
+  [query-ast]
+  (if (and (list? query-ast)
+           (= 'limit (first query-ast)))
+    (let [limit (second query-ast)
+          q (first (drop 2 query-ast))]
+      [q limit])
+    [query-ast nil]))
+
 (defn nbhm-index
   "Create a new nonblockinghashmap backed index"
   []
@@ -81,9 +91,12 @@
         (if-let [[host service] (query-for-host-and-service query-ast)]
           (when-let [e (.lookup this host service)]
             (list e))
-          (let [matching (query/fun query-ast)]
-            (filter matching (.values hm)))))
-
+          (let [[query limit] (query-with-limits query-ast)
+                matching (query/fun query)
+                result (filter matching (.values hm))]
+            (if limit
+              (take limit result)
+              result))))
 
       (update [this event]
         (if (= "expired" (:state event))

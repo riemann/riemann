@@ -18,6 +18,7 @@ tokens {
 	GREATER = '>';
 	GREATER_EQUAL = '>=';
 	TAGGED = 'tagged';
+	LIMIT = 'limit';
 }
 
 @header		{package riemann;}
@@ -48,6 +49,7 @@ simple	:	( t | f | nil
 		| greater_equal
 		| not_equal
 		| equal
+		| limit
 		);
 
 approximately
@@ -65,6 +67,8 @@ not_equal
 equal	:	field WS* EQUAL^ WS* value;
 
 tagged	:	TAGGED^ WS* String;
+
+limit	:	LIMIT^ WS* INT WS* primary;
 
 value	: 	(String | t | f | nil | INT | FLOAT);
 

@@ -41,11 +41,17 @@
 
 (deftest nhbm-search
          (let [i (wrap-index (index))]
-           (i {:host 1 :time 0})
+           (i {:host 1 :service "paw" :time 0})
            (i {:host 2 :service "meow" :time 0})
            (i {:host 3 :service "mrrrow" :time 0})
+           (i {:host 1 :service "maw" :time 0})
            (is (= (set (search i (ast "host >= 2 and not service =~ \"%r%\"")))
-                  #{{:host 2 :service "meow" :time 0}}))))
+                  #{{:host 2 :service "meow" :time 0}}))
+           (is (= (set (search i (ast "host = 1")))
+                  #{{:host 1 :time 0 :service "paw"}
+                    {:host 1 :time 0 :service "maw"}}))
+           (is (= (count (set (search i (ast "limit 1 host = 1"))))
+                  1))))
 
 (deftest nhbm-expire
          (let [i (wrap-index (index))]

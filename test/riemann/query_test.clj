@@ -76,6 +76,10 @@
               '(not (and (or (= host 1)
                              (= host 2))
                          (= host 3)))
+
+              ;; Limit
+              "limit 2 state = 2"
+              '(limit 2 (= state 2))
               ))
 
 (defn f [s good evil]
