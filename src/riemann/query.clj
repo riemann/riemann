@@ -111,6 +111,8 @@
                                    time        (:time event)
                                    tags        (:tags event)
                                    ttl         (:ttl event)
+                                   limit       (fn [n limit-result]
+                                                 limit-result)
                                    member?     riemann.common/member?]
                             ast)))]
       (swap! fun-cache cache/miss ast fun)
