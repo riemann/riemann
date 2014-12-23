@@ -235,9 +235,11 @@
   a single variable.
 
   (sdo prn (rate 5 index))"
-  [& children]
-  (fn stream [event]
-    (call-rescue event children)))
+  ([] bit-bucket)
+  ([child] child)
+  ([child & children]
+     (fn stream [event]
+       (call-rescue event (cons child children)))))
 
 (defn stream
   [& args]

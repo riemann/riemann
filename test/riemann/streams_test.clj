@@ -78,6 +78,11 @@
         add2    #(swap! vals2 conj %)]
     (run-stream (sdo add1 add2) [1 2 3])
     (is (= @vals1 [1 2 3]))
+    (is (= @vals2 [1 2 3]))
+    (run-stream (sdo add1) [4 5 6])
+    (is (= @vals1 [1 2 3 4 5 6]))
+    (run-stream (sdo) [6 7 8])
+    (is (= @vals1 [1 2 3 4 5 6]))
     (is (= @vals2 [1 2 3]))))
 
 (deftest exception-stream-test
