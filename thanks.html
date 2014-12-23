@@ -52,6 +52,10 @@ layout: default
     <div class="twelvecol">
       <h2>Contributors to the next release</h2>
 
+      <p>Pedro Araújo (pharaujo) wrote an OpenTSDB server for Riemann! Wow!</p>
+
+      <p>Brian Jackson (iggy) expanded the docs for the slack integration.</p>
+
       <p>Colin Alston (calston) fixed a typo in the slack docs.</p>
 
       <p>John D'Agostino (johndagostino) added a Twilio adapter.</p>
@@ -64,7 +68,9 @@ layout: default
       and daemon liveness.</p>
 
       <p>Gergely Nagy (algernon) expanded riemann-riak-client to support
-      node_gets_set, node_puts_set, and objsize stats.</p>
+      node_gets_set, node_puts_set, and objsize stats. Gergely made a
+      performance improvement to (sdo) which removes a stack frame and catch
+      target for zero and single-arity forms.</p>
 
       <p>Katelyn Perry (kjperry) fixed plural agreement in Riemann-dash's
       socket errors.</p>
@@ -83,7 +89,8 @@ layout: default
       <p>Marc Fournier (mfournier) added a dial view for gauges, and fixed a
       misclosed HTML tag in the dash. He also repaired an incorrect git tag,
       added an example rackup config, and fixed 404s for images when the dash
-      isn't served on /.</p>
+      isn't served on /. Then he got Wireshark protocol dissector support built
+      for Riemann!</p>
 
       <p>Nebojša Stričević (strika) added Logentries integration.<p>
 
