@@ -12,6 +12,7 @@
             [riemann.transport.websockets :as websockets]
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
+            [riemann.transport.opentsdb   :as opentsdb]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
@@ -136,6 +137,13 @@
   (graphite-server {:port 2222})"
   [& opts]
   (service! (graphite/graphite-server (kwargs-or-map opts))))
+
+(defn opentsdb-server
+  "Add a new OpenTSDB TCP server with opts to the default core.
+
+  (opentsdb-server {:port 4242})"
+  [& opts]
+  (service! (opentsdb/opentsdb-server (kwargs-or-map opts))))
 
 (defn udp-server
   "Add a new UDP server with opts to the default core.
