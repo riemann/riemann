@@ -57,6 +57,7 @@
       "tagged"      (list 'when 'tags (list 'member? (first kids) 'tags))
       "("           :useless
       ")"           :useless
+      "limit"       (apply list 'limit kids)
       "nil"         nil
       "null"        nil
       "true"        true
@@ -110,6 +111,8 @@
                                    time        (:time event)
                                    tags        (:tags event)
                                    ttl         (:ttl event)
+                                   limit       (fn [n limit-result]
+                                                 limit-result)
                                    member?     riemann.common/member?]
                             ast)))]
       (swap! fun-cache cache/miss ast fun)

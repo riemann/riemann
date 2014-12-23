@@ -1,4 +1,4 @@
-// $ANTLR 3.2 Sep 23, 2009 14:05:07 src/riemann/Query.g 2013-12-02 00:16:46
+// $ANTLR 3.2 debian-10 src/riemann/Query.g 2014-12-13 12:59:07
 package riemann;
 
 import org.antlr.runtime.*;
@@ -8,40 +8,41 @@ import java.util.ArrayList;
 
 public class QueryLexer extends Lexer {
     public static final int LESSER_EQUAL=12;
-    public static final int EXPONENT=21;
+    public static final int EXPONENT=22;
     public static final int T__29=29;
     public static final int T__28=28;
     public static final int T__27=27;
     public static final int T__26=26;
-    public static final int T__25=25;
+    public static final int LIMIT=16;
     public static final int APPROXIMATELY=7;
-    public static final int FLOAT=19;
-    public static final int INT=18;
+    public static final int FLOAT=20;
+    public static final int INT=19;
     public static final int NOT=6;
-    public static final int ID=20;
+    public static final int ID=21;
     public static final int AND=4;
     public static final int EOF=-1;
-    public static final int HexDigit=24;
+    public static final int HexDigit=25;
     public static final int T__30=30;
     public static final int T__31=31;
     public static final int T__32=32;
     public static final int T__33=33;
     public static final int LESSER=11;
     public static final int GREATER=13;
-    public static final int WS=16;
+    public static final int WS=17;
     public static final int T__34=34;
     public static final int T__35=35;
     public static final int T__36=36;
     public static final int T__37=37;
     public static final int T__38=38;
     public static final int NOT_EQUAL=9;
+    public static final int T__39=39;
     public static final int TAGGED=15;
-    public static final int UnicodeEscape=23;
+    public static final int UnicodeEscape=24;
     public static final int EQUAL=10;
     public static final int OR=5;
-    public static final int String=17;
+    public static final int String=18;
     public static final int GREATER_EQUAL=14;
-    public static final int EscapeSequence=22;
+    public static final int EscapeSequence=23;
     public static final int REGEX_MATCH=8;
 
     // delegates
@@ -306,15 +307,16 @@ public class QueryLexer extends Lexer {
     }
     // $ANTLR end "TAGGED"
 
-    // $ANTLR start "T__25"
-    public final void mT__25() throws RecognitionException {
+    // $ANTLR start "LIMIT"
+    public final void mLIMIT() throws RecognitionException {
         try {
-            int _type = T__25;
+            int _type = LIMIT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:17:7: ( '(' )
-            // src/riemann/Query.g:17:9: '('
+            // src/riemann/Query.g:17:7: ( 'limit' )
+            // src/riemann/Query.g:17:9: 'limit'
             {
-            match('('); 
+            match("limit"); 
+
 
             }
 
@@ -324,17 +326,17 @@ public class QueryLexer extends Lexer {
         finally {
         }
     }
-    // $ANTLR end "T__25"
+    // $ANTLR end "LIMIT"
 
     // $ANTLR start "T__26"
     public final void mT__26() throws RecognitionException {
         try {
             int _type = T__26;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:18:7: ( ')' )
-            // src/riemann/Query.g:18:9: ')'
+            // src/riemann/Query.g:18:7: ( '(' )
+            // src/riemann/Query.g:18:9: '('
             {
-            match(')'); 
+            match('('); 
 
             }
 
@@ -351,11 +353,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__27;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:19:7: ( 'true' )
-            // src/riemann/Query.g:19:9: 'true'
+            // src/riemann/Query.g:19:7: ( ')' )
+            // src/riemann/Query.g:19:9: ')'
             {
-            match("true"); 
-
+            match(')'); 
 
             }
 
@@ -372,10 +373,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__28;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:20:7: ( 'false' )
-            // src/riemann/Query.g:20:9: 'false'
+            // src/riemann/Query.g:20:7: ( 'true' )
+            // src/riemann/Query.g:20:9: 'true'
             {
-            match("false"); 
+            match("true"); 
 
 
             }
@@ -393,10 +394,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__29;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:21:7: ( 'null' )
-            // src/riemann/Query.g:21:9: 'null'
+            // src/riemann/Query.g:21:7: ( 'false' )
+            // src/riemann/Query.g:21:9: 'false'
             {
-            match("null"); 
+            match("false"); 
 
 
             }
@@ -414,10 +415,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__30;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:22:7: ( 'nil' )
-            // src/riemann/Query.g:22:9: 'nil'
+            // src/riemann/Query.g:22:7: ( 'null' )
+            // src/riemann/Query.g:22:9: 'null'
             {
-            match("nil"); 
+            match("null"); 
 
 
             }
@@ -435,10 +436,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__31;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:23:7: ( 'host' )
-            // src/riemann/Query.g:23:9: 'host'
+            // src/riemann/Query.g:23:7: ( 'nil' )
+            // src/riemann/Query.g:23:9: 'nil'
             {
-            match("host"); 
+            match("nil"); 
 
 
             }
@@ -456,10 +457,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__32;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:24:7: ( 'service' )
-            // src/riemann/Query.g:24:9: 'service'
+            // src/riemann/Query.g:24:7: ( 'host' )
+            // src/riemann/Query.g:24:9: 'host'
             {
-            match("service"); 
+            match("host"); 
 
 
             }
@@ -477,10 +478,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__33;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:25:7: ( 'state' )
-            // src/riemann/Query.g:25:9: 'state'
+            // src/riemann/Query.g:25:7: ( 'service' )
+            // src/riemann/Query.g:25:9: 'service'
             {
-            match("state"); 
+            match("service"); 
 
 
             }
@@ -498,10 +499,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__34;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:26:7: ( 'description' )
-            // src/riemann/Query.g:26:9: 'description'
+            // src/riemann/Query.g:26:7: ( 'state' )
+            // src/riemann/Query.g:26:9: 'state'
             {
-            match("description"); 
+            match("state"); 
 
 
             }
@@ -519,10 +520,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__35;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:27:7: ( 'metric_f' )
-            // src/riemann/Query.g:27:9: 'metric_f'
+            // src/riemann/Query.g:27:7: ( 'description' )
+            // src/riemann/Query.g:27:9: 'description'
             {
-            match("metric_f"); 
+            match("description"); 
 
 
             }
@@ -540,10 +541,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__36;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:28:7: ( 'metric' )
-            // src/riemann/Query.g:28:9: 'metric'
+            // src/riemann/Query.g:28:7: ( 'metric_f' )
+            // src/riemann/Query.g:28:9: 'metric_f'
             {
-            match("metric"); 
+            match("metric_f"); 
 
 
             }
@@ -561,10 +562,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__37;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:29:7: ( 'ttl' )
-            // src/riemann/Query.g:29:9: 'ttl'
+            // src/riemann/Query.g:29:7: ( 'metric' )
+            // src/riemann/Query.g:29:9: 'metric'
             {
-            match("ttl"); 
+            match("metric"); 
 
 
             }
@@ -582,10 +583,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = T__38;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:30:7: ( 'time' )
-            // src/riemann/Query.g:30:9: 'time'
+            // src/riemann/Query.g:30:7: ( 'ttl' )
+            // src/riemann/Query.g:30:9: 'ttl'
             {
-            match("time"); 
+            match("ttl"); 
 
 
             }
@@ -598,13 +599,34 @@ public class QueryLexer extends Lexer {
     }
     // $ANTLR end "T__38"
 
+    // $ANTLR start "T__39"
+    public final void mT__39() throws RecognitionException {
+        try {
+            int _type = T__39;
+            int _channel = DEFAULT_TOKEN_CHANNEL;
+            // src/riemann/Query.g:31:7: ( 'time' )
+            // src/riemann/Query.g:31:9: 'time'
+            {
+            match("time"); 
+
+
+            }
+
+            state.type = _type;
+            state.channel = _channel;
+        }
+        finally {
+        }
+    }
+    // $ANTLR end "T__39"
+
     // $ANTLR start "ID"
     public final void mID() throws RecognitionException {
         try {
             int _type = ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:85:5: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
-            // src/riemann/Query.g:85:7: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // src/riemann/Query.g:89:5: ( ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )* )
+            // src/riemann/Query.g:89:7: ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             {
             if ( (input.LA(1)>='A' && input.LA(1)<='Z')||input.LA(1)=='_'||(input.LA(1)>='a' && input.LA(1)<='z') ) {
                 input.consume();
@@ -615,7 +637,7 @@ public class QueryLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // src/riemann/Query.g:85:31: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
+            // src/riemann/Query.g:89:31: ( 'a' .. 'z' | 'A' .. 'Z' | '0' .. '9' | '_' )*
             loop1:
             do {
                 int alt1=2;
@@ -664,10 +686,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = INT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:88:5: ( ( '-' )? ( '0' .. '9' )+ )
-            // src/riemann/Query.g:88:7: ( '-' )? ( '0' .. '9' )+
+            // src/riemann/Query.g:92:5: ( ( '-' )? ( '0' .. '9' )+ )
+            // src/riemann/Query.g:92:7: ( '-' )? ( '0' .. '9' )+
             {
-            // src/riemann/Query.g:88:7: ( '-' )?
+            // src/riemann/Query.g:92:7: ( '-' )?
             int alt2=2;
             int LA2_0 = input.LA(1);
 
@@ -676,7 +698,7 @@ public class QueryLexer extends Lexer {
             }
             switch (alt2) {
                 case 1 :
-                    // src/riemann/Query.g:88:7: '-'
+                    // src/riemann/Query.g:92:7: '-'
                     {
                     match('-'); 
 
@@ -685,7 +707,7 @@ public class QueryLexer extends Lexer {
 
             }
 
-            // src/riemann/Query.g:88:12: ( '0' .. '9' )+
+            // src/riemann/Query.g:92:12: ( '0' .. '9' )+
             int cnt3=0;
             loop3:
             do {
@@ -699,7 +721,7 @@ public class QueryLexer extends Lexer {
 
                 switch (alt3) {
             	case 1 :
-            	    // src/riemann/Query.g:88:12: '0' .. '9'
+            	    // src/riemann/Query.g:92:12: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
@@ -731,10 +753,10 @@ public class QueryLexer extends Lexer {
         try {
             int _type = FLOAT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:92:5: ( ( '-' )? ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( EXPONENT )? )
-            // src/riemann/Query.g:92:9: ( '-' )? ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( EXPONENT )?
+            // src/riemann/Query.g:96:5: ( ( '-' )? ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( EXPONENT )? )
+            // src/riemann/Query.g:96:9: ( '-' )? ( '0' .. '9' )+ ( '.' ( '0' .. '9' )* )? ( EXPONENT )?
             {
-            // src/riemann/Query.g:92:9: ( '-' )?
+            // src/riemann/Query.g:96:9: ( '-' )?
             int alt4=2;
             int LA4_0 = input.LA(1);
 
@@ -743,7 +765,7 @@ public class QueryLexer extends Lexer {
             }
             switch (alt4) {
                 case 1 :
-                    // src/riemann/Query.g:92:9: '-'
+                    // src/riemann/Query.g:96:9: '-'
                     {
                     match('-'); 
 
@@ -752,7 +774,7 @@ public class QueryLexer extends Lexer {
 
             }
 
-            // src/riemann/Query.g:92:14: ( '0' .. '9' )+
+            // src/riemann/Query.g:96:14: ( '0' .. '9' )+
             int cnt5=0;
             loop5:
             do {
@@ -766,7 +788,7 @@ public class QueryLexer extends Lexer {
 
                 switch (alt5) {
             	case 1 :
-            	    // src/riemann/Query.g:92:15: '0' .. '9'
+            	    // src/riemann/Query.g:96:15: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
@@ -782,7 +804,7 @@ public class QueryLexer extends Lexer {
                 cnt5++;
             } while (true);
 
-            // src/riemann/Query.g:92:26: ( '.' ( '0' .. '9' )* )?
+            // src/riemann/Query.g:96:26: ( '.' ( '0' .. '9' )* )?
             int alt7=2;
             int LA7_0 = input.LA(1);
 
@@ -791,10 +813,10 @@ public class QueryLexer extends Lexer {
             }
             switch (alt7) {
                 case 1 :
-                    // src/riemann/Query.g:92:27: '.' ( '0' .. '9' )*
+                    // src/riemann/Query.g:96:27: '.' ( '0' .. '9' )*
                     {
                     match('.'); 
-                    // src/riemann/Query.g:92:31: ( '0' .. '9' )*
+                    // src/riemann/Query.g:96:31: ( '0' .. '9' )*
                     loop6:
                     do {
                         int alt6=2;
@@ -807,7 +829,7 @@ public class QueryLexer extends Lexer {
 
                         switch (alt6) {
                     	case 1 :
-                    	    // src/riemann/Query.g:92:32: '0' .. '9'
+                    	    // src/riemann/Query.g:96:32: '0' .. '9'
                     	    {
                     	    matchRange('0','9'); 
 
@@ -825,7 +847,7 @@ public class QueryLexer extends Lexer {
 
             }
 
-            // src/riemann/Query.g:92:45: ( EXPONENT )?
+            // src/riemann/Query.g:96:45: ( EXPONENT )?
             int alt8=2;
             int LA8_0 = input.LA(1);
 
@@ -834,7 +856,7 @@ public class QueryLexer extends Lexer {
             }
             switch (alt8) {
                 case 1 :
-                    // src/riemann/Query.g:92:45: EXPONENT
+                    // src/riemann/Query.g:96:45: EXPONENT
                     {
                     mEXPONENT(); 
 
@@ -859,8 +881,8 @@ public class QueryLexer extends Lexer {
         try {
             int _type = WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:95:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
-            // src/riemann/Query.g:95:9: ( ' ' | '\\t' | '\\r' | '\\n' )
+            // src/riemann/Query.g:99:5: ( ( ' ' | '\\t' | '\\r' | '\\n' ) )
+            // src/riemann/Query.g:99:9: ( ' ' | '\\t' | '\\r' | '\\n' )
             {
             if ( (input.LA(1)>='\t' && input.LA(1)<='\n')||input.LA(1)=='\r'||input.LA(1)==' ' ) {
                 input.consume();
@@ -886,8 +908,8 @@ public class QueryLexer extends Lexer {
     // $ANTLR start "EXPONENT"
     public final void mEXPONENT() throws RecognitionException {
         try {
-            // src/riemann/Query.g:103:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
-            // src/riemann/Query.g:103:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
+            // src/riemann/Query.g:107:10: ( ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+ )
+            // src/riemann/Query.g:107:12: ( 'e' | 'E' ) ( '+' | '-' )? ( '0' .. '9' )+
             {
             if ( input.LA(1)=='E'||input.LA(1)=='e' ) {
                 input.consume();
@@ -898,7 +920,7 @@ public class QueryLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // src/riemann/Query.g:103:22: ( '+' | '-' )?
+            // src/riemann/Query.g:107:22: ( '+' | '-' )?
             int alt9=2;
             int LA9_0 = input.LA(1);
 
@@ -924,7 +946,7 @@ public class QueryLexer extends Lexer {
 
             }
 
-            // src/riemann/Query.g:103:33: ( '0' .. '9' )+
+            // src/riemann/Query.g:107:33: ( '0' .. '9' )+
             int cnt10=0;
             loop10:
             do {
@@ -938,7 +960,7 @@ public class QueryLexer extends Lexer {
 
                 switch (alt10) {
             	case 1 :
-            	    // src/riemann/Query.g:103:34: '0' .. '9'
+            	    // src/riemann/Query.g:107:34: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
@@ -968,11 +990,11 @@ public class QueryLexer extends Lexer {
         try {
             int _type = String;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // src/riemann/Query.g:105:9: ( '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"' )
-            // src/riemann/Query.g:108:5: '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"'
+            // src/riemann/Query.g:109:9: ( '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"' )
+            // src/riemann/Query.g:112:5: '\"' ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )* '\"'
             {
             match('\"'); 
-            // src/riemann/Query.g:108:9: ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )*
+            // src/riemann/Query.g:112:9: ( EscapeSequence | ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' ) )*
             loop11:
             do {
                 int alt11=3;
@@ -988,14 +1010,14 @@ public class QueryLexer extends Lexer {
 
                 switch (alt11) {
             	case 1 :
-            	    // src/riemann/Query.g:108:11: EscapeSequence
+            	    // src/riemann/Query.g:112:11: EscapeSequence
             	    {
             	    mEscapeSequence(); 
 
             	    }
             	    break;
             	case 2 :
-            	    // src/riemann/Query.g:108:28: ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' )
+            	    // src/riemann/Query.g:112:28: ~ ( '\\u0000' .. '\\u001f' | '\\\\' | '\\\"' )
             	    {
             	    if ( (input.LA(1)>=' ' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
             	        input.consume();
@@ -1030,11 +1052,11 @@ public class QueryLexer extends Lexer {
     // $ANTLR start "EscapeSequence"
     public final void mEscapeSequence() throws RecognitionException {
         try {
-            // src/riemann/Query.g:112:9: ( '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' ) )
-            // src/riemann/Query.g:112:13: '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
+            // src/riemann/Query.g:116:9: ( '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' ) )
+            // src/riemann/Query.g:116:13: '\\\\' ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
             {
             match('\\'); 
-            // src/riemann/Query.g:112:18: ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
+            // src/riemann/Query.g:116:18: ( UnicodeEscape | 'b' | 't' | 'n' | 'f' | 'r' | '\\\"' | '\\\\' )
             int alt12=8;
             switch ( input.LA(1) ) {
             case 'u':
@@ -1086,56 +1108,56 @@ public class QueryLexer extends Lexer {
 
             switch (alt12) {
                 case 1 :
-                    // src/riemann/Query.g:112:19: UnicodeEscape
+                    // src/riemann/Query.g:116:19: UnicodeEscape
                     {
                     mUnicodeEscape(); 
 
                     }
                     break;
                 case 2 :
-                    // src/riemann/Query.g:112:34: 'b'
+                    // src/riemann/Query.g:116:34: 'b'
                     {
                     match('b'); 
 
                     }
                     break;
                 case 3 :
-                    // src/riemann/Query.g:112:38: 't'
+                    // src/riemann/Query.g:116:38: 't'
                     {
                     match('t'); 
 
                     }
                     break;
                 case 4 :
-                    // src/riemann/Query.g:112:42: 'n'
+                    // src/riemann/Query.g:116:42: 'n'
                     {
                     match('n'); 
 
                     }
                     break;
                 case 5 :
-                    // src/riemann/Query.g:112:46: 'f'
+                    // src/riemann/Query.g:116:46: 'f'
                     {
                     match('f'); 
 
                     }
                     break;
                 case 6 :
-                    // src/riemann/Query.g:112:50: 'r'
+                    // src/riemann/Query.g:116:50: 'r'
                     {
                     match('r'); 
 
                     }
                     break;
                 case 7 :
-                    // src/riemann/Query.g:112:54: '\\\"'
+                    // src/riemann/Query.g:116:54: '\\\"'
                     {
                     match('\"'); 
 
                     }
                     break;
                 case 8 :
-                    // src/riemann/Query.g:112:59: '\\\\'
+                    // src/riemann/Query.g:116:59: '\\\\'
                     {
                     match('\\'); 
 
@@ -1156,8 +1178,8 @@ public class QueryLexer extends Lexer {
     // $ANTLR start "UnicodeEscape"
     public final void mUnicodeEscape() throws RecognitionException {
         try {
-            // src/riemann/Query.g:116:5: ( 'u' HexDigit HexDigit HexDigit HexDigit )
-            // src/riemann/Query.g:116:7: 'u' HexDigit HexDigit HexDigit HexDigit
+            // src/riemann/Query.g:120:5: ( 'u' HexDigit HexDigit HexDigit HexDigit )
+            // src/riemann/Query.g:120:7: 'u' HexDigit HexDigit HexDigit HexDigit
             {
             match('u'); 
             mHexDigit(); 
@@ -1176,7 +1198,7 @@ public class QueryLexer extends Lexer {
     // $ANTLR start "HexDigit"
     public final void mHexDigit() throws RecognitionException {
         try {
-            // src/riemann/Query.g:120:5: ( '0' .. '9' | 'A' .. 'F' | 'a' .. 'f' )
+            // src/riemann/Query.g:124:5: ( '0' .. '9' | 'A' .. 'F' | 'a' .. 'f' )
             // src/riemann/Query.g:
             {
             if ( (input.LA(1)>='0' && input.LA(1)<='9')||(input.LA(1)>='A' && input.LA(1)<='F')||(input.LA(1)>='a' && input.LA(1)<='f') ) {
@@ -1198,8 +1220,8 @@ public class QueryLexer extends Lexer {
     // $ANTLR end "HexDigit"
 
     public void mTokens() throws RecognitionException {
-        // src/riemann/Query.g:1:8: ( AND | OR | NOT | APPROXIMATELY | REGEX_MATCH | NOT_EQUAL | EQUAL | LESSER | LESSER_EQUAL | GREATER | GREATER_EQUAL | TAGGED | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | ID | INT | FLOAT | WS | String )
-        int alt13=31;
+        // src/riemann/Query.g:1:8: ( AND | OR | NOT | APPROXIMATELY | REGEX_MATCH | NOT_EQUAL | EQUAL | LESSER | LESSER_EQUAL | GREATER | GREATER_EQUAL | TAGGED | LIMIT | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | ID | INT | FLOAT | WS | String )
+        int alt13=32;
         alt13 = dfa13.predict(input);
         switch (alt13) {
             case 1 :
@@ -1287,9 +1309,9 @@ public class QueryLexer extends Lexer {
                 }
                 break;
             case 13 :
-                // src/riemann/Query.g:1:112: T__25
+                // src/riemann/Query.g:1:112: LIMIT
                 {
-                mT__25(); 
+                mLIMIT(); 
 
                 }
                 break;
@@ -1385,35 +1407,42 @@ public class QueryLexer extends Lexer {
                 }
                 break;
             case 27 :
-                // src/riemann/Query.g:1:196: ID
+                // src/riemann/Query.g:1:196: T__39
+                {
+                mT__39(); 
+
+                }
+                break;
+            case 28 :
+                // src/riemann/Query.g:1:202: ID
                 {
                 mID(); 
 
                 }
                 break;
-            case 28 :
-                // src/riemann/Query.g:1:199: INT
+            case 29 :
+                // src/riemann/Query.g:1:205: INT
                 {
                 mINT(); 
 
                 }
                 break;
-            case 29 :
-                // src/riemann/Query.g:1:203: FLOAT
+            case 30 :
+                // src/riemann/Query.g:1:209: FLOAT
                 {
                 mFLOAT(); 
 
                 }
                 break;
-            case 30 :
-                // src/riemann/Query.g:1:209: WS
+            case 31 :
+                // src/riemann/Query.g:1:215: WS
                 {
                 mWS(); 
 
                 }
                 break;
-            case 31 :
-                // src/riemann/Query.g:1:212: String
+            case 32 :
+                // src/riemann/Query.g:1:218: String
                 {
                 mString(); 
 
@@ -1427,81 +1456,80 @@ public class QueryLexer extends Lexer {
 
     protected DFA13 dfa13 = new DFA13(this);
     static final String DFA13_eotS =
-        "\1\uffff\3\21\1\34\2\uffff\1\36\1\40\1\21\2\uffff\5\21\2\uffff\1"+
-        "\54\2\uffff\1\21\1\56\3\21\6\uffff\12\21\2\uffff\1\74\1\uffff\1"+
-        "\75\1\21\1\77\2\21\1\102\7\21\2\uffff\1\112\1\uffff\1\21\1\114\1"+
-        "\uffff\1\115\1\21\1\117\4\21\1\uffff\1\21\2\uffff\1\125\1\uffff"+
-        "\1\21\1\127\2\21\1\132\1\uffff\1\21\1\uffff\1\21\1\136\1\uffff\1"+
-        "\137\2\21\2\uffff\1\21\1\143\1\21\1\uffff\1\21\1\146\1\uffff";
+        "\1\uffff\3\22\1\35\2\uffff\1\37\1\41\2\22\2\uffff\5\22\2\uffff\1"+
+        "\55\2\uffff\1\22\1\60\3\22\6\uffff\13\22\2\uffff\1\77\1\uffff\1"+
+        "\100\1\22\1\102\2\22\1\105\10\22\2\uffff\1\116\1\uffff\1\22\1\120"+
+        "\1\uffff\1\121\2\22\1\124\4\22\1\uffff\1\22\2\uffff\1\132\1\133"+
+        "\1\uffff\1\22\1\135\2\22\1\140\2\uffff\1\22\1\uffff\1\22\1\144\1"+
+        "\uffff\1\145\2\22\2\uffff\1\22\1\151\1\22\1\uffff\1\22\1\154\1\uffff";
     static final String DFA13_eofS =
-        "\147\uffff";
+        "\155\uffff";
     static final String DFA13_minS =
-        "\1\11\1\156\1\162\1\151\1\176\2\uffff\2\75\1\141\2\uffff\1\141\1"+
-        "\157\3\145\1\uffff\1\60\1\56\2\uffff\1\144\1\60\1\164\2\154\6\uffff"+
-        "\1\147\1\165\1\154\1\155\1\154\1\163\1\162\1\141\1\163\1\164\2\uffff"+
-        "\1\60\1\uffff\1\60\1\154\1\60\1\147\1\145\1\60\1\145\1\163\1\164"+
-        "\1\166\1\164\1\143\1\162\2\uffff\1\60\1\uffff\1\145\1\60\1\uffff"+
-        "\1\60\1\145\1\60\1\151\1\145\1\162\1\151\1\uffff\1\144\2\uffff\1"+
-        "\60\1\uffff\1\143\1\60\1\151\1\143\1\60\1\uffff\1\145\1\uffff\1"+
-        "\160\1\60\1\uffff\1\60\1\164\1\146\2\uffff\1\151\1\60\1\157\1\uffff"+
-        "\1\156\1\60\1\uffff";
+        "\1\11\1\156\1\162\1\151\1\176\2\uffff\2\75\1\141\1\151\2\uffff\1"+
+        "\141\1\157\3\145\1\uffff\1\60\1\56\2\uffff\1\144\1\60\1\164\2\154"+
+        "\6\uffff\1\147\1\165\1\154\2\155\1\154\1\163\1\162\1\141\1\163\1"+
+        "\164\2\uffff\1\60\1\uffff\1\60\1\154\1\60\1\147\1\145\1\60\1\145"+
+        "\1\151\1\163\1\164\1\166\1\164\1\143\1\162\2\uffff\1\60\1\uffff"+
+        "\1\145\1\60\1\uffff\1\60\1\164\1\145\1\60\1\151\1\145\1\162\1\151"+
+        "\1\uffff\1\144\2\uffff\2\60\1\uffff\1\143\1\60\1\151\1\143\1\60"+
+        "\2\uffff\1\145\1\uffff\1\160\1\60\1\uffff\1\60\1\164\1\146\2\uffff"+
+        "\1\151\1\60\1\157\1\uffff\1\156\1\60\1\uffff";
     static final String DFA13_maxS =
-        "\1\176\1\156\1\162\1\165\1\176\2\uffff\2\75\1\164\2\uffff\1\141"+
-        "\1\157\1\164\2\145\1\uffff\1\71\1\145\2\uffff\1\144\1\172\1\164"+
-        "\2\154\6\uffff\1\147\1\165\1\154\1\155\1\154\1\163\1\162\1\141\1"+
-        "\163\1\164\2\uffff\1\172\1\uffff\1\172\1\154\1\172\1\147\1\145\1"+
-        "\172\1\145\1\163\1\164\1\166\1\164\1\143\1\162\2\uffff\1\172\1\uffff"+
-        "\1\145\1\172\1\uffff\1\172\1\145\1\172\1\151\1\145\1\162\1\151\1"+
-        "\uffff\1\144\2\uffff\1\172\1\uffff\1\143\1\172\1\151\1\143\1\172"+
-        "\1\uffff\1\145\1\uffff\1\160\1\172\1\uffff\1\172\1\164\1\146\2\uffff"+
-        "\1\151\1\172\1\157\1\uffff\1\156\1\172\1\uffff";
+        "\1\176\1\156\1\162\1\165\1\176\2\uffff\2\75\1\164\1\151\2\uffff"+
+        "\1\141\1\157\1\164\2\145\1\uffff\1\71\1\145\2\uffff\1\144\1\172"+
+        "\1\164\2\154\6\uffff\1\147\1\165\1\154\2\155\1\154\1\163\1\162\1"+
+        "\141\1\163\1\164\2\uffff\1\172\1\uffff\1\172\1\154\1\172\1\147\1"+
+        "\145\1\172\1\145\1\151\1\163\1\164\1\166\1\164\1\143\1\162\2\uffff"+
+        "\1\172\1\uffff\1\145\1\172\1\uffff\1\172\1\164\1\145\1\172\1\151"+
+        "\1\145\1\162\1\151\1\uffff\1\144\2\uffff\2\172\1\uffff\1\143\1\172"+
+        "\1\151\1\143\1\172\2\uffff\1\145\1\uffff\1\160\1\172\1\uffff\1\172"+
+        "\1\164\1\146\2\uffff\1\151\1\172\1\157\1\uffff\1\156\1\172\1\uffff";
     static final String DFA13_acceptS =
-        "\5\uffff\1\5\1\6\3\uffff\1\15\1\16\5\uffff\1\33\2\uffff\1\36\1\37"+
-        "\5\uffff\1\4\1\7\1\11\1\10\1\13\1\12\12\uffff\1\35\1\34\1\uffff"+
-        "\1\2\15\uffff\1\1\1\3\1\uffff\1\22\2\uffff\1\31\7\uffff\1\21\1\uffff"+
-        "\1\17\1\32\1\uffff\1\23\5\uffff\1\20\1\uffff\1\25\2\uffff\1\14\3"+
-        "\uffff\1\30\1\24\3\uffff\1\27\2\uffff\1\26";
+        "\5\uffff\1\5\1\6\4\uffff\1\16\1\17\5\uffff\1\34\2\uffff\1\37\1\40"+
+        "\5\uffff\1\4\1\7\1\11\1\10\1\13\1\12\13\uffff\1\35\1\36\1\uffff"+
+        "\1\2\16\uffff\1\1\1\3\1\uffff\1\23\2\uffff\1\32\10\uffff\1\22\1"+
+        "\uffff\1\20\1\33\2\uffff\1\24\5\uffff\1\15\1\21\1\uffff\1\26\2\uffff"+
+        "\1\14\3\uffff\1\31\1\25\3\uffff\1\30\2\uffff\1\27";
     static final String DFA13_specialS =
-        "\147\uffff}>";
+        "\155\uffff}>";
     static final String[] DFA13_transitionS = {
-            "\2\24\2\uffff\1\24\22\uffff\1\24\1\6\1\25\5\uffff\1\12\1\13"+
-            "\3\uffff\1\22\2\uffff\12\23\2\uffff\1\7\1\4\1\10\2\uffff\32"+
-            "\21\4\uffff\1\21\1\uffff\1\1\2\21\1\17\1\21\1\14\1\21\1\15\4"+
-            "\21\1\20\1\3\1\2\3\21\1\16\1\11\6\21\3\uffff\1\5",
-            "\1\26",
+            "\2\25\2\uffff\1\25\22\uffff\1\25\1\6\1\26\5\uffff\1\13\1\14"+
+            "\3\uffff\1\23\2\uffff\12\24\2\uffff\1\7\1\4\1\10\2\uffff\32"+
+            "\22\4\uffff\1\22\1\uffff\1\1\2\22\1\20\1\22\1\15\1\22\1\16\3"+
+            "\22\1\12\1\21\1\3\1\2\3\22\1\17\1\11\6\22\3\uffff\1\5",
             "\1\27",
-            "\1\32\5\uffff\1\30\5\uffff\1\31",
-            "\1\33",
+            "\1\30",
+            "\1\33\5\uffff\1\31\5\uffff\1\32",
+            "\1\34",
             "",
             "",
-            "\1\35",
-            "\1\37",
-            "\1\41\7\uffff\1\44\10\uffff\1\42\1\uffff\1\43",
-            "",
-            "",
-            "\1\45",
+            "\1\36",
+            "\1\40",
+            "\1\42\7\uffff\1\45\10\uffff\1\43\1\uffff\1\44",
             "\1\46",
-            "\1\47\16\uffff\1\50",
-            "\1\51",
-            "\1\52",
-            "",
-            "\12\23",
-            "\1\53\1\uffff\12\23\13\uffff\1\53\37\uffff\1\53",
             "",
             "",
-            "\1\55",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\1\47",
+            "\1\50",
+            "\1\51\16\uffff\1\52",
+            "\1\53",
+            "\1\54",
+            "",
+            "\12\24",
+            "\1\56\1\uffff\12\24\13\uffff\1\56\37\uffff\1\56",
+            "",
+            "",
             "\1\57",
-            "\1\60",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "\1\61",
-            "",
-            "",
-            "",
-            "",
-            "",
-            "",
             "\1\62",
             "\1\63",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
             "\1\64",
             "\1\65",
             "\1\66",
@@ -1510,65 +1538,72 @@ public class QueryLexer extends Lexer {
             "\1\71",
             "\1\72",
             "\1\73",
-            "",
-            "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\1\74",
+            "\1\75",
             "\1\76",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "\1\100",
+            "",
+            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "\1\101",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "\1\103",
             "\1\104",
-            "\1\105",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "\1\106",
             "\1\107",
             "\1\110",
             "\1\111",
-            "",
-            "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "",
+            "\1\112",
             "\1\113",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\1\114",
+            "\1\115",
             "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "\1\116",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "\1\120",
-            "\1\121",
+            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "",
+            "\1\117",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "\1\122",
             "\1\123",
-            "",
-            "\1\124",
-            "",
-            "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "\1\125",
             "\1\126",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\1\127",
             "\1\130",
-            "\1\131",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
             "",
-            "\1\133",
+            "\1\131",
+            "",
+            "",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "",
             "\1\134",
-            "\12\21\7\uffff\32\21\4\uffff\1\135\1\uffff\32\21",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "\1\136",
+            "\1\137",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             "",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "\1\140",
+            "",
             "\1\141",
             "",
-            "",
             "\1\142",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
-            "\1\144",
+            "\12\22\7\uffff\32\22\4\uffff\1\143\1\uffff\32\22",
             "",
-            "\1\145",
-            "\12\21\7\uffff\32\21\4\uffff\1\21\1\uffff\32\21",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "\1\146",
+            "\1\147",
+            "",
+            "",
+            "\1\150",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
+            "\1\152",
+            "",
+            "\1\153",
+            "\12\22\7\uffff\32\22\4\uffff\1\22\1\uffff\32\22",
             ""
     };
 
@@ -1602,7 +1637,7 @@ public class QueryLexer extends Lexer {
             this.transition = DFA13_transition;
         }
         public String getDescription() {
-            return "1:1: Tokens : ( AND | OR | NOT | APPROXIMATELY | REGEX_MATCH | NOT_EQUAL | EQUAL | LESSER | LESSER_EQUAL | GREATER | GREATER_EQUAL | TAGGED | T__25 | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | ID | INT | FLOAT | WS | String );";
+            return "1:1: Tokens : ( AND | OR | NOT | APPROXIMATELY | REGEX_MATCH | NOT_EQUAL | EQUAL | LESSER | LESSER_EQUAL | GREATER | GREATER_EQUAL | TAGGED | LIMIT | T__26 | T__27 | T__28 | T__29 | T__30 | T__31 | T__32 | T__33 | T__34 | T__35 | T__36 | T__37 | T__38 | T__39 | ID | INT | FLOAT | WS | String );";
         }
     }
  
