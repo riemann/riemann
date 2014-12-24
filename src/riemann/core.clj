@@ -185,17 +185,14 @@
   (source [this]))
 
 (defn- unwrap
-  "Get the inner index of a wrapped index"
-  [wrapped]
-  (if (instance? riemann.core.WrappedIndex wrapped)
-    (source wrapped)
-    wrapped))
+  "Get the inner index of a wrapped index."
+  [^riemann.core.WrappedIndex wrapped]
+  (source wrapped))
 
 (defn wrap-index
-  "Yield a wrapper to an index, exposing the same protocols as well
-   as IFn which will index an event. If a second argument is present
-   it should implement the PubSub interface and will be notified
-   when events are updated in the index."
+  "Wraps an index, exposing the normal Index and IFn protocols. If a second
+  argument is present it should implement the PubSub interface and will be
+  notified when events are updated in the index."
   ([source]
      (wrap-index source nil))
   ([source registry]
@@ -233,7 +230,8 @@
 
        ServiceEquiv
        (equiv? [this other]
-         (service/equiv? source (unwrap other)))
+         (and (satisfies? WrappedIndex other)
+           (service/equiv? source (unwrap other))))
 
        Service
        (conflict? [this other]
@@ -248,7 +246,6 @@
        clojure.lang.IFn
        (invoke [this event]
          (index/update this event)))))
-
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the

@@ -39,6 +39,11 @@
           core. Otherwise, the old service may be shut down and replaced by
           the new."))
 
+(extend-protocol ServiceEquiv
+  nil
+  (equiv? [s1 s2]
+    (nil? s2)))
+
 (defrecord ThreadService [name equiv-key f core running thread]
   ServiceEquiv
   (equiv? [this other]
