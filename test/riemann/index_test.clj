@@ -132,19 +132,17 @@
       (is (= nil (query-for-host-and-service ast))))))
 
 (deftest service-interface
-  (testing "service equivelance of indexes"
+  (testing "service equivalance of indexes"
     (let [one-index (index)
           two-index (index)]
       (is (service/equiv? one-index two-index))))
 
-  (testing "service equivelance of wrapped indexes"
+  (testing "service equivalance of wrapped indexes"
     (let [one-index (wrap-index (index))
           two-index (wrap-index (index))]
       (is (service/equiv? one-index two-index))))
 
-  (testing "service equivelance of wrapped to unwrapped index"
+  (testing "service equivalance of wrapped to unwrapped index"
     (let [one-index (wrap-index (index))
           two-index (index)]
-      (is (service/equiv? one-index two-index))))
-
-  )
+      (is (not (service/equiv? one-index two-index))))))
