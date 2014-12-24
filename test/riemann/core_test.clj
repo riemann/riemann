@@ -117,15 +117,15 @@
 (deftest transition-index
          (logging/suppress
            ["riemann.core" "riemann.pubsub"]
-           (testing "Different indexes"
+           (testing "Different services"
                     (let [old-running (atom nil)
                           old-core    (atom nil)
                           new-running (atom nil)
                           new-core    (atom nil)
-                          old-index (TestService. :old old-running old-core)
-                          new-index (TestService. :new new-running new-core)
-                          old {:index old-index}
-                          new {:index new-index}]
+                          old-pubsub (TestService. :old old-running old-core)
+                          new-pubsub (TestService. :new new-running new-core)
+                          old {:pubsub old-pubsub}
+                          new {:pubsub new-pubsub}]
 
                       (start! old)
                       (is @old-running)
@@ -135,29 +135,29 @@
 
                       (let [final (transition! old new)]
                         (is (not= new final))
-                        (is (= new-index (:index final)))
+                        (is (= new-pubsub (:pubsub final)))
                         (is (not     @old-running))
                         (is          @new-running)
                         (is (= final @new-core))
                         (is (= old   @old-core))
 
                         (stop! final)
-                        (is (= new-index (:index final)))
-                        (is (= old-index (:index old)))
+                        (is (= new-pubsub (:pubsub final)))
+                        (is (= old-pubsub (:pubsub old)))
                         (is (not @old-running))
                         (is (not @new-running))
                         (is (= final @new-core))
                         (is (= old   @old-core)))))
 
-           (testing "The same index"
+           (testing "The same service"
                     (let [old-running (atom nil)
                           old-core    (atom nil)
                           new-running (atom nil)
                           new-core    (atom nil)
-                          old-index (TestService. :same old-running old-core)
-                          new-index (TestService. :same new-running new-core)
-                          old {:index old-index}
-                          new {:index new-index}]
+                          old-pubsub (TestService. :same old-running old-core)
+                          new-pubsub (TestService. :same new-running new-core)
+                          old {:pubsub old-pubsub}
+                          new {:pubsub new-pubsub}]
 
                       (start! old)
                       (is @old-running)
@@ -167,14 +167,14 @@
 
                       (let [final (transition! old new)]
                         (is (not= new final))
-                        (is (= old-index (:index final)))
+                        (is (= old-pubsub (:pubsub final)))
                         (is          @old-running)
                         (is (not     @new-running))
                         (is (= final @old-core))
                         (is (nil?    @new-core))
 
                         (stop! final)
-                        (is (= old-index (:index final)))
+                        (is (= old-pubsub (:pubsub final)))
                         (is (not @old-running))
                         (is (not @new-running))
                         (is (= nil   @new-core))
@@ -366,19 +366,3 @@
                                   "riemann.core"
                                   "riemann.pubsub"]
                                  (stop! core))))))
-
-
-(deftest merge-cores-merges-indexes
-  (testing "reusing the index with an unwrapped index"
-    (let [first-core  {:index (index)}
-          second-core {:index (index)}
-          merged-core (merge-cores first-core second-core)]
-      (is (= (:index first-core) (:index merged-core)))))
-
-  (testing "reusing the index with a wrapped index"
-    (let [first-core  {:index (wrap-index (index))}
-          second-core {:index (wrap-index (index))}
-          merged-core (merge-cores first-core second-core)]
-      (is (= (:index first-core) (:index merged-core)))))
-
-  )

@@ -114,10 +114,9 @@
                  (assoc :streaming-metric (or (:streaming-metric new-core)
                                               (:streaming-metric old-core)))
                  (assoc :index (when (:index new-core)
-                                 (if (service/equiv? (:index new-core)
-                                                     (:index old-core))
-                                   (:index old-core)
-                                   (:index new-core))))
+                                 (doseq [event (:index old-core)]
+                                   (index/update (:index new-core) event))
+                                 (:index new-core)))
                  (assoc :pubsub (when (:pubsub new-core)
                                   (if (service/equiv? (:pubsub new-core)
                                                       (:pubsub old-core))
