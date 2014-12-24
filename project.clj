@@ -67,6 +67,7 @@
                    :focus :focus
                    :slack :slack
                    :cloudwatch :cloudwatch
+                   :datadog :datadog
                    :stackdriver :stackdriver
 		   :xymon :xymon
                    :shinken :shinken

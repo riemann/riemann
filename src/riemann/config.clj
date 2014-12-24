@@ -42,6 +42,7 @@
         [riemann.slack :only [slack]]
         [riemann.stackdriver :only [stackdriver]]
         [riemann.cloudwatch :only [cloudwatch]]
+        [riemann.datadog :only [datadog]]
         [cemerick.pomegranate :only [add-dependencies]]
         [riemann.shinken :only [shinken]]
         [riemann.xymon :only [xymon]]
