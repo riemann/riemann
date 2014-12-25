@@ -1,11 +1,12 @@
 (ns riemann.transport.opentsdb
-  (:import [org.jboss.netty.util CharsetUtil]
-           (org.jboss.netty.channel MessageEvent)
-           [org.jboss.netty.handler.codec.oneone OneToOneDecoder]
-           [org.jboss.netty.handler.codec.string StringDecoder StringEncoder]
-           [org.jboss.netty.handler.codec.frame
-            DelimiterBasedFrameDecoder
-            Delimiters])
+  (:import
+    [io.netty.util CharsetUtil]
+    [io.netty.handler.codec MessageToMessageDecoder]
+    [io.netty.handler.codec.string StringDecoder
+                                   StringEncoder]
+    [io.netty.handler.codec DelimiterBasedFrameDecoder
+                            Delimiters]
+    [io.netty.channel ChannelHandlerContext])
   (:require [interval-metrics.core :as metrics])
   (:use [riemann.core :only [stream!]]
         [riemann.codec :only [->Event]]
@@ -13,14 +14,14 @@
                                       gen-tcp-handler]]
         [riemann.transport :only [channel-pipeline-factory
                                   channel-group
-                                  shared-execution-handler]]
+                                  shared-event-executor]]
         [interval-metrics.measure :only [measure-latency]]
         [slingshot.slingshot :only [try+ throw+]]
-        [clojure.string :only [split
-                               join]]
+        [clojure.string :only [split join]]
         [clojure.tools.logging :only [warn]]))
 
 (defn decode-opentsdb-line
+  "Parse an OpenTSDB message string into an event."
   [line]
   (let [[verb service timestamp metric & tags] (split line #"\s")]
     ; Validate format
@@ -52,12 +53,12 @@
                            (throw+ "invalid timestamp")))
           description service
           service (if-let [tagstr (when-not (empty? tags) (join " " tags))]
-                              (str service " " tagstr)
-                              service)
-          host (when-let [h (-> (filter (fn [tag] (.startsWith tag "host=")) tags)
-                                first)]
-                         (subs h 5))
-          ]
+                    (str service " " tagstr)
+                    service)
+          host (when-let [h (->> tags
+                                 (filter (fn [tag] (.startsWith tag "host=")))
+                                 first)]
+                         (subs h 5))]
 
       ; Construct event
       ; (defrecord Event [host service state description metric tags time ttl])
@@ -71,38 +72,54 @@
                nil))))
 
 (defn opentsdb-frame-decoder
+  "A MessageToMessageDecoder that reads strings and emits either :version or
+  events."
   [parser-fn]
   (let [parser-fn (or parser-fn identity)]
-    (proxy [OneToOneDecoder] []
-      (decode [context channel message]
+    (proxy [MessageToMessageDecoder] []
+      (decode [context message out]
         (try+
-          (if (= "version" message)
-            (do
-              (. channel
-                (write
-                  (str "net.opentsdb\n"
-                       "Built on ... (riemann-opentsdb)\n"
-                       )))
-              {:service "version" :time (System/nanoTime)})
-            (-> message
-                decode-opentsdb-line
-                parser-fn))
+          (.add out
+                (if (= "version" message)
+                  :version
+                  (-> message
+                      decode-opentsdb-line
+                      parser-fn)))
           (catch Object e
             (throw (RuntimeException.
                      (str "OpenTSDB server parse error (" e "): "
-                          (pr-str message))))))))))
+                          (pr-str message)))))))
+
+      (isSharable [] true))))
 
 (defn opentsdb-handler
-  "Given a core and a MessageEvent, applies the message to core."
-  [core stats ^MessageEvent e]
-  (stream! core (.getMessage e)))
+  "Messages to this handler are either :version or an event. Responds to
+  version requests, and applies events to the core."
+  [core stats ^ChannelHandlerContext ctx message]
+  (if (= :version message)
+    ; Respond with version
+    (.writeAndFlush ctx "net.opentsdb\nBuilt on ... (riemann-opentsdb)\n")
+    ; Stream event
+    (stream! core message)))
+
+(defn cpf
+  "The pipeline of decoders, handlers, etc for parsing and handling messages."
+  [parser-fn message-handler]
+  (channel-pipeline-factory
+    frame-decoder (DelimiterBasedFrameDecoder. 1024 (Delimiters/lineDelimiter))
+    ^:shared string-decoder   (StringDecoder. CharsetUtil/UTF_8)
+    ^:shared string-encoder   (StringEncoder. CharsetUtil/UTF_8)
+    ^:shared opentsdb-decoder (opentsdb-frame-decoder parser-fn)
+    ^{:shared   true
+      :executor shared-event-executor} handler message-handler))
 
 (defn opentsdb-server
   "Start a opentsdb-server. Options:
 
   :host       \"127.0.0.1\"
   :port       4242
-  :parser-fn  an optional function given to decode-opentsdb-line"
+  :parser-fn  an optional function which transforms events prior to streaming
+              into the core."
   ([] (opentsdb-server {}))
   ([opts]
      (let [core  (get opts :core (atom nil))
@@ -111,23 +128,14 @@
            stats (metrics/rate+latency)
            server tcp-server
            channel-group (channel-group (str "opentsdb server " host ":" port))
-           opentsdb-message-handler (gen-tcp-handler
-                                        core stats channel-group opentsdb-handler)
-           pipeline-factory (channel-pipeline-factory
-                              frame-decoder  (DelimiterBasedFrameDecoder.
-                                               1024
-                                               (Delimiters/lineDelimiter))
-                              ^:shared string-decoder (StringDecoder.
-                                                        CharsetUtil/UTF_8)
-                              ^:shared string-encoder (StringEncoder.
-                                                        CharsetUtil/UTF_8)
-                              ^:shared executor shared-execution-handler
-                              ^:shared opentsdb-decoder (opentsdb-frame-decoder
-                                                          (:parser-fn opts))
-                              ^:shared handler opentsdb-message-handler)]
+           handler (gen-tcp-handler core
+                                    stats
+                                    channel-group
+                                    opentsdb-handler)
+           pipeline-factory (cpf (:parser-fn opts) handler)]
        (server (merge opts
-                          {:host host
-                           :port port
-                           :core core
-                           :channel-group channel-group
-                           :pipeline-factory pipeline-factory})))))
+                      {:host host
+                       :port port
+                       :core core
+                       :channel-group channel-group
+                       :pipeline-factory pipeline-factory})))))

@@ -45,9 +45,13 @@
   (LengthFieldPrepender. 4))
 
 (defn gen-tcp-handler
-  "Wraps netty boilerplate for common TCP server handlers. Given a reference to
-  a core, a channel group, and a handler fn, returns a ChannelInboundHandlerAdapter
-  which calls (handler core message-event) with each received message."
+  "Wraps Netty boilerplate for common TCP server handlers. Given a reference to
+  a core, a stats package, a channel group, and a handler fn, returns a
+  ChannelInboundHandlerAdapter which calls (handler core stats
+  channel-handler-context message) for each received message.
+
+  Automatically handles channel closure, and handles exceptions thrown by the
+  handler by logging an error and closing the channel."
   [core stats ^ChannelGroup channel-group handler]
   (proxy [ChannelInboundHandlerAdapter] []
     (channelActive [ctx]
@@ -62,11 +66,12 @@
     (exceptionCaught [^ChannelHandlerContext ctx ^Throwable cause]
       (warn cause "TCP handler caught")
       (.close (.channel ctx)))
+
     (isSharable [] true)))
 
 (defn tcp-handler
-  "Given a core, a channel, and a message, applies the message to core and writes a
-  response back on this channel."
+  "Given a core, a channel, and a message, applies the message to core and
+  writes a response back on this channel."
   [core stats ^ChannelHandlerContext ctx ^Object message]
   (let [t1 (:decode-time message)]
     (.. ctx
@@ -159,7 +164,7 @@
                                  :metric  latency})
                               (:latencies in)))))))
 
-(defn ssl-handler 
+(defn ssl-handler
   "Given an SSLContext, creates a new SSLEngine and a corresponding Netty
   SslHandler wrapping it."
   [^SSLContext context]
