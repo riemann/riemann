@@ -3,15 +3,15 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
            [java.util.concurrent Executors]
-           [org.jboss.netty.bootstrap ConnectionlessBootstrap]
-           [org.jboss.netty.channel ChannelStateEvent
-                                    Channels
-                                    ExceptionEvent
-                                    FixedReceiveBufferSizePredictorFactory
-                                    MessageEvent
-                                    SimpleChannelUpstreamHandler]
-           [org.jboss.netty.channel.group ChannelGroup]
-           [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
+           [io.netty.bootstrap ServerBootstrap]
+           [io.netty.channel Channel
+                             ChannelOption
+                             ChannelHandlerContext
+                             DefaultMessageSizeEstimator
+                             ChannelInboundHandlerAdapter]
+           [io.netty.channel.group ChannelGroup]
+           [io.netty.channel.socket.nio NioDatagramChannel]
+           [io.netty.channel.nio NioEventLoopGroup])
   (:require [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
@@ -23,27 +23,28 @@
                                       protobuf-decoder
                                       protobuf-encoder
                                       msg-decoder
-                                      shared-execution-handler
+                                      shared-event-executor
                                       channel-pipeline-factory]]))
 
 (defn gen-udp-handler
   [core stats ^ChannelGroup channel-group handler]
-  (proxy [SimpleChannelUpstreamHandler] []
-    (channelOpen [context ^ChannelStateEvent state-event]
-                 (.add channel-group (.getChannel state-event)))
+  (proxy [ChannelInboundHandlerAdapter] []
+    (channelActive [^ChannelHandlerContext ctx]
+      (.add channel-group (.channel ctx)))
 
-    (messageReceived [context ^MessageEvent message-event]
-                     (handler @core stats message-event))
+    (channelRead [^ChannelHandlerContext ctx ^Object message]
+      (handler @core stats ctx message))
 
-    (exceptionCaught [context ^ExceptionEvent exception-event]
-      (warn (.getCause exception-event) "UDP handler caught"))))
+    (exceptionCaught [^ChannelHandlerContext ctx ^Throwable cause]
+      (warn cause "UDP handler caught"))
+
+    (isSharable [] true)))
 
 (defn udp-handler
-  "Given a core and a MessageEvent, applies the message to core."
-  [core stats ^MessageEvent message-event]
-  (let [msg (.getMessage message-event)]
-    (handle core msg)
-    (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))))
+  "Given a core, a channel, and a message, applies the message to core."
+  [core stats ctx message]
+  (handle core message)
+  (metrics/update! stats (- (System/nanoTime) (:decode-time message))))
 
 (defrecord UDPServer [^String host
                       ^int port
@@ -55,7 +56,7 @@
                       killer]
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
-  
+
   ServiceEquiv
   ; TODO compare pipeline-factory!
   (equiv? [this other]
@@ -75,30 +76,27 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [pool (Executors/newCachedThreadPool)
-                    bootstrap (ConnectionlessBootstrap.
-                                (NioDatagramChannelFactory. pool))]
+              (let [worker-group (NioEventLoopGroup.)
+                    bootstrap (ServerBootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
-                  (.setPipelineFactory pipeline-factory)
-                  (.setOption "broadcast" "false")
-                  (.setOption "receiveBufferSizePredictorFactory"
-                              (FixedReceiveBufferSizePredictorFactory.
-                                max-size)))
+                  (.group worker-group)
+                  (.channel NioDatagramChannel)
+                  (.childHandler pipeline-factory)
+                  (.option ChannelOption/SO_BROADCAST false)
+                  (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
+                           (DefaultMessageSizeEstimator. max-size)))
 
                 ; Start bootstrap
-                (->> (InetSocketAddress. host port)
-                    (.bind bootstrap)
-                    (.add channel-group))
+                (.add channel-group (.channel (.bind bootstrap (InetSocketAddress. host port))))
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn []
                           (-> channel-group .close .awaitUninterruptibly)
-                          (.releaseExternalResources bootstrap)
-                          (.shutdown pool)
+                          (-> worker-group .shutdownGracefully .awaitUninterruptibly)
                           (info "UDP server" host port max-size "shut down")
                           ))))))
 
@@ -135,7 +133,7 @@
   :port             The port to listen on (default 5555).
   :max-size         The maximum datagram size (default 16384 bytes).
   :channel-group    A ChannelGroup used to track all connections
-  :pipeline-factory A ChannelPipelineFactory"
+  :pipeline-factory A ChannelInitializer"
   ([] (udp-server {}))
   ([opts]
    (let [core  (get opts :core (atom nil))
@@ -145,13 +143,12 @@
          max-size (get opts :max-size 16384)
          channel-group (get opts :channel-group
                             (channel-group
-                              (str "udp-server" host ":" port 
-                                   "(" max-size ")")))
+                              (str "udp-server" host ":" port "(" max-size ")")))
          pf (get opts :pipeline-factory
                  (channel-pipeline-factory
-                   ^:shared executor         shared-execution-handler
                    ^:shared protobuf-decoder (protobuf-decoder)
                    ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
-                   ^:shared handler          (gen-udp-handler core stats channel-group udp-handler)))]
+                   ^{:shared true :executor shared-event-executor} handler
+                   (gen-udp-handler core stats channel-group udp-handler)))]
      (UDPServer. host port max-size channel-group pf stats core (atom nil)))))
