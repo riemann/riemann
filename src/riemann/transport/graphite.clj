@@ -87,6 +87,7 @@
             (throw (RuntimeException.
                      (str "Graphite server parse error (" e "): "
                           (pr-str message)))))))
+
       (isSharable [] true))))
 
 (defn graphite-handler

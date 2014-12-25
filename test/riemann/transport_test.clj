@@ -22,33 +22,33 @@
            (java.io IOException)))
 
 (deftest ws-put-events-test
-         (riemann.logging/suppress
-           ["riemann.transport"
-            "riemann.core"
-            "riemann.pubsub"]
-           (let [server (ws-server {:port 15556})
-                 uri    "http://127.0.0.1:15556/events"
-                 core   (transition! (core) {:services [server]})]
-             ; Two simple events
-             (let [res (http/put uri
-                                 {:body "{\"service\": \"foo\"}\n{\"service\": \"bar\"}\n"})]
-               (is (= 200 (:status res)))
-               (is (= "{}\n{}\n" (:body res))))
+  (riemann.logging/suppress
+    ["riemann.transport"
+     "riemann.core"
+     "riemann.pubsub"]
+    (let [server (ws-server {:port 15556})
+          uri    "http://127.0.0.1:15556/events"
+          core   (transition! (core) {:services [server]})]
+      ; Two simple events
+      (let [res (http/put uri
+                          {:body "{\"service\": \"foo\"}\n{\"service\": \"bar\"}\n"})]
+        (is (= 200 (:status res)))
+        (is (= "{}\n{}\n" (:body res))))
 
-             ; A time
-             (let [res (http/put uri
-                                 {:body "{\"service\": \"foo\", \"time\": \"2013-04-15T18:06:58-07:00\"}\n"})]
-               (is (= 200 (:status res)))
-               (is (= "{}\n" (:body res))))
+      ; A time
+      (let [res (http/put uri
+                          {:body "{\"service\": \"foo\", \"time\": \"2013-04-15T18:06:58-07:00\"}\n"})]
+        (is (= 200 (:status res)))
+        (is (= "{}\n" (:body res))))
 
-             ; An invalid time
-             (let [res (http/put uri
-                                 {:body "{\"time\": \"xkcd\"}"})]
-               (is (= 200 (:status res)))
-               (is (= {:error "Invalid format: \"xkcd\""}
-                      (json/parse-string (:body res) true))))
+      ; An invalid time
+      (let [res (http/put uri
+                          {:body "{\"time\": \"xkcd\"}"})]
+        (is (= 200 (:status res)))
+        (is (= {:error "Invalid format: \"xkcd\""}
+               (json/parse-string (:body res) true))))
 
-             (stop! core))))
+      (stop! core))))
 
 (deftest sse-subscribe-events-test
   (riemann.logging/suppress
@@ -85,24 +85,24 @@
        (finally
          (stop! core))))))
 
-(deftest udp
-         (riemann.logging/suppress ["riemann.transport"
-                                    "riemann.core"
-                                    "riemann.pubsub"]
-           (let [server (udp-server {:port 15555})
-                 core   (transition! (core) {:services [server]})
-                 client (wait-for-result (udp-socket {}))
-                 msg (ChannelBuffers/wrappedBuffer
-                       (encode {:ok true}))]
+(deftest udp-test
+  (riemann.logging/suppress ["riemann.transport"
+                             "riemann.core"
+                             "riemann.pubsub"]
+    (let [server (udp-server {:port 15555})
+          core   (transition! (core) {:services [server]})
+          client (wait-for-result (udp-socket {}))
+          msg (ChannelBuffers/wrappedBuffer
+                (encode {:ok true}))]
 
-             (try
-               (enqueue client {:host "localhost"
-                                :port 15555
-                                :message msg})
-               (Thread/sleep 100)
-               (finally
-                 (close client)
-                 (stop! core))))))
+      (try
+        (enqueue client {:host "localhost"
+                         :port 15555
+                         :message msg})
+        (Thread/sleep 100)
+        (finally
+          (close client)
+          (stop! core))))))
 
 (defn test-tcp-client
   [client-opts server-opts]
@@ -162,24 +162,24 @@
                                            (:cert client))))))))
 
 (deftest ignores-garbage
-         (riemann.logging/suppress ["riemann.transport"
-                                    "riemann.core"
-                                    "riemann.pubsub"]
-            (let [server (tcp-server {:port 15555})
-                  core   (transition! (core) {:services [server]})
-                  client (wait-for-result
-                           (aleph.tcp/tcp-client
-                             {:host "localhost"
-                              :port 15555
-                              :frame (finite-block :int32)}))]
+  (riemann.logging/suppress ["riemann.transport"
+                             "riemann.core"
+                             "riemann.pubsub"]
+    (let [server (tcp-server {:port 15555})
+          core   (transition! (core) {:services [server]})
+          client (wait-for-result
+                   (aleph.tcp/tcp-client
+                     {:host "localhost"
+                      :port 15555
+                      :frame (finite-block :int32)}))]
 
-              (try
-                (enqueue client
-                         (java.nio.ByteBuffer/wrap
-                           (byte-array (map byte [0 1 2]))))
-                (is (thrown? java.lang.IllegalStateException
-                             (wait-for-message client)))
-                (is (closed? client))
-                (finally
-                  (close client)
-                  (stop! core))))))
+      (try
+        (enqueue client
+                 (java.nio.ByteBuffer/wrap
+                   (byte-array (map byte [0 1 2]))))
+        (is (thrown? java.lang.IllegalStateException
+                     (wait-for-message client)))
+        (is (closed? client))
+        (finally
+          (close client)
+          (stop! core))))))
