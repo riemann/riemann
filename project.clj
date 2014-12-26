@@ -47,7 +47,8 @@
      :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
-  :profiles {:dev {:dependencies [[criterium "0.4.3"]
+  :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
+                   :dependencies [[criterium "0.4.3"]
                                   [aleph     "0.3.2"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
