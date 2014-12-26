@@ -3,8 +3,10 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
            [java.util.concurrent Executors]
-           [io.netty.bootstrap ServerBootstrap]
+           [io.netty.bootstrap Bootstrap]
            [io.netty.channel Channel
+                             ChannelHandler
+                             ChannelInitializer
                              ChannelOption
                              ChannelHandlerContext
                              DefaultMessageSizeEstimator
@@ -47,6 +49,21 @@
   (handle core message)
   (metrics/update! stats (- (System/nanoTime) (:decode-time message))))
 
+(defn pipeline-initializer-handler
+  "A ChannelHandler that just initializes the channel with a pipeline. Lets us
+  re-use the pipeline initializer logic from the TCP handler."
+  [^ChannelInitializer initializer]
+  (proxy [ChannelHandler] []
+    (channelRegistered [ctx]
+      (let [pipeline (.pipeline ctx)]
+        (try
+          (.remove pipeline this)
+          (.channelRegistered initializer ctx)
+          (.fireChannelRegistered ctx)
+          (catch Throwable e
+            (warn e "Failed to initialize channel")
+            (.close ctx)))))))
+
 (defrecord UDPServer [^String host
                       ^int port
                       max-size
@@ -78,13 +95,13 @@
           (locking this
             (when-not @killer
               (let [worker-group (NioEventLoopGroup.)
-                    bootstrap (ServerBootstrap.)]
+                    bootstrap (Bootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
                   (.group worker-group)
                   (.channel NioDatagramChannel)
-                  (.childHandler pipeline-factory)
+                  (.handler (pipeline-initializer-handler pipeline-factory))
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size)))
@@ -151,7 +168,7 @@
          pf (get opts :pipeline-factory
                  (channel-pipeline-factory
                    ^:shared protobuf-decoder (protobuf-decoder)
-                   ^:shared protobuf-encoder (protobuf-encoder)
+;                   ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
                    ^{:shared true :executor shared-event-executor} handler
                    (gen-udp-handler core stats channel-group udp-handler)))]

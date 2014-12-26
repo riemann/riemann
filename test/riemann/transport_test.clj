@@ -18,12 +18,14 @@
             [cheshire.core :as json]
             [riemann.client :as client]
             [riemann.index :as index])
-  (:import (org.jboss.netty.buffer ChannelBuffers)
+  (:import (java.net Socket
+                     InetAddress)
+           (org.jboss.netty.buffer ChannelBuffers)
            (java.io IOException)))
 
 (deftest ws-put-events-test
   (riemann.logging/suppress
-    ["riemann.transport"
+    [;"riemann.transport"
      "riemann.core"
      "riemann.pubsub"]
     (let [server (ws-server {:port 15556})
@@ -51,8 +53,8 @@
       (stop! core))))
 
 (deftest sse-subscribe-events-test
-  (riemann.logging/suppress
-   ["riemann.transport" "riemann.core" "riemann.pubsub"]
+  (riemann.logging/suppress [;"riemann.transport"
+                             "riemann.core" "riemann.pubsub"]
    (let [s1       (tcp-server {:port 15555})
          s2       (sse-server {:port 15558})
          core     (core)
@@ -86,7 +88,7 @@
          (stop! core))))))
 
 (deftest udp-test
-  (riemann.logging/suppress ["riemann.transport"
+  (riemann.logging/suppress [;"riemann.transport"
                              "riemann.core"
                              "riemann.pubsub"]
     (let [server (udp-server {:port 15555})
@@ -106,7 +108,7 @@
 
 (defn test-tcp-client
   [client-opts server-opts]
-  (riemann.logging/suppress ["riemann.transport"
+  (riemann.logging/suppress [;"riemann.transport"
                              "riemann.core"
                              "riemann.pubsub"]
     (let [server (tcp-server server-opts)
@@ -162,24 +164,33 @@
                                            (:cert client))))))))
 
 (deftest ignores-garbage
-  (riemann.logging/suppress ["riemann.transport"
-                             "riemann.core"
-                             "riemann.pubsub"]
-    (let [server (tcp-server {:port 15555})
+  (riemann.logging/suppress ["riemann.core"];"riemann.transport"
+                             ;"riemann.core"
+                             ;"riemann.pubsub"]
+    (let [port   15555
+          server (tcp-server {:port port})
           core   (transition! (core) {:services [server]})
-          client (wait-for-result
-                   (aleph.tcp/tcp-client
-                     {:host "localhost"
-                      :port 15555
-                      :frame (finite-block :int32)}))]
-
+          sock   (Socket. "localhost" port)]
       (try
-        (enqueue client
-                 (java.nio.ByteBuffer/wrap
-                   (byte-array (map byte [0 1 2]))))
-        (is (thrown? java.lang.IllegalStateException
-                     (wait-for-message client)))
-        (is (closed? client))
+        ; Write garbage
+        (prn "writing")
+        (doto (.getOutputStream sock)
+          (.write (int 1))
+          (.write (int 0))
+          (.write (int 0))
+          (.write (int 1))
+          (.write (int -128))
+          (.flush))
+        (prn "wrote")
+
+        ; Should close socket
+        (is (.isClosed sock))
+;        (is (thrown? java.lang.IllegalStateException
+;                     (.. sock getInputStream read)))
+        (catch Throwable t
+          (prn "Caught!")
+          (.printStackTrace t))
         (finally
-          (close client)
+          (prn "Shutting down")
+          (.close sock)
           (stop! core))))))

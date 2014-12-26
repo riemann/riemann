@@ -27,6 +27,8 @@
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]
         [riemann.transport :only [handle
+                                  in-tap
+                                  out-tap
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
@@ -199,13 +201,14 @@
       ^:shared msg-encoder         (msg-encoder)
       ^{:shared true :executor shared-event-executor} handler
       (gen-tcp-handler core stats channel-group tcp-handler))
+
     (channel-pipeline-factory
-               int32-frame-decoder (int32-frame-decoder)
-      ^:shared int32-frame-encoder (int32-frame-encoder)
-      ^:shared protobuf-decoder (protobuf-decoder)
-      ^:shared protobuf-encoder (protobuf-encoder)
-      ^:shared msg-decoder (msg-decoder)
-      ^:shared msg-encoder (msg-encoder)
+               int32-frame-decoder  (int32-frame-decoder)
+      ^:shared int32-frame-encoder  (int32-frame-encoder)
+      ^:shared protobuf-decoder     (protobuf-decoder)
+      ^:shared protobuf-encoder     (protobuf-encoder)
+      ^:shared msg-decoder          (msg-decoder)
+      ^:shared msg-encoder          (msg-encoder)
       ^{:shared true :executor shared-event-executor} handler
       (gen-tcp-handler core stats channel-group tcp-handler))))
 

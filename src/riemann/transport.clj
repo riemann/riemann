@@ -21,6 +21,7 @@
                             MessageToMessageEncoder)
     (io.netty.handler.codec.protobuf ProtobufDecoder
                                             ProtobufEncoder)
+    (io.netty.util ReferenceCounted)
     (io.netty.util.concurrent Future
                               EventExecutorGroup
                               DefaultEventExecutorGroup
@@ -98,6 +99,41 @@
   (proxy [MessageToMessageEncoder] []
     (encode [context message out]
       (.add out (encode-pb-msg message)))
+    (isSharable [] true)))
+
+(defn retain
+  "Retain a ReferenceCounted object, if x is such an object. Otherwise, noop.
+  Returns x."
+  [x]
+  (when (instance? ReferenceCounted x)
+    (.retain x))
+  x)
+
+(defn out-tap
+  "Logs all outbound messages."
+  []
+  (proxy [MessageToMessageEncoder] []
+    (encode [ctx msg out]
+      (prn :out msg)
+      (.add out (retain msg)))
+
+    (exceptionCaught [ctx throwable]
+      (warn throwable "out-tap caught"))
+
+    (isSharable [] true)))
+
+(defn in-tap
+  "Logs all inbound messages."
+  []
+  (proxy [MessageToMessageDecoder] []
+    (decode [ctx msg out]
+      (prn :in msg)
+      (retain msg)
+      (.add out (retain msg)))
+
+    (exceptionCaught [ctx throwable]
+      (warn throwable "in-tap caught"))
+
     (isSharable [] true)))
 
 (defn event-executor
