@@ -83,9 +83,10 @@
     (isSharable [] true)))
 
 (defn event-executor
-  "Creates a new netty execution handler."
+  "Creates a new netty execution handler for processing events. Defaults to 1
+  thread per core."
   []
-  (DefaultEventExecutorGroup. 100))
+  (DefaultEventExecutorGroup. (.. Runtime getRuntime availableProcessors)))
 
 (defonce ^DefaultEventExecutorGroup shared-event-executor
   (event-executor))
