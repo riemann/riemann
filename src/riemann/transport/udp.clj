@@ -23,6 +23,7 @@
                                       protobuf-decoder
                                       protobuf-encoder
                                       msg-decoder
+                                      shutdown-event-executor-group
                                       shared-event-executor
                                       channel-pipeline-factory]]))
 
@@ -89,14 +90,17 @@
                            (DefaultMessageSizeEstimator. max-size)))
 
                 ; Start bootstrap
-                (.add channel-group (.channel (.bind bootstrap (InetSocketAddress. host port))))
+                (->> (InetSocketAddress. host port)
+                     (.bind bootstrap)
+                     (.channel)
+                     (.add channel-group))
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn []
                           (-> channel-group .close .awaitUninterruptibly)
-                          (-> worker-group .shutdownGracefully .awaitUninterruptibly)
+                          @(shutdown-event-executor-group worker-group)
                           (info "UDP server" host port max-size "shut down")
                           ))))))
 

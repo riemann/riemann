@@ -21,12 +21,30 @@
                             MessageToMessageEncoder)
     (io.netty.handler.codec.protobuf ProtobufDecoder
                                             ProtobufEncoder)
-    (io.netty.util.concurrent DefaultEventExecutorGroup ImmediateEventExecutor)))
+    (io.netty.util.concurrent Future
+                              EventExecutorGroup
+                              DefaultEventExecutorGroup
+                              ImmediateEventExecutor)))
 
-(defn channel-group
+(defn ^DefaultChannelGroup channel-group
   "Make a channel group with a given name."
   [name]
   (DefaultChannelGroup. name (ImmediateEventExecutor/INSTANCE)))
+
+(defn derefable
+  "A simple wrapper for a netty future which on deref just calls
+  (syncUninterruptibly f), and returns the future's result."
+  [^Future f]
+  (reify clojure.lang.IDeref
+    (deref [_]
+      (.syncUninterruptibly f)
+      (.get f))))
+
+(defn ^Future shutdown-event-executor-group
+  "Gracefully shut down an event executor group. Returns a derefable future."
+  [^EventExecutorGroup g]
+  ; 10ms quiet period, 10s timeout.
+  (derefable (.shutdownGracefully g 10 1000 TimeUnit/MILLISECONDS)))
 
 (defmacro channel-pipeline-factory
   "Constructs an instance of a Netty ChannelInitializer from a list of

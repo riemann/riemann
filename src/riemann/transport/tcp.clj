@@ -32,6 +32,7 @@
                                   msg-decoder
                                   msg-encoder
                                   shared-event-executor
+                                  shutdown-event-executor-group
                                   channel-group
                                   channel-pipeline-factory]]))
 
@@ -142,10 +143,10 @@
                         (fn killer []
                           (.. channel-group close awaitUninterruptibly)
                           ; Shut down workers and boss concurrently.
-                          (let [w (.shutdownGracefully worker-group)
-                                b (.shutdownGracefully boss-group)]
-                            (.awaitUninterruptibly w)
-                            (.awaitUninterruptibly b))
+                          (let [w (shutdown-event-executor-group worker-group)
+                                b (shutdown-event-executor-group boss-group)]
+                            @w
+                            @b)
                           (info "TCP server" host port "shut down")))))))
 
   (stop! [this]
