@@ -131,15 +131,21 @@
                   (.childHandler pipeline-factory))
 
                 ; Start bootstrap
-                (.add channel-group (.channel (.bind bootstrap (InetSocketAddress. host port))))
+                (->> (InetSocketAddress. host port)
+                     (.bind bootstrap)
+                     (.channel)
+                     (.add channel-group))
                 (info "TCP server" host port "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn killer []
-                          (-> channel-group .close .awaitUninterruptibly)
-                          (-> worker-group .shutdownGracefully .awaitUninterruptibly)
-                          (-> boss-group .shutdownGracefully .awaitUninterruptibly)
+                          (.. channel-group close awaitUninterruptibly)
+                          ; Shut down workers and boss concurrently.
+                          (let [w (.shutdownGracefully worker-group)
+                                b (.shutdownGracefully boss-group)]
+                            (.awaitUninterruptibly w)
+                            (.awaitUninterruptibly b))
                           (info "TCP server" host port "shut down")))))))
 
   (stop! [this]
