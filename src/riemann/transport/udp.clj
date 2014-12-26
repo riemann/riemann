@@ -53,13 +53,27 @@
   "A ChannelHandler that just initializes the channel with a pipeline. Lets us
   re-use the pipeline initializer logic from the TCP handler."
   [^ChannelInitializer initializer]
-  (proxy [ChannelHandler] []
+  (proxy [ChannelInboundHandlerAdapter] []
     (channelRegistered [ctx]
+      (prn "Handler initializing channel context" ctx)
+      (prn "This is" this)
       (let [pipeline (.pipeline ctx)]
         (try
+          ; Don't call this initializer again
+          (prn "Removing this from pipeline" pipeline)
           (.remove pipeline this)
+
+          ; Replace the pipeline for this context with one from the initializer.
+          (prn "registering with" initializer)
           (.channelRegistered initializer ctx)
+
+          (prn "New pipeline is" pipeline)
+
+          ; Propagate registration event
+          (prn "Propagating")
           (.fireChannelRegistered ctx)
+
+          (prn "Pipeline setup complete.")
           (catch Throwable e
             (warn e "Failed to initialize channel")
             (.close ctx)))))))
@@ -101,25 +115,30 @@
                 (doto bootstrap
                   (.group worker-group)
                   (.channel NioDatagramChannel)
-                  (.handler (pipeline-initializer-handler pipeline-factory))
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
-                           (DefaultMessageSizeEstimator. max-size)))
+                           (DefaultMessageSizeEstimator. max-size))
+                  (.handler (pipeline-initializer-handler pipeline-factory)))
 
                 ; Start bootstrap
+                (prn "Starting bootstrap")
                 (->> (InetSocketAddress. host port)
                      (.bind bootstrap)
+                     (.sync)
                      (.channel)
                      (.add channel-group))
+                (prn "Bootstrap running")
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server
                 (reset! killer
-                        (fn []
+                        (fn killer []
+                          (prn "Shutting down UDP server")
                           (-> channel-group .close .awaitUninterruptibly)
+                          (prn "Channel group shut down.")
                           @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size "shut down")
-                          ))))))
+                          (prn "UDP server shut down.")
+                          (info "UDP server" host port max-size "shut down")))))))
 
   (stop! [this]
          (locking this
@@ -168,7 +187,7 @@
          pf (get opts :pipeline-factory
                  (channel-pipeline-factory
                    ^:shared protobuf-decoder (protobuf-decoder)
-;                   ^:shared protobuf-encoder (protobuf-encoder)
+                   ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
                    ^{:shared true :executor shared-event-executor} handler
                    (gen-udp-handler core stats channel-group udp-handler)))]

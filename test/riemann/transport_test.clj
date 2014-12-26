@@ -5,11 +5,8 @@
         riemann.transport.udp
         riemann.transport.websockets
         riemann.logging
-        clojure.test
         lamina.core
-        aleph.tcp
-        aleph.udp
-        gloss.core)
+        clojure.test)
   (:require [clj-http.client :as http]
             [riemann.pubsub :as pubsub]
             [riemann.transport.sse :refer [sse-server]]
@@ -20,7 +17,6 @@
             [riemann.index :as index])
   (:import (java.net Socket
                      InetAddress)
-           (org.jboss.netty.buffer ChannelBuffers)
            (java.io IOException)))
 
 (deftest ws-put-events-test
@@ -163,6 +159,7 @@
                                            (:cert client))))))))
 
 (deftest ignores-garbage
+  (try
   (riemann.logging/suppress ["riemann.core"];"riemann.transport"
                              ;"riemann.core"
                              ;"riemann.pubsub"]
@@ -174,11 +171,7 @@
         ; Write garbage
         (prn "writing")
         (doto (.getOutputStream sock)
-          (.write (int 1))
-          (.write (int 0))
-          (.write (int 0))
-          (.write (int 1))
-          (.write (int -128))
+          (.write (byte-array (map byte (range -128 127))))
           (.flush))
         (prn "wrote")
 
@@ -192,4 +185,9 @@
         (finally
           (prn "Shutting down")
           (.close sock)
-          (stop! core))))))
+          (prn "Socket closed.")
+          (stop! core)
+          (prn "Core stopped.")))))
+    (catch Throwable t
+      (prn "Outer caught!")
+      (.printStackTrace t))))

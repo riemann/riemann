@@ -136,6 +136,7 @@
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
                      (.bind bootstrap)
+                     (.sync)
                      (.channel)
                      (.add channel-group))
                 (info "TCP server" host port "online")
