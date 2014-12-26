@@ -91,19 +91,18 @@
   (riemann.logging/suppress [;"riemann.transport"
                              "riemann.core"
                              "riemann.pubsub"]
-    (let [server (udp-server {:port 15555})
-          core   (transition! (core) {:services [server]})
-          client (wait-for-result (udp-socket {}))
-          msg (ChannelBuffers/wrappedBuffer
-                (encode {:ok true}))]
-
+    (let [port   15555
+          server (udp-server {:port port})
+          sink   (promise)
+          core   (transition! (core) {:services [server]
+                                      :streams  [(partial deliver sink)]})
+          client (client/udp-client {:port port})
+          event  (event {:service "hi" :state "ok" :metric 1.23})]
       (try
-        (enqueue client {:host "localhost"
-                         :port 15555
-                         :message msg})
-        (Thread/sleep 100)
+        (client/send-event client event)
+        (is (= event (deref sink 1000 :timed-out)))
         (finally
-          (close client)
+          (client/close-client client)
           (stop! core))))))
 
 (defn test-tcp-client
