@@ -1,10 +1,42 @@
-(ns riemann.transport.util
-  "Helpers for Netty stuff."
+(ns riemann.transport.debug
+  "It is very dark. You are likely to be eaten a grue."
+  (:require [clojure.tools.logging :refer :all]
+            [riemann.transport :refer [retain]])
   (:import [io.netty.channel ChannelHandler
                              ChannelInboundHandler
-                             ChannelOutboundHandler]))
+                             ChannelOutboundHandler]
+           [io.netty.handler.codec MessageToMessageEncoder
+                                   MessageToMessageDecoder]))
+
+(defn out-tap
+  "Logs all outbound messages."
+  []
+  (proxy [MessageToMessageEncoder] []
+    (encode [ctx msg out]
+      (prn :out msg)
+      (.add out (retain msg)))
+
+    (exceptionCaught [ctx throwable]
+      (warn throwable "out-tap caught"))
+
+    (isSharable [] true)))
+
+(defn in-tap
+  "Logs all inbound messages."
+  []
+  (proxy [MessageToMessageDecoder] []
+    (decode [ctx msg out]
+      (prn :in msg)
+      (retain msg)
+      (.add out (retain msg)))
+
+    (exceptionCaught [ctx throwable]
+      (warn throwable "in-tap caught"))
+
+    (isSharable [] true)))
 
 (defn tap [n]
+  "Log fucking everything, prefixed by `n`."
   (reify
     ChannelHandler
     ChannelInboundHandler
