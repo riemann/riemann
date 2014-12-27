@@ -16,6 +16,7 @@
     (com.aphyr.riemann Proto$Msg)
     (io.netty.channel ChannelInitializer Channel ChannelHandler)
     (io.netty.channel.group ChannelGroup DefaultChannelGroup)
+    (io.netty.channel.socket DatagramPacket)
     (io.netty.buffer ByteBufInputStream)
     (io.netty.handler.codec MessageToMessageDecoder
                             MessageToMessageEncoder)
@@ -46,6 +47,14 @@
   [^EventExecutorGroup g]
   ; 10ms quiet period, 10s timeout.
   (derefable (.shutdownGracefully g 10 1000 TimeUnit/MILLISECONDS)))
+
+(defn retain
+  "Retain a ReferenceCounted object, if x is such an object. Otherwise, noop.
+  Returns x."
+  [x]
+  (when (instance? ReferenceCounted x)
+    (.retain x))
+  x)
 
 (defmacro channel-pipeline-factory
   "Constructs an instance of a Netty ChannelInitializer from a list of
@@ -85,6 +94,15 @@
   []
   (ProtobufEncoder.))
 
+(defn datagram->byte-buf-decoder
+  "A decoder that turns DatagramPackets into ByteBufs."
+  []
+  (proxy [MessageToMessageDecoder] []
+    (decode [context ^DatagramPacket message out]
+      (.add out (retain (.content message))))
+
+    (isSharable [] true)))
+
 (defn msg-decoder
   "Netty decoder for Msg protobuf objects -> maps"
   []
@@ -100,14 +118,6 @@
     (encode [context message out]
       (.add out (encode-pb-msg message)))
     (isSharable [] true)))
-
-(defn retain
-  "Retain a ReferenceCounted object, if x is such an object. Otherwise, noop.
-  Returns x."
-  [x]
-  (when (instance? ReferenceCounted x)
-    (.retain x))
-  x)
 
 (defn out-tap
   "Logs all outbound messages."

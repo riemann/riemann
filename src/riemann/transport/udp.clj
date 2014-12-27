@@ -10,6 +10,8 @@
                              ChannelOption
                              ChannelHandlerContext
                              DefaultMessageSizeEstimator
+                             ChannelOutboundHandler
+                             ChannelInboundHandler
                              ChannelInboundHandlerAdapter]
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
@@ -22,8 +24,8 @@
         [riemann.time          :only [unix-time]]
         [riemann.transport     :only [handle
                                       channel-group
+                                      datagram->byte-buf-decoder
                                       protobuf-decoder
-                                      protobuf-encoder
                                       msg-decoder
                                       shutdown-event-executor-group
                                       shared-event-executor
@@ -49,40 +51,11 @@
   (handle core message)
   (metrics/update! stats (- (System/nanoTime) (:decode-time message))))
 
-(defn pipeline-initializer-handler
-  "A ChannelHandler that just initializes the channel with a pipeline. Lets us
-  re-use the pipeline initializer logic from the TCP handler."
-  [^ChannelInitializer initializer]
-  (proxy [ChannelInboundHandlerAdapter] []
-    (channelRegistered [ctx]
-      (prn "Handler initializing channel context" ctx)
-      (prn "This is" this)
-      (let [pipeline (.pipeline ctx)]
-        (try
-          ; Don't call this initializer again
-          (prn "Removing this from pipeline" pipeline)
-          (.remove pipeline this)
-
-          ; Replace the pipeline for this context with one from the initializer.
-          (prn "registering with" initializer)
-          (.channelRegistered initializer ctx)
-
-          (prn "New pipeline is" pipeline)
-
-          ; Propagate registration event
-          (prn "Propagating")
-          (.fireChannelRegistered ctx)
-
-          (prn "Pipeline setup complete.")
-          (catch Throwable e
-            (warn e "Failed to initialize channel")
-            (.close ctx)))))))
-
 (defrecord UDPServer [^String host
                       ^int port
                       max-size
                       ^ChannelGroup channel-group
-                      pipeline-factory
+                      ^ChannelHandler handler
                       stats
                       core
                       killer]
@@ -118,16 +91,15 @@
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size))
-                  (.handler (pipeline-initializer-handler pipeline-factory)))
+                  (.handler handler))
 
                 ; Start bootstrap
-                (prn "Starting bootstrap")
                 (->> (InetSocketAddress. host port)
                      (.bind bootstrap)
                      (.sync)
                      (.channel)
                      (.add channel-group))
-                (prn "Bootstrap running")
+
                 (info "UDP server" host port max-size "online")
 
                 ; fn to close server
@@ -184,11 +156,11 @@
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
-         pf (get opts :pipeline-factory
+         ci (get opts :pipeline-factory
                  (channel-pipeline-factory
+                   ^:shared datagram-decoder (datagram->byte-buf-decoder)
                    ^:shared protobuf-decoder (protobuf-decoder)
-                   ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
                    ^{:shared true :executor shared-event-executor} handler
                    (gen-udp-handler core stats channel-group udp-handler)))]
-     (UDPServer. host port max-size channel-group pf stats core (atom nil)))))
+     (UDPServer. host port max-size channel-group ci stats core (atom nil)))))

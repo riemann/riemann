@@ -5,10 +5,10 @@
         riemann.transport.udp
         riemann.transport.websockets
         riemann.logging
-        lamina.core
         clojure.test)
   (:require [clj-http.client :as http]
             [riemann.pubsub :as pubsub]
+            [lamina.core :as lamina]
             [riemann.transport.sse :refer [sse-server]]
             [aleph.http :refer [http-request]]
             [aleph.formats :as formats]
@@ -75,9 +75,9 @@
        (client/send-event client {:service "service2"})
        (let [[r2 r1] (->> response
                           :body
-                          (take* 2)
-                          (map* convert)
-                          channel->lazy-seq)]
+                          (lamina/take* 2)
+                          (lamina/map* convert)
+                          lamina/channel->lazy-seq)]
          (is (#{"service1" "service2"} (get r1 "service")))
          (is (#{"service1" "service2"} (get r2 "service"))))
        (finally
@@ -95,7 +95,7 @@
           client (client/udp-client {:port port})
           event  (event {:service "hi" :state "ok" :metric 1.23})]
       (try
-        (client/send-event client event)
+        (client/send-event client event false)
         (is (= event (deref sink 1000 :timed-out)))
         (finally
           (client/close-client client)
