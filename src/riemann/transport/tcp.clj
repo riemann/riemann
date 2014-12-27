@@ -21,7 +21,6 @@
            [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
            [io.netty.channel.nio NioEventLoopGroup])
   (:require [less.awful.ssl :as ssl]
-            [riemann.transport.debug :as debug]
             [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
         [interval-metrics.measure :only [measure-latency]]

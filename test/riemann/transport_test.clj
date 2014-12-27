@@ -4,9 +4,9 @@
         riemann.transport.tcp
         riemann.transport.udp
         riemann.transport.websockets
-        riemann.logging
         clojure.test)
   (:require [clj-http.client :as http]
+            [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
             [lamina.core :as lamina]
             [riemann.transport.sse :refer [sse-server]]
@@ -19,9 +19,11 @@
                      InetAddress)
            (java.io IOException)))
 
+(logging/init)
+
 (deftest ws-put-events-test
-  (riemann.logging/suppress
-    [;"riemann.transport"
+  (logging/suppress
+    ["riemann.transport"
      "riemann.core"
      "riemann.pubsub"]
     (let [server (ws-server {:port 15556})
@@ -49,8 +51,9 @@
       (stop! core))))
 
 (deftest sse-subscribe-events-test
-  (riemann.logging/suppress [;"riemann.transport"
-                             "riemann.core" "riemann.pubsub"]
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
    (let [s1       (tcp-server {:port 15555})
          s2       (sse-server {:port 15558})
          core     (core)
@@ -84,9 +87,9 @@
          (stop! core))))))
 
 (deftest udp-test
-  (riemann.logging/suppress [;"riemann.transport"
-                             "riemann.core"
-                             "riemann.pubsub"]
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
     (let [port   15555
           server (udp-server {:port port})
           sink   (promise)
@@ -103,9 +106,9 @@
 
 (defn test-tcp-client
   [client-opts server-opts]
-  (riemann.logging/suppress [;"riemann.transport"
-                             "riemann.core"
-                             "riemann.pubsub"]
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
     (let [server (tcp-server server-opts)
           index (wrap-index (index/index))
           core (transition! (core) {:index index
@@ -138,7 +141,7 @@
     ; Works with valid config
     (test-tcp-client client server)
 
-    (riemann.logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
+    (logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
       ; Fails with mismatching client key/cert
       (is (thrown? IOException
                    (test-tcp-client (assoc client :key (:key server))
@@ -159,35 +162,22 @@
                                            (:cert client))))))))
 
 (deftest ignores-garbage
-  (try
-  (riemann.logging/suppress ["riemann.core"];"riemann.transport"
-                             ;"riemann.core"
-                             ;"riemann.pubsub"]
+  (logging/suppress ["riemann.core"
+                     "riemann.transport"
+                     "riemann.pubsub"]
     (let [port   15555
           server (tcp-server {:port port})
           core   (transition! (core) {:services [server]})
           sock   (Socket. "localhost" port)]
       (try
         ; Write garbage
-        (prn "writing")
         (doto (.getOutputStream sock)
           (.write (byte-array (map byte (range -128 127))))
           (.flush))
-        (prn "wrote")
 
-        ; Should close socket
-        (is (.isClosed sock))
-;        (is (thrown? java.lang.IllegalStateException
-;                     (.. sock getInputStream read)))
-        (catch Throwable t
-          (prn "Caught!")
-          (.printStackTrace t))
+        ; lmao, (.isClosed sock) is meaningless
+        (is (= -1 (.. sock getInputStream read)))
+
         (finally
-          (prn "Shutting down")
           (.close sock)
-          (prn "Socket closed.")
-          (stop! core)
-          (prn "Core stopped.")))))
-    (catch Throwable t
-      (prn "Outer caught!")
-      (.printStackTrace t))))
+          (stop! core))))))
