@@ -23,7 +23,6 @@
                        (stop! core)
                        (is (thrown? java.io.IOException
                                     (send-event client {:service "test"})))
-                       
 
                        ; Restart server; should work
                        (start! core)
