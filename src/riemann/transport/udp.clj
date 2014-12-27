@@ -105,11 +105,8 @@
                 ; fn to close server
                 (reset! killer
                         (fn killer []
-                          (prn "Shutting down UDP server")
                           (-> channel-group .close .awaitUninterruptibly)
-                          (prn "Channel group shut down.")
                           @(shutdown-event-executor-group worker-group)
-                          (prn "UDP server shut down.")
                           (info "UDP server" host port max-size "shut down")))))))
 
   (stop! [this]
