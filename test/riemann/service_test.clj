@@ -149,6 +149,7 @@
            (testing "stats"
              (logging/suppress "riemann.service" (.start! s))
              (dotimes [i 3] (run))
+             (Thread/sleep 1) ; Let the executor catch up
 
              (time.controlled/advance! 5)
              (is (= (instrumentation/events s)
