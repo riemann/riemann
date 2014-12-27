@@ -6,6 +6,7 @@
         riemann.transport.websockets
         clojure.test)
   (:require [clj-http.client :as http]
+            [clojure.java.io :as io]
             [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
             [lamina.core :as lamina]
@@ -66,25 +67,39 @@
                     :services [s1 s2]
                     :streams  [index]})
          client   (client/tcp-client {:port 15555})
-         convert  (comp json/parse-string
-                        second
-                        (partial re-matches #"data: (.*)\n\n")
-                        formats/bytes->string)
-         response @(http-request
-                     {:method :get
-                      :url    "http://127.0.0.1:15558/index?query=true"})]
-     (try
-       (client/send-event client {:service "service1"})
-       (client/send-event client {:service "service2"})
-       (let [[r2 r1] (->> response
-                          :body
-                          (lamina/take* 2)
-                          (lamina/map* convert)
-                          lamina/channel->lazy-seq)]
-         (is (#{"service1" "service2"} (get r1 "service")))
-         (is (#{"service1" "service2"} (get r2 "service"))))
-       (finally
-         (stop! core))))))
+;         convert  (comp json/parse-string
+;                        second
+;                        (partial re-matches #"data: (.*)\n\n")
+;                        formats/bytes->string)
+         res      (http/get "http://127.0.0.1:15558/index?query=true"
+                            {:as :stream})
+         events   [{:host "h1" :service "s", :metric -6, :time 0}
+                   {:host "h2" :service "s2" :metric 1.5, :time 10}]]
+
+     ; Send events to server over TCP
+     (dorun (map (partial client/send-event client) events))
+
+     ; And read back via SSE
+     (let [stream (line-seq (io/reader (:body res)))]
+       (try
+         (let [events' (->> stream
+                            (take-nth 2) ; Delimiter is \n\n, why? --aphyr
+                            (take 2)
+                            (map (partial re-matches #"data: (.*)"))
+                            (map second)
+                            (map #(json/parse-string % true)))]
+           (is (= events'
+                  [{:host "h1", :service "s", :state nil, :description nil,
+                    :metric -6, :tags nil, :time "1970-01-01T00:00:00.000Z",
+                    :ttl nil}
+                   {:host "h2", :service "s2", :state nil, :description nil,
+                    :metric 1.5, :tags nil, :time "1970-01-01T00:00:10.000Z",
+                    :ttl nil}])))
+
+         (finally
+           ; Shut down server and close client stream
+           (stop! core)
+           (dorun stream)))))))
 
 (deftest udp-test
   (logging/suppress ["riemann.transport"
