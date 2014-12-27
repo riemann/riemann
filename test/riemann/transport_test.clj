@@ -81,13 +81,13 @@
                             (map (partial re-matches #"data: (.*)"))
                             (map second)
                             (map #(json/parse-string % true)))]
-           (is (= events'
-                  [{:host "h1", :service "s", :state nil, :description nil,
+           (is (= (set events')
+                  #{{:host "h1", :service "s", :state nil, :description nil,
                     :metric -6, :tags nil, :time "1970-01-01T00:00:00.000Z",
                     :ttl nil}
                    {:host "h2", :service "s2", :state nil, :description nil,
                     :metric 1.5, :tags nil, :time "1970-01-01T00:00:10.000Z",
-                    :ttl nil}])))
+                    :ttl nil}})))
 
          (finally
            ; Shut down server and close client stream
