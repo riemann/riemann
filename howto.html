@@ -131,6 +131,26 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>Including configuration from multiple files</h3>
+<div class="row">
+  <div class="sixcol">
+    <p>Often your Riemann configuration file will get quite large as you add streams and handle more events. Additionally, if you're managing Riemann with a configuration management tool like Puppet or Chef then it can be complex to template a large configuration file. To help with this Riemann also supports including other configuration files in your main configuration file. This is done with the <a href="http://riemann.io/api/riemann.config.html#var-include">include</a> variable. The <code>include</code> variable will include a single file or directory of configuration files. If you specify a directory then it will load all files ending in <code>.config</code> or <code>.clj</code>) contained in that directory.</p>
+    </div>
+    <div class="sixcol last">
+      {% highlight clj %}
+      ; Include relative to the current config file or current working directory
+      (include "foo.clj")
+
+      ; Specify an absolute path
+      (include "/foo/bar.clj")
+
+      ; Include a whole directory
+      (include "/usr/local/riemann/config")
+      {% endhighlight %}
+    </div>
+  </div>
+</div>
+
 <h3>Putting Riemann into production</h3>
 <div class="row">
   <div class="sixcol">
@@ -708,7 +728,7 @@ Ran 1 tests containing 1 assertions.
     won't count against your Hotspot inlining budget, etc.</p>
 
     <p> Note also that the test framework doesn't actually run a core,
-    so functions that require one, (like 
+    so functions that require one, (like
     <code>riemann.config/reinject</code>), can't work from within the test
     framework.</p>
   </div>
