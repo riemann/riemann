@@ -12,7 +12,7 @@
         [riemann.codec :only [->Event]]
         [riemann.transport.tcp :only [tcp-server
                                       gen-tcp-handler]]
-        [riemann.transport :only [channel-pipeline-factory
+        [riemann.transport :only [channel-initializer
                                   channel-group
                                   shared-event-executor]]
         [interval-metrics.measure :only [measure-latency]]
@@ -102,10 +102,10 @@
     ; Stream event
     (stream! core message)))
 
-(defn cpf
+(defn initializer
   "The pipeline of decoders, handlers, etc for parsing and handling messages."
   [parser-fn message-handler]
-  (channel-pipeline-factory
+  (channel-initializer
     frame-decoder (DelimiterBasedFrameDecoder. 1024 (Delimiters/lineDelimiter))
     ^:shared string-decoder   (StringDecoder. CharsetUtil/UTF_8)
     ^:shared string-encoder   (StringEncoder. CharsetUtil/UTF_8)
@@ -132,10 +132,10 @@
                                     stats
                                     channel-group
                                     opentsdb-handler)
-           pipeline-factory (cpf (:parser-fn opts) handler)]
+           initializer (initializer (:parser-fn opts) handler)]
        (server (merge opts
                       {:host host
                        :port port
                        :core core
                        :channel-group channel-group
-                       :pipeline-factory pipeline-factory})))))
+                       :initializer initializer})))))

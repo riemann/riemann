@@ -10,7 +10,7 @@
                                       gen-tcp-handler]]
         [riemann.transport.udp :only [udp-server
                                       gen-udp-handler]]
-        [riemann.transport :only [channel-pipeline-factory
+        [riemann.transport :only [channel-initializer
                                   channel-group
                                   shared-event-executor]]
         [slingshot.slingshot :only [try+ throw+]]
@@ -115,8 +115,8 @@
                                         core nil channel-group graphite-handler)
                                       (gen-udp-handler
                                         core nil channel-group graphite-handler))
-           pipeline-factory
-           (channel-pipeline-factory
+           initializer
+           (channel-initializer
              frame-decoder  (DelimiterBasedFrameDecoder.
                               1024
                               (Delimiters/lineDelimiter))
@@ -133,4 +133,4 @@
                        :port port
                        :core core
                        :channel-group channel-group
-                       :pipeline-factory pipeline-factory})))))
+                       :initializer   initializer})))))

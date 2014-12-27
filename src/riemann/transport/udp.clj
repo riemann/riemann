@@ -29,7 +29,7 @@
                                       msg-decoder
                                       shutdown-event-executor-group
                                       shared-event-executor
-                                      channel-pipeline-factory]]))
+                                      channel-initializer]]))
 
 (defn gen-udp-handler
   [core stats ^ChannelGroup channel-group handler]
@@ -145,7 +145,7 @@
   :port             The port to listen on (default 5555).
   :max-size         The maximum datagram size (default 16384 bytes).
   :channel-group    A ChannelGroup used to track all connections
-  :pipeline-factory A ChannelInitializer"
+  :initializer      A ChannelInitializer"
   ([] (udp-server {}))
   ([opts]
    (let [core  (get opts :core (atom nil))
@@ -156,8 +156,8 @@
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
-         ci (get opts :pipeline-factory
-                 (channel-pipeline-factory
+         ci (get opts :initializer
+                 (channel-initializer
                    ^:shared datagram-decoder (datagram->byte-buf-decoder)
                    ^:shared protobuf-decoder (protobuf-decoder)
                    ^:shared msg-decoder      (msg-decoder)

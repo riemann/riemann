@@ -9,6 +9,7 @@
            [io.netty.buffer ByteBufUtil]
            [io.netty.channel Channel
                              ChannelOption
+                             ChannelInitializer
                              ChannelHandler
                              ChannelHandlerContext
                              ChannelFutureListener
@@ -20,6 +21,7 @@
            [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
            [io.netty.channel.nio NioEventLoopGroup])
   (:require [less.awful.ssl :as ssl]
+            [riemann.transport.debug :as debug]
             [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
         [interval-metrics.measure :only [measure-latency]]
@@ -27,8 +29,6 @@
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]
         [riemann.transport :only [handle
-                                  in-tap
-                                  out-tap
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
@@ -36,7 +36,7 @@
                                   shared-event-executor
                                   shutdown-event-executor-group
                                   channel-group
-                                  channel-pipeline-factory]]))
+                                  channel-initializer]]))
 
 (defn int32-frame-decoder
   []
@@ -91,7 +91,7 @@
                       ^int port
                       equiv
                       ^ChannelGroup channel-group
-                      pipeline-factory
+                      ^ChannelInitializer initializer
                       core
                       stats
                       killer]
@@ -131,7 +131,7 @@
                   (.childOption ChannelOption/SO_REUSEADDR true)
                   (.childOption ChannelOption/TCP_NODELAY true)
                   (.childOption ChannelOption/SO_KEEPALIVE true)
-                  (.childHandler pipeline-factory))
+                  (.childHandler initializer))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
@@ -187,12 +187,12 @@
     ; (doto (.setEnableRenegotiation false))
     ))
 
-(defn cpf
-  "A channel pipeline factory for a TCP server."
+(defn initializer
+  "A channel pipeline initializer for a TCP server."
   [core stats channel-group ssl-context]
   ; Gross hack; should re-work the pipeline macro
   (if ssl-context
-    (channel-pipeline-factory
+    (channel-initializer
                ssl                 (ssl-handler ssl-context)
                int32-frame-decoder (int32-frame-decoder)
       ^:shared int32-frame-encoder (int32-frame-encoder)
@@ -203,7 +203,7 @@
       ^{:shared true :executor shared-event-executor} handler
       (gen-tcp-handler core stats channel-group tcp-handler))
 
-    (channel-pipeline-factory
+    (channel-initializer
                int32-frame-decoder  (int32-frame-decoder)
       ^:shared int32-frame-encoder  (int32-frame-encoder)
       ^:shared protobuf-decoder     (protobuf-decoder)
@@ -219,7 +219,7 @@
   :port             The port to listen on. (default 5554 with TLS, or 5555 std)
   :core             An atom used to track the active core for this server
   :channel-group    A global channel group used to track all connections.
-  :pipeline-factory A ChannelInitializer for creating new pipelines.
+  :initializer      A ChannelInitializer for creating new pipelines.
 
   TLS options:
   :tls?             Whether to enable TLS
@@ -238,19 +238,23 @@
                               (str "tcp-server " host ":" port)))
          equiv         (select-keys opts [:tls? :key :cert :ca-cert])
          ; Use the supplied pipeline factory...
-         pf (get opts :pipeline-factory
-                 ; or construct one for ourselves!
-                 (if (:tls? opts)
-                   ; A TLS-enabled handler
-                   (do
-                     (assert (:key opts))
-                     (assert (:cert opts))
-                     (assert (:ca-cert opts))
-                     (let [ssl-context (ssl/ssl-context (:key opts)
-                                                        (:cert opts)
-                                                        (:ca-cert opts))]
-                       (cpf core stats channel-group ssl-context)))
-                   ; A standard handler
-                   (cpf core stats channel-group nil)))]
+         initializer (get opts :initializer
+                          ; or construct one for ourselves!
+                          (if (:tls? opts)
+                            ; A TLS-enabled handler
+                            (do
+                              (assert (:key opts))
+                              (assert (:cert opts))
+                              (assert (:ca-cert opts))
+                              (let [ssl-context (ssl/ssl-context
+                                                  (:key opts)
+                                                  (:cert opts)
+                                                  (:ca-cert opts))]
+                                (initializer core stats channel-group
+                                             ssl-context)))
 
-       (TCPServer. host port equiv channel-group pf core stats (atom nil)))))
+                            ; A standard handler
+                            (initializer core stats channel-group nil)))]
+
+       (TCPServer. host port equiv channel-group initializer core stats
+                   (atom nil)))))

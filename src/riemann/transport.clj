@@ -14,14 +14,17 @@
     (java.util.concurrent TimeUnit
                           Executors)
     (com.aphyr.riemann Proto$Msg)
-    (io.netty.channel ChannelInitializer Channel ChannelHandler)
-    (io.netty.channel.group ChannelGroup DefaultChannelGroup)
+    (io.netty.channel ChannelInitializer
+                      Channel
+                      ChannelHandler)
+    (io.netty.channel.group ChannelGroup
+                            DefaultChannelGroup)
     (io.netty.channel.socket DatagramPacket)
     (io.netty.buffer ByteBufInputStream)
     (io.netty.handler.codec MessageToMessageDecoder
                             MessageToMessageEncoder)
     (io.netty.handler.codec.protobuf ProtobufDecoder
-                                            ProtobufEncoder)
+                                     ProtobufEncoder)
     (io.netty.util ReferenceCounted)
     (io.netty.util.concurrent Future
                               EventExecutorGroup
@@ -56,7 +59,7 @@
     (.retain x))
   x)
 
-(defmacro channel-pipeline-factory
+(defmacro channel-initializer
   "Constructs an instance of a Netty ChannelInitializer from a list of
   names and expressions which return handlers. Handlers with :shared metadata
   on their names are bound once and re-used in every invocation of
@@ -117,33 +120,6 @@
   (proxy [MessageToMessageEncoder] []
     (encode [context message out]
       (.add out (encode-pb-msg message)))
-    (isSharable [] true)))
-
-(defn out-tap
-  "Logs all outbound messages."
-  []
-  (proxy [MessageToMessageEncoder] []
-    (encode [ctx msg out]
-      (prn :out msg)
-      (.add out (retain msg)))
-
-    (exceptionCaught [ctx throwable]
-      (warn throwable "out-tap caught"))
-
-    (isSharable [] true)))
-
-(defn in-tap
-  "Logs all inbound messages."
-  []
-  (proxy [MessageToMessageDecoder] []
-    (decode [ctx msg out]
-      (prn :in msg)
-      (retain msg)
-      (.add out (retain msg)))
-
-    (exceptionCaught [ctx throwable]
-      (warn throwable "in-tap caught"))
-
     (isSharable [] true)))
 
 (defn event-executor
