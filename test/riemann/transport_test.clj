@@ -9,10 +9,7 @@
             [clojure.java.io :as io]
             [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
-            [lamina.core :as lamina]
             [riemann.transport.sse :refer [sse-server]]
-            [aleph.http :refer [http-request]]
-            [aleph.formats :as formats]
             [cheshire.core :as json]
             [riemann.client :as client]
             [riemann.index :as index])
@@ -67,10 +64,6 @@
                     :services [s1 s2]
                     :streams  [index]})
          client   (client/tcp-client {:port 15555})
-;         convert  (comp json/parse-string
-;                        second
-;                        (partial re-matches #"data: (.*)\n\n")
-;                        formats/bytes->string)
          res      (http/get "http://127.0.0.1:15558/index?query=true"
                             {:as :stream})
          events   [{:host "h1" :service "s", :metric -6, :time 0}
