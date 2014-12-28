@@ -1276,22 +1276,32 @@
   (with {:host nil :state \"broken\"} prn)"
   [& args]
   (if (map? (first args))
-    ; Merge in a map of new values.
-    (let [[m & children] args]
-      (fn stream [event]
-        ;    Merge on protobufs is broken; nil values aren't applied.
-        ;    (let [e (merge event m)]
-        (let [e (reduce (fn [m, [k, v]]
-                          (if (nil? v) (dissoc m k) (assoc m k v)))
-                        event m)]
-          (call-rescue e children))))
+    (let [[m & children] args
+          transform-event
+          (fn [individual-event]
+            (reduce (fn [m, [k, v]]
+                      (if (nil? v) (dissoc m k) (assoc m k v)))
+                    individual-event m))]
+      (if (empty? m)
+        (fn stream [event]
+          (call-rescue event children))
+        (fn stream [event]
+          (if (vector? event)
+            (call-rescue
+              (into [] (map transform-event event))
+              children)
+            (call-rescue (transform-event event) children)))))
 
     ; Change a particular key.
-    (let [[k v & children] args]
+    (let [[k v & children] args
+          transform-event
+          (fn [individual-event]
+            (if (nil? v) (dissoc individual-event k) (assoc individual-event k v)))]
       (fn stream [event]
-        ;    (let [e (assoc event k v)]
-        (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
-          (call-rescue e children))))))
+        (if (vector? event)
+          (call-rescue (into [] (map transform-event event))
+            children)
+          (call-rescue (transform-event event) children))))))
 
 (defn default
   "Like `with`, but does not override existing (i.e. non-nil) values. Useful
