@@ -1276,12 +1276,15 @@
             (reduce (fn [m, [k, v]]
                       (if (nil? v) (dissoc m k) (assoc m k v)))
                     individual-event m))]
-      (fn stream [event]
-        (if (vector? event)
-          (call-rescue
-            (into [] (map transform-event event))
-            children)
-          (call-rescue (transform-event event) children))))
+      (if (empty? m)
+        (fn stream [event]
+          (call-rescue event children))
+        (fn stream [event]
+          (if (vector? event)
+            (call-rescue
+              (into [] (map transform-event event))
+              children)
+            (call-rescue (transform-event event) children)))))
 
     ; Change a particular key.
     (let [[k v & children] args

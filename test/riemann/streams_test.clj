@@ -689,7 +689,8 @@
 
 (deftest with-map
          (let [r (ref nil)
-               s (with {:service "foo" :state nil} (fn [e] (dosync (ref-set r e))))]
+               s (with {:service "foo" :state nil} (fn [e] (dosync (ref-set r e))))
+               empty-s (with {} (fn [e] (dosync (ref-set r e))))]
            (s (event {:service nil}))
            (is (= "foo" (:service (deref r))))
            (is (= nil (:state (deref r))))
@@ -700,7 +701,10 @@
 
            (s (event {:service "bar" :test "baz" :state "evil"}))
            (is (= "foo" (:service (deref r))))
-           (is (= nil (:state (deref r))))))
+           (is (= nil (:state (deref r))))
+
+           (empty-s (event {:service "bar" :test "baz"}))
+           (is (= "bar" (:service (deref r))))))
 
 (deftest by-single
          ; Each test stream keeps track of the first host it sees, and confirms
