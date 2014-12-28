@@ -1525,8 +1525,8 @@ can decide whether an event is worthy of an alert by tagging it:</p>
 (require ['clojure.string :as str])
 
 (streams
-  ; Replace services like "legacy <anything>" with "new <anything>". Passes through
-  ; services that don't match the regular expression, unchanged.
+  ; Replace services like "legacy <anything>" with "new <anything>". Passes
+  through ; services that don't match the regular expression, unchanged.
   (adjust [:service str/replace #"^legacy (\w+)$"]
     ...))
 {% endhighlight %}
