@@ -1526,7 +1526,7 @@ can decide whether an event is worthy of an alert by tagging it:</p>
 
 (streams
   ; Replace services like "legacy <anything>" with "new <anything>". Passes
-  through ; services that don't match the regular expression, unchanged.
+  ; through services that don't match the regular expression, unchanged.
   (adjust [:service str/replace #"^legacy (\w+)$"]
     ...))
 {% endhighlight %}
