@@ -1478,6 +1478,41 @@ can decide whether an event is worthy of an alert by tagging it:</p>
   </div>
 </div>
 
+<h3>Apply a regular expression to a field</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can test whether a field matches a regular expression by simply
+    passing a regex to <code>where</code>. Clojure regular expressions look
+    like <code>#"..."</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service #"api req latency [\d\.]+")
+  ...)
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Or you can transform a string using a regular expression and capture
+    groups (also called "backreferences") using
+    <code>clojure.string/replace</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(require ['clojure.string :as str])
+
+(streams
+  ; Replace services like "legacy <anything>" with "new <anything>". Passes through
+  ; services that don't match the regular expression, unchanged.
+  (adjust [:service str/replace #"^legacy (\w+)$"]
+    ...))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Change units</h3>
 
 <div class="row">
