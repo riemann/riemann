@@ -682,7 +682,10 @@
            (is (= {:service "foo"} (deref r)))
 
            (s {:service "bar" :test "baz"})
-           (is (= {:service "foo" :test "baz"} (deref r)))))
+           (is (= {:service "foo" :test "baz"} (deref r)))
+
+           (s [{:service "bar" :test "baz"}])
+           (is (= [{:service "foo" :test "baz"}] (deref r)))))
 
 (deftest with-map
          (let [r (ref nil)
