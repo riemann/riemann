@@ -1420,12 +1420,12 @@ can provide a default TTL for any incoming events that don't provide one:</p>
 
 <p>Now, any services that fail to check in every ten seconds will expire
 (unless they give a different TTL). Since expired events have a different
-state, any (changed :state) streams will detect the transition and can alert
+state, any (changed-state) streams will detect the transition and can alert
 you:</p>
 
 {% highlight clj %}
 (streams
-  (changed :state {:init "ok"}
+  (changed-state {:init "ok"}
     (email "ops@foo.com")))
 {% endhighlight %}
 
