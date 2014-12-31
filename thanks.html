@@ -64,6 +64,9 @@ layout: default
 
       <p>Pedro Araújo (pharaujo) wrote an OpenTSDB server for Riemann! Wow!</p>
 
+      <p>Sergey Avseyev (avsej) and Pascal Quantin wrote a dissector for
+      Wireshark, enabling Riemann's protocol analysis.</p>
+
       <p>Brian Jackson (iggy) expanded the docs for the slack integration.</p>
 
       <p>Colin Alston (calston) fixed a typo in the slack docs.</p>
@@ -80,7 +83,8 @@ layout: default
       <p>Gergely Nagy (algernon) expanded riemann-riak-client to support
       node_gets_set, node_puts_set, and objsize stats. Gergely made a
       performance improvement to (sdo) which removes a stack frame and catch
-      target for zero and single-arity forms.</p>
+      target for zero and single-arity forms. He also wrote a module
+      to send log events to Riemann from Syslog-ng.</p>
 
       <p>Katelyn Perry (kjperry) fixed plural agreement in Riemann-dash's
       socket errors.</p>
@@ -100,8 +104,8 @@ layout: default
       <p>Marc Fournier (mfournier) added a dial view for gauges, and fixed a
       misclosed HTML tag in the dash. He also repaired an incorrect git tag,
       added an example rackup config, and fixed 404s for images when the dash
-      isn't served on /. Then he got Wireshark protocol dissector support built
-      for Riemann!</p>
+      isn't served on /. Then he tested and helped improve the Wireshark
+      protocol dissector for Riemann!</p>
 
       <p>Nebojša Stričević (strika) added Logentries integration.<p>
 
@@ -127,7 +131,9 @@ layout: default
 
       <p>Pierre Yves Ritschard (pyr) rewrote the websocket/sse server to
       replace Aleph with http-kit, and added dynamic dependency resolution to
-      Riemann via Aether.</p>
+      Riemann via Aether. He also added TCP batching to Collectd's
+      write_riemann plugin, drastically improving performance when shipping
+      events from Collectd.</p>
 
       <h2>0.2.6</h2>
 
