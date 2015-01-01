@@ -1458,6 +1458,19 @@ can decide whether an event is worthy of an alert by tagging it:</p>
     (tagged "notify-me" (email "ops@foo.com"))))
 {% endhighlight %}
 
+<p>If you're worried about spikes or flapping you can make use of the <a
+  href="http://riemann.io/api/riemann.streams.html#var-stable">stable</a>
+variable. The <code>stable</code> variable detects stable streams of events
+over time. It takes a time period and event function as input and only passes
+on events that remain the same for the specified time period.</p>
+
+{% highlight clj %}
+(streams
+  (changed-state {:init "ok"}
+    (stable 60 :state
+      (email "ops@foo.com"))))
+{% endhighlight %}
+
 <h3>Group events in time</h3>
 
 <div class="row">
