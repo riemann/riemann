@@ -178,15 +178,16 @@ state = "error rate" and (not host =~ "www.%")
       <h2>See problems faster</h2>
 
       <p>Traditional monitoring systems run polling loops every five minutes,
-      or roll up metrics on a minutely basis. Riemann is reactive: events are
-      pushed by clients and typically processed in 5 milliseconds or less.
-      Low latencies let you see outages faster--and know the instant you've
-      fixed the problem.</p>
+      or roll up metrics on a minutely basis. In a Riemann infrastructure,
+      clients (including stand-alone pollers) *push* their events to Riemann,
+      which makes them visible within milliseconds. Low latencies let you see
+      outages faster--and know the instant you've fixed the problem.</p>
 
-      <p>Throughput depends a lot on what your streams <i>do</i> with incoming
-      events, but real-world clients have reported pushing 14,000
-      events/sec per core on commodity X86 hardware. Riemann is fully parallel
-      and leverages the Clojure STM heavily.</p>
+      <p>Throughput depends on what your streams *do* with events, but a stock
+      Riemann config on commodity x86 hardware can handle *millions* of events
+      per second at sub-ms latencies, with 99ths around 5ms. Riemann is fully
+      parallel and leverages Clojure and JVM concurrency primitives
+      throughout.</p>
     </div>
 
     <div class="sixcol last">
