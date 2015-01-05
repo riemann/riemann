@@ -11,11 +11,13 @@
         clojure.tools.logging)
   (:require [riemann.query       :as query])
   (:import
+    (java.util List)
     (java.util.concurrent TimeUnit
                           Executors)
     (com.aphyr.riemann Proto$Msg)
     (io.netty.channel ChannelInitializer
                       Channel
+                      ChannelPipeline
                       ChannelHandler)
     (io.netty.channel.group ChannelGroup
                             DefaultChannelGroup)
@@ -56,7 +58,7 @@
   Returns x."
   [x]
   (when (instance? ReferenceCounted x)
-    (.retain x))
+    (.retain ^ReferenceCounted x))
   x)
 
 (defmacro channel-initializer
@@ -73,19 +75,24 @@
   (assert (even? (count names-and-exprs)))
   (let [handlers (partition 2 names-and-exprs)
         shared (filter (comp :shared meta first) handlers)
+        pipeline-name (vary-meta (gensym "pipeline")
+                                 assoc :tag `ChannelPipeline)
         forms (map (fn [[h-name h-expr]]
-                     `(.addLast ~(when-let [e (:executor (meta h-name))]
+                     `(.addLast ~pipeline-name
+                                ~(when-let [e (:executor (meta h-name))]
                                    e)
                                 ~(str h-name)
                                 ~(if (:shared (meta h-name))
                                    h-name
                                    h-expr)))
                    handlers)]
+;    (prn forms)
     `(let [~@(apply concat shared)]
        (proxy [ChannelInitializer] []
          (initChannel [~'ch]
-           (doto (.pipeline ~'ch)
-             ~@forms))))))
+           (let [~pipeline-name (.pipeline ^Channel ~'ch)]
+             ~@forms
+             ~pipeline-name))))))
 
 (defn protobuf-decoder
   "Decodes protobufs to Msg objects"
@@ -101,7 +108,7 @@
   "A decoder that turns DatagramPackets into ByteBufs."
   []
   (proxy [MessageToMessageDecoder] []
-    (decode [context ^DatagramPacket message out]
+    (decode [context ^DatagramPacket message ^List out]
       (.add out (retain (.content message))))
 
     (isSharable [] true)))
@@ -110,7 +117,7 @@
   "Netty decoder for Msg protobuf objects -> maps"
   []
   (proxy [MessageToMessageDecoder] []
-    (decode [context message out]
+    (decode [context message ^List out]
       (.add out (decode-msg message)))
     (isSharable [] true)))
 
@@ -118,7 +125,7 @@
   "Netty encoder for maps -> Msg protobuf objects"
   []
   (proxy [MessageToMessageEncoder] []
-    (encode [context message out]
+    (encode [context message ^List out]
       (.add out (encode-pb-msg message)))
     (isSharable [] true)))
 
