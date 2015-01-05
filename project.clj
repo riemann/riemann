@@ -47,10 +47,10 @@
      :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
-  :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"
-                              "-Dcom.sun.management.jmxremote"
-                              "-XX:+UnlockCommercialFeatures"
-                              "-XX:+FlightRecorder"]
+  :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
+;                              "-Dcom.sun.management.jmxremote"
+;                              "-XX:+UnlockCommercialFeatures"
+;                              "-XX:+FlightRecorder"]
                    :dependencies [[criterium "0.4.3"]]}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
