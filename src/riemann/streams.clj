@@ -1187,8 +1187,8 @@
   [client]
   (fn stream [es]
     (if (map? es)
-      (riemann.client/send-event client es)
-      (riemann.client/send-events client es))))
+      @(riemann.client/send-event client es)
+      @(riemann.client/send-events client es))))
 
 (defn match
   "Passes events on to children only when (f event) matches value, using

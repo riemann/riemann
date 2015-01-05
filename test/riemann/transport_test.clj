@@ -70,7 +70,7 @@
                    {:host "h2" :service "s2" :metric 1.5, :time 10}]]
 
      ; Send events to server over TCP
-     (dorun (map (partial client/send-event client) events))
+     @(client/send-events client events)
 
      ; And read back via SSE
      (let [stream (line-seq (io/reader (:body res)))]
@@ -91,6 +91,7 @@
 
          (finally
            ; Shut down server and close client stream
+           (client/close! client)
            (stop! core)
            (dorun stream)))))))
 
@@ -106,10 +107,10 @@
           client (client/udp-client {:port port})
           event  (event {:service "hi" :state "ok" :metric 1.23})]
       (try
-        (client/send-event client event false)
+        (client/send-event client event)
         (is (= event (deref sink 1000 :timed-out)))
         (finally
-          (client/close-client client)
+          (client/close! client)
           (stop! core))))))
 
 (defn test-tcp-client
@@ -125,13 +126,14 @@
       (try
         (let [client (apply client/tcp-client (mapcat identity client-opts))]
           (try
-            (client/send-event client {:service "laserkat"})
+            @(client/send-event client {:service "laserkat"})
             (is (= "laserkat" (-> client
                                 (client/query "service = \"laserkat\"")
+                                deref
                                 first
                                 :service)))
             (finally
-              (client/close-client client))))
+              (client/close! client))))
         (finally
           (stop! core))))))
 

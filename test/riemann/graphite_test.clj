@@ -30,12 +30,13 @@
        (sendout! {:service "service1" :metric 1.0 :time 0})
        (sendout! {:service "service2" :metric 1.0 :time 0})
        (Thread/sleep 100)
-       (let [[r1 r2] (client/query client "true")]
+       (let [[r1 r2] @(client/query client "true")]
          (is (and (#{"service1" "service2"} (:service r1))
                   (= 1.0 (:metric r1))))
          (is (and (#{"service1" "service2"} (:service r2))
                   (= 1.0 (:metric r2)))))
        (finally
+         (client/close! client)
          (stop! core))))))
 
 (deftest parse-error-test

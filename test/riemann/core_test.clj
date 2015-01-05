@@ -204,13 +204,13 @@
 
            (try
              ; Send events
-             (doseq [e events] (send-event client e))
+             @(send-events client events)
 
              (doseq [[in out] (map (fn [a b] [a b]) events (deref out))]
                (is (every? (fn [k] (= (k in) (k out))) (keys in))))
 
              (finally
-               (close-client client)
+               (close! client)
                (logging/suppress ["riemann.core"
                                   "riemann.transport.tcp"
                                   "riemann.pubsub"]
@@ -236,15 +236,16 @@
              (index {:service "miao" :host "cat" :time 3})
 
              (let [r (->> "metric = 2 or service = \"miao\" or tagged \"whiskers\""
-                       (query client)
-                       set)]
+                          (query client)
+                          deref
+                          set)]
                (is (= r
                       #{(event {:metric 2, :time 3})
                         (event {:host "kitten" :tags ["whiskers" "paws"] :time 2})
                         (event {:host "cat", :service "miao", :time 3})})))
 
              (finally
-               (close-client client)
+               (close! client)
                (logging/suppress ["riemann.core"
                                   "riemann.transport.tcp"
                                   "riemann.pubsub"]
@@ -325,7 +326,7 @@
         (is (= "hi" (:service event)))
         (is (<= t1 (:time event) t2)))
       (finally
-        (close-client client)
+        (close! client)
         (logging/suppress ["riemann.transport.tcp"
                            "riemann.core"
                            "riemann.pubsub"]
@@ -345,8 +346,8 @@
            (try
              ; Send some events over the network
              (doseq [n (shuffle (take 101 (iterate inc 0)))]
-               (send-event client {:metric n :service "per"}))
-             (close-client client)
+               @(send-event client {:metric n :service "per"}))
+             (close! client)
 
              ; Wait for percentiles
              (advance! 1)
@@ -361,7 +362,7 @@
                (is (= (:metric (states "per 1")) 100)))
 
              (finally
-               (close-client client)
+               (close! client)
                (logging/suppress ["riemann.transport.tcp"
                                   "riemann.core"
                                   "riemann.pubsub"]
