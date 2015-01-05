@@ -1,4 +1,5 @@
 .cake
+.attach_pid*
 pom.xml
 *.jar
 *.tar
