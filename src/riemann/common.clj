@@ -145,7 +145,7 @@
                 :service "riemann exception"
                 :state "error"
                 :tags ["exception" (.getName (class e))]
-                :original-event original
+                :event original
                 :description (str e "\n\n"
                                   (join "\n" (.getStackTrace e)))})))
 

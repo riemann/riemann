@@ -123,4 +123,4 @@
          (:tags (exception->event (ex-info "fake test error" {})))))
 
   (is (= "original-event"
-         (:service (:original-event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))
+         (:service (:event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))
