@@ -13,17 +13,17 @@
   (let [service ((:name opts) event)]
      (str/replace service #"\s+" ".")))
 
-(defn generate-datapoint
+(defn generate-datapoints
   "Accepts riemann event/events and converts it into equivalent stackdriver datapoint."
   [opts event-or-events]
-  (let [events (if (sequential? event-or-events) event-or-events (list event-or-events))]
-    (map (fn [event]
-      {:name (metric-name opts event)
-       :value (:metric event)
-       :collected_at (long (:time event))})
-    events)))
+  (->> (if (sequential? event-or-events) event-or-events (list event-or-events))
+       (remove (comp nil? :metric))
+       (map (fn [event]
+              {:name (metric-name opts event)
+               :value (:metric event)
+               :collected_at (long (:time event))}))))
 
-(defn post-datapoint
+(defn post-datapoints
   "Post the riemann metrics datapoints."
   [api-key uri data]
   (let [http-options {:body data
@@ -37,9 +37,10 @@
   (let [ts (atom 0)
         opts (merge {:api-key "stackdriver-api-key"
                      :name :service} opts)]
-    (fn [event]
-      (let [post-data {:timestamp (swap! ts #(max (inc %) (long (riemann.time/unix-time))))
-                       :proto_version 1
-                       :data (generate-datapoint opts (remove (comp nil? :metric) event))}
-            json-data (generate-string post-data)]
-        (post-datapoint (:api-key opts) gateway-url json-data)))))
+    (fn [event-or-events]
+      (when-let [data (not-empty (generate-datapoints opts event-or-events))]
+        (->>  {:timestamp (swap! ts #(max (inc %) (long (riemann.time/unix-time))))
+               :proto_version 1
+               :data data}
+              (generate-string)
+              (post-datapoints (:api-key opts) gateway-url))))))
