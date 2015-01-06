@@ -1,3 +1,61 @@
+# Version 0.2.7
+
+Performance improvements and important bugfixes: 0.2.7 is long overdue. New
+integrations with Blueflood, Logentries, Opsgenie, Cloudwatch, Mailgun, Xymon,
+Datadog, and Twilio.
+
+## Bugfixes
+
+- Stackdriver: fix a shadowing warning
+- Debian package now recommends Java
+- Debian package launches Riemann on boot by default
+- riemann test command now actually exists, works from startup scripts
+- Indexes no longer disappear on config reload
+
+## Deprecations and API changes
+
+- Riemann-clojure-client and riemann-java-client 0.3.x, included in riemann
+  0.2.7, return asynchronous results by default. `streams/forward` is still
+  synchronous, but if you're invoking clients manually, make sure to `deref`
+  results from `send-event` etc.
+
+## New features
+
+- Dynamic loading of dependencies via the new plugin system
+- Logentries integration
+- Blueflood integration
+- Xymon integration
+- Mailgun integration
+- Opsgenie integration
+- Cloudwatch integration
+- Datadog integration
+- Twilio integration
+- Slack adapter allows incoming webhooks
+- OpenTSDB server
+
+## Improvements
+
+- Logstash now sends events without metrics
+- You can set log4j options via a properties file
+- Aggressive JVM opts now includes -server
+- Various docstring improvements
+- Optimizations to zero- and single-argument forms of `sdo`
+- Faster startup and shutdown for TCP/UDP servers
+- `streams/with` can work with vectors of events, perf improvements
+- More type hints in performance-critical paths
+
+## Internals
+
+- clj-librato 0.0.5
+- Aleph and Lamina are now completely removed. Improves startup times and jar
+  sizes.
+- Websocket and SSE transports now based on httpkit. No instrumentation for
+  httpkit latencies sadly.
+- Upgrade from Netty 3 to Netty 4.0.21. Should see reduced CPU, slightly higher
+  throughput. Uses the epoll transport.
+- New mock macro in riemann.test-utils for testing integration streams.
+- riemann-clojure-client 0.3.1
+
 # Version 0.2.6
 
 Improvements to ease of use, expanded integration with other monitoring tools,
