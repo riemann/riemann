@@ -33,16 +33,14 @@
   LogentriesStub
   (open [this]
     (let [server-socket (ServerSocket. port)
-          client-socket (atom nil)
-          input (atom nil)]
-      (.start
-        (Thread.
-          (fn []
-            (let [socket (.accept server-socket)
-                  in (BufferedReader. (InputStreamReader. (.getInputStream socket)))]
-              (reset! client-socket socket)
-              (reset! input in)))))
-      (assoc this 
+          client-socket (promise)
+          input         (promise)]
+      (future
+        (let [socket (.accept server-socket)
+              in (BufferedReader. (InputStreamReader. (.getInputStream socket)))]
+          (deliver client-socket socket)
+          (deliver input in)))
+      (assoc this
              :server-socket server-socket
              :client-socket client-socket
              :input input)))
