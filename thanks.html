@@ -52,6 +52,28 @@ layout: default
     <div class="twelvecol">
       <h2>Contributors to the next release</h2>
 
+      <p>Andreas Klein (Kungi) fixed riemann-health's memory metrics on OS X
+      Mavericks.</p>
+
+      <p>Tom Crayford (tcrayford) extended (with) to take sequences of events
+      as well as single events, and optimized the case where (with) receives an
+      empty map of updates.</p>
+
+      <p>Matt Palmer (mpalmer) added partition transfer events to
+      riemann-riakm and dramatically expanded riemann-rabbitmq.</p>
+
+      <p>James Turnbull (jamtur01) clarified the quickstart docs around editing
+      views, updated the example for service expiry, and wrote a howto on
+      including configs. He also added documentation around (stable) in down
+      service detection.</p>
+
+      <p>Pedro Araújo (pharaujo) wrote an OpenTSDB server for Riemann! Wow!</p>
+
+      <p>Sergey Avseyev (avsej) and Pascal Quantin wrote a dissector for
+      Wireshark, enabling Riemann's protocol analysis.</p>
+
+      <p>Brian Jackson (iggy) expanded the docs for the slack integration.</p>
+
       <p>Colin Alston (calston) fixed a typo in the slack docs.</p>
 
       <p>John D'Agostino (johndagostino) added a Twilio adapter.</p>
@@ -61,15 +83,19 @@ layout: default
       <p>Sergey Avseyev (avsej) added Opsgenie integration.</p>
 
       <p>Sebastian Cruz (default50) expanded riemann-freeswitch with thresholds
-      and daemon liveness.</p>
+      and daemon liveness, and conference count.</p>
 
       <p>Gergely Nagy (algernon) expanded riemann-riak-client to support
-      node_gets_set, node_puts_set, and objsize stats.</p>
+      node_gets_set, node_puts_set, and objsize stats. Gergely made a
+      performance improvement to (sdo) which removes a stack frame and catch
+      target for zero and single-arity forms. He also wrote a module
+      to send log events to Riemann from Syslog-ng.</p>
 
       <p>Katelyn Perry (kjperry) fixed plural agreement in Riemann-dash's
       socket errors.</p>
 
-      <p>Pradeep Chhetri (pradeepchhetri) added Cloudwatch integration.</p>
+      <p>Pradeep Chhetri (pradeepchhetri) added Cloudwatch and Datadog
+      integration.</p>
 
       <p>Dominic LoBue (dlobue) added Mailgun integration and submitted a
       failing test case for index state not persisting through reloads.</p>
@@ -83,7 +109,8 @@ layout: default
       <p>Marc Fournier (mfournier) added a dial view for gauges, and fixed a
       misclosed HTML tag in the dash. He also repaired an incorrect git tag,
       added an example rackup config, and fixed 404s for images when the dash
-      isn't served on /.</p>
+      isn't served on /. Then he tested and helped improve the Wireshark
+      protocol dissector for Riemann!</p>
 
       <p>Nebojša Stričević (strika) added Logentries integration.<p>
 
@@ -109,7 +136,9 @@ layout: default
 
       <p>Pierre Yves Ritschard (pyr) rewrote the websocket/sse server to
       replace Aleph with http-kit, and added dynamic dependency resolution to
-      Riemann via Aether.</p>
+      Riemann via Aether. He also added TCP batching to Collectd's
+      write_riemann plugin, drastically improving performance when shipping
+      events from Collectd.</p>
 
       <h2>0.2.6</h2>
 

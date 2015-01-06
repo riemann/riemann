@@ -131,6 +131,36 @@ sudo service riemann reload
   </div>
 </div>
 
+<h3>Including configuration from multiple files</h3>
+<div class="row">
+  <div class="sixcol">
+    <p>Often your Riemann configuration file will get quite large as you add
+    streams and handle more events. Additionally, if you're managing Riemann
+    with a configuration management tool like Puppet or Chef then it can be
+    complex to template a large configuration file. To help with this Riemann
+    also supports including other configuration files in your main
+    configuration file. This is done with the <a
+      href="http://riemann.io/api/riemann.config.html#var-include">include</a>
+    variable. The <code>include</code> variable will include a single file or
+    directory of configuration files. If you specify a directory then it will
+    load all files ending in <code>.config</code> or <code>.clj</code>
+    contained in that directory.</p>
+  </div>
+    <div class="sixcol last">
+{% highlight clj %}
+; Include relative to the current config file or current working directory
+(include "foo.clj")
+
+; Specify an absolute path
+(include "/foo/bar.clj")
+
+; Include a whole directory
+(include "/usr/local/riemann/config")
+{% endhighlight %}
+    </div>
+  </div>
+</div>
+
 <h3>Putting Riemann into production</h3>
 <div class="row">
   <div class="sixcol">
@@ -708,7 +738,7 @@ Ran 1 tests containing 1 assertions.
     won't count against your Hotspot inlining budget, etc.</p>
 
     <p> Note also that the test framework doesn't actually run a core,
-    so functions that require one, (like 
+    so functions that require one, (like
     <code>riemann.config/reinject</code>), can't work from within the test
     framework.</p>
   </div>
@@ -1400,12 +1430,12 @@ can provide a default TTL for any incoming events that don't provide one:</p>
 
 <p>Now, any services that fail to check in every ten seconds will expire
 (unless they give a different TTL). Since expired events have a different
-state, any (changed :state) streams will detect the transition and can alert
+state, any (changed-state) streams will detect the transition and can alert
 you:</p>
 
 {% highlight clj %}
 (streams
-  (changed :state {:init "ok"}
+  (changed-state {:init "ok"}
     (email "ops@foo.com")))
 {% endhighlight %}
 
@@ -1436,6 +1466,19 @@ can decide whether an event is worthy of an alert by tagging it:</p>
 (streams
   (expired
     (tagged "notify-me" (email "ops@foo.com"))))
+{% endhighlight %}
+
+<p>If you're worried about spikes or flapping you can make use of the <a
+  href="http://riemann.io/api/riemann.streams.html#var-stable">stable</a>
+variable. The <code>stable</code> variable detects stable streams of events
+over time. It takes a time period and event function as input and only passes
+on events that remain the same for the specified time period.</p>
+
+{% highlight clj %}
+(streams
+  (changed-state {:init "ok"}
+    (stable 60 :state
+      (email "ops@foo.com"))))
 {% endhighlight %}
 
 <h3>Group events in time</h3>
@@ -1475,6 +1518,41 @@ can decide whether an event is worthy of an alert by tagging it:</p>
     passes through that coalesce stream. Coalesce helps answer questions like
     "what fraction of my API servers are running the most recent version", or
     "what's the median queue depth across all queues in a given broker?"</p>
+  </div>
+</div>
+
+<h3>Apply a regular expression to a field</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can test whether a field matches a regular expression by simply
+    passing a regex to <code>where</code>. Clojure regular expressions look
+    like <code>#"..."</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(where (service #"api req latency [\d\.]+")
+  ...)
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Or you can transform a string using a regular expression and capture
+    groups (also called "backreferences") using
+    <code>clojure.string/replace</code>.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(require ['clojure.string :as str])
+
+(streams
+  ; Replace services like "legacy <anything>" with "new <anything>". Passes
+  ; through services that don't match the regular expression, unchanged.
+  (adjust [:service str/replace #"^legacy (\w+)$"]
+    ...))
+{% endhighlight %}
   </div>
 </div>
 

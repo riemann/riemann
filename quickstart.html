@@ -42,12 +42,12 @@ layout: default
         href="/howto.html#putting-riemann-into-production">Putting
         Riemann into production</a> for tips.
 
-<code><pre>wget <a href="http://aphyr.com/riemann/riemann-0.2.7.tar.bz2">http://aphyr.com/riemann/riemann-0.2.7.tar.bz2</a>
+<code><pre>wget <a href="https://aphyr.com/riemann/riemann-0.2.7.tar.bz2">https://aphyr.com/riemann/riemann-0.2.7.tar.bz2</a>
 tar xvfj riemann-0.2.7.tar.bz2
 cd riemann-0.2.7</pre></code>
 
       <p>Check the md5sum to verify the tarball:</p>
-<code><pre>wget <a href="http://aphyr.com/riemann/riemann-0.2.7.tar.bz2.md5">http://aphyr.com/riemann/riemann-0.2.7.tar.bz2.md5</a>
+<code><pre>wget <a href="https://aphyr.com/riemann/riemann-0.2.7.tar.bz2.md5">https://aphyr.com/riemann/riemann-0.2.7.tar.bz2.md5</a>
 md5sum -c riemann-0.2.7.tar.bz2.md5
 </pre></code>
 
@@ -74,14 +74,13 @@ md5sum -c riemann-0.2.7.tar.bz2.md5
 
       <p>Point your web browser to <a
         href="http://localhost:4567/">http://localhost:4567/</a>. You'll see a
-      big title and a quick overview of the control scheme in the bottom pane.
+      big title in the top pane and a quick overview of the control scheme in the bottom pane.
       At the top right is the current host your browser is connected to. At the
       top left is the pager, which shows your workspaces--like tabs, in a
       browser.</p>
 
-
       <p>Let's change the title into a Grid view. Hold CTRL (or OPTION/META
-      depending on your OS) and click the title "Riemann". The title will be
+      depending on your OS) and click the big title "Riemann" in the top pane. The title will be
       shaded grey to indicate that view is selected.</p>
 
       <p>Then, press "e" to edit, and change "Title" to "Grid". We need to
@@ -201,6 +200,11 @@ metric_f: 2.5299999713897705&gt;]</span></pre></code>
       event processing tasks see the <a href="howto.html">howto guide</a>.</p>
 
       <h2>What next?</h2>
+
+      <p>James Turnbull has written a <a
+      href="http://kartar.net/2014/12/an-introduction-to-riemann/">beautiful
+      introduction to Riemann</a> which takes you through the whole setup
+    process and monitoring some basic services.</p>
 
       <p>Riemann comes with a standard config that listens on the local ipv4
       interface and indexes all events, but that's just the the start. You can
