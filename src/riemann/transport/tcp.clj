@@ -18,7 +18,7 @@
            [io.netty.handler.codec LengthFieldBasedFrameDecoder
                                    LengthFieldPrepender]
            [io.netty.handler.ssl SslHandler]
-           [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
+           [io.netty.channel.socket.nio NioServerSocketChannel]
            [io.netty.channel.nio NioEventLoopGroup])
   (:require [less.awful.ssl :as ssl]
             [interval-metrics.core :as metrics])
@@ -117,14 +117,14 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [boss-group (EpollEventLoopGroup.)
-                    worker-group (EpollEventLoopGroup.)
+              (let [boss-group (NioEventLoopGroup.)
+                    worker-group (NioEventLoopGroup.)
                     bootstrap (ServerBootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
                   (.group boss-group worker-group)
-                  (.channel EpollServerSocketChannel)
+                  (.channel NioServerSocketChannel)
                   (.option ChannelOption/SO_REUSEADDR true)
                   (.option ChannelOption/TCP_NODELAY true)
                   (.childOption ChannelOption/SO_REUSEADDR true)
