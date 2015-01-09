@@ -18,8 +18,9 @@
            [io.netty.handler.codec LengthFieldBasedFrameDecoder
                                    LengthFieldPrepender]
            [io.netty.handler.ssl SslHandler]
-           [io.netty.channel.socket.nio NioServerSocketChannel]
-           [io.netty.channel.nio NioEventLoopGroup])
+           [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
+           [io.netty.channel.nio NioEventLoopGroup]
+           [io.netty.channel.socket.nio NioServerSocketChannel])
   (:require [less.awful.ssl :as ssl]
             [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
@@ -71,6 +72,9 @@
 
     (isSharable [] true)))
 
+(def transport {:event-loop-group-fn #(NioEventLoopGroup.)
+                :channel NioServerSocketChannel})
+
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and
   writes a response back on this channel."
@@ -117,14 +121,15 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [boss-group (NioEventLoopGroup.)
-                    worker-group (NioEventLoopGroup.)
+              (let [event-loop-group-fn (:event-loop-group-fn transport)
+                    boss-group (event-loop-group-fn)
+                    worker-group (event-loop-group-fn)
                     bootstrap (ServerBootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
                   (.group boss-group worker-group)
-                  (.channel NioServerSocketChannel)
+                  (.channel (:channel transport))
                   (.option ChannelOption/SO_REUSEADDR true)
                   (.option ChannelOption/TCP_NODELAY true)
                   (.childOption ChannelOption/SO_REUSEADDR true)
