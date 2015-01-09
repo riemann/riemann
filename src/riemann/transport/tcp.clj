@@ -72,7 +72,7 @@
 
     (isSharable [] true)))
 
-(def transport
+(def netty-implementation
   (if (.contains (. System getProperty "os.name") "Linux")
     {:event-loop-group-fn #(EpollEventLoopGroup.)
      :channel EpollServerSocketChannel}
@@ -125,7 +125,7 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [event-loop-group-fn (:event-loop-group-fn transport)
+              (let [event-loop-group-fn (:event-loop-group-fn netty-implementation)
                     boss-group (event-loop-group-fn)
                     worker-group (event-loop-group-fn)
                     bootstrap (ServerBootstrap.)]
@@ -133,7 +133,7 @@
                 ; Configure bootstrap
                 (doto bootstrap
                   (.group boss-group worker-group)
-                  (.channel (:channel transport))
+                  (.channel (:channel netty-implementation))
                   (.option ChannelOption/SO_REUSEADDR true)
                   (.option ChannelOption/TCP_NODELAY true)
                   (.childOption ChannelOption/SO_REUSEADDR true)
