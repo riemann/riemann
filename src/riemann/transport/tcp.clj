@@ -72,8 +72,12 @@
 
     (isSharable [] true)))
 
-(def transport {:event-loop-group-fn #(NioEventLoopGroup.)
-                :channel NioServerSocketChannel})
+(def transport
+  (if (.contains (. System getProperty "os.name") "Linux")
+    {:event-loop-group-fn #(EpollEventLoopGroup.)
+     :channel EpollServerSocketChannel}
+    {:event-loop-group-fn #(NioEventLoopGroup.)
+     :channel NioServerSocketChannel}))
 
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and
