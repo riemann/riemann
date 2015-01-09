@@ -73,6 +73,9 @@
     (isSharable [] true)))
 
 (def netty-implementation
+  "Provide native implementation of Netty for improved performance on
+  Linux only. Provide pure-Java implementation of Netty on all other
+  platforms. See http://netty.io/wiki/native-transports.html"
   (if (.contains (. System getProperty "os.name") "Linux")
     {:event-loop-group-fn #(EpollEventLoopGroup.)
      :channel EpollServerSocketChannel}
