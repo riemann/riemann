@@ -146,6 +146,7 @@
                 :state "error"
                 :tags ["exception" (.getName (class e))]
                 :event original
+                :exception e
                 :description (str e "\n\n"
                                   (join "\n" (.getStackTrace e)))})))
 

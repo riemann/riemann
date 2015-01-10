@@ -122,5 +122,9 @@
   (is (= ["exception" "clojure.lang.ExceptionInfo"]
          (:tags (exception->event (ex-info "fake test error" {})))))
 
+  (let [e (ex-info "fake test error" {})]
+    (is (= e
+         (:exception (exception->event e)))))
+
   (is (= "original-event"
          (:service (:event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))
