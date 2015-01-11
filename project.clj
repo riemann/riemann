@@ -27,7 +27,7 @@
     [clj-http "0.9.1"]
     [cheshire "5.3.1"]
     [clj-librato "0.0.5"]
-    [clj-time "0.6.0"]
+    [clj-time "0.9.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.4"]
     [com.draines/postal "1.11.1"]
