@@ -5,9 +5,6 @@
 ;  :warn-on-reflection true
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-XX:+CMSClassUnloadingEnabled"]
-  :repositories {
-    "boundary-site" "http://maven.boundary.com/artifactory/repo"
-  }
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
@@ -29,7 +26,7 @@
     [clj-librato "0.0.5"]
     [clj-time "0.9.0"]
     [clj-wallhack "1.0.1"]
-    [com.boundary/high-scale-lib "1.0.4"]
+    [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.7.5"]
     [interval-metrics "1.0.0"]
