@@ -82,5 +82,8 @@
   :java-source-path "src/riemann/"
 ;  :aot [riemann.bin]
   :main riemann.bin
-  :codox {:output-dir "site/api"}
+  :codox {:output-dir "site/api"
+          :src-dir-uri "http://github.com/aphyr/riemann/blob/master/"
+          :src-linenum-anchor-prefix "L"
+          :defaults {:doc/format :markdown}}
 )
