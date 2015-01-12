@@ -22,15 +22,16 @@
   (match [pred object]
     "Does predicate describe object?"))
 
-; Deprecation
+(def deprecations-emitted (atom {}))
+
 (defmacro deprecated
   "Wraps body in an implicit (do), and logs a deprecation notice when invoked."
   [comment & body]
-  `(do
-     (info ~(str "Deprecated: "
-                 (format "<%s:%s> " *file* (:line (meta &form)))
-                 comment))
-     ~@body))
+  (let [id (str *file* ":" (:line (meta &form)) " - " comment)]
+    (swap! deprecations-emitted assoc id (delay (info comment)))
+    `(do
+       (force (get @deprecations-emitted ~id))
+       ~@body)))
 
 (def hostname-refresh-interval
   "How often to allow shelling out to hostname (1), in seconds."
