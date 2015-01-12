@@ -139,13 +139,16 @@
 
 (defn exception->event
   "Creates an event from an Exception."
-  [^Throwable e]
-  (map->Event {:time (unix-time)
-               :service "riemann exception"
-               :state "error"
-               :tags ["exception" (.getName (class e))]
-               :description (str e "\n\n"
-                                 (join "\n" (.getStackTrace e)))}))
+  ([exception] (exception->event exception nil))
+  ([^Throwable e original]
+   (map->Event {:time (unix-time)
+                :service "riemann exception"
+                :state "error"
+                :tags ["exception" (.getName (class e))]
+                :event original
+                :exception e
+                :description (str e "\n\n"
+                                  (join "\n" (.getStackTrace e)))})))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of

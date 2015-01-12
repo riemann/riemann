@@ -1,3 +1,13 @@
+# Version 0.2.8
+
+Minor followup release: fixes a bug in 0.2.7 which broke TCP servers on
+non-linux platforms.
+
+## Bugfixes
+
+- TCP transport now uses epoll only on Linux platforms, Java NIO otherwise.
+
+
 # Version 0.2.7
 
 Performance improvements and important bugfixes: 0.2.7 is long overdue. New

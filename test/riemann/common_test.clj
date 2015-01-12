@@ -117,3 +117,14 @@
   (is (= (truncate-bytes "あいう" 4) "あ"))
   (is (= (truncate-bytes "あいう" 9) "あいう"))
   (is (= (truncate-bytes "あいう" 10) "あいう")))
+
+(deftest exception->event-test
+  (is (= ["exception" "clojure.lang.ExceptionInfo"]
+         (:tags (exception->event (ex-info "fake test error" {})))))
+
+  (let [e (ex-info "fake test error" {})]
+    (is (= e
+         (:exception (exception->event e)))))
+
+  (is (= "original-event"
+         (:service (:event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))
