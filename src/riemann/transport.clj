@@ -144,13 +144,10 @@
 
     (reify Instrumented
       (events [this]
-        (comment (let [base {:state "ok" :time (unix-time)}]
+        (let [base {:state "ok" :time (unix-time)}]
                    (map (partial merge base)
-                        [{:service (str svc "queue size")
-                          :metric  (.. executor getQueue size)}
-                         {:service (str svc "threads active")
-                          :metric (.. executor getActiveCount)}])))
-        []
+                        [{:service (str svc "threads active")
+                          :metric (.. executor executorCount)}]))
         ))))
 
 (defn handle
