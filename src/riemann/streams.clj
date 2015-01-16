@@ -325,7 +325,7 @@
         (when events
           (call-rescue events children))))))
 
-(defn fixed-time-window
+(defn- fixed-time-window-fn
   "A fixed window over the event stream in time. Emits vectors of events, such
   that each vector has events from a distinct n-second interval. Windows do
   *not* overlap; each event appears at most once in the output stream. Once an
@@ -333,7 +333,7 @@
   silently dropped.
 
   Events without times accrue in the current window."
-  [n & children]
+  [n start-time-fn & children]
   ; This is not a particularly inspired or clear implementation. :-(
 
   (when (zero? n)
@@ -353,7 +353,7 @@
                         ; No start time
                         (nil? @start-time)
                         (do
-                          (ref-set start-time (:time event))
+                          (ref-set start-time (start-time-fn n event))
                           (ref-set buffer [event])
                           nil)
 
@@ -380,6 +380,29 @@
           (doseq [w windows]
             (call-rescue w children)))))))
 
+(defn fixed-time-window
+  "A fixed window over the event stream in time. Emits vectors of events, such
+  that each vector has events from a distinct n-second interval. Windows do
+  *not* overlap; each event appears at most once in the output stream. Once an
+  event is emitted, all events *older or equal* to that emitted event are
+  silently dropped.
+
+  Events without times accrue in the current window."
+  [n & children]
+  (fixed-time-window-fn n (fn [n event] (:time event)) children))
+
+(defn fixed-wall-clock-time-window
+  "Like fixed-time-window, but divides wall clock time into discrete windows.
+
+  A fixed window over the event stream in time. Emits vectors of events, such
+  that each vector has events from a distinct n-second interval. Windows do
+  *not* overlap; each event appears at most once in the output stream. Once an
+  event is emitted, all events *older or equal* to that emitted event are
+  silently dropped.
+
+  Events without times accrue in the current window."
+  [n & children]
+  (fixed-time-window-fn n (fn [n event] (- (unix-time) (mod (unix-time) n))) children))
 
 (defn window
   "Alias for moving-event-window."
