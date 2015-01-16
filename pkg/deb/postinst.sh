@@ -5,6 +5,7 @@ chown root:root /usr/bin/riemann
 chown riemann:riemann /var/log/riemann
 chown -R riemann:riemann /etc/riemann
 chown root:root /etc/init.d/riemann
+chown root:root /etc/default/riemann
 
 # Start riemann on boot
 if [ -x "/etc/init.d/riemann" ]; then
