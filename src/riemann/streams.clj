@@ -389,7 +389,7 @@
 
   Events without times accrue in the current window."
   [n & children]
-  (fixed-time-window-fn n (fn [n event] (:time event)) children))
+  (apply fixed-time-window-fn n (fn [n event] (:time event)) children))
 
 (defn fixed-wall-clock-time-window
   "Like fixed-time-window, but divides wall clock time into discrete windows.
@@ -402,7 +402,7 @@
 
   Events without times accrue in the current window."
   [n & children]
-  (fixed-time-window-fn n (fn [n event] (- (unix-time) (mod (unix-time) n))) children))
+  (apply fixed-time-window-fn n (fn [n event] (- (unix-time) (mod (unix-time) n))) children))
 
 (defn window
   "Alias for moving-event-window."
