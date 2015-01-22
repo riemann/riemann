@@ -9,7 +9,8 @@
              ConsoleAppender
              FileAppender
              SimpleLayout)
-           (net.logstash.log4j JSONEventLayoutV1 JSONEventLayout)
+           (net.logstash.log4j JSONEventLayoutV0
+                               JSONEventLayoutV1)
            (org.apache.log4j.spi RootLogger))
   (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
                                      SizeBasedTriggeringPolicy
@@ -42,7 +43,8 @@
 (def ^{:doc "available logging patterns"}
   layouts
   {:riemann       (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable")
-   :json-event    (JSONEventLayout.)
+   :json-event    (JSONEventLayoutV0.)
+   :json-event-v0 (JSONEventLayoutV0.)
    :json-event-v1 (JSONEventLayoutV1.)})
 
 (defn get-layout
