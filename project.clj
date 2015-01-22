@@ -10,7 +10,7 @@
     [org.clojure/algo.generic "0.1.2"]
     [org.clojure/clojure "1.6.0"]
     [org.clojure/math.numeric-tower "0.0.4"]
-    [org.clojure/tools.logging "0.2.6"]
+    [org.clojure/tools.logging "0.3.1"]
     [org.clojure/tools.nrepl "0.2.3"]
     [org.clojure/core.cache "0.6.3"]
     [org.clojure/java.classpath "0.2.2"]
