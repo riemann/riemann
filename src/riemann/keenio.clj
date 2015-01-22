@@ -9,18 +9,16 @@
 (defn post
   "POST to Keen IO."
   [collection project-id write-key request]
-
   (let [final-event-url
        (str event-url project-id "/events/" collection)]
-
-  (client/post final-event-url
-               {:body (json/generate-string request)
-                :query-params { "api_key" write-key }
-                :socket-timeout 5000
-                :conn-timeout 5000
-                :content-type :json
-                :accept :json
-                :throw-entire-message? true})))
+    (client/post final-event-url
+                 {:body (json/generate-string request)
+                  :query-params { "api_key" write-key }
+                  :socket-timeout 5000
+                  :conn-timeout 5000
+                  :content-type :json
+                  :accept :json
+                  :throw-entire-message? true})))
 
 (defn keenio
   "Creates a keen adapter. Takes your Keen project id and write key, and
