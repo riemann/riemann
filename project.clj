@@ -33,7 +33,7 @@
     [io.netty/netty-all "4.0.24.Final"]
     [log4j/apache-log4j-extras "1.2.17"]
     [org.antlr/antlr "3.2"]
-    [org.slf4j/slf4j-log4j12 "1.7.7"]
+    [org.slf4j/slf4j-log4j12 "1.7.10"]
     [riemann-clojure-client "0.3.1"]
     [slingshot "0.12.1"]
     [clj-campfire "2.2.0"]
