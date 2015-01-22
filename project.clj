@@ -28,7 +28,7 @@
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "1.11.1"]
-    [com.amazonaws/aws-java-sdk "1.7.5"]
+    [com.amazonaws/aws-java-sdk "1.7.5" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.0.24.Final"]
     [log4j/apache-log4j-extras "1.0"]
@@ -39,7 +39,7 @@
     [clj-campfire "2.2.0"]
     [less-awful-ssl "0.1.1"]
     [clj-nsca "0.0.3"]
-    [amazonica "0.2.26"]
+    [amazonica "0.2.26" :exclusions [joda-time]]
     [capacitor "0.2.2"
      :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
