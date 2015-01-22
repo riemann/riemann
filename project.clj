@@ -18,7 +18,7 @@
                                        javax.jms/jms
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
-    [net.logstash.log4j/jsonevent-layout "1.5"]
+    [net.logstash.log4j/jsonevent-layout "1.7"]
     [com.cemerick/pomegranate "0.3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "1.0.0"]
