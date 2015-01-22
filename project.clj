@@ -21,7 +21,7 @@
     [net.logstash.log4j/jsonevent-layout "1.5"]
     [com.cemerick/pomegranate "0.3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
-    [clj-http "1.0.1"]
+    [clj-http "1.0.0"]
     [cheshire "5.3.1"]
     [clj-librato "0.0.5"]
     [clj-time "0.9.0"]
