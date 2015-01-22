@@ -5,9 +5,6 @@
 ;  :warn-on-reflection true
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-XX:+CMSClassUnloadingEnabled"]
-  :repositories {
-    "boundary-site" "http://maven.boundary.com/artifactory/repo"
-  }
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
@@ -24,12 +21,12 @@
     [net.logstash.log4j/jsonevent-layout "1.5"]
     [com.cemerick/pomegranate "0.3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
-    [clj-http "0.9.1"]
+    [clj-http "1.0.1"]
     [cheshire "5.3.1"]
     [clj-librato "0.0.5"]
-    [clj-time "0.6.0"]
+    [clj-time "0.9.0"]
     [clj-wallhack "1.0.1"]
-    [com.boundary/high-scale-lib "1.0.4"]
+    [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "1.11.1"]
     [com.amazonaws/aws-java-sdk "1.7.5"]
     [interval-metrics "1.0.0"]
@@ -82,5 +79,8 @@
   :java-source-path "src/riemann/"
 ;  :aot [riemann.bin]
   :main riemann.bin
-  :codox {:output-dir "site/api"}
+  :codox {:output-dir "site/api"
+          :src-dir-uri "http://github.com/aphyr/riemann/blob/master/"
+          :src-linenum-anchor-prefix "L"
+          :defaults {:doc/format :markdown}}
 )

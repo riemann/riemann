@@ -70,7 +70,7 @@
          (catch Throwable e#
            (warn e# (str child# " threw"))
            (if-let [ex-stream# *exception-stream*]
-             (ex-stream# (exception->event e#))))))
+             (ex-stream# (exception->event e# ~event))))))
      ; TODO: Why return true?
      true))
 
@@ -1646,9 +1646,10 @@
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
     `(let [true-kids# ~true-kids
-           else-kids# ~else-kids]
+           else-kids# ~else-kids
+           predicate# ~f]
       (fn stream# [event#]
-         (let [value# (~f event#)]
+         (let [value# (predicate# event#)]
            (if value#
              (call-rescue event# true-kids#)
              (call-rescue event# else-kids#))
