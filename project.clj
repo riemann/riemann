@@ -27,7 +27,7 @@
     [clj-time "0.9.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.6"]
-    [com.draines/postal "1.11.1"]
+    [com.draines/postal "1.11.3"]
     [com.amazonaws/aws-java-sdk "1.9.16" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.0.24.Final"]
