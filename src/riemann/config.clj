@@ -49,6 +49,7 @@
         [riemann.xymon :only [xymon]]
         [riemann.mailgun :only [mailgun]]
         [riemann.twilio :only [twilio]]
+        [riemann.boundary :only [boundary]]
         riemann.streams))
 
 (def core "The currently running core."
