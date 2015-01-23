@@ -402,7 +402,7 @@
 
   Events without times accrue in the current window."
   [n & children]
-  (apply fixed-time-window-fn n (fn [n event] (- (unix-time) (mod (unix-time) n))) children))
+  (apply fixed-time-window-fn n (fn [n event] (- (:time event) (mod (:time event) n))) children))
 
 (defn window
   "Alias for moving-event-window."
