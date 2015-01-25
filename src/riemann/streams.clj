@@ -391,7 +391,7 @@
   [n & children]
   (apply fixed-time-window-fn n (fn [n event] (:time event)) children))
 
-(defn fixed-wall-clock-time-window
+(defn fixed-offset-time-window
   "Like fixed-time-window, but divides wall clock time into discrete windows.
 
   A fixed window over the event stream in time. Emits vectors of events, such
