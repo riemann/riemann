@@ -1,6 +1,11 @@
+sudo: false
 language: clojure
 lein: lein2
 jdk:
   - openjdk7
   - oraclejdk7
   - oraclejdk8
+
+cache:
+  directories:
+    - $HOME/.m2
