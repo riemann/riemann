@@ -32,8 +32,9 @@ DAEMON_OPTS="${RIEMANN_OPTS} ${RIEMANN_CONFIG}"
 start() {
     echo -n $"Starting ${NAME}: "
     ulimit -n $NFILES
-#    daemon --pidfile $PID_FILE --user $RIEMANN_USER $DAEMON $DAEMON_OPTS
-    daemonize -u $RIEMANN_USER -p $PID_FILE -l $LOCK_FILE $DAEMON $DAEMON_OPTS
+    if [ ! -f $LOCK_FILE ]; then
+      daemon --pidfile $PID_FILE --user $RIEMANN_USER $DAEMON $DAEMON_OPTS
+    fi
     RETVAL=$?
     [ $RETVAL -eq 0 ] && touch $LOCK_FILE
     [ $RETVAL -eq 0 ] && success || failure
