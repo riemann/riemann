@@ -112,4 +112,10 @@
         (is (= (last @calls)
                ["https://premium-api.boundary.com/v1/measurements"
                 (merge default {:body (str "[[\"host1\",\"ORG_METRIC\",0,123],"
-                                           "[\"host2\",\"ORG_METRIC\",0,123]]")})]))))))
+                                           "[\"host2\",\"ORG_METRIC\",0,123]]")})]))
+
+        ((bdry {:async true}) [{:host "host" :service "service"
+                                :metric 0 :time 123}])
+        (is (= (last @calls)
+               ["https://premium-api.boundary.com/v1/measurementsAsync"
+                (merge default {:body "[[\"host\",\"SERVICE\",0,123]]"})]))))))

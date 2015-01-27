@@ -8,6 +8,11 @@
   "https://premium-api.boundary.com")
 (def ^:private version "Boundary API version to use."
   "v1")
+(def ^:private sync-path "Path part for syncrhonous communication."
+  "measurements")
+  (def ^:private async-path "Path part for asyncrhonous
+  communication."
+    "measurementsAsync")
 
 (defn ^:private boundarify
   "As of Boundary's specs, metric ids can only contain characters
@@ -67,29 +72,32 @@
 
 (defn boundary
   "Returns a function used to generate specific senders (like mailer)
-  that takes two optional named arguments, namely :metric-id
-  and :organization, that modify which metric the events are sent to.
+  that takes three optional named arguments, namely :metric-id
+  :org and :async, that modify which metric the events are sent to.
 
   Specifically, if :metric-id is supplied, every single event is sent
   to that metric, otherwise the event's :service field is used to
   construct the destination Boundary's metric id. In both cases,
-  organization is prepended if non nil.
+  organization is prepended if non nil. The last argument, :async,
+  switches the endpoint to the asynchronous one (default is sync).
 
   Examples:
 
   (def bdry (boundary eml tkn))
   (when :foo (bdry)) => builds the destination metric id with :service
+  (when :foo (bdry {:async true})) => same as previous, but async
   (when :foo (bdry {:metric-id \"METRIC_ID\"})) => sends to METRIC_ID"
   [email token]
   (fn b
     ([] (b {}))
-    ([{:keys [metric-id org]}]
-     (let [pack-up (packer-upper {:metric-id metric-id :org org})]
+    ([{:keys [metric-id org async]}]
+     (let [pack-up (packer-upper {:metric-id metric-id :org org})
+           path (if async async-path sync-path)]
        (fn [events]
          (let [pack (pack-up events)
                req-map {:scheme :https
                         :basic-auth [email token]
                         :headers {"Content-Type" "application/json"}
                         :body (json/generate-string pack)}]
-           (client/post (s/join "/" [base-uri version "measurements"])
+           (client/post (s/join "/" [base-uri version path])
                         req-map)))))))
