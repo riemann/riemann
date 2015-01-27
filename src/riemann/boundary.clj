@@ -25,50 +25,45 @@
 
   Examples:
 
-  ((boundarify) \"foo\") => \"FOO\"
-  ((boundarify) \"foo bar\") => \"FOO_BAR\"
-  ((boundarify) \"foo@\") => \"FOO\"
-  ((boundarify) \"foo@bar\") => \"FOOBAR\"
-  ((boundarify \"org\") \"foo\") => \"ORG_FOO\"
-  ((boundarify) \"!#@\") => exception
-  ((boundarify \"org\") \"!#@\") => exception
+  (boundarify \"foo\") => \"FOO\"
+  (boundarify \"foo bar\") => \"FOO_BAR\"
+  (boundarify \"foo@\") => \"FOO\"
+  (boundarify \"foo@bar\") => \"FOOBAR\"
+  (boundarify \"foo\" \"org\") => \"ORG_FOO\"
+  (boundarify \"!#@\") => exception
+  (boundarify \"!#@\" \"org\") => exception
   "
-  [& [organization]]
-  (fn [service]
-    (let [good-ones (s/replace (s/upper-case (s/replace service #"\s+" "_"))
-                               #"[^A-Z0-9_]" "")
-          res (if-not (nil? organization)
-                (str (s/upper-case organization) "_" good-ones)
-                good-ones)]
-      (if-not (empty? good-ones)
-        res
-        (throw (RuntimeException.
-                (str "can't accept the given service string \""
-                     service "\" as metric id")))))))
+  [service & [organization]]
+  (let [good-ones (-> service
+                      (s/replace #"\s+" "_")
+                      s/upper-case
+                      (s/replace #"[^A-Z0-9_]" ""))]
+    (when (empty? good-ones)
+      (throw (RuntimeException.
+              (str "can't accept the given service string \""
+                   service "\" as metric id"))))
+    (if (nil? organization)
+      good-ones
+      (str (s/upper-case organization) "_" good-ones))))
 
 (defn ^:private packer-upper
-  "Returns a function that packs up the events in a form suitable for
+  "Returns a function packs up the events in a form suitable for
   Boundary's API.
 
   If a metric-id is given, it will be used for all the events in the
   pack. Otherwise, every single event service is \"boundarified\". In
   both cases, organization is prepended if given."
-  [metric-id organization]
+  [{:keys [metric-id org]}]
   (let [helper
         #(vector
           (:host %)
-          `~(cond (and (nil? metric-id) (nil? organization))
-                  ((boundarify) (:service %))
-                  (and (nil? metric-id) (not (nil? organization)))
-                  ((boundarify organization) (:service %))
-                  (and (not (nil? metric-id)) (nil? organization))
-                  ((boundarify) metric-id)
-                  :else
-                  ((boundarify organization) metric-id))
+          (if (nil? metric-id)
+            (boundarify (:service %) org)
+            (boundarify metric-id org))
           (:metric %)
           (:time %))]
     (fn [events]
-      (vec (map helper events)))))
+      (mapv helper events))))
 
 (defn boundary
   "Returns a function used to generate specific senders (like mailer)
@@ -84,15 +79,17 @@
 
   (def bdry (boundary eml tkn))
   (when :foo (bdry)) => builds the destination metric id with :service
-  (when :foo (bdry :metric-id \"METRIC_ID\")) => sends to METRIC_ID"
+  (when :foo (bdry {:metric-id \"METRIC_ID\"})) => sends to METRIC_ID"
   [email token]
-  (fn [& {:keys [metric-id org] :or {metric-id nil org nil}}]
-    (let [pack-up (packer-upper metric-id org)]
-      (fn [events]
-        (let [pack (pack-up events)
-              req-map {:scheme :https
-                       :basic-auth [email token]
-                       :headers {"Content-Type" "application/json"}
-                       :body (json/generate-string pack {:pretty true})}]
-          (client/post (s/join "/" [base-uri version "measurements"])
-                       req-map))))))
+  (fn b
+    ([] (b {}))
+    ([{:keys [metric-id org]}]
+     (let [pack-up (packer-upper {:metric-id metric-id :org org})]
+       (fn [events]
+         (let [pack (pack-up events)
+               req-map {:scheme :https
+                        :basic-auth [email token]
+                        :headers {"Content-Type" "application/json"}
+                        :body (json/generate-string pack)}]
+           (client/post (s/join "/" [base-uri version "measurements"])
+                        req-map)))))))
