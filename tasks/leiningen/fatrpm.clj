@@ -178,8 +178,7 @@
     (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"
-                                              "daemonize >= 1.7.3"]))
+    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"]))
     (.execute)))
 
 (defn extract-rpm
