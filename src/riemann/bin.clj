@@ -76,6 +76,7 @@
                 (reset! config-file config)
                 (riemann.config/include @config-file)
                 (binding [test/*streams* (:streams @config/next-core)]
+                  (riemann.config/apply!)
                   (let [results (clojure.test/run-all-tests #".*-test")]
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
