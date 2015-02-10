@@ -8,10 +8,13 @@
   missing a metric or service."
   [event]
   (when (and (:metric event) (:service event))
-    {:name (:service event)
-     :host (or (:host event) "")
-     :state (:state event)
-     :value (:metric event)}))
+    (merge
+      {:name (:service event)
+       :host (or (:host event) "")
+       :state (:state event)
+       :value (:metric event)
+       }
+      (apply dissoc event [:service :host :state :metric :tags :time ]))))
 
 (defn events->points
   "Takes a series fn that finds the series for a given event, and a sequence of
