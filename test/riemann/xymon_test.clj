@@ -16,7 +16,15 @@
                [{:host "foo" :service "bar" :state "ok" :description "blah"}
                 "status foo.bar ok blah\n"]
                [{:host "foo" :service "bar" :state "ok" :ttl 300}
-                "status+300 foo.bar ok \n"]
+                "status+5 foo.bar ok \n"]
+               [{:host "foo" :service "bar" :state "ok" :ttl 61}
+                "status+2 foo.bar ok \n"]
+               [{:host "foo" :service "bar" :state "ok" :ttl 59}
+                "status+1 foo.bar ok \n"]
+               [{:host "foo" :service "bar" :state "ok" :ttl 1}
+                "status+1 foo.bar ok \n"]
+               [{:host "foo" :service "bar" :state "ok" :ttl 0}
+                "status+0 foo.bar ok \n"]
                [{:host "example.com" :service "some.metric rate" :state "ok"}
                 "status example,com.some_metric_rate ok \n"]]]
     (doseq [[event line] pairs]
