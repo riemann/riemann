@@ -131,7 +131,7 @@
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
-                                                (float (:metric event))
+                                                ((fn [x] (try (float x) (catch Exception e (float 0)))) (:metric event))
                                                 (int (:time event))])
                                      "\n")]
                      (send-line client string)))))))
