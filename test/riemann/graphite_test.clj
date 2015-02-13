@@ -34,7 +34,7 @@
          (is (and (#{"service1" "service2"} (:service r1))
                   (= 1.0 (:metric r1))))
          (is (and (#{"service1" "service2"} (:service r2))
-                  (= 0.0 (:metric r2)))))
+                  (= -1.0 (:metric r2)))))
        (finally
          (client/close! client)
          (stop! core))))))
