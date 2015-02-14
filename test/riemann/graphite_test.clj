@@ -29,7 +29,7 @@
      (try
        (sendout! {:service "service1" :metric 1.0 :time 0})
        (sendout! {:service "service2" :metric 2.0 :time 0})
-       ; the next service does not follow protocol and should be droppec by the graphite server
+       ; the next service does not follow protocol and should be dropped by the graphite server
        ; see https://answers.launchpad.net/graphite/+question/173242
        (sendout! {:service "service3" :metric "NaN" :time 0})
        (Thread/sleep 100)
