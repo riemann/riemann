@@ -131,7 +131,8 @@
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
-                                                ((fn [x] (try (float x) (catch Exception e (float -1)))) (:metric event))
+                                                ((fn [x] (try (float x) (catch Exception e (str "NaN")))) (:metric event))
                                                 (int (:time event))])
                                      "\n")]
-                     (send-line client string)))))))
+                     (if (nil? (re-find #"\sNaN\s" string)) (send-line client string))
+                     ))))))
