@@ -12,6 +12,7 @@
       {:name (:service event)
        :host (or (:host event) "")
        :state (:state event)
+       :time (:time event)
        :value (:metric event)
        }
       (apply dissoc event [:service :host :state :metric :tags :time ]))))
