@@ -72,4 +72,4 @@
             points (events->points series events)]
         (when-not (empty? points)
           (doseq [[series points] points]
-            (influx/post-points client series points)))))))
+            (influx/post-points client series "s" points)))))))
