@@ -46,8 +46,8 @@
       (if (and (= 2 (count and-exprs))
                (every? list? and-exprs)
                (= 2 (count (filter #(= (first %) '=) and-exprs))))
-        (let [host    (first (filter #(= (second %) 'host) and-exprs))
-              service (first (filter #(= (second %) 'service) and-exprs))]
+        (let [host    (first (filter #(= (second %) :host) and-exprs))
+              service (first (filter #(= (second %) :service) and-exprs))]
           (if (and host service)
             [(last host) (last service)]))))))
 

@@ -39,22 +39,18 @@
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
-           (let [index (index)
-                 server (tcp-server)
-                 core   (transition! (core) {:services [server]
-                                             :index index})
-                 client (tcp-client)]
+  (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
+    (let [index (index)
+          server (tcp-server)
+          core   (transition! (core) {:services [server]
+                                      :index index})
+          client (tcp-client)]
 
-             (try
-               (is (thrown? com.aphyr.riemann.client.ServerError
-                            @(query client "invalid!")))
-
-               (let [e (try @(query client "invalid!")
-                      (catch com.aphyr.riemann.client.ServerError e e))]
-                 (is (= "no viable alternative at input 'invalid!'"
-                        (.getMessage e))))
-
-               (finally
-                 (close! client)
-                 (stop! core))))))
+      (try
+        (is (thrown-with-msg?
+              com.aphyr.riemann.client.ServerError
+              #"^mismatched input 'no' expecting \{<EOF>, 'or', 'and'\}$"
+              @(query client "oh no not again")))
+        (finally
+          (close! client)
+          (stop! core))))))
