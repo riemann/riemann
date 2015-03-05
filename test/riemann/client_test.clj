@@ -52,7 +52,8 @@
 
                (let [e (try @(query client "invalid!")
                       (catch com.aphyr.riemann.client.ServerError e e))]
-                 (is (= "parse error: invalid term \"invalid\"" (.getMessage e))))
+                 (is (= "no viable alternative at input 'invalid!'"
+                        (.getMessage e))))
 
                (finally
                  (close! client)

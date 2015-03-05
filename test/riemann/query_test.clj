@@ -4,79 +4,178 @@
         clojure.test))
 
 (deftest ast-test
-         (are [s expr] (= (ast s) expr)
-              ; Fields
-              "state = true"        '(= state true)
-              "host = true"         '(= host true)
-              "service = true"      '(= service true)
-              "description = true"  '(= description true)
-              "metric_f = true"     '(= metric_f true)
-              "metric = true"       '(= metric true)
-              "time = true"         '(= time true)
-              "ttl = 64"            '(= ttl 64)
+  (are [s expr] (= (ast s) expr)
+       ; Fields
+       "state = true"        '(= :state true)
+       "host = true"         '(= :host true)
+       "service = true"      '(= :service true)
+       "description = true"  '(= :description true)
+       "metric_f = true"     '(= :metric_f true)
+       "metric = true"       '(= :metric true)
+       "time = true"         '(= :time true)
+       "ttl = 64"            '(= :ttl 64)
 
-              ; Literals
-              "true"  true
-              "false" false
-              "nil"   nil
-              "null"  nil
+       ; Literals
+       "true"  true
+       "false" false
+       "nil"   nil
+       "null"  nil
 
-              ; Integers
-              "state = 0"  '(= state 0)
-              "state = 1"  '(= state 1)
-              "state = -1" '(= state -1)
+       ; Integers
+       "state = 0"  '(= :state 0)
+       "state = 1"  '(= :state 1)
+       "state = -1" '(= :state -1)
 
-              ; Floats
-              "state = 1."      '(= state 1.)
-              "state = 0.0"     '(= state 0.0)
-              "state = 1.5"     '(= state 1.5)
-              "state = -1.5"    '(= state -1.5)
-              "state = 1e5"     '(= state 1e5)
-              "state = 1E5"     '(= state 1e5)
-              "state = -1.2e-5" '(= state -1.2e-5)
+       ; Floats
+       "state = 0.0"     '(= :state 0.0)
+       "state = 1.5"     '(= :state 1.5)
+       "state = -1.5"    '(= :state -1.5)
+       "state = 1e5"     '(= :state 1e5)
+       "state = 1E5"     '(= :state 1e5)
+       "state = -1.2e-5" '(= :state -1.2e-5)
 
-              ; Strings
-              "state = \"\""                '(= state "")
-              "state = \"foo\""             '(= state "foo")
-              "state = \"\\b\\t\\n\\f\\r\"" '(= state "\b\t\n\f\r")
-              "state = \" \\\" \\\\ \""     '(= state " \" \\ ")
-              "state = \"辻斬\""            '(= state "辻斬")
+       ; Strings
+       "state = \"\""                '(= :state "")
+       "state = \"foo\""             '(= :state "foo")
+       "state = \"\\b\\t\\n\\f\\r\"" '(= :state "\b\t\n\f\r")
+       "state = \" \\\" \\\\ \""     '(= :state " \" \\ ")
+       "state = \"辻斬\""            '(= :state "辻斬")
 
-              ; Simple predicates
-              "state = 2"                   '(= state 2)
-              "state > 2"                   '(when state (> state 2))
-              "state < 2"                   '(when state (< state 2))
-              "state >= 2"                  '(when state (>= state 2))
-              "state <= 2"                  '(when state (<= state 2))
-              "state != 2"                  '(not (= state 2))
-              ; Regexen aren't comparable
-              ; "state =~ \"%foo%\""          '(re-find #".*foo.*" state)
+       ; Simple predicates
+       "state = 2"                   '(= :state 2)
+       "state > 2"                   '(> :state 2)
+       "state < 2"                   '(< :state 2)
+       "state >= 2"                  '(>= :state 2)
+       "state <= 2"                  '(<= :state 2)
+       "state != 2"                  '(not= :state 2)
 
-              ; Tags
-              "tagged \"cat\""              '(when tags (member? "cat" tags))
+       "state =~ \"%foo%\""          '(:like "%foo%" :state)
 
-              ; Boolean operators
-              "not host = 1"                '(not (= host 1))
-              "host = 1 and state = 2"      '(and (= host 1) (= state 2))
-              "host = 1 or state = 2"       '(or (= host 1) (= state 2))
+       ; yay regexes aren't comparable
+;       "state ~= \"[a-z]+\""        '(:regex #"[a-z]+" :state)
+;       "state ~= \"\w+\""           '(:regex #"\w+" :state)
 
-              ; Grouping
-              "(host = 1)"                  '(= host 1)
-              "((host = 1))"                '(= host 1)
+       ; Tags
+       "tagged \"cat\""              '(:tagged "cat")
 
-              ; Precedence
-              "not host = 1 and host = 2"
-              '(and (not (= host 1)) (= host 2))
+       ; Boolean operators
+       "not host = 1"                '(not (= :host 1))
+       "host = 1 and state = 2"      '(and (= :host 1)
+                                           (= :state 2))
+       "host = 1 or state = 2"       '(or (= :host 1)
+                                          (= :state 2))
 
-              "not host = 1 or host = 2 and host = 3"
-              '(or (not (= host 1))
-                   (and (= host 2) (= host 3)))
+       ; Grouping
+       "(host = 1)"                  '(= :host 1)
+       "((host = 1))"                '(= :host 1)
 
-              "not ((host = 1 or host = 2) and host = 3)"
-              '(not (and (or (= host 1)
-                             (= host 2))
-                         (= host 3)))
-              ))
+       ; Precedence
+       "not host = 1 and host = 2"   '(and (not (= :host 1))
+                                           (= :host 2))
+
+       "not host = 1 or host = 2 and host = 3"
+       '(or (not (= :host 1))
+            (and (= :host 2) (= :host 3)))
+
+       "not ((host = 1 or host = 2) and host = 3)"
+       '(not (and (or (= :host 1)
+                      (= :host 2))
+                  (= :host 3)))
+       ))
+
+
+(deftest clj-ast-test
+  (are [s expr] (= (clj-ast (ast s)) expr)
+       ; Fields
+       "state = true"        '(= (:state event) true)
+       "host = true"         '(= (:host event) true)
+       "service = true"      '(= (:service event) true)
+       "description = true"  '(= (:description event) true)
+       "metric_f = true"     '(= (:metric_f event) true)
+       "metric = true"       '(= (:metric event) true)
+       "time = true"         '(= (:time event) true)
+       "ttl = 64"            '(= (:ttl event) 64)
+
+       ; Literals
+       "true"  true
+       "false" false
+       "nil"   nil
+       "null"  nil
+
+       ; Integers
+       "state = 0"  '(= (:state event) 0)
+       "state = 1"  '(= (:state event) 1)
+       "state = -1" '(= (:state event) -1)
+
+       ; Floats
+       "state = 0.0"     '(= (:state event) 0.0)
+       "state = 1.5"     '(= (:state event) 1.5)
+       "state = -1.5"    '(= (:state event) -1.5)
+       "state = 1e5"     '(= (:state event) 1e5)
+       "state = 1E5"     '(= (:state event) 1e5)
+       "state = -1.2e-5" '(= (:state event) -1.2e-5)
+
+       ; Strings
+       "state = \"\""                '(= (:state event) "")
+       "state = \"foo\""             '(= (:state event) "foo")
+       "state = \"\\b\\t\\n\\f\\r\"" '(= (:state event) "\b\t\n\f\r")
+       "state = \" \\\" \\\\ \""     '(= (:state event) " \" \\ ")
+       "state = \"辻斬\""            '(= (:state event) "辻斬")
+
+       ; Simple predicates
+       "state = 2"                   '(= (:state event) 2)
+       "state > 2"                   '(let [a (:state event)
+                                            b 2]
+                                        (and (number? a)
+                                             (number? b)
+                                             (> a b)))
+       "state < 2"                   '(let [a (:state event)
+                                            b 2]
+                                        (and (number? a)
+                                             (number? b)
+                                             (< a b)))
+       "state >= 2"                  '(let [a (:state event)
+                                            b 2]
+                                        (and (number? a)
+                                             (number? b)
+                                             (>= a b)))
+       "state <= 2"                  '(let [a (:state event)
+                                            b 2]
+                                        (and (number? a)
+                                             (number? b)
+                                             (<= a b)))
+       "state != 2"                  '(not= (:state event) 2)
+       ; Regexen aren't comparable
+       ; "state =~ \"%foo%\""          '(re-find #".*foo.*" state)
+
+       ; Tags
+       "tagged \"cat\""              '(when-let [tags (:tags event)]
+                                        (riemann.common/member? "cat" tags))
+
+       ; Boolean operators
+       "not host = 1"                '(not (= (:host event) 1))
+       "host = 1 and state = 2"      '(and (= (:host event) 1)
+                                           (= (:state event) 2))
+       "host = 1 or state = 2"       '(or (= (:host event) 1)
+                                          (= (:state event) 2))
+
+       ; Grouping
+       "(host = 1)"                  '(= (:host event) 1)
+       "((host = 1))"                '(= (:host event) 1)
+
+       ; Precedence
+       "not host = 1 and host = 2"   '(and (not (= (:host event) 1))
+                                           (= (:host event) 2))
+
+       "not host = 1 or host = 2 and host = 3"
+       '(or (not (= (:host event) 1))
+            (and (= (:host event) 2) (= (:host event) 3)))
+
+       "not ((host = 1 or host = 2) and host = 3)"
+       '(not (and (or (= (:host event) 1)
+                      (= (:host event) 2))
+                  (= (:host event) 3)))
+       ))
 
 (defn f [s good evil]
   "Given a query string s, ensure that it matches all good states and no evil
@@ -91,7 +190,7 @@
          (f "true"
             [{:state "foo"} {}]
             [])
-         
+
          (f "false"
             []
             [{:state "foo"} {}])
