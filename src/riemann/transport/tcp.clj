@@ -76,7 +76,8 @@
   "Provide native implementation of Netty for improved performance on
   Linux only. Provide pure-Java implementation of Netty on all other
   platforms. See http://netty.io/wiki/native-transports.html"
-  (if (.contains (. System getProperty "os.name") "Linux")
+  (if (and (.contains (. System getProperty "os.name") "Linux")
+           (.contains (. System getProperty "os.arch") "amd64"))
     {:event-loop-group-fn #(EpollEventLoopGroup.)
      :channel EpollServerSocketChannel}
     {:event-loop-group-fn #(NioEventLoopGroup.)

@@ -1646,6 +1646,40 @@
                        [{:time 8} {:time 8}]
                        [{:time 9}]]))
 
+(deftest fixed-offset-time-window-test
+         ; Zero-time windows.
+         (is (thrown? IllegalArgumentException (fixed-offset-time-window 0)))
+
+         ; n-width windows
+         (test-stream (fixed-offset-time-window 2) [] [])
+         (test-stream (fixed-offset-time-window 2) [{:time 1}] [])
+         (test-stream (fixed-offset-time-window 2) 
+                      [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5} {:time 6}]
+                      [[{:time 1}]
+                       [{:time 2} {:time 3}]
+                       [{:time 4} {:time 5}]])
+
+         ; With a gap
+         (test-stream (fixed-offset-time-window 2) [{:time 1} {:time 7}] 
+                      [[{:time 1}] [] []])
+
+         ; With out-of-order events
+         (test-stream (fixed-offset-time-window 2)
+                      [{:time 5}
+                       {:time 1}
+                       {:time 2}
+                       {:time 6}
+                       {:time 3}
+                       {:time 8}
+                       {:time 4}
+                       {:time 8}
+                       {:time 5}
+                       {:time 9}
+                       {:time 11}]
+                      [[{:time 5}]
+                       [{:time 6}]
+                       [{:time 8} {:time 8} {:time 9}]]))
+
 (deftest part-time-simple-test
          ; Record windows of [start-time e1 e2 e3 end-time]
          (advance! 1)

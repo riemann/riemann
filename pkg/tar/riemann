@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 top="$(dirname "$0")/.."
 
-JAR="$top/lib/riemann.jar"
+JAR="$top/lib/riemann.jar:$EXTRA_CLASSPATH"
 CONFIG="$top/etc/riemann.config"
 COMMAND="start"
 AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
@@ -47,4 +47,4 @@ for arg in "$@"; do
   esac
 done
 
-exec java $OPTS -jar "$JAR" "$COMMAND" "$CONFIG"
+exec java $EXTRA_JAVA_OPTS $OPTS -cp "$JAR" riemann.bin "$COMMAND" "$CONFIG"

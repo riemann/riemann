@@ -3,17 +3,44 @@
   (:require [capacitor.core :as influx])
   (:use [clojure.string :only [join split]]))
 
-(defn influxdb-series
-  "Constructs a series name for an event."
-  [opts event]
-  ((:series opts) event))
- 
+(defn event->point
+  "Transform a Riemann event to an InfluxDB point, or nil if the event is
+  missing a metric or service."
+  [event]
+  (when (and (:metric event) (:service event))
+    (merge
+      {:name (:service event)
+       :host (or (:host event) "")
+       :state (:state event)
+       :time (:time event)
+       :value (:metric event)
+       }
+      (apply dissoc event [:service :host :state :metric :tags :time ]))))
+
+(defn events->points
+  "Takes a series fn that finds the series for a given event, and a sequence of
+  events, and emits a map of series names to vectors of points for that series."
+  [series-fn events]
+  (persistent!
+    (reduce (fn [m event]
+              (let [series (or (series-fn event) "riemann-events")
+                    point  (event->point event)]
+                (if point
+                  (assoc! m series (conj (get m series []) point))
+                  m)))
+            (transient {})
+            events)))
+
 (defn influxdb
-  "Returns a function which accepts an event and sends it to InfluxDB.
+  "Returns a function which accepts an event, or sequence of events, and sends
+  it to InfluxDB.
 
-  ;; For giving series name as the concatenation of :host and :service fields with dot separator.
+  ; For giving series name as the concatenation of :host and :service fields
+  ; with dot separator.
 
-  (influxdb {:host \"play.influxdb.org\" :port 8086 :series #(str (:host %) \".\" (:service %))})
+  (influxdb {:host   \"play.influxdb.org\"
+             :port   8086
+             :series #(str (:host %) \".\" (:service %))})
 
   Options:
 
@@ -24,9 +51,10 @@
   :username       Name of the user who is allowed to push metrics to this DB.
 
   :password       Password of the corresponding user.
- 
-  :series         Name of the InfluxDB's time-series. Default value is :service field of event,
-                  incase that is nil, \"riemann-events\" will be the default name."
+
+  :series         Function which takes an event and returns the InfluxDB series
+                  name to use. Defaults to :service. If this function returns
+                  nil, series names default to \"riemann-events\"."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 8086
@@ -34,12 +62,14 @@
                      :username "root"
                      :password "root"
                      :db "riemann"
-                     :series :service} opts)
+                     :series :service}
+                    opts)
+        series (:series opts)
         client (influx/make-client opts)]
-    (fn [event]
-      (when (:metric event)
-        (when (:service event)
-          (influx/post-points client (if-let [series (influxdb-series opts event)] series "riemann-events") [{ :name (:service event)
-                                                                                                               :host (if-let [hostname (:host event)] hostname "") 
-                                                                                                               :state (:state event)
-                                                                                                               :value (:metric event) }]))))))
+
+    (fn stream [events]
+      (let [events (if (sequential? events) events (list events))
+            points (events->points series events)]
+        (when-not (empty? points)
+          (doseq [[series points] points]
+            (influx/post-points client series "s" points)))))))

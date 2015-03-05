@@ -2,14 +2,29 @@
   "Forwards events to Xymon"
   (:require [clojure.java.io       :as io]
             [clojure.string        :as s]
-            [clojure.tools.logging :refer [error]])
+            [clojure.tools.logging :refer [error]]
+            [clojure.math.numeric-tower :refer [ceil]])
   (:import java.net.Socket))
 
 (defn format-line
-  "Formats an event "
+  "Formats an event as a Xymon status message:
+
+  status[+LIFETIME][/group:GROUP] HOSTNAME.TESTNAME COLOR <additional text>
+
+  Note about fields mapping:
+    - HOSTNAME results from the string conversion (\".\" -> \",\") of :host
+    - TESTNAME results from the string conversion (#\"(\\.| )\" -> \"_\") of :service
+    - COLOR is taken as is from :state
+    - <additional text> is taken \"as is\" from :description
+    - GROUP is not handled
+    - LIFETIME results from the rounding up to the nearest whole number of the division by 60 of :ttl.
+       - No :ttl (i.e. :ttl nil) ends up with no LIFETIME set (defaults to Xymon server's default lifetime)
+       - :ttl 0 becomes +0 LIFETIME and will end up as immediate purple
+
+  "
   [{:keys [ttl host service state description]
     :or {host "" service "" description "" state "unknown"}}]
-  (let [ttl-prefix (if ttl (str "+" ttl) "")
+  (let [ttl-prefix (if ttl (str "+" (int (ceil (/ ttl 60)))) "")
         host       (s/replace host "." ",")
         service    (s/replace service #"(\.| )" "_")]
     (format "status%s %s.%s %s %s\n"

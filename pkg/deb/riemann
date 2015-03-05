@@ -4,7 +4,7 @@ if [ -f /etc/default/riemann ]; then
     . /etc/default/riemann
 fi
 
-JAR="$EXTRA_CLASSPATH:/usr/share/riemann/riemann.jar"
+JAR="/usr/share/riemann/riemann.jar:$EXTRA_CLASSPATH"
 CONFIG="/etc/riemann/riemann.config"
 COMMAND="start"
 AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
