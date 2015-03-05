@@ -249,6 +249,19 @@
             [{:host 1} {:service 3} {}]
             [{:host 2 :service 3}]))
 
+(deftest custom-fields
+  (f "paws = 4 and tagged \"catz\""
+     [{:paws 4, :time 2, :tags ["fuzzy" "catz"]}]
+     [; Bad tags
+      {:paws 4, :time 2, :tags ["fuzzy"]}
+      {:paws 4, :time 2, :tags []}
+      {:paws 4, :time 2}
+
+      ; Bad paws
+      {:paws 3,   :time 2, :tags ["fuzzy" "catz"]}
+      {:paws nil, :time 2, :tags ["fuzzy" "catz"]}
+      {           :time 2, :tags ["fuzzy" "catz"]}]))
+
 (deftest fast
          (let [fun (fun (ast
                       "host =~ \"api %\" and state = \"ok\" and metric > 0"))
