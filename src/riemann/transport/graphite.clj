@@ -84,9 +84,10 @@
                     decode-graphite-line
                     parser-fn))
           (catch Object e
-            (throw (RuntimeException.
-                     (str "Graphite server parse error (" e "): "
-                          (pr-str message)))))))
+            (warn (str "Graphite server received malformed message ("
+                       e
+                       "): ")
+                  (pr-str message)))))
 
       (isSharable [] true))))
 
