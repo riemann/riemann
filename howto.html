@@ -1101,6 +1101,27 @@ client << {service: "thumbnailer rate",
 
 <div class="row">
   <div class="sixcol">
+    <p>The <code>where</code> stream provides some syntactic sugar to allow you
+    to access your event fields. In a <code>where</code> stream you can refer to
+    "standard" fields like <code>host</code>, <code>service</code>,
+    <code>description</code>, <code>metric</code>, and <code>ttl</code> by name.
+    If you need to refer to another field you need to reference the full field name,
+    <code>(:field_name event)</code>.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(streams
+  (where (= (:type event) "evolution")
+    ; Only events which have a type of "evolution" are passed on to the email
+    ; stream:
+    (email "delacroix@vonbraun.com")))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
     <p>Where expressions can match particular values of a field; like passing
     on events which occur only on the Von Braun:</p>
   </div>
