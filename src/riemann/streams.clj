@@ -1507,7 +1507,10 @@
              fork (if-let [fork (@table fork-name)]
                     fork
                     ((swap! table assoc fork-name (new-fork)) fork-name))]
-         (call-rescue event fork)))))
+         (do
+           (if (expired? event) (swap! table dissoc fork-name))
+           (call-rescue event fork))))))
+
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous

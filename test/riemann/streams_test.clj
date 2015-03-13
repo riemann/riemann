@@ -772,6 +772,34 @@
            (s {:metric 1})
            (is (= @i 2))))
 
+(deftest by-expire-starts-new-branch
+         (let [i (atom 0)
+               s (by :metric (do (swap! i inc) identity))]
+           (is (= @i 0))
+           (s {:metric 1 :state "hello"})
+           (is (= @i 1))
+           (s {:metric 1 :state "hello"})
+           (is (= @i 1))
+           (s {:metric 1 :state "expired"})
+           (is (= @i 1))
+           (s {:metric 1 :state "hello"})
+           (is (= @i 2))))
+
+(deftest by-expire-is-evaluated
+         (let [i (ref 0)
+               s (by :metric
+                     (fn [event]
+                         (dosync
+                           (alter i inc))))]
+           (is (= @i 0))
+           (s {:metric 1 :state "expired"})
+           (is (= @i 1))
+           (s {:metric 1 :state "hello"})
+           (is (= @i 2))
+           (s {:metric 1 :state "expired"})
+           (is (= @i 3))))
+
+
 (deftest pipe-test
   (testing "One stage"
     (test-stream
