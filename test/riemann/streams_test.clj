@@ -772,31 +772,31 @@
            (s {:metric 1})
            (is (= @i 2))))
 
-(deftest by-expire-starts-new-branch
+(deftest by-host-service-expire-starts-new-branch
          (let [i (atom 0)
-               s (by :metric (do (swap! i inc) identity))]
+               s (by-host-service (do (swap! i inc) identity))]
            (is (= @i 0))
-           (s {:metric 1 :state "hello"})
+           (s {:host "x" :service "y" :state "hello"})
            (is (= @i 1))
-           (s {:metric 1 :state "hello"})
+           (s {:host "x" :service "y" :state "hello"})
            (is (= @i 1))
-           (s {:metric 1 :state "expired"})
+           (s {:host "x" :service "y" :state "expired"})
            (is (= @i 1))
-           (s {:metric 1 :state "hello"})
+           (s {:host "x" :service "y" :state "hello"})
            (is (= @i 2))))
 
-(deftest by-expire-is-evaluated
+(deftest by-host-service-expire-is-evaluated
          (let [i (ref 0)
-               s (by :metric
+               s (by-host-service
                      (fn [event]
                          (dosync
                            (alter i inc))))]
            (is (= @i 0))
-           (s {:metric 1 :state "expired"})
+           (s {:host "x" :service "y" :state "expired"})
            (is (= @i 1))
-           (s {:metric 1 :state "hello"})
+           (s {:host "x" :service "y" :state "hello"})
            (is (= @i 2))
-           (s {:metric 1 :state "expired"})
+           (s {:host "x" :service "y" :state "expired"})
            (is (= @i 3))))
 
 
