@@ -248,9 +248,9 @@ set :bind, "1.2.3.4"
     doing, back off to UDP, HTTP, or Graphite.</p>
 
     <p>Use UDP if you <i>intend</i> to have the OS and network discard data
-    automtically, instead of application-level flow control. Don't use UDP "for
-    speed"; it's designed to drop data, it will drop data, and you'll spend a
-    long time trying to figure out <a
+    automatically, instead of application-level flow control. Don't use UDP
+    "for speed"; it's designed to drop data, it will drop data, and you'll
+    spend a long time trying to figure out <a
     href="https://github.com/etsy/statsd/issues/245">why your stats are
     wrong</a>. UDP may be appropriate for sampling events where discarding
     large parts of the datastream is OK, but if different nodes drop packets at
@@ -2176,6 +2176,167 @@ rate
     ; the async queue.
     (batch 100 1/10
       downstream)))
+{% endhighlight %}
+  </div>
+</div>
+
+<h3>Organizing with functions</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann's config is a Clojure program; you can break up your config into
+    smaller, testable, re-usable pieces using <i>functions</i>, and organize
+    those functions into <i>namespaces</i>. For example, here's a config which
+    computes rates and percentiles over two different services.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (index)
+      graph (graphite {:host "graphs.internal")]
+  (streams
+    (where (service "foo")
+      (by :host
+        (with {:metric 1, :service "foo rate"}
+          (rate 5 index graph))
+        (percentiles 5 [0.5 0.95 0.99] index graph)))
+
+    (where (service "bar")
+      (by :host
+        (with {:metric 1, :service "bar rate"}
+          (rate 5 index graph))
+        (percentiles 5 [0.5 0.95 0.99] index graph)))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Let's break that rate and percentile pattern out into its own function.
+    The two <code>where</code> expressions match <i>different</i> services, so
+    we'll make the service name an argument to the function. We also need to
+    send our rate and latency events to two child streams--the index, and the
+    graphite client--so we'll make those the two arguments to the function. The
+    function will construct a stream using <code>(where ...)</code> and return
+    that to its caller.</p>
+
+    <p><code>(defn ...)</code> defines a new function, named
+    <code>rate+percentiles</code>. We provide a docstring that describes the
+    function, and a list of arguments in <code>[brackets]</code>. Then we
+    create a stream using <code>where</code>. The final (in this case only)
+    expression in a <code>defn</code> is the function's return value.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(defn rate+percentiles
+  "Filters events to those with the given service, then, for each host, compute
+  a rate and percentile distribution every 5 seconds, and forward those events
+  to the given index and graphite client."
+  [svc index graph]
+  (where (= service svc)
+    (by :host
+      (with {:metric 1, :service (str svc " rate")}
+        (rate 5 index graph))
+      (percentiles 5 [0.5 0.95 0.99] index graph))))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Then we just <i>call</i> that function in our streams, filling in the
+    service, index, and graphite client we'd like to send events to. Remember,
+    in Clojure, <code>(fun a b)</code> means "call the function
+    <code>fun</code> with arguments <code>a</code> and <code>b</code>".</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [index (index)
+      graph (graphite {:host "graphs.internal")]
+  (streams
+    (rate+percentiles "foo" index graph)
+    (rate+percentiles "bar" index graph)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>These functions can, in turn, call <i>other</i> functions, allowing you
+    to build up complex streams out of small, well-organized parts.
+<i>Everything</i> in Riemann is defined in terms of functions like this: the
+same tools we use to build Riemann's internals are in your hands too.</p>
+
+   <p>Use functions whenever you start nesting too deeply, or whenever you can
+put a name to a well-defined stream. Use functions to transform events! Use
+functions to figure out what time it is! There's no limit. For more on
+functions and Clojure in general, see <a
+href="https://aphyr.com/posts/303-clojure-from-the-ground-up-functions">Clojure
+from the Ground Up: Functions</a>.</p>
+  </div>
+</div>
+
+<h3>Organizing with namespaces</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>As your config grows, you'll have more and more functions--and more and
+more <i>names</i> to worry about. It helps to break things up into
+<i>namespaces</i>--typically one per file. Clojure provides a first-class
+namespace system, which you can use to organize your configuration. For
+instance, we might have a file in <code>/etc/riemann/mycorp/queue.clj</code>
+which knows how to handle all the events from a queuing system.</p>
+
+    <p>We start the file with a namespace declaration <code>ns</code>, and pull
+in some common Riemann functions using <code>:require</code>. If you need
+functions from other namespaces, you can add them as well. Then we define functions that help build queue-related streams.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(ns mycorp.queue
+  "Instrumentation and alerts for our distributed queue and consumers"
+  (:require [riemann.config :refer :all]
+            [riemann.streams :refer :all]))
+
+(defn capacity [index pagerduty] ...)
+
+(defn rate-of-growth [index pagerduty] ...)
+
+(defn queues
+  "Handles all queuing events."
+  [index pagerduty]
+  ; We'll just route all events to each of these streams
+  (sdo
+    (capacity       index pagerduty)
+    (rate-of-growth index pagerduty)))
+{% endhighlight %}
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>In our top-level <code>riemann.config</code>, we don't want to worry
+about capacities or rates of growth or anything else. We'll just load every
+<code>.clj</code> file in the <code>mycorp</code> directory, and require the
+<code>mycorp.queues</code> namespace, giving it the short name <code>q</code>.
+Then we can call any function from that namespace using
+<code>q/some-fn</code>.</p>
+
+    <p>Note that <code>require</code> has a slightly different shape in a
+<code>ns</code> declaration versus when it's called as a function: when called
+as a function, we put a single quote in front of the vector. There are Good
+Reasons (TM) for Clojure to work this way, but it's a long story and we won't
+dig into it here.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(include "mycorp/")
+(require '[mycorp.queue :as q])
+
+(let [index (index)
+      pd    (pagerduty ...)]
+  (streams
+    (where (service #"queue ")
+      (q/queues index pd))))
 {% endhighlight %}
   </div>
 </div>
