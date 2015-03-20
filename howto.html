@@ -2228,9 +2228,9 @@ rate
   <div class="sixcol last">
 {% highlight clj %}
 (defn rate+percentiles
-  "Filters events to those with the given service, then, for each host, compute
-  a rate and percentile distribution every 5 seconds, and forward those events
-  to the given index and graphite client."
+  "Filters events to those with the given service, then, for each host,
+  compute a rate and percentile distribution every 5 seconds, and forward
+  those events to the given index and graphite client."
   [svc index graph]
   (where (= service svc)
     (by :host
