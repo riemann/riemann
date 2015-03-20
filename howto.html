@@ -1290,8 +1290,9 @@ reported "ok" and service B reported "down". There's a shorthand for this:</p>
 
 <p>When you start Riemann, it doesn't know what the previous state was. By
 default, <code>changed</code> will forward on the first event it receives. You
-can tell <code>changed</code> and <code>changed-state</code> to *assume* an
-initial state with the <code>:init</code> option:</p>
+can tell <code>changed</code> and <a href="http://riemann.io/api/riemann.streams.html#var-changed-state">
+<code>changed-state</code></a> to *assume* an initial state with the
+<code>:init</code> option:</p>
 
 {% highlight clj %}
 (streams
@@ -1451,8 +1452,8 @@ can provide a default TTL for any incoming events that don't provide one:</p>
 
 <p>Now, any services that fail to check in every ten seconds will expire
 (unless they give a different TTL). Since expired events have a different
-state, any (changed-state) streams will detect the transition and can alert
-you:</p>
+state, any <a href="http://riemann.io/api/riemann.streams.html#var-changed-state">
+(changed-state)</a> streams will detect the transition and can alert you:</p>
 
 {% highlight clj %}
 (streams
@@ -2276,7 +2277,7 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
 <h3>Notify with Pagerduty</h3>
 
-<p>Create a client with your pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service:</p>
+<p>Create a client with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service:</p>
 
 {% highlight clj %}
 (let [pd (pagerduty "my-service-key")]
@@ -2290,7 +2291,7 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 <h3>Forward between Riemann servers</h3>
 
 <p>When you have *many* events, you can use multiple Riemann servers to scale
-out. You might, for instance, run one Riemann server per datacenter, and
+out. You might, for instance, run one Riemann server per data center, and
 forward only state changes in each service to a master server for a birds-eye
 view.</p>
 
