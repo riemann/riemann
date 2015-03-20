@@ -1,3 +1,3 @@
 safe: true
-pygments: true
+highlighter: true
 markdown: kramdown
