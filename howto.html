@@ -2387,7 +2387,7 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 </div
 
 <div class="row">
-  <div class="sixcol">
+  <div class="sixcol last">
 {% highlight clj %}
 (let [email (mailer {:from "riemann@trioptimum.com"})]
   (streams
@@ -2414,12 +2414,11 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   <p>Then, use the client as a stream.</p>
 
   <p>Or just graph everything.</p>
-
   </div>
 </div>
 
 <div class="row">
-  <div class="sixcol">
+  <div class="sixcol last">
 {% highlight clj %}
 (def graph (graphite {:host "my.graphite.server"}))
 {% endhighlight %}
@@ -2464,7 +2463,7 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 </div>
 
 <div class="row">
-  <div class="sixcol">
+  <div class="sixcol last">
 {% highlight clj %}
 (let [pd (pagerduty "my-service-key")]
   (streams
@@ -2487,7 +2486,7 @@ Specify the user name of the Riemann bot, a channel to notify in and an icon for
 </div>
 
 <div class="row">
-  <div class="sixcol">
+  <div class="sixcol last">
 {% highlight clj %}
 (def credentials {:account "your_org", :token "your_token"})
 (def slack (slack credentials {:username "Riemann bot"
@@ -2513,7 +2512,7 @@ view.</p>
 </div>
 
 <div class="row">
-  <div class="sixcol">
+  <div class="sixcol last">
 {% highlight clj %}
 (streams
   (let [client (tcp-client :host "aggregator")]
