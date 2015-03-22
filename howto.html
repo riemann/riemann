@@ -2364,7 +2364,7 @@ irb -r riemann/client
 Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.each { |x| puts x }
 {% endhighlight %}
   </div>
-<div>
+</div>
 
 <h2>Integrating with other systems</h2>
 
@@ -2378,8 +2378,16 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
 <h3>Send email</h3>
 
-<p><code>riemann.email</code> can send single events--or vectors of events--via email:</p>
+<div class="row">
+  <div class="sixcol">
+    <p><code>riemann.email</code> can send single events--or vectors of events--via email:</p>
 
+    <p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:</p>
+  </div>
+</div
+
+<div class="row">
+  <div class="sixcol">
 {% highlight clj %}
 (let [email (mailer {:from "riemann@trioptimum.com"})]
   (streams
@@ -2387,24 +2395,34 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
       (email "shodan@tauceti.five"))))
 {% endhighlight %}
 
-<p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>:</p>
-
 {% highlight clj %}
 (mailer {:from "riemann@trioptimum.com"
          :host "mx1.trioptimum.com"
          :user "foo"
          :pass "bar"})
 {% endhighlight %}
+  </div>
+</div>
 
 <h3>Forward to Graphite</h3>
 
-<p>First, you define a client to graphite, which maintains a connection pool:</p>
+<div class="row">
+  <div class="sixcol">
 
+  <p>First, you define a client to graphite, which maintains a connection pool:</p>
+
+  <p>Then, use the client as a stream.</p>
+
+  <p>Or just graph everything.</p>
+
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
 {% highlight clj %}
 (def graph (graphite {:host "my.graphite.server"}))
 {% endhighlight %}
-
-<p>Then, use the client as a stream:</p>
 
 {% highlight clj %}
 (streams
@@ -2412,12 +2430,12 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
     graph))
 {% endhighlight %}
 
-<p>Or just graph everything:</p>
-
 {% highlight clj %}
 (streams
   graph)
 {% endhighlight %}
+  </div>
+</div>
 
 <h3>Forward to Librato Metrics</h3>
 
@@ -2438,8 +2456,15 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
 <h3>Notify with Pagerduty</h3>
 
-<p>Create a client with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service:</p>
+<div class="row">
+  <div class="sixcol">
 
+  <p>Create a client with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service:</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
 {% highlight clj %}
 (let [pd (pagerduty "my-service-key")]
   (streams
@@ -2448,14 +2473,47 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
         (:resolve pd)
         (else (:trigger pd))))))
 {% endhighlight %}
+  </div>
+</div>
+
+<h3>Sent events to Slack</h3>
+
+<div class="row">
+  <div class="sixcol">
+  <p>Create a <a href="https://api.slack.com/incoming-webhooks">Slack webhook</a> for Riemann. Then create a Slack client using the token from the last element of your
+webhook URL, for example with a URL of <code>https://hooks.slack.com/services/QWERSAFG0/AFOIUYTQ48/120984SAFJSFR</code> then your token would be <code>120984SAFJSFR</code>.
+Specify the user name of the Riemann bot, a channel to notify in and an icon for the notification.</p>
+  </div>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+{% highlight clj %}
+(def credentials {:account "your_org", :token "your_token"})
+(def slack (slack credentials {:username "Riemann bot"
+                                 :channel "#ops"
+                                 :icon ":smile:"}))
+
+(streams
+    (where (state "critical")
+      slack))
+{% endhighlight %}
+  </div>
+</div>
 
 <h3>Forward between Riemann servers</h3>
 
+<div class="row">
+  <div class="sixcol">
 <p>When you have *many* events, you can use multiple Riemann servers to scale
 out. You might, for instance, run one Riemann server per data center, and
 forward only state changes in each service to a master server for a birds-eye
 view.</p>
+  </div>
+</div>
 
+<div class="row">
+  <div class="sixcol">
 {% highlight clj %}
 (streams
   (let [client (tcp-client :host "aggregator")]
@@ -2463,6 +2521,8 @@ view.</p>
        (changed :state
                 (forward client)))))
 {% endhighlight %}
+  </div>
+</div>
 
 <h2>Contributing to Riemann</h2>
 
