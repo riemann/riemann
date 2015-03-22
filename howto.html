@@ -2384,9 +2384,7 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
     <p>You can use any options for <a href="https://github.com/drewr/postal">Postal</a>.</p>
   </div>
-</div
 
-<div class="row">
   <div class="sixcol last">
 {% highlight clj %}
 (let [email (mailer {:from "riemann@trioptimum.com"})]
@@ -2417,7 +2415,6 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   </div>
 </div>
 
-<div class="row">
   <div class="sixcol last">
 {% highlight clj %}
 (def graph (graphite {:host "my.graphite.server"}))
@@ -2438,20 +2435,29 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
 <h3>Forward to Librato Metrics</h3>
 
-<p>Create a client for librato-metrics with your username and API key:</p>
+<div class="row">
+  <div class="sixcol">
+<p>Create a client for librato-metrics with your username and API key.</p>
+
+<p>Then use it in streams.</p>
+
+<p>You can submit events as annotations too. See the <a href="api/riemann.librato.html#var-librato-metrics">librato-metrics documentation</a>.</p>
+  </div>
+</div>
+
+  <div class="sixcol last">
 
 {% highlight clj %}
 (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
 {% endhighlight %}
-
-<p>Then use it in streams:</p>
 
 {% highlight clj %}
 (streams
   (tagged \"latency\" (librato :gauge)))
 {% endhighlight %}
 
-<p>You can submit events as annotations too. See the <a href="api/riemann.librato.html#var-librato-metrics">librato-metrics documentation</a>.</p>
+  </div>
+</div>
 
 <h3>Notify with Pagerduty</h3>
 
@@ -2462,7 +2468,6 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   </div>
 </div>
 
-<div class="row">
   <div class="sixcol last">
 {% highlight clj %}
 (let [pd (pagerduty "my-service-key")]
@@ -2485,7 +2490,6 @@ Specify the user name of the Riemann bot, a channel to notify in and an icon for
   </div>
 </div>
 
-<div class="row">
   <div class="sixcol last">
 {% highlight clj %}
 (def credentials {:account "your_org", :token "your_token"})
@@ -2511,7 +2515,6 @@ view.</p>
   </div>
 </div>
 
-<div class="row">
   <div class="sixcol last">
 {% highlight clj %}
 (streams
