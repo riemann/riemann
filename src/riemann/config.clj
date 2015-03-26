@@ -398,7 +398,7 @@
     (binding [*config-file* path
               *ns* (find-ns 'riemann.config)]
       (if (.isDirectory file)
-        (doseq [f (file-seq file)]
+        (doseq [f (sort (file-seq file))]
           (when (config-file? f)
             (load-file (.toString f))))
         (load-file path)))))
