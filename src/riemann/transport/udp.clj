@@ -92,8 +92,10 @@
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size))
-                  (.option ChannelOption/SO_RCVBUF so-rcvbuf)
                   (.handler handler))
+                
+                ; Setup Channel options
+                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
@@ -102,14 +104,14 @@
                      (.channel)
                      (.add channel-group))
 
-                (info "UDP server" host port max-size "online")
+                (info "UDP server" host port max-size so-rcvbuf "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
                           @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size "shut down")))))))
+                          (info "UDP server" host port max-size so-rcvbuf "shut down")))))))
 
   (stop! [this]
          (locking this
@@ -153,7 +155,7 @@
          host  (get opts :host "127.0.0.1")
          port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
-         so-rcvbuf (get opts :so-rcvbuf 124928)
+         so-rcvbuf (get opts :so-rcvbuf -1)
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
