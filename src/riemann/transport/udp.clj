@@ -67,6 +67,7 @@
   ; TODO compare pipeline-factory!
   (equiv? [this other]
           (and (instance? UDPServer other)
+               (= max-size (:max-size other))
                (= so-rcvbuf (:so-rcvbuf other))
                (= host (:host other))
                (= port (:port other))))
@@ -74,6 +75,7 @@
   Service
   (conflict? [this other]
              (and (instance? UDPServer other)
+                  (= max-size (:max-size other))
                   (= so-rcvbuf (:so-rcvbuf other))
                   (= host (:host other))
                   (= port (:port other))))
