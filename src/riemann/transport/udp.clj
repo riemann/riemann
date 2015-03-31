@@ -54,6 +54,7 @@
 (defrecord UDPServer [^String host
                       ^int port
                       max-size
+                      ^int so-rcvbuf
                       ^ChannelGroup channel-group
                       ^ChannelHandler handler
                       stats
@@ -66,12 +67,16 @@
   ; TODO compare pipeline-factory!
   (equiv? [this other]
           (and (instance? UDPServer other)
+               (= max-size (:max-size other))
+               (= so-rcvbuf (:so-rcvbuf other))
                (= host (:host other))
                (= port (:port other))))
 
   Service
   (conflict? [this other]
              (and (instance? UDPServer other)
+                  (= max-size (:max-size other))
+                  (= so-rcvbuf (:so-rcvbuf other))
                   (= host (:host other))
                   (= port (:port other))))
 
@@ -92,6 +97,9 @@
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size))
                   (.handler handler))
+                
+                ; Setup Channel options
+                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
@@ -100,14 +108,14 @@
                      (.channel)
                      (.add channel-group))
 
-                (info "UDP server" host port max-size "online")
+                (info "UDP server" host port max-size so-rcvbuf "online")
 
                 ; fn to close server
                 (reset! killer
                         (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
                           @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size "shut down")))))))
+                          (info "UDP server" host port max-size so-rcvbuf "shut down")))))))
 
   (stop! [this]
          (locking this
@@ -141,6 +149,7 @@
   :host             The address to listen on (default 127.0.0.1).
   :port             The port to listen on (default 5555).
   :max-size         The maximum datagram size (default 16384 bytes).
+  :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
   :channel-group    A ChannelGroup used to track all connections
   :initializer      A ChannelInitializer"
   ([] (udp-server {}))
@@ -150,6 +159,7 @@
          host  (get opts :host "127.0.0.1")
          port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
+         so-rcvbuf (get opts :so-rcvbuf -1)
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
@@ -160,4 +170,4 @@
                    ^:shared msg-decoder      (msg-decoder)
                    ^{:shared true :executor shared-event-executor} handler
                    (gen-udp-handler core stats channel-group udp-handler)))]
-     (UDPServer. host port max-size channel-group ci stats core (atom nil)))))
+     (UDPServer. host port max-size so-rcvbuf channel-group ci stats core (atom nil)))))
