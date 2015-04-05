@@ -98,7 +98,7 @@
       (events [this]
         (let [base {:state "ok" :time (unix-time)}]
           (map (partial merge base)
-               [{:service "riemann index event-count"
+               [{:service "riemann index size"
                  :metric (.size hm)}])))
 
       clojure.lang.Seqable
