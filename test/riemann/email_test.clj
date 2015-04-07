@@ -19,7 +19,19 @@
            (is (= @a [{} {:subject "subject foo"
                           :body    "body foo"}]))))
 
+(deftest email-test-erroring
+  (testing "sending an email integration test"
+    (let [email (mailer {:from "riemann-test"})]
+      (is (thrown? java.lang.AssertionError
+                   (email {:host "localhost"
+                           :service "email test"
+                           :state "ok"
+                           :description "all clear, uh, situation normal"
+                           :metric 3.14159
+                           :time (unix-time)}))))))
+
 (deftest ^:email ^:integration email-test
+  (testing "sending an email integration test"
          (let [email (mailer {:from "riemann-test"})
                stream (email "aphyr@aphyr.com")]
            (stream {:host "localhost"
@@ -27,4 +39,4 @@
                     :state "ok"
                     :description "all clear, uh, situation normal"
                     :metric 3.14159
-                    :time (unix-time)})))
+                    :time (unix-time)}))))
