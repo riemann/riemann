@@ -2165,7 +2165,7 @@ rate
       downstream (async-queue!
                     :agg-forwarder        ; A name for the forwarder
                     {:queue-size     1e4  ; 10,000 events max
-                     :core-pool-size 1    ; Minimum 4 threads
+                     :core-pool-size 4    ; Minimum 4 threads
                      :max-pools-size 100} ; Maxium 100 threads
                     (forward
                       (riemann.client/tcp-client :host "127.0.0.1")))]
