@@ -347,3 +347,20 @@ ul {
   list-style: disc !important;
   padding-left: 2em;
 }
+
+/* -- admonitions ----------------------------------------------------------- */
+
+div.admonition {
+    border: thin solid black;
+    padding: 10px;
+}
+
+span.admonition-title {
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+div.body span.centered {
+    text-align: center;
+}
+

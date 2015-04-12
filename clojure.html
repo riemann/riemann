@@ -1,0 +1,556 @@
+---
+title: Riemann - Just Enough Clojure
+layout: default
+---
+
+<style>
+  body {
+    background: #ff9000; /* Old browsers */
+    background: -moz-radial-gradient(center, ellipse cover,  #ff9000 0%, #d14c00 100%); /* FF3.6+ */
+    background: -webkit-gradient(radial, center center, 0px, center center, 100%, color-stop(0%,#ff9000), color-stop(100%,#d14c00)); /* Chrome,Safari4+ */
+    background: -webkit-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* Chrome10+,Safari5.1+ */
+    background: -o-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* Opera 12+ */
+    background: -ms-radial-gradient(center, ellipse cover,  #ff9000 0%,#d14c00 100%); /* IE10+ */
+    background: radial-gradient(ellipse at center,  #ff9000 0%,#d14c00 100%); /* W3C */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff9000', endColorstr='#d14c00',GradientType=1 ); /* IE6-9 fallback on horizontal gradient */
+  }
+</style>
+
+<div class="row">
+  <h1 class="twelvecol">Just <span class="focus">enough</span> Clojure to work with Riemann</h1>
+</div>
+
+<div class="row">
+  <div class="sixcol">
+    <p>This is not a comprehensive guide to Clojure, but it will get you started.</p>
+  </div>
+
+</div><!-- container -->
+<div class="light">
+
+<div class="container">
+
+  <script type="text/javascript" charset="utf-8">
+    $(document).ready(function() {
+      $("#toc").tableOfContents(null, {
+        startLevel: 2,
+        depth: 3,
+        topLinks: true
+      });
+    });
+  </script>
+
+  <div class="row">
+    <div class="twelvecol">
+      <div id="toc">
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="twelvecol">
+
+<p>Riemann is configured using a Clojure-based configuration file. This means your configuration file is actually processed as a Clojure program. So to process events and send alerts and metrics you'll be writing Clojure. Don't panic! You won't need to become a fully fledged Clojure developer to use Riemann. We'll teach you what you need to know in order to use Riemann. Additionally, Riemann comes with a lot of helpers and shortcuts that make it easier to write Clojure to do what we need to process our events.</p>
+<p>Let's learn a bit more about Clojure and help you get started with Riemann. Clojure is a dynamic programming language that targets the Java Virtual Machine. It's a dialect of Lisp and is largely a <a href="http://clojure.org/functional_programming">functional programming language</a>.</p>
+<p><a href="https://en.wikipedia.org/wiki/Functional_programming">Functional programming</a> is a programming style that focuses on the evaluation of mathematical functions and steers away from changing state and mutable data. It's highly declarative, meaning you build programs from expressions that describe "what" a program should accomplish rather than "how" it accomplishes it.</p>
+<div class="admonition">
+<span class="admonition-title">Note</span> <span>Languages that describe more of the "how" are called imperative languages.</span>
+</div>
+<p>Examples of declarative programming languages include SQL, CSS, regular expressions and configuration management languages like Puppet and Chef. Let's take a simple example.</p>
+
+{% highlight sql %}
+SELECT user_id FROM users WHERE user_name = "Alice"
+{% endhighlight %}
+
+<p>In this SQL query we're asking for the <code>user_id</code> for <code>user_name</code> of <code>Alice</code> from the <code>users</code> table. The statement is asking a declarative "what" question. We don't really care about the "how", the database engine takes care of those details.</p>
+<p>In addition to their declarative nature, functional programming languages try to eliminate all side effects from changing state. In a functional language when you call a function its output value depends only on the inputs to the function. So if you repeatedly call function <code>f</code> with the same value for argument <code>x</code>, <code>f(x)</code>, it will produce the same result every time. This makes functional programs very easy to understand, test and predict. Functional programming languages call functions that operate like this "pure" functions.</p>
+<p>The best way to get started with Clojure is to understand the basics of its syntax and types. Let's get a crash course now.</p>
+<div class="admonition">
+<span class="admonition-title">Warning</span> <span>This is going to be a very high level and not very nuanced introduction to Clojure. It's designed to give you the knowledge and recognition of various syntax and expressions to allow you to work with Riemann. It is not an article that will teach you how to develop in Clojure.</span>
+</div>
+<section id="a-brief-introduction-to-clojure" class="level3">
+<h3>A brief introduction to Clojure</h3>
+<p>Let's step through the Clojure basic syntax and types. We'll also show you a tool called REPL that can help you test and build your Clojure snippets. REPL (short for read–eval–print loop) is an interactive programming shell that takes single expressions, evaluates them and returns the results. It's a great way to get to know Clojure.</p>
+<div class="admonition">
+<span class="admonition-title">Note</span> <span>If you're from the Ruby world then REPL is just like <code>irb</code>. Or in Python when you launch the <code>python</code> binary interactively.</span>
+</div>
+<p>We can install REPL via a tool called <a href="http://leiningen.org/">Leiningen</a>. Leiningen is an automation tool for Clojure that helps you automate the build and management of Clojure projects.</p>
+</section>
+<section id="installing-leiningen" class="level3">
+<h3>Installing Leiningen</h3>
+<p>In order to install Leiningen we'll need to have Java installed on the host. The prerequisite Java packages on Ubuntu and Red Hat for Reimann will also be sufficient for Leiningen too.</p>
+<p>We're going to download a Leiningen binary called <code>lein</code> to install it. Let's download that into a <code>bin</code> directory under our home directory.</p>
+
+{% highlight sh %}
+$ mkdir -p ~/bin
+$ cd ~/bin
+$ curl -o lein https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+$ chmod a+x lein
+$ export PATH=$PATH:$HOME/bin
+{% endhighlight %}
+
+<p>Here we've created a new directory called <code>~/bin</code> and changed into it. We've then used the <code>curl</code> command to download the <code>lein</code> binary and the <code>chmod</code> command to make it executable. Lastly, we've added our <code>~/bin</code> directory to our path so that we can find the <code>lein</code> binary.</p>
+<div class="admonition">
+<span class="admonition-title">Tip</span> <span>The addition of the <code>~/bin</code> directory assumes you're in a Bash shell. It's also temporary to your current shell. You'd need to add the path to your <code>.bashrc</code> or the similar setup for your shell.</span>
+</div>
+<p>Next we need to run <code>lein</code> to auto-install its supporting libraries.</p>
+
+{% highlight sh %}
+$ lein
+. . .
+{% endhighlight %}
+
+<p>This will download Leiningen's supporting Jar file.</p>
+<p>Finally, we can run REPL using the <code>lein repl</code> sub-command.</p>
+
+{% highlight sh %}
+$ lein repl
+. . .
+user=>
+{% endhighlight %}
+
+<p>This will download Clojure itself (in the form of its Jar file) and launch our interactive Clojure shell.</p>
+</section>
+<section id="clojure-syntax-and-types" class="level3">
+<h3>Clojure syntax and types</h3>
+<p>Let's use this interactive shell to look at some of the syntax and functions we've just learnt about. Let's start by opening our shell.</p>
+{% highlight clj %}
+user=>
+{% endhighlight %}
+
+<p>Now let's try a simple expression.</p>
+{% highlight clj %}
+user=> nil
+nil
+{% endhighlight %}
+
+<p>The <code>nil</code> expression is the simplest value in Clojure. It represents literally nothing.</p>
+<p>We can also specify an integer value.</p>
+{% highlight clj %}
+user=> 1
+1
+{% endhighlight %}
+
+<p>Or a string.</p>
+{% highlight clj %}
+user=> "hello Ms Event"
+"hello Ms Event"
+{% endhighlight %}
+
+<p>Or Boolean values.</p>
+{% highlight clj %}
+user=> true
+true
+user=> false
+false
+{% endhighlight %}
+
+<section id="clojure-functions" class="level4">
+<h4>Clojure functions</h4>
+<p>Whilst interesting these values aren't very exciting on their own. To do some more interesting things we can use Clojure functions. A function is structured like this:</p>
+{% highlight clj %}
+(function argument argument)
+{% endhighlight %}
+
+<div class="admonition">
+<span class="admonition-title">Tip</span> <span>If you're used to the Ruby or Python world a function is broadly the equivalent of a method.</span>
+</div>
+<p>Let's look at a function in action by doing something with some values: adding two integers together.</p>
+{% highlight clj %}
+user=> (+ 1 1)
+2
+{% endhighlight %}
+
+<p>In this case we've used the <code>+</code> function and added <code>1</code> and <code>1</code> together to get <code>2</code>.</p>
+<p>But there's something about this structure that might look familiar to you if you've used other programming languages. Our function looks just like <a href="https://en.wikipedia.org/wiki/List_(abstract_data_type)">a list</a>. This is because it is! Our expression might add two numbers together but it’s also a list of three items in a valid list data structure.</p>
+<div class="admonition">
+<span class="admonition-title">Note</span> <span>Technically it's an <a href="http://en.wikipedia.org/wiki/S-expression">s-epression</a>.</span>
+</div>
+<p>This is a feature of Clojure called <a href="http://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a>, sometimes described as: "code is data, data is code". This concept is inherited from Clojure's parent language: <a href="http://en.wikipedia.org/wiki/Lisp_(programming_language)">Lisp</a>.</p>
+<p>Homoiconicity means that the program's structure is similar to its syntax. In this case Clojure programs are written in the form of lists. Hence you can gain insight into the program's internal workings by reading its code. This also makes <a href="http://en.wikipedia.org/wiki/Metaprogramming">metaprogramming</a> really easy because Clojure's source code is a data structure and the language can treat it like one.</p>
+<p>Now let's look more closely at the <code>+</code> function. Each function is a symbol. A symbol is a bare string of characters, like <code>+</code> or <code>inc</code>. Symbols have short names and full names. The short name is used to refer to it locally, for example <code>+</code>. The full name, or perhaps more accurately the fully qualified name, gives you a way to refer to the symbol unambiguously from anywhere. The fully qualified name of the <code>+</code> symbol is <code>clojure.core/+</code>. The <code>clojure.core</code> being the fundamental library of the Clojure language. We can refer to <code>+</code> in it's fully qualified form here:</p>
+{% highlight clj %}
+user=> (clojure.core/+ 1 1)
+2
+{% endhighlight %}
+
+<p>Symbol refer to other things; generally they point to values. Think about them as a name or identifier that points to a concept: <code>+</code> is the name, "adding" is the concept. When Clojure encounters a symbol it evaluates it by looking up its meaning. If it can't find a meaning it'll generate an error message, for example:</p>
+{% highlight clj %}
+user=> (bob 1 2)
+CompilerException java.lang.RuntimeException: Unable to resolve symbol: bob in this context, compiling:(NO_SOURCE_PATH:1:1)
+{% endhighlight %}
+
+<p>Clojure also has a syntax for stopping that evaluation. This is called quoting and it is achieved by prefixing the expression with a quotation mark: <code>'</code>.</p>
+{% highlight clj %}
+user=> '(+ 1 1)
+(+ 1 1)
+{% endhighlight %}
+
+<p>This returns the symbol itself without evaluating it. This is important because often we want to do things, review things, or test things without evaluating.</p>
+<p>For example, if we need to determine what type of thing something is in Clojure we can use the <code>type</code> function and quote the function like so:</p>
+{% highlight clj %}
+user=> (type '+)
+clojure.lang.Symbol
+{% endhighlight %}
+
+<p>Here we can see that <code>+</code> is a Clojure language symbol.</p>
+</section>
+<section id="lists" class="level4">
+<h4>Lists</h4>
+<p>Clojure also has a variety of data structures. Especially useful to us will be collections. Collections are groups of values, for example a list or a map.</p>
+<p>Let's start by looking at lists. Lists are core to all Lisp-based languages (Lisp means "LISt Processing"). As we discovered above Clojure programs are essentially lists. So we're going to see a lot of them!</p>
+<p>Lists have zero or more elements and are wrapped in parentheses.</p>
+{% highlight clj %}
+user=> '(a b c)
+(a b c)
+{% endhighlight %}
+
+<p>Here we've created a list containing the elements <code>a</code>, <code>b</code> and <code>c</code>. We've quoted it because we don't want it evaluated. If we didn't quote it then evaluation would fail because none of the elements, <code>a</code>, <code>b</code>, etc are defined. Let's see that now.</p>
+{% highlight clj %}
+user=> (a b c)
+CompilerException java.lang.RuntimeException: Unable to resolve symbol: a in this context, compiling:(NO_SOURCE_PATH:1:1)
+{% endhighlight %}
+
+<p>We can do a few neat things with lists, for example add an element using the <code>conj</code> function.</p>
+{% highlight clj %}
+user=> (conj '(a b c) 'd)
+(d a b c)
+{% endhighlight %}
+
+<p>You can see we've added a new element, <code>d</code>, to the front of the list. Why the front? Because a list is really a <a href="https://en.wikipedia.org/wiki/Linked_list">linked list</a> and focusses on providing immediate access to the first value in the list. Lists are most useful for small collections of elements and when you need to read elements in a linear fashion.</p>
+<p>We can also return values from a list using a variety of functions.</p>
+{% highlight clj %}
+user=> (first '(a b c))
+a
+user=> (second '(a b c))
+b
+user=> (nth '(a b c) 2)
+c
+{% endhighlight %}
+
+<p>Here we've pulled out the first element, second element, and using the <code>nth</code> function, the third element.</p>
+<p>This last, <code>nth</code>, function shows us a multi-argument function. The first argument is the list, <code>'(a b c)</code>, and the second argument is the index value of the element we want to return, here <code>2</code>.</p>
+<div class="admonition">
+<span class="admonition-title">Tip</span> <span>Like most programming languages Clojure starts counting from <code>0</code>.</span>
+</div>
+<p>We can also create a list with the <code>list</code> function.</p>
+{% highlight clj %}
+user=> (list 1 2 3)
+(1 2 3)
+{% endhighlight %}
+
+</section>
+<section id="vectors" class="level4">
+<h4>Vectors</h4>
+<p>Another collection available to us is the vector. Vectors are like lists but they are optimized for random access to the elements by index. Vectors are created by adding zero or more elements inside square brackets.</p>
+<div class="admonition">
+<span class="admonition-title">Tip</span> <span>Most of the time, given the choice between a list and a vector, you should use a vector for data access. It's generally faster.</span>
+</div>
+{% highlight clj %}
+user=> '[a b c]
+[a b c]
+{% endhighlight %}
+
+<p>Like lists, we can again use <code>conj</code> to add to a vector.</p>
+{% highlight clj %}
+user=> (conj '[a b c] 'd)
+[a b c d]
+{% endhighlight %}
+
+<p>You'll note the <code>d</code> element is added at the end because a vector isn't focussed on sequential access like a list.</p>
+<p>There are some other useful functions we can use on lists and vectors, for example to get the last element in a list or vector.</p>
+{% highlight clj %}
+user=> (last '[a b c d])
+d
+{% endhighlight %}
+
+<p>Or count the elements.</p>
+{% highlight clj %}
+user=> (count '[a b c d])
+4
+{% endhighlight %}
+
+<p>Because vectors are designed to look up elements by index, we can also use them directly as functions, for example:</p>
+{% highlight clj %}
+user=> ([1 2 3] 1)
+2
+{% endhighlight %}
+
+<p>Here we've retrieved the value, <code>2</code>, at index <code>1</code>.</p>
+<p>We can create or convert an existing structure, like a list, into a vector with the <code>vector</code> function.</p>
+{% highlight clj %}
+user=> (vector 1 2 3)
+[1 2 3]
+user=> (vector (list 1 2 3))
+[1 2 3]
+{% endhighlight %}
+
+</section>
+<section id="sets" class="level4">
+<h4>Sets</h4>
+<p>There's a final collection related to lists and vectors called a set. Sets are unordered collections of values, prefixed with <code>#</code> and wrapped in curly braces, <code>{ }</code>. They are most useful for collections of values where you want to check a value or values is present.</p>
+{% highlight clj %}
+user=> '#{a b c}
+#{a c b}
+{% endhighlight %}
+
+<p>You'll notice the set was returned in a different order. This is because sets are focussed on presence lookups so order doesn't matter quite so much.</p>
+<p>Like lists and vectors we can use the <code>conj</code> function to add an element to a set.</p>
+{% highlight clj %}
+user=> (conj '#{a b c} 'd)
+#{a c b d}
+{% endhighlight %}
+
+<p>Sets can never contain an element more than once, so adding an element which is already present does nothing. You can remove elements with the <code>disj</code> function.</p>
+{% highlight clj %}
+user=> (disj '#{a b c d} 'd)
+#{a c b}
+{% endhighlight %}
+
+<p>The most common operation with a set is to check for the presence of a specific value, for this we use the <code>contains?</code> function.</p>
+{% highlight clj %}
+user=> (contains? '#{a b c} 'c)
+true
+user=> (contains? '#{a b c} 'd)
+false
+{% endhighlight %}
+
+<p>Like a vector, you can also use the set itself as a function. This returns the value if it is present or <code>nil</code> if it is not.</p>
+{% highlight clj %}
+user=> ('#{a b c} 'c)
+c
+user=> ('#{a b c} 'd)
+nil
+{% endhighlight %}
+
+<p>You can make a set out of any other collection with the <code>set</code> function.</p>
+{% highlight clj %}
+user=> (set '[a b c])
+#{a c b}
+{% endhighlight %}
+
+<p>Here we've made a set out of a vector.</p>
+</section>
+<section id="maps" class="level4">
+<h4>Maps</h4>
+<p>The last data structure we're going to look at is the map. Maps are key/value pairs enclosed in braces. You can think about them as being equivalent to a hash.</p>
+{% highlight clj %}
+user=> {:a 1 :b 2}
+{:b 2, :a 1}
+{% endhighlight %}
+
+<p>Here we've defined a map with two key/value pairs: <code>:a 1</code> and <code>:b 2</code>.</p>
+<p>You'll note each key is prefixed with a <code>:</code>. This denotes another type of Clojure syntax: the keyword. A keyword is much like a symbol but instead of referencing another value it is merely a name or label. It's highly useful in data structures like maps to do lookups, you look up the keyword and return the value.</p>
+<p>We can use the <code>get</code> function to retrieve a value.</p>
+{% highlight clj %}
+(get {:a 1 :b 2} :a)
+1
+{% endhighlight %}
+
+<p>Here we've specified the keyword <code>:a</code> and asked Clojure if it is inside our map. It's returned the value in the key/value pair, <code>1</code>.</p>
+<p>If the key doesn't exist in the map then Clojure returns <code>nil</code>.</p>
+{% highlight clj %}
+user=> (get {:a 1 :b 2} :c)
+nil
+{% endhighlight %}
+
+<p>The <code>get</code> function can also take a default value to return instead of <code>nil</code>, if the key doesn’t exist in that map.</p>
+{% highlight clj %}
+user=> (get {:a 1 :b 2} :c :novalue)
+:novalue
+{% endhighlight %}
+
+<p>We can also use the map itself as a function.</p>
+{% highlight clj %}
+user=> ({:a 1 :b 2} :a)
+1
+{% endhighlight %}
+
+<p>We can also use keywords as functions to look themselves up in a map.</p>
+{% highlight clj %}
+user=> (:a {:a 1 :b 2})
+1
+{% endhighlight %}
+
+<p>To add a key/value pair to a map we use the <code>assoc</code> function.</p>
+{% highlight clj %}
+user=> (assoc {:a 1 :b 2} :c 3)
+{:c 3, :b 2, :a 1}
+{% endhighlight %}
+
+<p>If a key isn't present then <code>assoc</code> adds it. If the key is present then <code>assoc</code> replaces the value.</p>
+{% highlight clj %}
+user=> (assoc {:a 1 :b 2} :b 3)
+{:b 3, :a 1}
+{% endhighlight %}
+
+<p>To remove a key we use the <code>dissoc</code> function.</p>
+{% highlight clj %}
+user=> (dissoc {:a 1 :b 2} :b)
+{:a 1}
+{% endhighlight %}
+
+<div class="admonition">
+<span class="admonition-title">Note</span> <span>If you've come from the Ruby or Python world the terms list, set, vector and map might be a little new. But the syntax probably looks familiar. You can think about lists, vectors and sets as being very similar to arrays and maps being hashes.</span>
+</div>
+</section>
+<section id="strings" class="level4">
+<h4>Strings</h4>
+<p>We can also work with strings. Clojure lets you turn pretty much any value into a string using the <code>str</code> function.</p>
+{% highlight clj %}
+user=> (str "holiday")
+"holiday"
+{% endhighlight %}
+
+<p>The <code>str</code> function turns anything specified into a string. We can also use it concatenate strings.</p>
+{% highlight clj %}
+user=> (str "james needs " 2 " holidays")
+"james needs 2 holidays"
+{% endhighlight %}
+
+</section>
+<section id="creating-our-own-functions" class="level4">
+<h4>Creating our own functions</h4>
+<p>Up until now we've run functions as stand-alone expressions, for example here's the <code>inc</code> function which increments arguments passed to it:</p>
+{% highlight clj %}
+user=> (inc 1)
+2
+{% endhighlight %}
+
+<p>This isn't overly practical except to demonstrate how a function works. If we want do more with Clojure we need to be able to define our own functions. To do this Clojure provides a function called <code>fn</code>. Let us construct our first function.</p>
+{% highlight clj %}
+user=> (fn [a] (+ a 1))
+{% endhighlight %}
+
+<p>So what's going on here? We've used the <code>fn</code> function to create a new function. The <code>fn</code> function takes a vector as an argument. This vector contains are any arguments being passed to our function. Then we specify the actual action our function is going to perform. In our case we're mimicking the behavior of the <code>inc</code> function. The function will take the value of <code>a</code> and add <code>1</code> to it.</p>
+<p>If we run this code now nothing will happen because <code>a</code> is currently unbound as we haven't defined a value for it. Let's run our function now.</p>
+{% highlight clj %}
+user=> ((fn [x] (+ x 1)) 2)
+3
+{% endhighlight %}
+
+<p>Here we've evaluated our function and passed in an argument of <code>2</code>. This is assigned to our <code>a</code> symbol and passed to the function. The function adds <code>a</code>, now set to <code>2</code>, and <code>1</code> and returns the resulting value: <code>3</code>.</p>
+<p>There's also a shorthand for writing functions that we'll see occasionally in Riemann configurations.</p>
+{% highlight clj %}
+user=> #(+ % 1)
+{% endhighlight %}
+
+<p>This shorthand function is the equivalent of <code>(fn [x] (+ x 1))</code> and we can call it to see the result.</p>
+{% highlight clj %}
+user=> (#(+ % 1) 2)
+3
+{% endhighlight %}
+
+</section>
+<section id="creating-variables" class="level4">
+<h4>Creating variables</h4>
+<p>But we're still a step from a named function and we're missing an important piece, how do we define our own variables to hold values? Clojure has a function called <code>def</code> that allows us to do this.</p>
+{% highlight clj %}
+user=> (def smoker "joker")
+#'user/smoker
+{% endhighlight %}
+
+<p>The <code>def</code> function does two things:</p>
+<ul>
+<li>It creates a new type of object called a var. Vars, like symbols, are references to other values. You can see our new var <code>#'user/smoker</code> returned as output of the <code>def</code> function.</li>
+<li>It binds a symbol to that var, here the symbol <code>smoker</code> is bound to a var with a value of the string "joker".</li>
+</ul>
+<p>When we evaluate a symbol pointing to a var it is replaced by the var's value. But because <code>def</code> also creates a symbol we can refer to our var like that too.</p>
+{% highlight clj %}
+user=> user/smoker
+"joker"
+user=> smoker
+"joker"
+{% endhighlight %}
+
+<p>Where did this <code>user/</code> come from? It's a Clojure namespace. Namespaces are a way Clojure organizes code and program structure. In this case the REPL creates a namespace called <code>user/</code> by default. Remember we learnt earlier that a symbol has a short name, for example <code>smoker</code> that can be used locally to refer to it, and a full name. That full name, here <code>user/smoker</code>, would be used to refer to this symbol from another namespace.</p>
+<p>We'll talk more about namespaces and use them to organize our Riemann configuration in the <a href="http://riemann.io/howto.html#organizing-with-namespaces">HOWTO</a>. If you'd like to read more about them then there is an excellent explanation at <a href="http://www.braveclojure.com/organization/" class="uri">http://www.braveclojure.com/organization/</a>.</p>
+<p>We can also use the <code>type</code> function to see the type of value the symbol references.</p>
+{% highlight clj %}
+user=> (type smoker)
+java.lang.String
+{% endhighlight %}
+
+<p>Here we can see that the value <code>smoker</code> resolves to is a string.</p>
+</section>
+<section id="creating-named-functions" class="level4">
+<h4>Creating named functions</h4>
+<p>Now with the combination of <code>def</code> and <code>fn</code> we can create our own named functions.</p>
+{% highlight clj %}
+user=> (def grow (fn [number] (* number 2)))
+#'user/grow
+{% endhighlight %}
+
+<p>Firstly, we've defined a var (and symbol) called <code>grow</code>. Inside that we've defined a function. Our function takes a single argument, <code>number</code>, and passes that number to the <code>*</code> function, the mathematical multiplication operator in Clojure, and multiplies it by <code>2</code>.</p>
+<p>Let's call our function now.</p>
+{% highlight clj %}
+user=> (grow 10)
+20
+{% endhighlight %}
+
+<p>Here we've called the <code>grow</code> function and passed it a value of <code>10</code>. The <code>grow</code> function multiplies that value and returns the result: <code>20</code>. Pretty awesome eh?</p>
+<p>But the syntax is a little cumbersome. Thankfully Clojure offers a shortcut to creating a var and binding it to a function called <code>defn</code>. Let's rewrite our function using this form.</p>
+{% highlight clj %}
+user=> (defn grow [number] (* number 2))
+#'user/grow
+{% endhighlight %}
+
+<p>That's a little neater and easier to read. Now how about we add a second argument? Let's make both the number to be multiplied and the multiplier arguments.</p>
+{% highlight clj %}
+user=> (defn grow [number multiple] (* number multiple))
+#'user/grow
+{% endhighlight %}
+
+<p>Let's call our <code>grow</code> function again.</p>
+{% highlight clj %}
+user=> (grow 10)
+ArityException Wrong number of args (1) passed to: user/grow  clojure.lang.AFn.throwArity (AFn.java:429)
+{% endhighlight %}
+
+<p>Ooops not enough arguments. Let's add the second argument.</p>
+{% highlight clj %}
+user=> (grow 10 4)
+40
+{% endhighlight %}
+
+<p>We can also add a doc string to our function to help us articulate what it does.</p>
+{% highlight clj %}
+(defn grow
+  "Multiplies numbers - can specify the number and multplier"
+  [number multiple]
+  (* number multiple)
+)
+{% endhighlight %}
+
+<p>We can access a function's doc string using the <code>doc</code> function.</p>
+
+{% highlight clj %}
+user=> (doc grow)
+-------------------------
+user/grow
+([number multiple])
+  Multiplies numbers - can specify the number and multplier
+nil
+{% endhighlight %}
+
+<p>The <code>doc</code> function tells us the full name of the function, the arguments it accepts, and returns the docstring.</p>
+<p>That's the end of our crash course.</p>
+</section>
+<section id="learning-more-clojure" class="level4">
+<h4>Learning more Clojure</h4>
+<p>I recommend trying to get an understanding of the basics of Clojure to get the most out of Riemann. If you'd like to start to learn a bit about Clojure then Kyle Kingsbury's excellent <a href="https://aphyr.com/posts/301-clojure-from-the-ground-up-welcome">Clojure from the ground up</a> series is an great place to start. This section is very much an abbreviated crash-course of sections of that tutorial and I can't thank Kyle enough for writing it. A reading of this tutorial will add signicantly to the knowledge we've shared here. I recommend at least a solid reading of the first three posts in the series:</p>
+<ul>
+<li>The <a href="https://aphyr.com/posts/301-clojure-from-the-ground-up-welcome">Welcome</a> post.</li>
+<li>The post on <a href="https://aphyr.com/posts/302-clojure-from-the-ground-up-basic-types">Basic types</a>.</li>
+<li>The post on <a href="https://aphyr.com/posts/303-clojure-from-the-ground-up-functions">Functions</a>.</li>
+</ul>
+<div class="admonition">
+<span class="admonition-title">Tip</span> <span>Another resource if you're interested in learning a bit more about the basics of Clojure is <a href="http://learn-clojure.com/" class="uri">http://learn-clojure.com/</a>.</span>
+</div>
+</section>
+</section>
+</section>
+    </div>
+  </div>
+  </div>
+</div>
