@@ -174,7 +174,7 @@ user=> (clojure.core/+ 1 1)
 2
 {% endhighlight %}
 
-<p>Symbol refer to other things; generally they point to values. Think about them as a name or identifier that points to a concept: <code>+</code> is the name, "adding" is the concept. When Clojure encounters a symbol it evaluates it by looking up its meaning. If it can't find a meaning it'll generate an error message, for example:</p>
+<p>Symbols refer to other things; generally they point to values. Think about them as a name or identifier that points to a concept: <code>+</code> is the name, "adding" is the concept. When Clojure encounters a symbol it evaluates it by looking up its meaning. If it can't find a meaning it'll generate an error message, for example:</p>
 {% highlight clj %}
 user=> (bob 1 2)
 CompilerException java.lang.RuntimeException: Unable to resolve symbol: bob in this context, compiling:(NO_SOURCE_PATH:1:1)
@@ -417,12 +417,12 @@ user=> (inc 1)
 2
 {% endhighlight %}
 
-<p>This isn't overly practical except to demonstrate how a function works. If we want do more with Clojure we need to be able to define our own functions. To do this Clojure provides a function called <code>fn</code>. Let us construct our first function.</p>
+<p>This isn't overly practical, except to demonstrate how a function works. If we want do more with Clojure we need to be able to define our own functions. To do this Clojure provides a function called <code>fn</code>. Let us construct our first function.</p>
 {% highlight clj %}
 user=> (fn [a] (+ a 1))
 {% endhighlight %}
 
-<p>So what's going on here? We've used the <code>fn</code> function to create a new function. The <code>fn</code> function takes a vector as an argument. This vector contains are any arguments being passed to our function. Then we specify the actual action our function is going to perform. In our case we're mimicking the behavior of the <code>inc</code> function. The function will take the value of <code>a</code> and add <code>1</code> to it.</p>
+<p>So what's going on here? We've used the <code>fn</code> function to create a new function. The <code>fn</code> function takes a vector as an argument. This vector contains any arguments being passed to our function. Then we specify the actual action our function is going to perform. In our case we're mimicking the behavior of the <code>inc</code> function. The function will take the value of <code>a</code> and add <code>1</code> to it.</p>
 <p>If we run this code now nothing will happen because <code>a</code> is currently unbound as we haven't defined a value for it. Let's run our function now.</p>
 {% highlight clj %}
 user=> ((fn [x] (+ x 1)) 2)
@@ -453,7 +453,7 @@ user=> (def smoker "joker")
 <p>The <code>def</code> function does two things:</p>
 <ul>
 <li>It creates a new type of object called a var. Vars, like symbols, are references to other values. You can see our new var <code>#'user/smoker</code> returned as output of the <code>def</code> function.</li>
-<li>It binds a symbol to that var, here the symbol <code>smoker</code> is bound to a var with a value of the string "joker".</li>
+<li>It binds a symbol to that var, here the symbol <code>smoker</code> is bound to a var with a value of the string <code>"joker"</code>.</li>
 </ul>
 <p>When we evaluate a symbol pointing to a var it is replaced by the var's value. But because <code>def</code> also creates a symbol we can refer to our var like that too.</p>
 {% highlight clj %}
