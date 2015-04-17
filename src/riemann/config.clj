@@ -50,6 +50,7 @@
         [riemann.mailgun :only [mailgun]]
         [riemann.twilio :only [twilio]]
         [riemann.boundary :only [boundary]]
+        [riemann.pushover :only [pushover]]
         riemann.streams))
 
 (def core "The currently running core."
