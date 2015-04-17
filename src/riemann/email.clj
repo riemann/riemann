@@ -62,6 +62,10 @@
   ([smtp-opts msg-opts]
    (let [msg-opts (merge {:from "riemann"} msg-opts)]
      (fn make-stream [& recipients]
+       (assert (every? string? recipients)
+               (str "email was passed a recipient that wasn't a string: "
+                    (pr-str recipients)
+                    " if those are events, you'll wanna call (email \"someemail@example.com\")"))
        (fn stream [event]
          (let [msg-opts (if (empty? recipients)
                           msg-opts
