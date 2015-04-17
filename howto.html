@@ -2482,8 +2482,11 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 <div class="row">
   <div class="sixcol">
   <p>Create a <a href="https://api.slack.com/incoming-webhooks">Slack webhook</a> for Riemann. Then create a Slack client using the token from the last element of your
-webhook URL, for example with a URL of <code>https://hooks.slack.com/services/QWERSAFG0/AFOIUYTQ48/120984SAFJSFR</code> then your token would be <code>120984SAFJSFR</code>.
-Specify the user name of the Riemann bot, a channel to notify in and an icon for the notification.</p>
+  webhook URL, for example with a URL of:</p>
+
+  <small>https://hooks.slack.com/services/QWERSAFG0/AFOIUYTQ48/120984SAFJSFR</small>
+
+  <p>Then your token would be <code>120984SAFJSFR</code>. Specify the user name of the Riemann bot, a channel to notify in and an icon for the notification.</p>
   </div>
 
   <div class="sixcol last">
