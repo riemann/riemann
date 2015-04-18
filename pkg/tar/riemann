@@ -16,12 +16,20 @@ Runs Riemann with the given configuration file.
 OPTIONS:
   -h    Show this message
   -a    Adds some default aggressive, nonportable JVM optimization flags.
+  -v    Output Riemann version and exit.
 
 COMMANDS:
   start    Start the Riemann server (this is the default)
   test     Run the configuration tests
 
   Any unrecognized options (e.g. -XX:+UseParNewGC) will be passed on to java.
+EOF
+}
+
+version()
+{
+  cat <<EOF
+_VERSION_
 EOF
 }
 
@@ -33,6 +41,10 @@ for arg in "$@"; do
       ;;
     "-h")
       usage
+      exit 0
+      ;;
+    "-v")
+      version
       exit 0
       ;;
     -*)

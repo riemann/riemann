@@ -26,9 +26,23 @@
   [project]
   (file (:root project) "target" "rpm"))
 
+(defn riemann-version
+  [project]
+  (file (:root project) "target" "riemann-version"))
+
+(defn insert_version
+  [project]
+  (spit
+   (riemann-version project)
+   (clojure.string/replace
+    (slurp (file (:root project) "pkg" "rpm" "riemann"))
+    "_VERSION_"
+    (:version project))))
+
 (defn cleanup
   [project]
-  (sh "rm" "-rf" (str (workarea project))))
+  (sh "rm" "-rf" (str (workarea project)))
+  (sh "rm" "-f" (str (riemann-version project))))
 
 (defn reset
   [project]
@@ -40,7 +54,7 @@
   (let [df   (SimpleDateFormat. ".yyyyMMdd.HHmmss")]
     (replace (:version project) #"-SNAPSHOT" (.format df (Date.)))))
 
-(defn set-mojo! 
+(defn set-mojo!
   "Set a field on an AbstractRPMMojo object."
   [object name value]
   (let [field (.getDeclaredField AbstractRPMMojo name)]
@@ -113,19 +127,19 @@
          :filemode "755"
          :username "root"
          :groupname "root"
-         :sources [(source (file (:root project) "pkg" "rpm" "riemann")
+         :sources [(source (riemann-version project)
                            "riemann")]}
 
         ; Log dir
         {:directory "/var/log/riemann"
          :filemode "755"
          :directory-included? true}
-        
+
         ; Config dir
         {:directory "/etc/riemann"
          :filemode "755"
          :directory-included? true}
-        
+
         ; Config file
         {:directory "/etc/riemann"
          :filemode "644"
@@ -205,6 +219,7 @@
   ([project uberjar?]
    (reset project)
    (when uberjar? (uberjar project))
+   (insert_version project)
    (make-rpm project)
    (extract-rpm project)
    (cleanup project)))

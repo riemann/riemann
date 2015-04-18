@@ -104,8 +104,12 @@
 
     ; Binary
     (.mkdirs (file dir "usr" "bin"))
-    (copy (file (:root project) "pkg" "deb" "riemann")
-          (file dir "usr" "bin" "riemann"))
+    (spit
+     (file dir "usr" "bin" "riemann")
+     (clojure.string/replace
+      (slurp (file (:root project) "pkg" "deb" "riemann"))
+      "_VERSION_"
+      (:version project)))
     (.setExecutable (file dir "usr" "bin" "riemann") true false)
 
     ; Log dir
