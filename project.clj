@@ -68,7 +68,7 @@
                    :cloudwatch :cloudwatch
                    :datadog :datadog
                    :stackdriver :stackdriver
-		   :xymon :xymon
+                   :xymon :xymon
                    :shinken :shinken
                    :blueflood :blueflood
                    :opsgenie :opsgenie
