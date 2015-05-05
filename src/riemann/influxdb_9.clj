@@ -12,7 +12,7 @@
   [opts]
   (str (if (:tls opts) "https" "http")
        "://" (:host opts)
-       \: (:port opts)
+       \: (:port opts 8086)
        "/write"))
 
 
@@ -65,14 +65,15 @@
 
   (batch 500 1
     (influxdb {:host \"influxdb.example.com\"
-               :port 8086
-               :database \"my_db\"}))
+               :database \"my_db\"
+               :user \"riemann\"
+               :password \"secret\"}))
 
   Options:
 
   `:host`           Hostname to write points to.
 
-  `:port`           API port number.
+  `:port`           API port number. (optional)
 
   `:tls`            Whether to write using HTTPS. (optional)
 
