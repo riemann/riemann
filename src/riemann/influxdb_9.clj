@@ -7,15 +7,6 @@
     [riemann.common :refer [unix-to-iso8601]]))
 
 
-(defn write-endpoint
-  "Generates a URL for the write endpoint based on an InfluxDB opts map."
-  [opts]
-  (str (if (:tls opts) "https" "http")
-       "://" (:host opts)
-       \: (:port opts 8086)
-       "/write"))
-
-
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any entries in the
   event which are named in `tag-keys` will be converted to a string key/value
@@ -71,37 +62,52 @@
 
   Options:
 
-  `:host`           Hostname to write points to.
-
-  `:port`           API port number. (optional)
-
-  `:tls`            Whether to write using HTTPS. (optional)
-
   `:database`       Name of database to write to.
 
   `:retention`      Name of retention policy to use. (optional)
 
-  `:username`       Database user to authenticate as.
-
-  `:password`       Password to authenticate with.
-
-  `:tags`           A common map of tags to apply to all events. (optional)
+  `:tags`           A common map of tags to apply to all points. (optional)
 
   `:tag-keys`       A set of event fields to map into InfluxDB series tags.
-                    (optional)"
+                    (optional)
+
+  `:username`       Database user to authenticate as. (optional)
+
+  `:password`       Password to authenticate with. (optional)
+
+  `:host`           Hostname to write points to. (default: localhost)
+
+  `:port`           API port number. (default: 8086)
+
+  `:tls`            Whether to write using HTTPS. (default: false)
+
+  `:timeout`        HTTP timeout in milliseconds. (default: 5000)"
   [opts]
-  (let [write-url (write-endpoint opts)
-        tag-keys (:tag-keys opts #{})
-        payload-base (cond-> {"database" (:database opts)}
-                       (:retention opts)
-                         (assoc "retentionPolicy" (:retention opts))
-                       (seq (:tags opts))
-                         (assoc "tags" (:tags opts)))
-        http-opts {:socket-timeout 5000 ; ms
-                   :conn-timeout   5000 ; ms
-                   :content-type   :json
-                   :basic-auth [(:username opts)
-                                (:password opts)]}]
+  (assert (string? (:database opts)))
+  (let [write-url
+        (str (if (:tls opts) "https" "http")
+             "://" (:host opts "localhost")
+             \: (:port opts 8086)
+             "/write")
+
+        payload-base
+        (cond->
+          {"database" (:database opts)}
+          (:retention opts)
+            (assoc "retentionPolicy" (:retention opts))
+          (seq (:tags opts))
+            (assoc "tags" (:tags opts)))
+
+        http-opts
+        (cond->
+          {:socket-timeout (:timeout opts 5000) ; ms
+           :conn-timeout   (:timeout opts 5000) ; ms
+           :content-type   :json}
+          (:username opts)
+            (assoc :basic-auth [(:username opts)
+                                (:password opts)]))
+
+        tag-keys (:tag-keys opts #{})]
     (fn stream
       [events]
       (let [events (if (sequential? events) events (list events))
