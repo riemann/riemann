@@ -77,9 +77,9 @@
   ; For giving series name as the concatenation of :host and :service fields
   ; with dot separator.
 
-  (influxdb {:host   \"play.influxdb.org\"
-             :port   8086
-             :series #(str (:host %) \".\" (:service %))})
+  (influxdb-8 {:host   \"play.influxdb.org\"
+               :port   8086
+               :series #(str (:host %) \".\" (:service %))})
 
   0.8 Options:
 
@@ -129,10 +129,10 @@
   "Returns a function which accepts an event, or sequence of events, and writes
   them to InfluxDB. Compatible with the 0.9.x series.
 
-  (influxdb {:host \"influxdb.example.com\"
-             :db \"my_db\"
-             :retention \"raw\"
-             :tag-fields #{:host :sys :env}})
+  (influxdb-9 {:host \"influxdb.example.com\"
+               :db \"my_db\"
+               :retention \"raw\"
+               :tag-fields #{:host :sys :env}})
 
   0.9 Options:
 
