@@ -47,7 +47,7 @@
   [tag-keys event]
   (when (and (:time event) (:service event) (:metric event))
     {"name" (:service event)
-     "timestamp" (unix-to-iso8601 (:time event))
+     "time" (unix-to-iso8601 (:time event))
      "tags" (event-tags tag-keys event)
      "fields" (event-fields tag-keys event)}))
 
@@ -61,13 +61,13 @@
 
 (defn influxdb
   "Returns a function which accepts an event, or sequence of events, and writes
-  them to InfluxDB as a batch of measurement points.
+  them to InfluxDB as a batch of measurement points. For performance, you should
+  wrap this stream with `batch` or an asynchronous queue.
 
-  (batch 500 1
-    (influxdb {:host \"influxdb.example.com\"
-               :database \"my_db\"
-               :user \"riemann\"
-               :password \"secret\"}))
+      (influxdb {:host \"influxdb.example.com\"
+                 :database \"my_db\"
+                 :user \"riemann\"
+                 :password \"secret\"})
 
   Options:
 
