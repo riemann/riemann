@@ -9,10 +9,17 @@
   (escape message {\< "&lt;" \> "&gt;" \& "&amp;"}))
 
 (defn default-formatter [events]
-  {:text (str "*Host:* " (:host events)
-              " *State:* " (:state events)
-              " *Description:* " (:description events)
-              " *Metric:* " (:metric events))})
+  {:attachments
+   [{:fields
+     [{:title "Riemann Event"
+       :value (slack-escape
+                (str "Host:   " (or (:host events) "-") "\n"
+                     "Service:   " (or (:service events) "-") "\n"
+                     "State:   " (or (:state events) "-") "\n"
+                     "Description:   " (or (:description events) "-") "\n"
+                     "Metric:   " (or (:metric events) "-") "\n"
+                     "Tag:   " (or (:tag events) "-") "\n"))
+       :short true}]}]})
 
 (defn extended-formatter [events]
   {:text "This event requires your attention!",
@@ -20,6 +27,8 @@
    [{:fallback
      (slack-escape
        (str
+         "*Service:* "
+         (:service events)
          "*Description:* "
          (:description events)
          " *Host:* "
@@ -29,7 +38,7 @@
          " *State:* "
          (:state events))),
      :text (slack-escape (or (:description events) "")),
-     :pretext "Event properties:",
+     :pretext "Event Details:",
      :color
      (case (:state events) "ok" "good" "critical" "danger" "warning"),
      :fields
@@ -42,6 +51,12 @@
       {:title "Metric", :value (or (:metric events) "-"), :short true}
       {:title "State",
        :value (slack-escape (or (:state events) "-")),
+       :short true}
+      {:title "Description",
+       :value (slack-escape (or (:description events) "-"))
+       :short true}
+      {:title "Tags",
+       :value (slack-escape (or (:tag events) "-"))
        :short true}]}]})
 
 (defn slack
