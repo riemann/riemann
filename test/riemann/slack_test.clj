@@ -51,13 +51,7 @@
           (slacker {:host "localhost", :service "mailer", :state "error",
                     :description "Mailer failed", :metric 42, :tags ["first", "second"]})
           (is (= (:body @post-request)
-                 (str "{\"text\":\"*Host:* localhost "
-                                  "*State:* error "
-                                  "*Description:* Mailer failed "
-                                  "*Metric:* 42\","
-                      "\"channel\":\"#test-channel\","
-                      "\"username\":\"test-user\","
-                      "\"icon_emoji\":\":warning:\"}")))))
+                 "{\"attachments\":[{\"fields\":[{\"title\":\"Riemann Event\",\"value\":\"Host:   localhost\\nService:   mailer\\nState:   error\\nDescription:   Mailer failed\\nMetric:   42\\nTag:   -\\n\",\"short\":true}]}],\"channel\":\"#test-channel\",\"username\":\"test-user\",\"icon_emoji\":\":warning:\"}"))))
 
       (testing "escapes formatting characters in main message text"
         (let [slacker (slack/slack any-account (with-formatter (fn [e] {:text (:host e)})))]
@@ -83,13 +77,15 @@
                       "\"icon_emoji\":\":ogre:\"}")))))
 
       (testing "formats multiple events with a custom formatter"
-        (let [slacker (slack/slack {:account "any", :token "any"}
-                                   {:username "test-user", :channel "#test-channel", :icon ":ogre:"
-                                    :formatter (fn [events] {:text (apply str (map #(str (:tags %)) events))
-                                                             :icon ":ship:"
-                                                             :username "another-user"
-                                                             :channel "#another-channel"
-                                                             :attachments [{:pretext "pretext"}]})})]
+        (let [slacker (slack/slack
+                        {:account "any", :token "any"}
+                        {:username "test-user", :channel "#test-channel", :icon ":ogre:"
+                         :formatter (fn [events]
+                                      {:text (apply str (map #(str (:tags %)) events))
+                                       :icon ":ship:"
+                                       :username "another-user"
+                                       :channel "#another-channel"
+                                       :attachments [{:pretext "pretext"}]})})]
           (slacker [{:host "localhost", :service "mailer", :tags ["first" "second"]}
                     {:host "localhost", :service "mailer", :tags ["third" "fourth"]}])
           (is (= (:body @post-request)
