@@ -3,9 +3,12 @@
         clojure.test)
   (:require [riemann.logging :as logging]))
 
+(def server (System/getenv "HIPCHAT_SERVER"))
 (def api-key (System/getenv "HIPCHAT_API_KEY"))
 (def room (System/getenv "HIPCHAT_ALERT_ROOM"))
-(def alert_user "Riemann_HC_Test")
+
+(when-not server
+  (println "export HIPCHAT_SERVER=\"...\" to run these tests."))
 
 (when-not api-key
   (println "export HIPCHAT_API_KEY=\"...\" to run these tests."))
@@ -16,7 +19,7 @@
 (logging/init)
 
 (deftest ^:hipchat ^:integration good_event
-  (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
+  (let [hc (hipchat {:server server :token api-key :room room :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test good"
          :description "Testing a metric with ok state"
@@ -24,7 +27,7 @@
          :state "ok"})))
 
 (deftest ^:hipchat ^:integration error_event
-  (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
+  (let [hc (hipchat {:server server :token api-key :room room :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test error"
          :description "Testing a metric with error state"
@@ -32,7 +35,7 @@
          :state "error"})))
 
 (deftest ^:hipchat ^:integration critical_event
-  (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
+  (let [hc (hipchat {:server server :token api-key :room room :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test critical"
          :description "Testing a metric with critical state"
@@ -40,7 +43,7 @@
          :state "critical"})))
 
 (deftest ^:hipchat ^:integration yellow
-  (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
+  (let [hc (hipchat {:server server :token api-key :room room :notify 0})]
     (hc {:host "localhost"
          :service "hipchat test yellow"
          :description "Testing a metric with unknown state"
@@ -48,7 +51,7 @@
          :state "unknown"})))
 
 (deftest ^:hipchat ^:integration multiple_events
-  (let [hc (hipchat {:token api-key :room room :from alert_user :notify 0})]
+  (let [hc (hipchat {:server server :token api-key :room room :notify 0})]
     (hc [{:host "localhost"
           :service "hipchat multi 1"
           :description "Testing multiple metrics"
