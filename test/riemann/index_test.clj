@@ -78,7 +78,7 @@
     (i {:host 1 :service 1 :metric 5 :time 0})
     (i {:host 1 :service 2 :metric 7 :time 0})
 
-    (is (= 2 (:metric (first (filter #(= (:service %) "riemann index event-count") (events i))))))))
+    (is (= 2 (:metric (first (filter #(= (:service %) "riemann index size") (events i))))))))
 
 (defn random-event
   [& {:as event}]
