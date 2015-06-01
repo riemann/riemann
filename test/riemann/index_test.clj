@@ -2,6 +2,7 @@
   (:use riemann.index
         riemann.core
         riemann.query
+        [riemann.instrumentation :only [events]]
         [riemann.common :only [event]]
         [riemann.time :only [unix-time]]
         clojure.test)
@@ -71,6 +72,13 @@
            (is (= 5 (:metric (lookup i 1 1))))
            (is (= 7 (:metric (lookup i 1 2))))))
 
+(deftest nbhm-instrumentation
+  (let [i (wrap-index (index))]
+
+    (i {:host 1 :service 1 :metric 5 :time 0})
+    (i {:host 1 :service 2 :metric 7 :time 0})
+
+    (is (= 2 (:metric (first (filter #(= (:service %) "riemann index size") (events i))))))))
 
 (defn random-event
   [& {:as event}]

@@ -10,7 +10,8 @@
   Index: indexing and querying events
   Seqable: returning a list of events
   Service: lifecycle management"
-  (:require [riemann.query :as query])
+  (:require [riemann.query :as query]
+            [riemann.instrumentation :refer [Instrumented]])
   (:use [riemann.time :only [unix-time]]
          riemann.service)
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
@@ -92,6 +93,13 @@
 
       (lookup [this host service]
         (.get hm [host service]))
+
+      Instrumented
+      (events [this]
+        (let [base {:state "ok" :time (unix-time)}]
+          (map (partial merge base)
+               [{:service "riemann index size"
+                 :metric (.size hm)}])))
 
       clojure.lang.Seqable
       (seq [this]
