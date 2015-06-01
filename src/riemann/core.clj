@@ -228,6 +228,10 @@
        (seq [this]
          (seq source))
 
+       Instrumented
+       (instrumentation/events [this]
+         (instrumentation/events source))
+
        ServiceEquiv
        (equiv? [this other]
          (and (satisfies? WrappedIndex other)
