@@ -2341,6 +2341,29 @@ dig into it here.</p>
   </div>
 </div>
 
+<div class="row">
+  <div class="sixcol">
+    <p>If you want to include namespaced functions you've created inside other namespaced functions
+    you'll need to <code>include</code> the file containing the function and then
+    <code>require</code> it. For example, if we created a new function called
+    <code>mycorp.process</code> and wanted to use it in our <code>mycorp.queues</code>
+    function we need to include and require that function.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(include "process.clj")
+
+(ns mycorp.queue
+  "Instrumentation and alerts for our distributed queue and consumers"
+  (:require [riemann.config :refer :all]
+            [riemann.streams :refer :all]
+            [mycorp.process :refer :all]))
+
+...
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Working with the dashboard</h2>
 
 <h3>Find out what services are in the index</h3>
