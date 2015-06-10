@@ -58,7 +58,7 @@
 (deftest point-conversion
   (is (nil? (influxdb/event->point-9 #{} {:service "foo test", :time 1}))
       "Event with no metric is converted to nil")
-  (is (= {"name" "test service"
+  (is (= {"measurement" "test service"
           "time" "2015-04-07T00:32:45.000Z"
           "tags" {"host" "host-01"}
           "fields" {"value" 42.08}}
@@ -69,7 +69,7 @@
             :time 1428366765
             :metric 42.08}))
       "Minimal event is converted to point fields")
-  (is (= {"name" "service_api_req_latency"
+  (is (= {"measurement" "service_api_req_latency"
           "time" "2015-04-06T21:15:41.000Z"
           "tags" {"host" "www-dev-app-01.sfo1.example.com"
                   "sys" "www"
