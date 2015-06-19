@@ -151,17 +151,17 @@
             persistent!)))))
 
 (defn lookup
-  "Lookup an event in a pseudo-index returned by inject!.
-  The equivalent to index/lookup, for tests.
-  "
-  [index host service]
+  "Lookup an event by host/service in a vector of tapped events returned by
+  inject!. If several matching events have passed through the tap, the last one
+  will be returned."
+  [events host service]
   (last
     (filter
       identity
       (map #(when
               (and (= host (:host %))
                    (= service (:service %))) %)
-           index))))
+           events))))
 
 (defmacro deftest
   "Like clojure.test deftest, but establishes a fresh time context and a fresh
