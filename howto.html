@@ -2531,7 +2531,7 @@ view.</p>
 <p>A TCP connection to Riemann is a stream of messages. Each message is a 4
 byte network-endian integer *length*, followed by a Protocol Buffer Message of
 *length* bytes. See the <a
-  href="https://github.com/aphyr/riemann-java-client/blob/master/src/main/proto/riemann/proto.proto">protocol
+  href="https://github.com/aphyr/riemann-java-client/blob/master/riemann-java-client/src/main/proto/riemann/proto.proto">protocol
   buffer definition</a> for the details.</p>
 
 <p>Over UDP, the length header is omitted; just send the protobuf Message
