@@ -34,6 +34,7 @@
   (let [ignored-fields (set/union special-fields tag-fields)]
     (-> event
         (->> (remove (comp ignored-fields key))
+             (remove #(nil? (val %)))
              (map #(vector (name (key %)) (val %)))
              (into {}))
         (assoc "value" (:metric event)))))
