@@ -54,7 +54,7 @@
         :metric 4
         :time (unix-time)})))
 
-
+; 0.9
 (deftest point-conversion
   (is (nil? (influxdb/event->point-9 #{} {:service "foo test", :time 1}))
       "Event with no metric is converted to nil")
