@@ -26,7 +26,7 @@
   (let [encoded_fields (kv-encode (get event "fields"))
         encoded_tags  (kv-encode (get event "tags"))]
 
-    (str (get event "name") " " encoded_fields  "\n")))
+    (str (get event "name") "," encoded_tags " " encoded_fields  "\n")))
 
 
 (defn lineprotocol-encode-list [events]
