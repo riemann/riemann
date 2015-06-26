@@ -14,26 +14,27 @@
   "A set of event fields in Riemann with special handling logic."
   #{:host :service :time :metric :tags :ttl})
 
-(defn replace-disallowed [field]
+(defn replace-disallowed-9 [field]
   (clojure.string/replace
     (clojure.string/replace
       (clojure.string/replace field " " "\\ ") "=" "\\=") "," "\\,"))
-(defn kv-encode [kv]
-  (clojure.string/join "," (map (fn [[key value]]
-   (str key "=" value)) kv)))
 
-(defn lineprotocol-encode [event]
-  (let [encoded_fields (kv-encode (get event "fields"))
-        encoded_tags  (kv-encode (get event "tags"))]
+(defn kv-encode-9 [kv]
+  (clojure.string/join "," (map (fn [[key value]]
+   (str (replace-disallowed-9 key) "=" (replace-disallowed-9 value))) kv)))
+
+(defn lineprotocol-encode-9 [event]
+  (let [encoded_fields (kv-encode-9 (get event "fields"))
+        encoded_tags  (kv-encode-9 (get event "tags"))]
 
     (str (get event "name") "," encoded_tags " " encoded_fields  "\n")))
 
 
-(defn lineprotocol-encode-list [events]
+(defn lineprotocol-encode-list-9 [events]
   ; encode {"points" [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}], "database" "foo"}
   ; [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}]
   ; {"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}
-  (clojure.string/join (pmap lineprotocol-encode (get events "points"))))
+  (clojure.string/join (pmap lineprotocol-encode-9 (get events "points"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
@@ -180,7 +181,7 @@
         (cond->
           {:socket-timeout (:timeout opts 5000) ; ms
            :conn-timeout   (:timeout opts 5000) ; ms
-           :content-type   "application/x-www-form-urlencoded"}
+           :content-type   "text/plain"}
           (:username opts)
             (assoc :basic-auth [(:username opts)
                                 (:password opts)]))
@@ -193,7 +194,7 @@
         (when-not (empty? points)
           (->> points
                (assoc payload-base "points")
-               (lineprotocol-encode-list)
+               (lineprotocol-encode-list-9)
                (assoc http-opts :Ω)
                (http/post write-url)))))))
 
