@@ -14,6 +14,26 @@
   "A set of event fields in Riemann with special handling logic."
   #{:host :service :time :metric :tags :ttl})
 
+(defn replace-disallowed [field]
+  (clojure.string/replace
+    (clojure.string/replace
+      (clojure.string/replace field " " "\\ ") "=" "\\=") "," "\\,"))
+(defn kv-encode [kv]
+  (clojure.string/join "," (map (fn [[key value]]
+   (str key "=" value)) kv)))
+
+(defn lineprotocol-encode [event]
+  (let [encoded_fields (kv-encode (get event "fields"))
+        encoded_tags  (kv-encode (get event "tags"))]
+
+    (str (get event "name") " " encoded_fields  "\n")))
+
+
+(defn lineprotocol-encode-list [events]
+  ; encode {"points" [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}], "database" "foo"}
+  ; [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}]
+  ; {"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}
+  (clojure.string/join (pmap lineprotocol-encode (get events "points"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
@@ -146,7 +166,7 @@
   `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
   [opts]
   (let [write-url
-        (format "%s://%s:%s/write" (:scheme opts) (:host opts) (:port opts))
+        (format "%s://%s:%s/write?db=%s" (:scheme opts) (:host opts) (:port opts) (:db opts))
 
         payload-base
         (cond->
@@ -160,7 +180,7 @@
         (cond->
           {:socket-timeout (:timeout opts 5000) ; ms
            :conn-timeout   (:timeout opts 5000) ; ms
-           :content-type   :json}
+           :content-type   "application/x-www-form-urlencoded"}
           (:username opts)
             (assoc :basic-auth [(:username opts)
                                 (:password opts)]))
@@ -173,8 +193,8 @@
         (when-not (empty? points)
           (->> points
                (assoc payload-base "points")
-               (json/generate-string)
-               (assoc http-opts :body)
+               (lineprotocol-encode-list)
+               (assoc http-opts :Ω)
                (http/post write-url)))))))
 
 
