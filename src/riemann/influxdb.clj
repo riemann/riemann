@@ -192,14 +192,12 @@
         tag-fields (:tag-fields opts #{:host})]
     (fn stream
       [events]
-      (let [events (if (sequential? events) events (list events))
-            points (events->points-9 tag-fields events)]
-        (when-not (empty? points)
-          (->> points
-               (assoc payload-base "points")
-               (json/generate-string)
-               (assoc http-opts :body)
-               (http/post write-url)))))))
+      (when-let [points (events->points-9 tag-fields events)]
+        (->> points
+             (assoc payload-base "points")
+             (json/generate-string)
+             (assoc http-opts :body)
+             (http/post write-url))))))
 
 
 
