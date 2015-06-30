@@ -1243,7 +1243,7 @@ client << {service: "thumbnailer rate",
   </div>
   <div class="sixcol last">
 {% highlight clj %}
-(where (or (service "ok") (service "warning"))
+(where (or (state "ok") (state "warning"))
   index
   (else
     (email "ops@foo.com")))
