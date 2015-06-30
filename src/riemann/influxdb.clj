@@ -43,7 +43,7 @@
   `metric` is converted to the `value` field, and any additional event fields
   which are not standard Riemann properties or marked as tags in the metadata
   will also be present."
-  [tag-fields event]
+  [event]
   (let [ignored-fields (set/union special-fields (marked-tags event))]
     (-> event
         (->> (remove (comp ignored-fields key))

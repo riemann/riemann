@@ -56,20 +56,21 @@
 
 
 (deftest point-conversion
-  (is (nil? (influxdb/event->point-9 #{} {:service "foo test", :time 1}))
+  (is (nil? (influxdb/event->point-9 {:service "foo test", :time 1}))
       "Event with no metric is converted to nil")
-  (is (= {"name" "test service"
+  (is (= {"measurement" "test service"
           "time" "2015-04-07T00:32:45.000Z"
           "tags" {"host" "host-01"}
           "fields" {"value" 42.08}}
          (influxdb/event->point-9
-           #{:host}
-           {:host "host-01"
-            :service "test service"
-            :time 1428366765
-            :metric 42.08}))
+           (influxdb/mark-tags
+             #{:host}
+             {:host "host-01"
+              :service "test service"
+              :time 1428366765
+              :metric 42.08})))
       "Minimal event is converted to point fields")
-  (is (= {"name" "service_api_req_latency"
+  (is (= {"measurement" "service_api_req_latency"
           "time" "2015-04-06T21:15:41.000Z"
           "tags" {"host" "www-dev-app-01.sfo1.example.com"
                   "sys" "www"
@@ -81,20 +82,21 @@
                     "state" "ok"
                     "foo" "frobble"}}
          (influxdb/event->point-9
-           #{:host :sys :env :role :loc}
-           {:host "www-dev-app-01.sfo1.example.com"
-            :service "service_api_req_latency"
-            :time 1428354941
-            :metric 0.8025
-            :state "ok"
-            :description "A text description!"
-            :ttl 60
-            :tags ["one" "two" "red"]
-            :sys "www"
-            :env "dev"
-            :role "app"
-            :loc "sfo1"
-            :foo "frobble"}))
+           (influxdb/mark-tags
+             #{:host :sys :env :role :loc}
+             {:host "www-dev-app-01.sfo1.example.com"
+              :service "service_api_req_latency"
+              :time 1428354941
+              :metric 0.8025
+              :state "ok"
+              :description "A text description!"
+              :ttl 60
+              :tags ["one" "two" "red"]
+              :sys "www"
+              :env "dev"
+              :role "app"
+              :loc "sfo1"
+              :foo "frobble"})))
       "Full event is converted to point fields")
   (is (empty? (influxdb/events->points-9 #{} [{:service "foo test"}]))
       "Nil points are filtered from result"))
