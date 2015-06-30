@@ -47,13 +47,14 @@
   (let [ignored-fields (set/union special-fields (marked-tags event))]
     (-> event
         (->> (remove (comp ignored-fields key))
+             (remove (comp nil? val))
              (map #(vector (name (key %)) (val %)))
              (into {}))
         (assoc "value" (:metric event)))))
 
 
 
-;; ## InfluxDB 0.8
+;; ## InfluxDB 0.8.x
 
 (defn event->point-8
   "Transform a Riemann event to an InfluxDB point, or nil if the event is
@@ -118,7 +119,7 @@
 
 
 
-;; ## InfluxDB 0.9
+;; ## InfluxDB 0.9.0
 
 (defn event->point-9
   "Converts a Riemann event into an InfluxDB point if it has a time, service,
@@ -126,7 +127,7 @@
   treated as a set of event attributes to use as InfluxDB series tags."
   [event]
   (when (and (:time event) (:service event) (:metric event))
-    {"name" (:service event)
+    {"measurement" (:service event)
      "time" (unix-to-iso8601 (:time event))
      "tags" (event-tags event)
      "fields" (event-fields event)}))
