@@ -53,10 +53,11 @@
           (is (= (:body @post-request)
                  "{\"attachments\":[{\"fields\":[{\"title\":\"Riemann Event\",\"value\":\"Host:   localhost\\nService:   mailer\\nState:   error\\nDescription:   Mailer failed\\nMetric:   42\\nTag:   -\\n\",\"short\":true}]}],\"channel\":\"#test-channel\",\"username\":\"test-user\",\"icon_emoji\":\":warning:\"}"))))
 
-      (testing "escapes formatting characters in main message text"
-        (let [slacker (slack/slack any-account (with-formatter (fn [e] {:text (:host e)})))]
-          (slacker {:host "<>&"})
-          (is (seq (re-seq #"&lt;&gt;&amp;" (:body @post-request))))))
+      (testing "allows formatting characters in main message text with custom formatter"
+        (let [formatter (fn [e] {:text (str "<http://health.check.api/" (:service e) "|" (:service e) ">")})
+              slacker (slack/slack any-account (with-formatter formatter))]
+          (slacker {:service "my-service"})
+          (is (seq (re-seq #"<http://health\.check\.api/my-service\|my-service>" (:body @post-request))))))
 
       (testing "allows for empty message text"
         (let [slacker (slack/slack any-account (with-formatter (constantly {})))]
