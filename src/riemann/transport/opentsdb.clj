@@ -9,7 +9,7 @@
     [io.netty.channel ChannelHandlerContext])
   (:require [interval-metrics.core :as metrics])
   (:use [riemann.core :only [stream!]]
-        [riemann.codec :only [->Event]]
+        [riemann.common :only [event]]
         [riemann.transport.tcp :only [tcp-server
                                       gen-tcp-handler]]
         [riemann.transport :only [channel-initializer
@@ -17,7 +17,8 @@
                                   shared-event-executor]]
         [interval-metrics.measure :only [measure-latency]]
         [slingshot.slingshot :only [try+ throw+]]
-        [clojure.string :only [split join]]
+        [clojure.string :only [split join replace-first trimr]]
+        [clojure.walk :only [keywordize-keys]]
         [clojure.tools.logging :only [warn]]))
 
 (defn decode-opentsdb-line
@@ -44,7 +45,6 @@
           (re-find #"(?i)nan" metric)
           (throw+ "NaN metric"))
 
-    ; Parse numbers
     (let [metric (try (Double. metric)
                       (catch NumberFormatException e
                         (throw+ "invalid metric")))
@@ -53,23 +53,27 @@
                            (throw+ "invalid timestamp")))
           description service
           service (if-let [tagstr (when-not (empty? tags) (join " " tags))]
-                    (str service " " tagstr)
+                    (-> service
+                        (str " " (replace-first tagstr #"\bhost=[^\s$]+\s?" ""))
+                        trimr)
                     service)
-          host (when-let [h (->> tags
-                                 (filter (fn [tag] (.startsWith tag "host=")))
-                                 first)]
-                         (subs h 5))]
+          fields (->> tags
+                      (map (fn [t]
+                              (-> t
+                                 (replace-first #"\bservice=" "servicetag=")
+                                 (split #"="))))
+                      flatten
+                      (apply hash-map)
+                      keywordize-keys)
+          ]
 
       ; Construct event
       ; (defrecord Event [host service state description metric tags time ttl])
-      (->Event host
-               service
-               nil
-               description
-               metric
-               tags
-               timestamp
-               nil))))
+      (event (merge {:service service
+                     :metric metric
+                     :description description
+                     :time timestamp}
+                    fields)))))
 
 (defn opentsdb-frame-decoder
   "A MessageToMessageDecoder that reads strings and emits either :version or

@@ -10,14 +10,16 @@
             [clojure.pprint :refer [pprint]]))
 
 (deftest decode-opentsdb-line-success-test
-  (is (= (event {:service "name", :description "name", :metric 456.0, :time 123})
+  (is (= (event {:service "name" :description "name" :metric 456.0 :time 123})
          (decode-opentsdb-line "put name 123 456")))
-  (is (= (event {:host "host", :service "name host=host", :description "name", :metric 456.0, :tags (list "host=host"), :time 123})
+  (is (= (event {:host "host" :service "name" :description "name" :metric 456.0 :time 123})
          (decode-opentsdb-line "put name 123 456 host=host")))
-  (is (= (event {:service "name tag=value", :description "name", :metric 456.0, :tags (list "tag=value"), :time 123})
+  (is (= (event {:service "name tag=value" :description "name" :metric 456.0 :tag "value" :time 123})
          (decode-opentsdb-line "put name 123 456 tag=value")))
-  (is (= (event {:service "name tag=value tag2=value2", :description "name", :metric 456.0, :tags (list "tag=value" "tag2=value2"), :time 123})
+  (is (= (event {:service "name tag=value tag2=value2" :description "name" :metric 456.0 :tag "value" :tag2 "value2" :time 123})
          (decode-opentsdb-line "put name 123 456 tag=value tag2=value2")))
+  (is (= (event {:service "name service=value" :description "name" :metric 456.0 :servicetag "value" :time 123})
+        (decode-opentsdb-line "put name 123 456 service=value")))
 )
 
 (deftest decode-opentsdb-line-failure-test
@@ -51,11 +53,11 @@
           ; Verify event arrives
           (is (= (deref sink 1000 :timed-out)
                  (event {:host "computar"
-                         :service "hi.there host=computar"
+                         :service "hi.there"
                          :state nil
                          :description "hi.there"
                          :metric 2.5
-                         :tags ["host=computar"]
+                         :tags nil
                          :time 123
                          :ttl nil}))))
         (finally
