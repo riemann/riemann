@@ -1,3 +1,3 @@
-V	170603011121Z		8D22210F12A51585	unknown	/C=US/ST=California/O=Riemann/OU=Test/CN=test.riemann.io
-V	150604011211Z		8D22210F12A51586	unknown	/C=US/ST=California/L=San Francisco/O=Riemann/OU=Test Server/CN=server.test.riemann.io
-V	150604011313Z		8D22210F12A51587	unknown	/C=US/ST=California/L=San Francisco/O=Riemann/OU=Client Test/CN=client.test.riemann.io
+V	22890427214119Z		94FD3EFB7A3D153E	unknown	/C=US/ST=CA/O=Puppy Bureaucracy/OU=Distributed Systems Department/CN=test.riemann.io
+V	22890427215023Z		94FD3EFB7A3D153F	unknown	/C=US/ST=CA/L=San Francisco/O=Puppy Bureaucracy/OU=Riemann Testing Dept/CN=arf.riemann.io
+V	22890427215130Z		94FD3EFB7A3D1540	unknown	/C=US/ST=CA/L=San Francisco/O=Puppy Bureaucracy/OU=Riemann Clients Dept/CN=bark.riemann.io
