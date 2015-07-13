@@ -164,7 +164,7 @@ user=> (+ 1 1)
 <p>In this case we've used the <code>+</code> function and added <code>1</code> and <code>1</code> together to get <code>2</code>.</p>
 <p>But there's something about this structure that might look familiar to you if you've used other programming languages. Our function looks just like <a href="https://en.wikipedia.org/wiki/List_(abstract_data_type)">a list</a>. This is because it is! Our expression might add two numbers together but it’s also a list of three items in a valid list data structure.</p>
 <div class="admonition">
-<span class="admonition-title">Note</span> <span>Technically it's an <a href="http://en.wikipedia.org/wiki/S-expression">s-epression</a>.</span>
+<span class="admonition-title">Note</span> <span>Technically it's an <a href="http://en.wikipedia.org/wiki/S-expression">s-expression</a>.</span>
 </div>
 <p>This is a feature of Clojure called <a href="http://en.wikipedia.org/wiki/Homoiconicity">homoiconicity</a>, sometimes described as: "code is data, data is code". This concept is inherited from Clojure's parent language: <a href="http://en.wikipedia.org/wiki/Lisp_(programming_language)">Lisp</a>.</p>
 <p>Homoiconicity means that the program's structure is similar to its syntax. In this case Clojure programs are written in the form of lists. Hence you can gain insight into the program's internal workings by reading its code. This also makes <a href="http://en.wikipedia.org/wiki/Metaprogramming">metaprogramming</a> really easy because Clojure's source code is a data structure and the language can treat it like one.</p>
