@@ -150,6 +150,19 @@
                     (transient {}))
             persistent!)))))
 
+(defn lookup
+  "Lookup an event by host/service in a vector of tapped events returned by
+  inject!. If several matching events have passed through the tap, the last one
+  will be returned."
+  [events host service]
+  (last
+    (filter
+      identity
+      (map #(when
+              (and (= host (:host %))
+                   (= service (:service %))) %)
+           events))))
+
 (defmacro deftest
   "Like clojure.test deftest, but establishes a fresh time context and a fresh
   set of tap results for the duration of the body.
@@ -173,7 +186,7 @@
   (let [old-ns (ns-name *ns*)
         new-ns (symbol (str old-ns "-test"))]
     `(do (ns ~new-ns
-           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream]]
+           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream lookup]]
                        [riemann.streams :refer :all]
                        [riemann.folds :as folds]
                        [clojure.test :refer [is are]]))
