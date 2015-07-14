@@ -15,12 +15,25 @@
   #{:host :service :time :metric :tags :ttl})
 
 
+(defn mark-tags
+  "Marks an event with metadata that denotes a set of fields to use as
+  series tags in InfluxDB. Returns the updated event."
+  [fields event]
+  (vary-meta event update-in [::tags] set/union (set fields)))
+
+
+(defn marked-tags
+  "Returns a set of the fields marked as tags in InfluxDB."
+  [event]
+  (::tags (meta event)))
+
+
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
-  event which are named in `tag-fields` will be converted to a string key/value
-  entry in the tag map."
-  [tag-fields event]
-  (->> (select-keys event tag-fields)
+  event which are marked in the metadata will be converted to a string
+  key/value entry in the tag map."
+  [event]
+  (->> (select-keys event (marked-tags event))
        (map #(vector (name (key %)) (str (val %))))
        (into {})))
 
@@ -28,19 +41,20 @@
 (defn event-fields
   "Generates a map of InfluxDB fields from a Riemann event. The event's
   `metric` is converted to the `value` field, and any additional event fields
-  which are not standard Riemann properties or in `tag-fields` will also be
-  present."
-  [tag-fields event]
-  (let [ignored-fields (set/union special-fields tag-fields)]
+  which are not standard Riemann properties or marked as tags in the metadata
+  will also be present."
+  [event]
+  (let [ignored-fields (set/union special-fields (marked-tags event))]
     (-> event
         (->> (remove (comp ignored-fields key))
+             (remove (comp nil? val))
              (map #(vector (name (key %)) (val %)))
              (into {}))
         (assoc "value" (:metric event)))))
 
 
 
-;; ## InfluxDB 0.8
+;; ## InfluxDB 0.8.x
 
 (defn event->point-8
   "Transform a Riemann event to an InfluxDB point, or nil if the event is
@@ -105,24 +119,35 @@
 
 
 
-;; ## InfluxDB 0.9
+;; ## InfluxDB 0.9.0
 
 (defn event->point-9
   "Converts a Riemann event into an InfluxDB point if it has a time, service,
-  and metric."
-  [tag-fields event]
+  and metric. If the event's metadata contains a `::tags` key, it will be
+  treated as a set of event attributes to use as InfluxDB series tags."
+  [event]
   (when (and (:time event) (:service event) (:metric event))
-    {"name" (:service event)
+    {"measurement" (:service event)
      "time" (unix-to-iso8601 (:time event))
-     "tags" (event-tags tag-fields event)
-     "fields" (event-fields tag-fields event)}))
+     "tags" (event-tags event)
+     "fields" (event-fields event)}))
 
 
 (defn events->points-9
-  "Converts a collection of Riemann events into InfluxDB points. Events which
-  map to nil are removed from the final collection."
+  "Converts one or more Riemann events into a seq of InfluxDB points. The given
+  set of tag fields will be applied to every event. Events which map to `nil`
+  are removed from the final collection."
   [tag-fields events]
-  (vec (remove nil? (map (partial event->point-9 tag-fields) events))))
+  (-> events
+      (cond->>
+        (not (sequential? events))
+          (list)
+        (seq tag-fields)
+          (map (partial mark-tags tag-fields)))
+      (->>
+        (map event->point-9)
+        (remove nil?)
+        (seq))))
 
 
 (defn influxdb-9
@@ -168,14 +193,12 @@
         tag-fields (:tag-fields opts #{:host})]
     (fn stream
       [events]
-      (let [events (if (sequential? events) events (list events))
-            points (events->points-9 tag-fields events)]
-        (when-not (empty? points)
-          (->> points
-               (assoc payload-base "points")
-               (json/generate-string)
-               (assoc http-opts :body)
-               (http/post write-url)))))))
+      (when-let [points (events->points-9 tag-fields events)]
+        (->> points
+             (assoc payload-base "points")
+             (json/generate-string)
+             (assoc http-opts :body)
+             (http/post write-url))))))
 
 
 
