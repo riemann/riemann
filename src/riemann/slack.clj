@@ -112,5 +112,5 @@
                      {:payload (json/generate-string
                                  (merge
                                   {:channel channel, :username username, :icon_emoji icon}
-                                  (when text {:text (slack-escape text)})
+                                  (when text {:text text})
                                   (dissoc result :icon :text)))}})))))
