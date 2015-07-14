@@ -77,7 +77,8 @@
   Linux only. Provide pure-Java implementation of Netty on all other
   platforms. See http://netty.io/wiki/native-transports.html"
   (if (and (.contains (. System getProperty "os.name") "Linux")
-           (.contains (. System getProperty "os.arch") "amd64"))
+           (.contains (. System getProperty "os.arch") "amd64")
+           (.equals (System/getProperty "netty.epoll.enabled" "true") "true"))
     {:event-loop-group-fn #(EpollEventLoopGroup.)
      :channel EpollServerSocketChannel}
     {:event-loop-group-fn #(NioEventLoopGroup.)
