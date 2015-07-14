@@ -1494,9 +1494,31 @@
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
   `(let [new-fork# (fn [] [~@children])]
-     (by-fn ~fields new-fork#)))
+     (by-fn ~fields new-fork# false)))
 
-(defn by-fn [fields new-fork]
+(defmacro by-host-service
+  "Splits stream by [:host :service] until an expired event arrives.
+  Every time an event arrives with a new value of host and service, this macro invokes
+  its child forms to return a *new*, distinct set of streams for that
+  particular [:host :service] value. That new stream is garbage collected if an expired event arrives
+  to that stream.
+
+  (by-host-service
+    (changed :state {:pairs? true}
+      (fn [[event event']]
+        (prn [(:host event) (:service event)] \"changed from\" (:state event) \"to\" (:state event')))))
+
+  Use (by-host-service) with indexed events with low ttl, otherwise *many* substreams would be created
+  without being garbage collected."
+
+  [& children]
+  ; new-fork is a function which gives us a new copy of our children.
+  ; table is a reference which maps (field event) to a fork (or list of
+  ; children).
+  `(let [new-fork# (fn [] [~@children])]
+     (by-fn [:host :service] new-fork# true)))
+
+(defn by-fn [fields new-fork expire-branches?]
   (let [fields (flatten [fields])
         f (if (= 1 (count fields))
             ; Just use the first function given applied to the event
@@ -1510,7 +1532,8 @@
                     fork
                     ((swap! table assoc fork-name (new-fork)) fork-name))]
          (do
-           (if (expired? event) (swap! table dissoc fork-name))
+           (if (and expire-branches? (expired? event))
+             (swap! table dissoc fork-name))
            (call-rescue event fork))))))
 
 
