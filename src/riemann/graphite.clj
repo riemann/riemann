@@ -10,7 +10,8 @@
   (:use [clojure.string :only [split join replace]]
         clojure.tools.logging
         riemann.pool
-        riemann.common))
+        riemann.common
+        [riemann.transport :only [resolve-host]]))
 
 (defprotocol GraphiteClient
   (open [client]
@@ -110,12 +111,12 @@
         pool (fixed-pool
                (fn []
                  (info "Connecting to " (select-keys opts [:host :port]))
-                 (let [host (:host opts)
+                 (let [host (resolve-host (:host opts))
                        port (:port opts)
                        client (open (condp = (:protocol opts)
                                       :tcp (GraphiteTCPClient. host port)
                                       :udp (GraphiteUDPClient. host port)))]
-                   (info "Connected")
+                   (info "Connected to" host)
                    client))
                (fn [client]
                  (info "Closing connection to "
