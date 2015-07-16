@@ -40,7 +40,7 @@
     [slingshot "0.12.1"]
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
-    [amazonica "0.3.13" :exclusions [joda-time]]
+    [amazonica "0.3.28" :exclusions [joda-time]]
     [capacitor "0.4.3" :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
