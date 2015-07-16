@@ -37,7 +37,7 @@
     [org.slf4j/slf4j-log4j12 "1.7.10"]
     [riemann-clojure-client "0.4.1"]
     [less-awful-ssl "1.0.0"]
-    [slingshot "0.12.1"]
+    [slingshot "0.12.2"]
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
     [amazonica "0.3.28" :exclusions [joda-time]]
