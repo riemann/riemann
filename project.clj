@@ -25,7 +25,7 @@
     [clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
     [cheshire "5.5.0"]
     [clj-librato "0.0.5"]
-    [clj-time "0.9.0"]
+    [clj-time "0.10.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "1.11.3"]
