@@ -41,7 +41,7 @@
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
     [amazonica "0.3.13" :exclusions [joda-time]]
-    [capacitor "0.4.2" :exclusions [http-kit]]]
+    [capacitor "0.4.3" :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
             [lein-rpm "0.0.5"]]
   :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
