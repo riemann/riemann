@@ -22,7 +22,7 @@
     [net.logstash.log4j/jsonevent-layout "1.7"]
     [com.cemerick/pomegranate "0.3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
-    [clj-http "1.0.1" :exclusions [org.clojure/tools.reader]]
+    [clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
     [cheshire "5.5.0"]
     [clj-librato "0.0.5"]
     [clj-time "0.9.0"]
