@@ -111,6 +111,11 @@
   [msg]
   (.toByteArray (encode-pb-msg msg)))
 
+(defn pkey
+  "Primary key for an event."
+  [event]
+  [(:host event) (:service event)])
+
 (defn expire
   "An expired version of an event."
   [event]
