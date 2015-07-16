@@ -93,7 +93,10 @@
            ; Shut down server and close client stream
            (client/close! client)
            (stop! core)
-           (dorun stream)))))))
+           ; lol actually not safe to close the reader; apache httpclient
+           ; explodes because .close calls .read and it's closed so fml
+           ;(dorun stream)
+           ))))))
 
 (deftest udp-test
   (logging/suppress ["riemann.transport"
