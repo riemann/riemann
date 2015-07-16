@@ -20,7 +20,10 @@
                                        com.sun.jdmk/jmxtools
                                        com.sun.jmx/jmxri]]
     [net.logstash.log4j/jsonevent-layout "1.7"]
-    [com.cemerick/pomegranate "0.3.0"]
+    [com.cemerick/pomegranate "0.3.0"
+     :exclusions [org.codehaus.plexus/plexus-utils]]
+    ; for pomegranate
+    [org.codehaus.plexus/plexus-utils "3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
     [clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
     [cheshire "5.5.0"]
@@ -43,7 +46,18 @@
     [amazonica "0.3.28" :exclusions [joda-time]]
     [capacitor "0.4.3" :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
-            [lein-rpm "0.0.5"]]
+            [lein-rpm "0.0.5"
+             :exclusions [org.apache.maven/maven-plugin-api
+                          org.codehaus.plexus/plexus-container-default
+                          org.codehaus.plexus/plexus-utils
+                          org.clojure/clojure
+                          classworlds]]
+            ; for lein-rpm
+            [org.apache.maven/maven-plugin-api "2.0"]
+            [org.codehaus.plexus/plexus-container-default
+             "1.0-alpha-9-stable-1"]
+            [org.codehaus.plexus/plexus-utils "1.5.15"]
+            [classworlds "1.1"]]
   :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
 ;                              "-Dcom.sun.management.jmxremote"
 ;                              "-XX:+UnlockCommercialFeatures"
