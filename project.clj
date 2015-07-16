@@ -29,7 +29,7 @@
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "1.11.3"]
-    [com.amazonaws/aws-java-sdk "1.9.13" :exclusions [joda-time]]
+    [com.amazonaws/aws-java-sdk "1.10.5.1" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.0.24.Final"]
     [log4j/apache-log4j-extras "1.2.17"]
