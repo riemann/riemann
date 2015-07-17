@@ -3,22 +3,25 @@
   streams, client, email, logging, and graphite; the common functions used in
   config. Provides a default core and functions ((tcp|udp)-server, streams,
   index, reinject) which operate on that core."
+  (:import (java.io File))
   (:require [riemann.core :as core]
-            [riemann.common :as common]
+            [riemann.common :as common :refer [event]]
             [riemann.service :as service]
             [riemann.transport.tcp        :as tcp]
             [riemann.transport.udp        :as udp]
             [riemann.transport.websockets :as websockets]
             [riemann.transport.sse        :as sse]
             [riemann.transport.graphite   :as graphite]
-            [riemann.repl]
-            [riemann.index]
+            [riemann.transport.opentsdb   :as opentsdb]
             [riemann.logging :as logging]
             [riemann.folds :as folds]
             [riemann.pubsub :as pubsub]
             [riemann.graphite :as graphite-client]
             [riemann.logstash :as logstash-client]
-            [clojure.tools.nrepl.server :as repl])
+            [clojure.tools.nrepl.server :as repl]
+            [riemann.repl]
+            [riemann.index]
+            [riemann.test :as test :refer [tap io tests]])
   (:use clojure.tools.logging
         [clojure.java.io :only [file]]
         [riemann.client :only [udp-client tcp-client multi-client]]
@@ -27,12 +30,27 @@
         [riemann.plugin  :only [load-plugin load-plugins]]
         [riemann.time :only [unix-time linear-time once! every!]]
         [riemann.pagerduty :only [pagerduty]]
+        [riemann.opsgenie :only [opsgenie]]
+        [riemann.keenio :only [keenio]]
         [riemann.campfire :only [campfire]]
         [riemann.kairosdb :only [kairosdb]]
         [riemann.librato :only [librato-metrics]]
+        [riemann.logentries :only [logentries]]
         [riemann.nagios :only [nagios]]
         [riemann.opentsdb :only [opentsdb]]
+        [riemann.influxdb :only [influxdb]]
         [riemann.hipchat :only [hipchat]]
+        [riemann.slack :only [slack]]
+        [riemann.stackdriver :only [stackdriver]]
+        [riemann.cloudwatch :only [cloudwatch]]
+        [riemann.datadog :only [datadog]]
+        [cemerick.pomegranate :only [add-dependencies]]
+        [riemann.shinken :only [shinken]]
+        [riemann.xymon :only [xymon]]
+        [riemann.mailgun :only [mailgun]]
+        [riemann.twilio :only [twilio]]
+        [riemann.boundary :only [boundary]]
+        [riemann.pushover :only [pushover]]
         riemann.streams))
 
 (def core "The currently running core."
@@ -42,7 +60,6 @@
 
 (def graphite #'graphite-client/graphite)
 (def logstash #'logstash-client/logstash)
-
 
 (defn kwargs-or-map
   "Takes a sequence of arguments like
@@ -125,6 +142,13 @@
   [& opts]
   (service! (graphite/graphite-server (kwargs-or-map opts))))
 
+(defn opentsdb-server
+  "Add a new OpenTSDB TCP server with opts to the default core.
+
+  (opentsdb-server {:port 4242})"
+  [& opts]
+  (service! (opentsdb/opentsdb-server (kwargs-or-map opts))))
+
 (defn udp-server
   "Add a new UDP server with opts to the default core.
 
@@ -157,13 +181,19 @@
   "Set the index used by this core. Returns the index."
   [& opts]
   (locking core
-    (let [index (apply riemann.index/index opts)
+    (let [index (:index @core)
           ; Note that we need to wrap the *current* core's pubsub; the next
           ; core's pubsub module will be discarded in favor of the current one
           ; when core transition takes place.
-          wrapper (core/wrap-index index (:pubsub @core))]
-      (swap! next-core assoc :index wrapper)
-      wrapper)))
+          index' (-> (apply riemann.index/index opts)
+                     (core/wrap-index (:pubsub @core)))
+          ; If the new index is equivalent to the old one, preserve the old
+          ; one.
+          index' (if (service/equiv? index index')
+                   index
+                   index')]
+      (swap! next-core assoc :index index')
+      index')))
 
 (defn update-index
   "Updates the given index with all events received. Also publishes to the
@@ -216,10 +246,18 @@
 
   Example:
 
-  (let [graph (async-queue! :graphite {:queue-size 100}
-                            (graphite {:host ...}))]
+  (let [downstream (batch 100 1/10
+                          (async-queue! :agg {:queue-size     1e3
+                                              :core-pool-size 4
+                                              :max-pool-size  32}
+                            (forward
+                              (riemann.client/tcp-client
+                                :host \"127.0.0.1\"))))]
     (streams
-      (where ... graph)))"
+      ...
+      ; Forward all events downstream to the aggregator.
+      (where (service #\"^riemann.*\")
+        downstream)))"
   [name threadpool-service-opts & children]
   (let [s (service! (service/threadpool-service name threadpool-service-opts))]
     (apply execute-on s children)))
@@ -306,9 +344,49 @@
     (catch clojure.lang.LispReader$ReaderException e
       (throw (logging/nice-syntax-error e file)))))
 
+
+(defn- config-file?
+  "Is the given File a configuration file?"
+  [^File file]
+  (let [filename (.getName file)]
+    (and (.isFile file)
+         (or (.matches filename ".*\\.clj$")
+             (.matches filename ".*\\.config$")))))
+
+(defn local-repo
+  "Sets the location of the local maven repository used
+   by `depend` to load plugins"
+  [path]
+  (reset! riemann.plugin/repo path))
+
+(defmacro depend
+  "Pull in specified dependencies. This combines pulling dependencies with
+   aether and loading a plugin.
+
+   The option map is fed to com.cemerick.pomegranate/add-dependencies and
+   accepts an optional :exit-on-failure keyword defaulting to true which
+   indicates whether riemann should bail out when failing to load a plugin
+   as well as an option :alias parameter which will be forward to `load-plugin`
+
+   To prefer https, only the clojars repository is registered by default."
+  [plugin artifact version options]
+  `(let [options# (merge {:coordinates '[[~artifact ~version]]
+                          :local-repo (deref riemann.plugin/repo)
+                          :exit-on-failure true
+                          :repositories {"clojars" "https://clojars.org/repo"}}
+                         ~options)]
+     (try
+       (apply add-dependencies (apply concat options#))
+       (load-plugin ~plugin (select-keys options# [:alias]))
+       (catch Exception e#
+         (error "could not load plugin" (name ~plugin) ":" (.getMessage e#))
+         (when (:exit-on-failure options#)
+           (System/exit 0))))))
+
 (defn include
   "Include another config file or directory. If the path points to a
-   directory, all files within it will be loaded recursively.
+   directory, all files with names ending in `.config` or `.clj` within
+   it will be loaded recursively.
 
   ; Relative to the current config file, or cwd
   (include \"foo.clj\")
@@ -321,7 +399,10 @@
     (binding [*config-file* path
               *ns* (find-ns 'riemann.config)]
       (if (.isDirectory file)
-        (doseq [f (file-seq file)]
-          (when (.isFile f)
-            (load-file (.toString f))))
+        (->> file
+             file-seq
+             (filter config-file?)
+             (map str)
+             (map include)
+             dorun)
         (load-file path)))))

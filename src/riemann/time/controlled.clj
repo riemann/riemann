@@ -52,12 +52,19 @@
           (schedule-sneaky! task))))
     (swap! clock max t)))
 
+(defmacro with-controlled-time!
+  "Like control-time! but for without the fn callback. Again, *not* threadsafe;
+  bindings take effect globally."
+  [& body]
+  ; Please forgive me
+  `(with-redefs [riemann.time/unix-time unix-time-controlled
+                 riemann.time/linear-time linear-time-controlled]
+     ~@body))
+
 (defn control-time!
   "Switches riemann.time functions to time.controlled counterparts, invokes f,
   then restores them. Definitely not threadsafe. Not safe by any standard,
   come to think of it. Only for testing purposes."
   [f]
-  ; Please forgive me.
-  (with-redefs [riemann.time/unix-time unix-time-controlled
-                riemann.time/linear-time linear-time-controlled]
-    (f)))
+  (with-controlled-time! (f)))
+

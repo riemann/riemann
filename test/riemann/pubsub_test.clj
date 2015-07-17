@@ -2,6 +2,7 @@
   (:use riemann.pubsub
         riemann.core
         riemann.index
+        [riemann.common :only [event]]
         clojure.test)
   (:require [riemann.logging :as logging]))
 
@@ -65,8 +66,8 @@
               ["riemann.core" "riemann.pubsub"]
               (transition! (core) {:index i :pubsub ps}))
         l    (atom nil)
-        e1   {:host "a" :service "b" :metric 1}
-        e2   {:host "b" :service "a" :metric 2}]
+        e1   (event  {:host "a" :service "b" :metric 1})
+        e2   (event {:host "b" :service "a" :metric 2})]
     (subscribe! ps "index" (partial swap! l conj))
     (i e1)
     (i e2)

@@ -45,8 +45,8 @@ if(defined $ENV{OPENSSL}) {
 }
 
 $SSLEAY_CONFIG=$ENV{"SSLEAY_CONFIG"};
-$DAYS="-days 365";	# 1 year
-$CADAYS="-days 1095";	# 3 years
+$DAYS="-days 100000";
+$CADAYS="-days 100000";
 $REQ="$openssl req $SSLEAY_CONFIG";
 $CA="$openssl ca $SSLEAY_CONFIG";
 $VERIFY="$openssl verify";

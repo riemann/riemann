@@ -88,7 +88,7 @@
                  (print (:err (sh "tar" "cvjf" tarball (.getName tar-dir)))))
 
     (write (str tarball ".md5")
-           (str (md5 tarball) " " filename))))
+           (str (md5 tarball) "  " filename))))
 
 (defn tar
   ([project] (tar project true))

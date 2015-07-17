@@ -1,5 +1,7 @@
 .cake
+.attach_pid*
 pom.xml
+pom.xml.asc
 *.jar
 *.tar
 *.tar.bz2
@@ -9,6 +11,7 @@ pom.xml
 .*.swp
 *.log
 .lein-repl-history
+.nrepl-port
 lib
 classes
 build
@@ -20,3 +23,4 @@ reimann-*.zip
 site/**
 bench/**
 target/**
+/target/

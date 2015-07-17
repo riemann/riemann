@@ -6,14 +6,7 @@
              DatagramSocket
              DatagramPacket
              InetAddress)
-   (java.io Writer
-            OutputStreamWriter)
-   (org.jboss.netty.channel Channels)
-   (org.jboss.netty.handler.codec.frame DelimiterBasedFrameDecoder
-                                        Delimiters)
-   (org.jboss.netty.handler.codec.oneone OneToOneDecoder)
-   (org.jboss.netty.handler.codec.string StringDecoder StringEncoder)
-   (org.jboss.netty.util CharsetUtil))
+   (java.io Writer OutputStreamWriter))
   (:use [clojure.string :only [split join replace]]
         clojure.tools.logging
         riemann.pool
@@ -106,7 +99,6 @@
                 :regenerate-interval  (:reconnect-interval opts)})]
 
     (fn [event]
-      (when (:metric event)
-        (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (event-to-json (merge event {:source (:host event)}))]
-                     (send-line client (str string "\n"))))))))
+      (with-pool [client pool (:claim-timeout opts)]
+                 (let [string (event-to-json (merge event {:source (:host event)}))]
+                   (send-line client (str string "\n")))))))

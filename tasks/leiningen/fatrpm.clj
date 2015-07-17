@@ -99,6 +99,8 @@
        [; Jar
         {:directory "/usr/lib/riemann/"
          :filemode "644"
+         :username "root"
+         :groupname "root"
          :sources [(source (str (file (:root project) 
                                       "target"
                                       (str "riemann-"
@@ -109,6 +111,8 @@
         ; Binary
         {:directory "/usr/bin"
          :filemode "755"
+         :username "root"
+         :groupname "root"
          :sources [(source (file (:root project) "pkg" "rpm" "riemann")
                            "riemann")]}
 
@@ -132,6 +136,8 @@
         ; Default file
         {:directory "/etc/sysconfig"
          :filemode "644"
+         :username "root"
+         :groupname "root"
          :configuration true
          :sources [(source (file (:root project) "pkg" "riemann-default")
                            "riemann")]}
@@ -172,7 +178,7 @@
     (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["jre >= 1.6.0"
+    (set-mojo! "requires" (create-dependency ["jre >= 1.7.0"
                                               "daemonize >= 1.7.3"]))
     (.execute)))
 
@@ -192,7 +198,7 @@
 
         ; MD5
         (write (str dest ".md5")
-               (str (md5 dest) " " (.getName rpm)))))))
+               (str (md5 dest) "  " (.getName rpm)))))))
 
 (defn fatrpm
   ([project] (fatrpm project true))

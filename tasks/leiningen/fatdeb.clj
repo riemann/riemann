@@ -48,10 +48,11 @@
         (map (fn [[k v]] (str (capitalize (name k)) ": " v))
              {:package (:name project)
               :version (get-version project)
-              :section "base"
+              :section "java"
               :priority "optional"
               :architecture "all"
-              :depends (join ", " ["bash"])
+              ; See riemann#200, riemann#248, riemann#419 for why this is not :depends
+              :recommends (join ", " ["default-jre-headless (<= 1.7) | java7-runtime"])
               :maintainer (:email (:maintainer project))
               :description (:description project)})))
 
@@ -71,7 +72,9 @@
     (.mkdirs (file dir "DEBIAN"))
     (write (file dir "DEBIAN" "control") (control project))
     (write (file dir "DEBIAN" "conffiles")
-           (join "\n" ["/etc/riemann/riemann.config" "/etc/default/riemann"]))
+           (join "\n" ["/etc/riemann/riemann.config"
+                       "/etc/default/riemann"
+                       "/etc/init.d/riemann"]))
 
     ; Preinst
     (copy (file (:root project) "pkg" "deb" "preinst.sh")
@@ -83,11 +86,21 @@
           (file dir "DEBIAN" "postinst"))
     (.setExecutable (file dir "DEBIAN" "postinst") true false)
 
+    ; Prerm
+    (copy (file (:root project) "pkg" "deb" "prerm.sh")
+          (file dir "DEBIAN" "prerm"))
+    (.setExecutable (file dir "DEBIAN" "prerm") true false)
+
+    ; Postrm
+    (copy (file (:root project) "pkg" "deb" "postrm.sh")
+          (file dir "DEBIAN" "postrm"))
+    (.setExecutable (file dir "DEBIAN" "postrm") true false)
+
     ; Jar
-    (.mkdirs (file dir "usr" "lib" "riemann"))
-    (copy (file (:root project) "target" 
+    (.mkdirs (file dir "usr" "share" "riemann"))
+    (copy (file (:root project) "target"
                 (str "riemann-" (:version project) "-standalone.jar"))
-          (file dir "usr" "lib" "riemann" "riemann.jar"))
+          (file dir "usr" "share" "riemann" "riemann.jar"))
 
     ; Binary
     (.mkdirs (file dir "usr" "bin"))
@@ -113,21 +126,21 @@
     (copy (file (:root project) "pkg" "deb" "init.sh")
           (file dir "etc" "init.d" "riemann"))
     (.setExecutable (file dir "etc" "init.d" "riemann") true false)
-   
+
     dir))
 
 (defn dpkg
   "Convert given package directory to a .deb."
   [project deb-dir]
-  (print (:err (sh "dpkg" "--build" 
-                   (str deb-dir) 
+  (print (:err (sh "fakeroot" "dpkg" "--build"
+                   (str deb-dir)
                    (str (file (:root project) "target")))))
   (let [deb-file-name (str (:name project) "_"
                            (get-version project) "_"
                            "all" ".deb")
         deb-file (file (:root project) "target" deb-file-name)]
     (write (str deb-file ".md5")
-           (str (md5 deb-file) " " deb-file-name))))
+           (str (md5 deb-file) "  " deb-file-name))))
 
 (defn fatdeb
   ([project] (fatdeb project true))

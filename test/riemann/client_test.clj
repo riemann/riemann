@@ -14,47 +14,43 @@
                    (let [server (tcp-server)
                          core   (transition! (core) {:services [server]})
                          client (tcp-client)]
-                     (-> client .transport .transport .reconnectDelay (.set 0))
+                     (.. client transport reconnectDelay (set 0))
                      (try
                        ; Initial connection works
-                       (is (send-event client {:service "test"}))
+                       (is @(send-event client {:service "test"}))
 
                        ; Kill server; should fail.
                        (stop! core)
                        (is (thrown? java.io.IOException
-                                    (send-event client {:service "test"})))
-                       
+                                    @(send-event client {:service "test"})))
 
                        ; Restart server; should work
                        (start! core)
                        (Thread/sleep 200)
 
                        (try
-                         (send-event client {:service "test"})
+                         @(send-event client {:service "test"})
                          (finally
                            (stop! core)))
 
                        (finally
-                         (close-client client)
+                         (close! client)
                          (stop! core))))))
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors
-         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
-           (let [index (index)
-                 server (tcp-server)
-                 core   (transition! (core) {:services [server]
-                                             :index index})
-                 client (tcp-client)]
+  (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
+    (let [index (index)
+          server (tcp-server)
+          core   (transition! (core) {:services [server]
+                                      :index index})
+          client (tcp-client)]
 
-             (try
-               (is (thrown? com.aphyr.riemann.client.ServerError
-                            (query client "invalid!")))
-               
-               (let [e (try (query client "invalid!")
-                      (catch com.aphyr.riemann.client.ServerError e e))]
-                 (is (= "parse error: invalid term \"invalid\"" (.getMessage e))))
-               
-               (finally
-                 (close-client client)
-                 (stop! core))))))
+      (try
+        (is (thrown-with-msg?
+              com.aphyr.riemann.client.ServerError
+              #"^mismatched input 'no' expecting \{<EOF>, 'or', 'and'\}$"
+              @(query client "oh no not again")))
+        (finally
+          (close! client)
+          (stop! core))))))

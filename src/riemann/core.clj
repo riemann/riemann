@@ -41,7 +41,8 @@
         (try
           ; Take events from core and instrumented services
           (let [base (event {:host (localhost)
-                             :ttl  (* 2 interval)})
+                             ; Default TTL of 2 intervals, and convert ms to s.
+                             :ttl  (long (/ interval 500))})
                 events (mapcat instrumentation/events
                             (concat
                               [core
@@ -179,18 +180,29 @@
               integration now."
               ((:index core) event)))
 
+; Provides an accessor for a source index
+(defprotocol WrappedIndex
+  (source [this]))
+
+(defn- unwrap
+  "Get the inner index of a wrapped index."
+  [^riemann.core.WrappedIndex wrapped]
+  (source wrapped))
+
 (defn wrap-index
-  "Yield a wrapper to an index, exposing the same protocols as well
-   as IFn which will index an event. If a second argument is present
-   it should implement the PubSub interface and will be notified
-   when events are updated in the index."
+  "Wraps an index, exposing the normal Index and IFn protocols. If a second
+  argument is present it should implement the PubSub interface and will be
+  notified when events are updated in the index."
   ([source]
      (wrap-index source nil))
   ([source registry]
      (reify
        Object
        (equals [this other]
-         (= source other))
+         (= source (unwrap other)))
+       WrappedIndex
+       (source [this]
+         source)
        Index
        (clear [this]
          (index/clear source))
@@ -203,6 +215,9 @@
        (search [this query-ast]
          (index/search source query-ast))
        (update [this event]
+         (when-not (:time event)
+           (throw (ex-info "cannot index event with no time"
+                           {:event event})))
          (index/update source event)
          (when registry
            (ps/publish! registry "index" event)))
@@ -213,13 +228,18 @@
        (seq [this]
          (seq source))
 
+       Instrumented
+       (instrumentation/events [this]
+         (instrumentation/events source))
+
        ServiceEquiv
        (equiv? [this other]
-         (service/equiv? source other))
+         (and (satisfies? WrappedIndex other)
+           (service/equiv? source (unwrap other))))
 
        Service
        (conflict? [this other]
-         (service/conflict? source other))
+         (service/conflict? source (unwrap other)))
        (reload! [this new-core]
          (service/reload! source new-core))
        (start! [this]
@@ -230,7 +250,6 @@
        clojure.lang.IFn
        (invoke [this event]
          (index/update this event)))))
-
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the

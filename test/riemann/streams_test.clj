@@ -3,6 +3,8 @@
         [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
+        [riemann.test :refer [run-stream run-stream-intervals test-stream 
+                              with-test-stream test-stream-intervals]]
         clojure.test)
   (:require [riemann.index :as index]
             [riemann.folds :as folds]
@@ -14,53 +16,6 @@
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
-
-(defmacro run-stream
-  "Applies inputs to stream, and returns outputs."
-  [stream inputs]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))]
-     (doseq [e# ~inputs] (stream# e#))
-     (deref out#)))
-
-(defmacro run-stream-intervals
-  "Applies a seq of alternating events and intervals (in seconds) between them
-  to stream, returning outputs."
-  [stream inputs-and-intervals]
-  `(let [out# (atom [])
-         stream# (~@stream (append out#))
-         start-time# (ref (unix-time))
-         next-time# (ref (deref start-time#))]
-     (doseq [[e# interval#] (partition-all 2 ~inputs-and-intervals)]
-       (stream# e#)
-       (when interval#
-         (dosync (ref-set next-time# (+ (deref next-time#) interval#)))
-         (advance! (deref next-time#))))
-     (let [result# (deref out#)]
-       ; close stream
-       (stream# {:state "expired" :time (unix-time)})
-       result#)))
-
-(defmacro test-stream
-  "Verifies that the given stream, taking inputs, forwards outputs to children."
-  [stream inputs outputs]
-  `(is (~'= ~outputs (run-stream ~stream ~inputs))))
-
-(defmacro with-test-stream
-  "Exposes a fake index, verifies that the given stream, taking inputs,
-  forwards outputs to children"
-  [sym stream inputs outputs]
-  `(let [out#    (atom [])
-         ~sym    (append out#)
-         stream# ~stream]
-     (doseq [e# ~inputs] (stream# e#))
-     (is (~'= (deref out#) ~outputs))))
-
-(defmacro test-stream-intervals
-  "Verifies that run-stream-intervals, taking inputs/intervals, forwards
-  outputs to chldren."
-  [stream inputs-and-intervals outputs]
-  `(is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
 
 (defn evs
   "Generate events based on the given event, with given metrics"
@@ -74,25 +29,27 @@
   (vec (map (fn [m] {:metric m}) metrics)))
 
 (deftest combine-test
-         (let [r (atom nil)
-               sum (combine folds/sum (register r))
-               min (combine folds/minimum (register r))
-               max (combine folds/maximum (register r))
-               mean (combine folds/mean (register r))
-               median (combine folds/median (register r))
-               events [{:metric 1}
-                       {:metric 0}
-                       {:metric -2}]]
-           (sum events)
-           (is (= (deref r) {:metric -1}))
-           (min events)
-           (is (= (deref r) {:metric -2}))
-           (max events)
-           (is (= (deref r) {:metric 1}))
-           (mean events)
-           (is (= (deref r) {:metric -1/3}))
-           (median events)
-           (is (= (deref r) {:metric 0}))))
+  (logging/suppress
+    ["riemann.streams"]
+    (let [r (atom nil)
+          sum (combine folds/sum (register r))
+          min (combine folds/minimum (register r))
+          max (combine folds/maximum (register r))
+          mean (combine folds/mean (register r))
+          median (combine folds/median (register r))
+          events [{:metric 1}
+                  {:metric 0}
+                  {:metric -2}]]
+      (sum events)
+      (is (= (deref r) {:metric -1}))
+      (min events)
+      (is (= (deref r) {:metric -2}))
+      (max events)
+      (is (= (deref r) {:metric 1}))
+      (mean events)
+      (is (= (deref r) {:metric -1/3}))
+      (median events)
+      (is (= (deref r) {:metric 0})))))
 
 (deftest smap*-test
          (testing "passes nil values"
@@ -103,11 +60,16 @@
 (deftest smap-test
          (testing "increment"
                   (test-stream (smap inc) [6 3 -1] [7 4 0]))
-         
+
          (testing "ignores nil values"
                   (test-stream (smap identity)
                                [1 nil false 3]
                                [1 false 3])))
+
+(deftest smapcat-test
+  (testing "doubles"
+    (test-stream (smapcat #(vector % %)) [0 1 2 3]
+                 [0 0 1 1 2 2 3 3])))
 
 (deftest sdo-test
   (let [vals1   (atom [])
@@ -116,6 +78,11 @@
         add2    #(swap! vals2 conj %)]
     (run-stream (sdo add1 add2) [1 2 3])
     (is (= @vals1 [1 2 3]))
+    (is (= @vals2 [1 2 3]))
+    (run-stream (sdo add1) [4 5 6])
+    (is (= @vals1 [1 2 3 4 5 6]))
+    (run-stream (sdo) [6 7 8])
+    (is (= @vals1 [1 2 3 4 5 6]))
     (is (= @vals2 [1 2 3]))))
 
 (deftest exception-stream-test
@@ -242,7 +209,22 @@
          ; Functions
          (test-stream (match identity 2)
                       [1 2 3]
-                      [2]))
+                      [2])
+         
+         ; Maps
+         (test-stream (match identity {:state #"^mi", :host "other"})
+                      [{}
+                       {:state "migas"}
+                       {:state "migas", :host "other"}]
+                      [{:state "migas", :host "other"}])
+
+  ; Nils
+  (test-stream (match :host nil)
+               [{}
+                {:host nil}
+                {:host :foo}]
+               [{}
+                {:host nil}]))
 
 (deftest tag-test
          ; Single tag
@@ -518,6 +500,15 @@
                                 {:metric 2}]
                                [{:metric 2}]))
 
+         (testing "using sets as predicates"
+                  (test-stream (where (service #{"service1" "service2"}))
+                               [{:service "service1"}
+                                {:service "service2"}
+                                {:service "service-doesnt-match"}]
+                               [{:service "service1"}
+                                {:service "service2"}]))
+
+
          (testing "variable"
                   ; Verify that the macro allows variables to be used in
                   ; predicates.
@@ -696,11 +687,15 @@
            (is (= {:service "foo"} (deref r)))
 
            (s {:service "bar" :test "baz"})
-           (is (= {:service "foo" :test "baz"} (deref r)))))
+           (is (= {:service "foo" :test "baz"} (deref r)))
+
+           (s [{:service "bar" :test "baz"}])
+           (is (= [{:service "foo" :test "baz"}] (deref r)))))
 
 (deftest with-map
          (let [r (ref nil)
-               s (with {:service "foo" :state nil} (fn [e] (dosync (ref-set r e))))]
+               s (with {:service "foo" :state nil} (fn [e] (dosync (ref-set r e))))
+               empty-s (with {} (fn [e] (dosync (ref-set r e))))]
            (s (event {:service nil}))
            (is (= "foo" (:service (deref r))))
            (is (= nil (:state (deref r))))
@@ -711,7 +706,10 @@
 
            (s (event {:service "bar" :test "baz" :state "evil"}))
            (is (= "foo" (:service (deref r))))
-           (is (= nil (:state (deref r))))))
+           (is (= nil (:state (deref r))))
+
+           (empty-s (event {:service "bar" :test "baz"}))
+           (is (= "bar" (:service (deref r))))))
 
 (deftest by-single
          ; Each test stream keeps track of the first host it sees, and confirms
@@ -773,6 +771,41 @@
            (is (= @i 2))
            (s {:metric 1})
            (is (= @i 2))))
+
+(deftest pipe-test
+  (testing "One stage"
+    (test-stream
+      (pipe !)
+      [1 2 3]
+      [1 2 3]))
+
+  (testing "Chained stages"
+    (test-stream
+      (pipe ! (smap inc !) (smap (partial * 2) !))
+      [1 2 3]
+      [4 6 8]))
+
+  (testing "Multiple markers"
+    (test-stream
+      (pipe - (splitp < metric
+                      0.9 (with :state :critical -)
+                      0.5 (with :state :warning  -)
+                          (with :state :ok       -))
+            (smap identity -))
+      [{:metric 0.1}
+       {:metric 0.7}
+       {:metric 1.0}]
+      [{:metric 0.1 :state :ok}
+       {:metric 0.7 :state :warning}
+       {:metric 1.0 :state :critical}]))
+
+  (testing "Rebinding a marker"
+    (test-stream
+      (pipe - (let [! -
+                    - clojure.core/-]
+                (smap - !)))
+      [-1 0 1]
+      [1 0 -1])))
 
 (deftest fill-in-test
          (test-stream-intervals
@@ -895,7 +928,6 @@
 
 (deftest ddt-interval-test
          (testing "Quick burst without crossing interval"
-                  (reset-time!)
                   (is (= (map :metric (run-stream-intervals 
                                         (ddt 0.1)
                                         [{:metric 1} nil
@@ -904,7 +936,6 @@
                          [])))
 
          (testing "1 event per interval"
-                  (reset-time!)
                   (test-stream-intervals
                     (ddt 1)
                     ; Note that the swap occurs just prior to events at time 1.
@@ -915,7 +946,6 @@
                      {:time 2 :metric -5}]))
         
          (testing "n events per interval"
-                  (reset-time!)
                   (test-stream-intervals 
                     (ddt 1)
                     [{:time 0 :metric -1} 1/100
@@ -927,7 +957,6 @@
                      {:time 4/2 :metric -4}]))
 
          (testing "emits zeroes when no events arrive in an interval"
-                  (reset-time!)
                   (test-stream-intervals (ddt 2)
                                          [{:time 0 :metric 0} 1
                                           {:time 1 :metric 1} 2
@@ -1038,27 +1067,31 @@
            (em 12 200)))
 
 (deftest changed-test
-         (let [output (atom [])
-               r (changed :state (append output))
-               r2 (changed :state {:init :ok}
-                           (append output))
-               states [:ok :bad :bad :ok :ok :ok :evil :bad]]
+  (let [states (partial map (partial hash-map :state))]
+    (testing ":state"
+      (test-stream (changed :state)
+                   (states [:ok :bad :bad :ok :ok :ok :evil :bad])
+                   (states [:ok :bad :ok :evil :bad])))
 
-           ; Apply states
-           (doseq [state states]
-             (r {:state state}))
+    (testing ":state with :init"
+      (test-stream (changed :state {:init :ok})
+                   (states [:ok :bad :bad :ok :ok :evil :bad])
+                   (states [:bad :ok :evil :bad])))
 
-           ; Check output
-           (is (= [:ok :bad :ok :evil :bad]
-                  (vec (map (fn [s] (:state s)) (deref output)))))
+    (testing "with previous event and arbitrary fn"
+      (test-stream (changed #(:state %) {:init :ok, :pairs? true})
+                   (states [:ok :bad :bad :ok :ok :evil :bad])
+                   (partition 2 1 (states [:ok :bad :ok :evil :bad]))))))
 
-           ; Test with init
-           (reset! output [])
-           (doseq [state states]
-             (r2 {:state state}))
-
-           (is (= [:bad :ok :evil :bad]
-                  (vec (map (fn [s] (:state s)) (deref output)))))))
+(deftest changed-with-exception-test
+        (logging/suppress
+          "riemann.streams"
+           (let [exceptions (atom [])]
+             (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
+               (run-stream (changed :state (fn [x]
+                                             (throw (Throwable. "boo!"))))
+                           [(riemann.common/event {:state :critical})]))
+             (is (= 1 (count @exceptions))))))
 
 (deftest changed-state-test
          ; Each test stream keeps track of the first host/service it sees, and
@@ -1095,7 +1128,9 @@
            (doseq [event events]
              (s event))
            (is (= 6 (deref i)))))
+
 (deftest within-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (within [1 2]
                          (fn [e] (dosync (alter output conj e))))
@@ -1103,9 +1138,10 @@
                expect [1 1.5 2]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest without-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (without [1 2]
                          (fn [e] (dosync (alter output conj e))))
@@ -1113,9 +1149,10 @@
                expect [0.5 2.5]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest over-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (over 1.5
                          (fn [e] (dosync (alter output conj e))))
@@ -1123,9 +1160,10 @@
                expect [2 2.5]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest under-test
+(logging/suppress ["riemann.streams"]
          (let [output (ref [])
                r (under 1.5
                          (fn [e] (dosync (alter output conj e))))
@@ -1133,7 +1171,7 @@
                expect [0.5 1]]
            
            (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output)))))))
+           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest ewma-timeless-test
          (test-stream (ewma-timeless 0)
@@ -1145,6 +1183,60 @@
          (test-stream (ewma-timeless 1/2)
                       (em 1   1   1   1     1    )
                       (em 1/2 3/4 7/8 15/16 31/32)))
+
+(deftest ewma-test
+  (let [output1 (atom [])
+        output2 (atom [])
+        output5 (atom [])
+        seconds 50
+        s1 (ewma 1
+          (fn [event] (swap! output1 conj event)))
+        s2 (ewma 2
+          (fn [event] (swap! output2 conj event)))
+        s5 (ewma 5
+          (fn [event] (swap! output5 conj event)))]
+
+    ; Generate enough events to allow the means to converge
+    (dotimes [n seconds]
+      (s1 {:metric 1 :time (inc n)})
+      (s2 {:metric 1 :time (inc n)})
+      (s5 {:metric 1 :time (inc n)}))
+
+    ; Verify that the means have converged
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 10 @output1))))
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 15 @output2))))
+    (is (every? (fn [measured-rate]
+                  (approx-equal 1 measured-rate))
+                  (map :metric (drop 40 @output5))))
+
+    ; Verify halflives with spaced out :metric 0 events
+    (s1 {:metric 0 :time (+ 1 seconds)})
+    (s1 {:metric 0 :time (+ 2 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output1)))))
+    (is (approx-equal 1/4 (:metric (last @output1))))
+
+    (s2 {:metric 0 :time (+ 2 seconds)})
+    (s2 {:metric 0 :time (+ 4 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output2)))))
+    (is (approx-equal 1/4 (:metric (last @output2))))
+
+    (s5 {:metric 0 :time (+ 5 seconds)})
+    (s5 {:metric 0 :time (+ 10 seconds)})
+    (is (approx-equal 1/2 (:metric (last (drop-last @output5)))))
+    (is (approx-equal 1/4 (:metric (last @output5)))))
+
+  ; Verify that metrics are weighted by :time, regardless of order of arrival
+  (test-stream-intervals (ewma 1)
+    [{:metric 1 :time 0} 1
+     {:metric 1 :time 2} 1
+     {:metric 1 :time 1} 1]
+    [{:metric 0.5 :time 0}
+     {:metric 0.625 :time 2}
+     {:metric 0.875 :time 2}]))
 
 (deftest top-test
   (let [e (fn [s m & tags] {:service s :metric m :tags tags})
@@ -1245,13 +1337,11 @@
          ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]] 
 
          (testing "expired events"
-                  (reset-time!)
                   (test-stream-intervals
                     (rollup 2 3)
                     [ 1 0 {:state "expired"} 0 :a 1 :b 1 :c 1 ]
                     [[1] [{:state "expired"}]              [:a :b :c]])
 
-                  (reset-time!)
                   (let [e {:state "expired"}]
                     (test-stream-intervals
                       (rollup 2 2)
@@ -1263,14 +1353,12 @@
     (test-stream-intervals (batch 2 3) [] []))
 
   (testing "incomplete batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 3 :b 1 :c 2 :d 3]
       [[:a] [:b :c] [:d]]))
 
   (testing "overflowing batches"
-    (reset-time!)
     (test-stream-intervals
       (batch 2 3)
       [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
@@ -1359,7 +1447,6 @@
                                 [{:x 1 :time 1}])
 
          ; Triggers after dt seconds with new events.
-         (reset-time!)
          (test-stream-intervals (stable 10 :x)
                                 [{:x 0 :time 0} 1
                                  {:x 0 :time 1} 4
@@ -1558,6 +1645,40 @@
                       [[{:time 5} {:time 6}]
                        [{:time 8} {:time 8}]
                        [{:time 9}]]))
+
+(deftest fixed-offset-time-window-test
+         ; Zero-time windows.
+         (is (thrown? IllegalArgumentException (fixed-offset-time-window 0)))
+
+         ; n-width windows
+         (test-stream (fixed-offset-time-window 2) [] [])
+         (test-stream (fixed-offset-time-window 2) [{:time 1}] [])
+         (test-stream (fixed-offset-time-window 2) 
+                      [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5} {:time 6}]
+                      [[{:time 1}]
+                       [{:time 2} {:time 3}]
+                       [{:time 4} {:time 5}]])
+
+         ; With a gap
+         (test-stream (fixed-offset-time-window 2) [{:time 1} {:time 7}] 
+                      [[{:time 1}] [] []])
+
+         ; With out-of-order events
+         (test-stream (fixed-offset-time-window 2)
+                      [{:time 5}
+                       {:time 1}
+                       {:time 2}
+                       {:time 6}
+                       {:time 3}
+                       {:time 8}
+                       {:time 4}
+                       {:time 8}
+                       {:time 5}
+                       {:time 9}
+                       {:time 11}]
+                      [[{:time 5}]
+                       [{:time 6}]
+                       [{:time 8} {:time 8} {:time 9}]]))
 
 (deftest part-time-simple-test
          ; Record windows of [start-time e1 e2 e3 end-time]

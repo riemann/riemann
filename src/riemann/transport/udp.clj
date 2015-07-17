@@ -3,15 +3,19 @@
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
            [java.util.concurrent Executors]
-           [org.jboss.netty.bootstrap ConnectionlessBootstrap]
-           [org.jboss.netty.channel ChannelStateEvent
-                                    Channels
-                                    ExceptionEvent
-                                    FixedReceiveBufferSizePredictorFactory
-                                    MessageEvent
-                                    SimpleChannelUpstreamHandler]
-           [org.jboss.netty.channel.group ChannelGroup]
-           [org.jboss.netty.channel.socket.nio NioDatagramChannelFactory])
+           [io.netty.bootstrap Bootstrap]
+           [io.netty.channel Channel
+                             ChannelHandler
+                             ChannelInitializer
+                             ChannelOption
+                             ChannelHandlerContext
+                             DefaultMessageSizeEstimator
+                             ChannelOutboundHandler
+                             ChannelInboundHandler
+                             ChannelInboundHandlerAdapter]
+           [io.netty.channel.group ChannelGroup]
+           [io.netty.channel.socket.nio NioDatagramChannel]
+           [io.netty.channel.nio NioEventLoopGroup])
   (:require [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
@@ -20,52 +24,59 @@
         [riemann.time          :only [unix-time]]
         [riemann.transport     :only [handle
                                       channel-group
+                                      datagram->byte-buf-decoder
                                       protobuf-decoder
-                                      protobuf-encoder
                                       msg-decoder
-                                      shared-execution-handler
-                                      channel-pipeline-factory]]))
+                                      shutdown-event-executor-group
+                                      shared-event-executor
+                                      channel-initializer]]))
 
 (defn gen-udp-handler
   [core stats ^ChannelGroup channel-group handler]
-  (proxy [SimpleChannelUpstreamHandler] []
-    (channelOpen [context ^ChannelStateEvent state-event]
-                 (.add channel-group (.getChannel state-event)))
+  (proxy [ChannelInboundHandlerAdapter] []
+    (channelActive [^ChannelHandlerContext ctx]
+      (.add channel-group (.channel ctx)))
 
-    (messageReceived [context ^MessageEvent message-event]
-                     (handler @core stats message-event))
+    (channelRead [^ChannelHandlerContext ctx ^Object message]
+      (handler @core stats ctx message))
 
-    (exceptionCaught [context ^ExceptionEvent exception-event]
-      (warn (.getCause exception-event) "UDP handler caught"))))
+    (exceptionCaught [^ChannelHandlerContext ctx ^Throwable cause]
+      (warn cause "UDP handler caught"))
+
+    (isSharable [] true)))
 
 (defn udp-handler
-  "Given a core and a MessageEvent, applies the message to core."
-  [core stats ^MessageEvent message-event]
-  (let [msg (.getMessage message-event)]
-    (handle core msg)
-    (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))))
+  "Given a core, a channel, and a message, applies the message to core."
+  [core stats ctx message]
+  (handle core message)
+  (metrics/update! stats (- (System/nanoTime) (:decode-time message))))
 
 (defrecord UDPServer [^String host
                       ^int port
                       max-size
+                      ^int so-rcvbuf
                       ^ChannelGroup channel-group
-                      pipeline-factory
+                      ^ChannelHandler handler
                       stats
                       core
                       killer]
   ; core is an atom to a core
   ; killer is an atom to a function that shuts down the server
-  
+
   ServiceEquiv
   ; TODO compare pipeline-factory!
   (equiv? [this other]
           (and (instance? UDPServer other)
+               (= max-size (:max-size other))
+               (= so-rcvbuf (:so-rcvbuf other))
                (= host (:host other))
                (= port (:port other))))
 
   Service
   (conflict? [this other]
              (and (instance? UDPServer other)
+                  (= max-size (:max-size other))
+                  (= so-rcvbuf (:so-rcvbuf other))
                   (= host (:host other))
                   (= port (:port other))))
 
@@ -75,32 +86,36 @@
   (start! [this]
           (locking this
             (when-not @killer
-              (let [pool (Executors/newCachedThreadPool)
-                    bootstrap (ConnectionlessBootstrap.
-                                (NioDatagramChannelFactory. pool))]
+              (let [worker-group (NioEventLoopGroup.)
+                    bootstrap (Bootstrap.)]
 
                 ; Configure bootstrap
                 (doto bootstrap
-                  (.setPipelineFactory pipeline-factory)
-                  (.setOption "broadcast" "false")
-                  (.setOption "receiveBufferSizePredictorFactory"
-                              (FixedReceiveBufferSizePredictorFactory.
-                                max-size)))
+                  (.group worker-group)
+                  (.channel NioDatagramChannel)
+                  (.option ChannelOption/SO_BROADCAST false)
+                  (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
+                           (DefaultMessageSizeEstimator. max-size))
+                  (.handler handler))
+                
+                ; Setup Channel options
+                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
-                    (.bind bootstrap)
-                    (.add channel-group))
-                (info "UDP server" host port max-size "online")
+                     (.bind bootstrap)
+                     (.sync)
+                     (.channel)
+                     (.add channel-group))
+
+                (info "UDP server" host port max-size so-rcvbuf "online")
 
                 ; fn to close server
                 (reset! killer
-                        (fn []
+                        (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
-                          (.releaseExternalResources bootstrap)
-                          (.shutdown pool)
-                          (info "UDP server" host port max-size "shut down")
-                          ))))))
+                          @(shutdown-event-executor-group worker-group)
+                          (info "UDP server" host port max-size so-rcvbuf "shut down")))))))
 
   (stop! [this]
          (locking this
@@ -134,8 +149,9 @@
   :host             The address to listen on (default 127.0.0.1).
   :port             The port to listen on (default 5555).
   :max-size         The maximum datagram size (default 16384 bytes).
+  :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
   :channel-group    A ChannelGroup used to track all connections
-  :pipeline-factory A ChannelPipelineFactory"
+  :initializer      A ChannelInitializer"
   ([] (udp-server {}))
   ([opts]
    (let [core  (get opts :core (atom nil))
@@ -143,15 +159,15 @@
          host  (get opts :host "127.0.0.1")
          port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
+         so-rcvbuf (get opts :so-rcvbuf -1)
          channel-group (get opts :channel-group
                             (channel-group
-                              (str "udp-server" host ":" port 
-                                   "(" max-size ")")))
-         pf (get opts :pipeline-factory
-                 (channel-pipeline-factory
-                   ^:shared executor         shared-execution-handler
+                              (str "udp-server" host ":" port "(" max-size ")")))
+         ci (get opts :initializer
+                 (channel-initializer
+                   ^:shared datagram-decoder (datagram->byte-buf-decoder)
                    ^:shared protobuf-decoder (protobuf-decoder)
-                   ^:shared protobuf-encoder (protobuf-encoder)
                    ^:shared msg-decoder      (msg-decoder)
-                   ^:shared handler          (gen-udp-handler core stats channel-group udp-handler)))]
-     (UDPServer. host port max-size channel-group pf stats core (atom nil)))))
+                   ^{:shared true :executor shared-event-executor} handler
+                   (gen-udp-handler core stats channel-group udp-handler)))]
+     (UDPServer. host port max-size so-rcvbuf channel-group ci stats core (atom nil)))))

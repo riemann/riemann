@@ -8,10 +8,10 @@
                           "2013-04-15T18:06:58.123+11:00"
                            "2013-04-15T18:06:58Z"
                            "2013-04-15"])]
-           (is (= times [1366074418000
-                         1366009618123
-                         1366049218000
-                         1365984000000]))))
+           (is (= times [1366074418
+                         1366009618
+                         1366049218
+                         1365984000]))))
 
 (deftest subset-test
          (are [a b] (subset? a b)
@@ -117,3 +117,14 @@
   (is (= (truncate-bytes "あいう" 4) "あ"))
   (is (= (truncate-bytes "あいう" 9) "あいう"))
   (is (= (truncate-bytes "あいう" 10) "あいう")))
+
+(deftest exception->event-test
+  (is (= ["exception" "clojure.lang.ExceptionInfo"]
+         (:tags (exception->event (ex-info "fake test error" {})))))
+
+  (let [e (ex-info "fake test error" {})]
+    (is (= e
+         (:exception (exception->event e)))))
+
+  (is (= "original-event"
+         (:service (:event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))

@@ -5,8 +5,7 @@
            (java.io InputStream)
            [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
            [java.net InetAddress])
-  (:require gloss.io
-            clj-time.core
+  (:require clj-time.core
             clj-time.format
             clj-time.coerce
             clojure.set
@@ -17,20 +16,22 @@
         [clojure.java.shell :only [sh]]
         clojure.tools.logging
         riemann.codec
-        gloss.core
         clojure.math.numeric-tower))
 
 (defprotocol Match
   (match [pred object]
     "Does predicate describe object?"))
 
-; Deprecation
+(def deprecations-emitted (atom {}))
+
 (defmacro deprecated
   "Wraps body in an implicit (do), and logs a deprecation notice when invoked."
   [comment & body]
-  `(do
-     (info ~(str "Deprecated: " comment))
-     ~@body))
+  (let [id (str *file* ":" (:line (meta &form)) " - " comment)]
+    (swap! deprecations-emitted assoc id (delay (info comment)))
+    `(do
+       (force (get @deprecations-emitted ~id))
+       ~@body)))
 
 (def hostname-refresh-interval
   "How often to allow shelling out to hostname (1), in seconds."
@@ -75,9 +76,11 @@
 (defn iso8601->unix
   "Transforms ISO8601 strings to unix timestamps."
   [iso8601]
-  (->> iso8601
-    (clj-time.format/parse (:date-time-parser clj-time.format/formatters))
-    (clj-time.coerce/to-long)))
+  (-> (->> iso8601
+          (clj-time.format/parse (:date-time-parser clj-time.format/formatters))
+          (clj-time.coerce/to-long))
+      (/ 1000)
+      long))
 
 ; Events
 (defn post-load-event
@@ -108,6 +111,11 @@
   [msg]
   (.toByteArray (encode-pb-msg msg)))
 
+(defn pkey
+  "Primary key for an event."
+  [event]
+  [(:host event) (:service event)])
+
 (defn expire
   "An expired version of an event."
   [event]
@@ -137,13 +145,16 @@
 
 (defn exception->event
   "Creates an event from an Exception."
-  [^Throwable e]
-  (map->Event {:time (unix-time)
-               :service "riemann exception"
-               :state "error"
-               :tags ["exception" (.getName (class e))]
-               :description (str e "\n\n"
-                                 (join "\n" (.getStackTrace e)))}))
+  ([exception] (exception->event exception nil))
+  ([^Throwable e original]
+   (map->Event {:time (unix-time)
+                :service "riemann exception"
+                :state "error"
+                :tags ["exception" (.getName (class e))]
+                :event original
+                :exception e
+                :description (str e "\n\n"
+                                  (join "\n" (.getStackTrace e)))})))
 
 (defn approx-equal
   "Returns true if x and y are roughly equal, such that x/y is within tol of
@@ -161,6 +172,11 @@
   (when string
     (re-find re string)))
 
+(defn map-matches?
+  "Does the given map pattern match obj?"
+  [pat obj]
+    (every? (fn [[k v]] (match v (get obj k))) pat))
+
 ; Matching
 (extend-protocol Match
   ; Regexes are matched against strings.
@@ -175,10 +191,25 @@
   (match [f obj]
          (f obj))
 
+  ; Map types
+  clojure.lang.PersistentArrayMap
+  (match [pat obj] (map-matches? pat obj))
+
+  clojure.lang.PersistentHashMap
+  (match [pat obj] (map-matches? pat obj))
+
+  clojure.lang.PersistentTreeMap
+  (match [pat obj] (map-matches? pat obj))
+
   ; Falls back to object equality
   java.lang.Object
   (match [pred object]
-         (= pred object)))
+         (= pred object))
+
+  ; Nils match nils only.
+  nil
+  (match [_ object]
+    (nil? object)))
 
 ; Vector set operations
 (defn member?

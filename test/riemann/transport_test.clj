@@ -4,110 +4,123 @@
         riemann.transport.tcp
         riemann.transport.udp
         riemann.transport.websockets
-        riemann.logging
-        clojure.test
-        lamina.core
-        aleph.tcp
-        aleph.udp
-        gloss.core)
+        clojure.test)
   (:require [clj-http.client :as http]
+            [clojure.java.io :as io]
+            [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
             [riemann.transport.sse :refer [sse-server]]
-            [aleph.http :refer [http-request]]
-            [aleph.formats :as formats]
             [cheshire.core :as json]
             [riemann.client :as client]
             [riemann.index :as index])
-  (:import (org.jboss.netty.buffer ChannelBuffers)
+  (:import (java.net Socket
+                     InetAddress)
            (java.io IOException)))
 
-(riemann.logging/init)
+(logging/init)
 
 (deftest ws-put-events-test
-         (riemann.logging/suppress
-           ["riemann.transport"
-            "riemann.core"
-            "riemann.pubsub"]
-           (let [server (ws-server)
-                 uri    "http://127.0.0.1:5556/events"
-                 core   (transition! (core) {:services [server]})]
-             ; Two simple events
-             (let [res (http/put uri
-                                 {:body "{\"service\": \"foo\"}\n{\"service\": \"bar\"}\n"})]
-               (is (= 200 (:status res)))
-               (is (= "{}\n{}\n" (:body res))))
+  (logging/suppress
+    ["riemann.transport"
+     "riemann.core"
+     "riemann.pubsub"]
+    (let [server (ws-server {:port 15556})
+          uri    "http://127.0.0.1:15556/events"
+          core   (transition! (core) {:services [server]})]
+      ; Two simple events
+      (let [res (http/put uri
+                          {:body "{\"service\": \"foo\"}\n{\"service\": \"bar\"}\n"})]
+        (is (= 200 (:status res)))
+        (is (= "{}\n{}\n" (:body res))))
 
-             ; A time
-             (let [res (http/put uri
-                                 {:body "{\"service\": \"foo\", \"time\": \"2013-04-15T18:06:58-07:00\"}\n"})]
-               (is (= 200 (:status res)))
-               (is (= "{}\n" (:body res))))
+      ; A time
+      (let [res (http/put uri
+                          {:body "{\"service\": \"foo\", \"time\": \"2013-04-15T18:06:58-07:00\"}\n"})]
+        (is (= 200 (:status res)))
+        (is (= "{}\n" (:body res))))
 
-             ; An invalid time
-             (let [res (http/put uri
-                                 {:body "{\"time\": \"xkcd\"}"})]
-               (is (= 200 (:status res)))
-               (is (= {:error "Invalid format: \"xkcd\""}
-                      (json/parse-string (:body res) true))))
+      ; An invalid time
+      (let [res (http/put uri
+                          {:body "{\"time\": \"xkcd\"}"})]
+        (is (= 200 (:status res)))
+        (is (= {:error "Invalid format: \"xkcd\""}
+               (json/parse-string (:body res) true))))
 
-             (stop! core))))
+      (stop! core))))
 
 (deftest sse-subscribe-events-test
-  (riemann.logging/suppress
-   ["riemann.transport" "riemann.core" "riemann.pubsub"]
-   (let [s1       (tcp-server)
-         s2       (sse-server)
-         index    (wrap-index (index/index))
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
+   (let [s1       (tcp-server {:port 15555})
+         s2       (sse-server {:port 15558})
+         core     (core)
+         index    (wrap-index (index/index) (:pubsub core))
          pubsub   (pubsub/pubsub-registry)
          core     (transition!
-                   (core)
+                   core
                    {:index    index
                     :pubsub   pubsub
                     :services [s1 s2]
                     :streams  [index]})
-         client   (client/tcp-client)
-         convert  (comp json/parse-string
-                        second
-                        (partial re-matches #"data: (.*)\n\n")
-                        formats/bytes->string)
-         response (http-request
-                   {:method :get
-                    :url    "http://127.0.0.1:5558/index?query=true"})]
-     (try
-       (client/send-event client {:service "service1"})
-       (client/send-event client {:service "service2"})
-       (Thread/sleep 500)
-       (let [[r2 r1] (channel->seq (map* convert (take* 2 (:body @response))))]
+         client   (client/tcp-client {:port 15555})
+         res      (http/get "http://127.0.0.1:15558/index?query=true"
+                            {:as :stream})
+         events   [{:host "h1" :service "s", :metric -6, :time 0}
+                   {:host "h2" :service "s2" :metric 1.5, :time 10}]]
 
-         (is (#{"service1" "service2"} (get r1 "service")))
-         (is (#{"service1" "service2"} (get r2 "service"))))
-       (finally
-         (stop! core))))))
+     ; Send events to server over TCP
+     @(client/send-events client events)
 
-(deftest udp
-         (riemann.logging/suppress ["riemann.transport"
-                                    "riemann.core"
-                                    "riemann.pubsub"]
-           (let [server (udp-server)
-                 core   (transition! (core) {:services [server]})
-                 client (wait-for-result (udp-socket {}))
-                 msg (ChannelBuffers/wrappedBuffer
-                       (encode {:ok true}))]
+     ; And read back via SSE
+     (let [stream (line-seq (io/reader (:body res)))]
+       (try
+         (let [events' (->> stream
+                            (take-nth 2) ; Delimiter is \n\n, why? --aphyr
+                            (take 2)
+                            (map (partial re-matches #"data: (.*)"))
+                            (map second)
+                            (map #(json/parse-string % true)))]
+           (is (= (set events')
+                  #{{:host "h1", :service "s", :state nil, :description nil,
+                    :metric -6, :tags nil, :time "1970-01-01T00:00:00.000Z",
+                    :ttl nil}
+                   {:host "h2", :service "s2", :state nil, :description nil,
+                    :metric 1.5, :tags nil, :time "1970-01-01T00:00:10.000Z",
+                    :ttl nil}})))
 
-             (try
-               (enqueue client {:host "localhost"
-                                :port 5555
-                                :message msg})
-               (Thread/sleep 100)
-               (finally
-                 (close client)
-                 (stop! core))))))
+         (finally
+           ; Shut down server and close client stream
+           (client/close! client)
+           (stop! core)
+           ; lol actually not safe to close the reader; apache httpclient
+           ; explodes because .close calls .read and it's closed so fml
+           ;(dorun stream)
+           ))))))
+
+(deftest udp-test
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
+    (let [port   15555
+          server (udp-server {:port port})
+          sink   (promise)
+          core   (transition! (core) {:services [server]
+                                      :streams  [(partial deliver sink)]})
+          client (client/udp-client {:port port})
+          event  (event {:service "hi" :state "ok" :metric 1.23})]
+      (try
+        (client/send-event client event)
+        (is (= event (deref sink 1000 :timed-out)))
+        (finally
+          (client/close! client)
+          (stop! core))))))
 
 (defn test-tcp-client
   [client-opts server-opts]
-  (riemann.logging/suppress ["riemann.transport"
-                             "riemann.core"
-                             "riemann.pubsub"]
+  (logging/suppress ["riemann.transport"
+                     "riemann.core"
+                     "riemann.pubsub"]
     (let [server (tcp-server server-opts)
           index (wrap-index (index/index))
           core (transition! (core) {:index index
@@ -116,13 +129,14 @@
       (try
         (let [client (apply client/tcp-client (mapcat identity client-opts))]
           (try
-            (client/send-event client {:service "laserkat"})
+            @(client/send-event client {:service "laserkat"})
             (is (= "laserkat" (-> client
                                 (client/query "service = \"laserkat\"")
+                                deref
                                 first
                                 :service)))
             (finally
-              (client/close-client client))))
+              (client/close! client))))
         (finally
           (stop! core))))))
 
@@ -130,15 +144,17 @@
   (let [server {:tls? true
                 :key "test/data/tls/server.pkcs8"
                 :cert "test/data/tls/server.crt"
-                :ca-cert "test/data/tls/demoCA/cacert.pem"}
+                :ca-cert "test/data/tls/demoCA/cacert.pem"
+                :port 15555}
         client {:tls? true
                 :key "test/data/tls/client.pkcs8"
                 :cert "test/data/tls/client.crt"
-                :ca-cert "test/data/tls/demoCA/cacert.pem"}]
+                :ca-cert "test/data/tls/demoCA/cacert.pem"
+                :port 15555}]
     ; Works with valid config
     (test-tcp-client client server)
 
-    (riemann.logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
+    (logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
       ; Fails with mismatching client key/cert
       (is (thrown? IOException
                    (test-tcp-client (assoc client :key (:key server))
@@ -159,24 +175,22 @@
                                            (:cert client))))))))
 
 (deftest ignores-garbage
-         (riemann.logging/suppress ["riemann.transport"
-                                    "riemann.core"
-                                    "riemann.pubsub"]
-            (let [server (tcp-server)
-                  core   (transition! (core) {:services [server]})
-                  client (wait-for-result
-                           (aleph.tcp/tcp-client
-                             {:host "localhost"
-                              :port 5555
-                              :frame (finite-block :int32)}))]
+  (logging/suppress ["riemann.core"
+                     "riemann.transport"
+                     "riemann.pubsub"]
+    (let [port   15555
+          server (tcp-server {:port port})
+          core   (transition! (core) {:services [server]})
+          sock   (Socket. "localhost" port)]
+      (try
+        ; Write garbage
+        (doto (.getOutputStream sock)
+          (.write (byte-array (map byte (range -128 127))))
+          (.flush))
 
-              (try
-                (enqueue client
-                         (java.nio.ByteBuffer/wrap
-                           (byte-array (map byte [0 1 2]))))
-                (is (thrown? java.lang.IllegalStateException
-                             (wait-for-message client)))
-                (is (closed? client))
-                (finally
-                  (close client)
-                  (stop! core))))))
+        ; lmao, (.isClosed sock) is meaningless
+        (is (= -1 (.. sock getInputStream read)))
+
+        (finally
+          (.close sock)
+          (stop! core))))))

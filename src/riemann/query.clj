@@ -1,30 +1,149 @@
 (ns riemann.query
   "The query parser. Parses strings into ASTs, and converts ASTs to functions
   which match events."
-  (:use riemann.common
-        [slingshot.slingshot :only [throw+ try+]])
-  (:require [clojure.core.cache :as cache])
-  (:import (org.antlr.runtime ANTLRStringStream
-                              CommonTokenStream)
-           (org.antlr.runtime.tree BaseTree)
-           (riemann QueryLexer QueryParser)))
+  (:require [clojure.core.cache :as cache]
+            [clojure.java.io :as io]
+            [clj-antlr.core :as antlr]
+            [riemann.common :refer :all]
+            [slingshot.slingshot :refer [throw+ try+]]))
 
-; With many thanks to Brian Carper
-; http://briancarper.net/blog/554/antlr-via-clojure
+(def antlr-parser (-> "query.g4" io/resource slurp antlr/parser))
 
-(defn parse-string
-  "Parse string into ANTLR tree nodes"
-  [s]
-  (try
-    (let [lexer (QueryLexer. (ANTLRStringStream. s))
-                  tokens (CommonTokenStream. lexer)
-                  parser (QueryParser. tokens)]
-      (.getTree (.expr parser)))
-    (catch Throwable e
-      (throw+ {:type ::parse-error
-               :message (.getMessage (.getCause e))}))))
+(declare antlr->ast)
 
-(defn- make-regex
+(defn ast-predicate
+  "Rewrites predicates with and/or/not to normal Clojure forms."
+  [terms]
+  (cond ; Basic predicate
+        (= 1 (count terms))
+        (antlr->ast (first terms))
+
+        ; Negation
+        (= "not" (first terms))
+        (do (assert (= 2 (count terms)))
+            (list 'not (antlr->ast (second terms))))
+
+        ; And/or
+        (= "or" (second terms))
+        (do (assert (= 3 (count terms)))
+            (let [[t1 _ t2] terms]
+              (list 'or (antlr->ast t1) (antlr->ast t2))))
+
+        (= "and" (second terms))
+        (do (assert (= 3 (count terms)))
+            (let [[t1 _ t2] terms]
+              (list 'and (antlr->ast t1) (antlr->ast t2))))
+
+        ; The grammar should never generate these trees, but for completeness...
+        true
+        (throw+ {:type ::parse-error
+                 :message (str "Unexpected predicate structure: "
+                               (pr-str terms))})))
+
+(defn ast-prefix
+  "Rewrites binary expressions from infix to prefix. Takes a symbol `(e.g. '=)`
+  and a 3-element seq like `(1 \"=\" 2)` and emits `(= 1 2)`, ignoring the
+  middle term and transforming t1 and t2."
+  [sym [t1 _ t2]]
+  (list sym (antlr->ast t1) (antlr->ast t2)))
+
+(defn ast-regex
+  "Takes a type of match (:like or :regex), a list of three string terms: an
+  AST resolving to a string, the literal =~ (ignored), and a pattern. Returns
+  `(:regex pattern string-ast)`.
+
+  For :regex matches, emits a regular expression pattern.
+  For :like matches, emits a string pattern."
+  [type [string _ pattern]]
+  (list type
+        (condp = type
+          :regex (re-pattern (antlr->ast pattern))
+          :like  (antlr->ast pattern))
+        (antlr->ast string)))
+
+(defn antlr->ast
+  "Converts a parse tree to an intermediate AST which is a little easier to
+  analyze and work with. This is the AST we use for optimization and which is
+  passed to various query compilers. Turns literals into their equivalent JVM
+  types, and eliminates some unnecessary parser structure."
+  [[node-type & terms]]
+  ; (prn :antlr->ast node-type terms)
+  (case node-type
+    ; Unwrapping transformations: dropping unnecessary parse tree wrapper nodes
+    :primary        (recur (first (remove string? terms)))
+    :simple         (recur (first terms))
+    :value          (recur (first terms))
+    :number         (recur (first terms))
+
+    ; Predicate transforms emit and/or/not prefixes: (not (and (= a b)))
+    :predicate      (ast-predicate terms)
+
+    ; Rewrite relations like '(:equal a "=" b) as prefix exprs '(= a b)
+    :equal          (ast-prefix '=     terms)
+    :not_equal      (ast-prefix 'not=  terms)
+    :lesser         (ast-prefix '<     terms)
+    :greater        (ast-prefix '>     terms)
+    :lesser_equal   (ast-prefix '<=    terms)
+    :greater_equal  (ast-prefix '>=    terms)
+
+    ; String first, then pattern.
+    :regex_match    (ast-regex :regex terms)
+    :like           (ast-regex :like  terms)
+
+    ; Drop redundant terms from prefix expressions
+    :tagged         (list :tagged (antlr->ast (second terms)))
+
+    ; Value transformations: coercing strings to JVM types.
+    :long       (Long/parseLong (first terms))
+    :float      (Double/parseDouble (first terms))
+    :bign       (bigint (subs (first terms) 0 (dec (.length (first terms)))))
+    :string     (read-string (first terms))
+    :field      (keyword (first terms))
+    :true       true
+    :false      false
+    :nil        nil
+
+    ; And by default, recurse into sub-expressions.
+    (->> terms
+         (map (fn [term]
+                (if (sequential? term)
+                  (antlr->ast term)
+                  term)))
+         doall
+         (cons node-type))))
+
+(defn ast
+  "Takes a string to a general AST."
+  [string]
+  (-> string antlr-parser antlr->ast))
+
+;; This code transforms the general AST into Clojure code.
+
+(declare clj-ast)
+
+(defn clj-ast-guarded-prefix
+  "Like prefix, but inserts a predicate check around both terms."
+  [f check [a b]]
+  (list 'let ['a (clj-ast a)
+              'b (clj-ast b)]
+        (list 'and
+              (list check 'a)
+              (list check 'b)
+              (list f 'a 'b))))
+
+(defn clj-ast-field
+  "Takes a keyword field name and emits an expression to extract that field
+  from an 'event map, e.g. `(:fieldname event)`."
+  [field]
+  (list field 'event))
+
+(defn clj-ast-tagged
+  "Takes a tag and emits an expression to match that tag in an event."
+  [tag]
+  (list 'when-let '[tags (:tags event)]
+        (list 'riemann.common/member? tag 'tags)))
+
+(defn make-regex
   "Convert a string like \"foo%\" into /^foo.*$/"
   [string]
   (let [tokens (re-seq #"%|[^%]+" string)
@@ -35,51 +154,41 @@
                    tokens)]
     (re-pattern (str "^" (apply str pairs) "$"))))
 
-(defn node-ast [^BaseTree node]
-  "The AST for a given parse node"
-  (let [n    (.getText node)
-        kids (remove (fn [x] (= x :useless))
-                     (map node-ast (.getChildren node)))]
-    (case n
-      "or"  (apply list 'or kids)
-      "and" (apply list 'and kids)
-      "not" (apply list 'not kids)
-      "="   (apply list '= kids)
-      ">"   (list 'when (first kids) (apply list '> kids))
-      ">="  (list 'when (first kids) (apply list '>= kids))
-      "<"   (list 'when (first kids) (apply list '< kids))
-      "<="  (list 'when (first kids) (apply list '<= kids))
-      "=~"  (list 'when (first kids) (list 're-find (make-regex (last kids))
-                                           (first kids)))
-      "~="  (list 'when (first kids) (list 're-find (re-pattern (last kids))
-                                           (first kids)))
-      "!="  (list 'not (apply list '= kids))
-      "tagged"      (list 'when 'tags (list 'member? (first kids) 'tags))
-      "("           :useless
-      ")"           :useless
-      "nil"         nil
-      "null"        nil
-      "true"        true
-      "false"       false
-      "host"        'host
-      "service"     'service
-      "state"       'state
-      "description" 'description
-      "metric_f"    'metric_f
-      "metric"      'metric
-      "time"        'time
-      "ttl"         'ttl
-      (when n (let [term (read-string n)]
-                (if (or (number? term)
-                        (string? term))
-                  term
-                  (throw+ {:type ::parse-error
-                           :message (str "invalid term \"" n "\"")})))))))
+(defn clj-ast-regex-match
+  "Takes a pattern transformer, and a list of [pattern string-ast], and emits
+  code to match the string-ast's results with a regex match, compiling pattern
+  with pattern-transformer."
+  [pattern-transformer [pattern field]]
+  (list 'let ['s (clj-ast field)]
+        (list 'and
+              (list 'string? 's)
+              (list 're-find (pattern-transformer pattern) 's))))
 
-(defn ast
-  "The expression AST for a given string"
-  [string]
-  (node-ast (parse-string string)))
+(defn clj-ast
+  "Rewrites an AST to eval-able Clojure forms."
+  [ast]
+  (cond
+    ; Rewrite fields to field extracting expressions
+    (keyword? ast)
+    (clj-ast-field ast)
+
+    ; Anything other than a list passes through unchanged
+    (not (sequential? ast))
+    ast
+
+    ; Lists, on the other hand
+    true
+    (let [[node-type & terms] ast]
+      (case node-type
+        =               (apply list '= (map clj-ast terms))
+        <               (clj-ast-guarded-prefix '< 'number? terms)
+        >               (clj-ast-guarded-prefix '> 'number? terms)
+        <=              (clj-ast-guarded-prefix '<= 'number? terms)
+        >=              (clj-ast-guarded-prefix '>= 'number? terms)
+        :like           (clj-ast-regex-match make-regex terms)
+        :regex          (clj-ast-regex-match identity   terms)
+        :tagged         (clj-ast-tagged (first terms))
+       (cons node-type (mapv clj-ast terms))))))
 
 (def fun-cache
   "Speeds up the compilation of queries by caching map of ASTs to corresponding
@@ -98,19 +207,8 @@
     ; Cache hit
     (do (swap! fun-cache cache/hit ast)
         fun)
+
     ; Cache miss
-    (let [fun (eval
-                (list 'fn ['event]
-                      (list 'let '[host        (:host event)
-                                   service     (:service event)
-                                   state       (:state event)
-                                   description (:description event)
-                                   metric_f    (:metric_f event)
-                                   metric      (:metric event)
-                                   time        (:time event)
-                                   tags        (:tags event)
-                                   ttl         (:ttl event)
-                                   member?     riemann.common/member?]
-                            ast)))]
+    (let [fun (eval (list 'fn ['event] (clj-ast ast)))]
       (swap! fun-cache cache/miss ast fun)
       fun)))

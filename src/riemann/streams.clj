@@ -61,8 +61,7 @@
             (> age ttl)))))
 
 (defmacro call-rescue
-  "Call each child (children), in order, with event.
-  Rescues and logs any failure."
+  "Call each child stream with event, in order. Rescues and logs any failure."
   [event children]
   `(do
      (doseq [child# ~children]
@@ -71,7 +70,7 @@
          (catch Throwable e#
            (warn e# (str child# " threw"))
            (if-let [ex-stream# *exception-stream*]
-             (ex-stream# (exception->event e#))))))
+             (ex-stream# (exception->event e# ~event))))))
      ; TODO: Why return true?
      true))
 
@@ -142,13 +141,6 @@
           (call-rescue (expire event) [true-stream])
           (call-rescue event [false-stream]))))))
 
-(defn combine
-  "Returns a function which takes a seq of events.
-  Combines events with f, then forwards the result to children."
-  [f & children]
-  (fn stream [events]
-    (call-rescue (f events) children)))
-
 (defn smap*
   "Streaming map: less magic. Calls children with (f event).
   Unlike smap, passes on nil results to children. Example:
@@ -170,6 +162,33 @@
       (when-not (nil? value)
         (call-rescue value children)))))
 
+(defn combine
+  "Returns a function which takes a seq of events.
+  Combines events with f, then forwards the result to children."
+  [f & children]
+  (deprecated "combine is deprecated in favor of smap or smap*"
+              (apply smap* f children)))
+
+(defn smapcat
+  "Streaming mapcat. Calls children with each event in (f event), which should
+  return a sequence. For instance, to set the state of any services with
+  metrics deviating from the mode to \"warning\", one might use coalesce to
+  aggregate all services, and smapcat to find the mode and assoc the proper
+  states; emitting a series of individual events to the index.
+
+  (coalesce
+    (smapcat (fn [events]
+               (let [freqs (frequencies (map :metric events))
+                     mode  (apply max-key freqs (keys freqs))]
+                 (map #(assoc % :state (if (= mode (:metric %))
+                                         \"ok\" \"warning\"))
+                      events)))
+      index))"
+  [f & children]
+  (fn stream [event]
+    (doseq [e (f event)]
+      (call-rescue e children))))
+
 (defn sreduce
   "Streaming reduce. Two forms:
 
@@ -183,7 +202,7 @@
 
   Passes on events, but with the *maximum* of all received metrics:
   (sreduce (fn [acc event] (assoc event :metric
-                                  (+ (:metric event) (:metric acc)))) ...)
+                                  (max (:metric event) (:metric acc)))) ...)
 
   Or, using riemann.folds, a simple moving average:
   (sreduce (fn [acc event] (folds/mean [acc event])) ...)"
@@ -216,9 +235,11 @@
   a single variable.
 
   (sdo prn (rate 5 index))"
-  [& children]
-  (fn stream [event]
-    (call-rescue event children)))
+  ([] bit-bucket)
+  ([child] child)
+  ([child & children]
+     (fn stream [event]
+       (call-rescue event (cons child children)))))
 
 (defn stream
   [& args]
@@ -251,7 +272,7 @@
   children with a vector of the last n events, from oldest to newest. Ignores
   event times. Example:
 
-  (moving-event-window 5 (combine folds/mean index))"
+  (moving-event-window 5 (smap folds/mean index))"
   [n & children]
   (let [window (atom (vec []))]
     (fn stream [event]
@@ -264,7 +285,7 @@
   calls children with a vector of those events, from oldest to newest. Ignores
   event times. Example:
 
-  (fixed-event-window 5 (combine folds/mean index))"
+  (fixed-event-window 5 (smap folds/mean index))"
   [n & children]
   (let [buffer (atom [])]
     (fn stream [event]
@@ -304,7 +325,7 @@
         (when events
           (call-rescue events children))))))
 
-(defn fixed-time-window
+(defn- fixed-time-window-fn
   "A fixed window over the event stream in time. Emits vectors of events, such
   that each vector has events from a distinct n-second interval. Windows do
   *not* overlap; each event appears at most once in the output stream. Once an
@@ -312,7 +333,7 @@
   silently dropped.
 
   Events without times accrue in the current window."
-  [n & children]
+  [n start-time-fn & children]
   ; This is not a particularly inspired or clear implementation. :-(
 
   (when (zero? n)
@@ -332,7 +353,7 @@
                         ; No start time
                         (nil? @start-time)
                         (do
-                          (ref-set start-time (:time event))
+                          (ref-set start-time (start-time-fn n event))
                           (ref-set buffer [event])
                           nil)
 
@@ -359,6 +380,29 @@
           (doseq [w windows]
             (call-rescue w children)))))))
 
+(defn fixed-time-window
+  "A fixed window over the event stream in time. Emits vectors of events, such
+  that each vector has events from a distinct n-second interval. Windows do
+  *not* overlap; each event appears at most once in the output stream. Once an
+  event is emitted, all events *older or equal* to that emitted event are
+  silently dropped.
+
+  Events without times accrue in the current window."
+  [n & children]
+  (apply fixed-time-window-fn n (fn [n event] (:time event)) children))
+
+(defn fixed-offset-time-window
+  "Like fixed-time-window, but divides wall clock time into discrete windows.
+
+  A fixed window over the event stream in time. Emits vectors of events, such
+  that each vector has events from a distinct n-second interval. Windows do
+  *not* overlap; each event appears at most once in the output stream. Once an
+  event is emitted, all events *older or equal* to that emitted event are
+  silently dropped.
+
+  Events without times accrue in the current window."
+  [n & children]
+  (apply fixed-time-window-fn n (fn [n event] (- (:time event) (mod (:time event) n))) children))
 
 (defn window
   "Alias for moving-event-window."
@@ -595,15 +639,15 @@
   interval seconds."
   [interval event-key folder & children]
   (part-time-fast interval
-      (fn create [] (atom []))
-      (fn add [r event]
-        (when-let [ek (event-key event)]
-          (swap! r conj event)))
-      (fn finish [r start end]
-        (let [events @r
-              stat  (folder (map event-key events))
-              event (assoc (last events) event-key stat)]
-          (call-rescue event children)))))
+                  (fn create [] (atom []))
+                  (fn add [r event]
+                    (when-let [ek (event-key event)]
+                      (swap! r conj event)))
+                  (fn finish [r start end]
+                    (let [events @r
+                          stat  (folder (map event-key events))
+                          event (assoc (last events) event-key stat)]
+                      (call-rescue event children)))))
 
 (defn fold-interval-metric
   "Wrapping for fold-interval that assumes :metric as event-key."
@@ -744,22 +788,26 @@
                   (call-rescue (assoc event :metric diff) children))))))))))
 
 (defn ddt
-  "Differentiate metrics with respect to time. With no args, emits an event for
-  each one received, but with metric equal to the difference between the
-  current event and the previous one, divided by the difference in their times.
-  If the first argument is a number n, emits a rate-of-change event every n
-  seconds instead, until expired. Skips events without metrics."
+  "Differentiate metrics with respect to time. Takes an optional number
+  followed by child streams. If the first argument is a number n, emits a
+  rate-of-change event every n seconds, until expired. If the first argument is
+  not number, emits an event for each event received, but with metric equal to
+  the difference between the current event and the previous one, divided by the
+  difference in their times. Skips events without metrics.
+
+  (ddt 5 graph index)
+  (ddt graph index)"
   [& args]
   (if (number? (first args))
     (apply ddt-real args)
     (apply ddt-events args)))
 
 (defn rate
-  "Take the sum of every event over interval seconds and divide by the interval
-  size. Emits one event every interval seconds. Starts as soon as an event is
-  received, stops when an expired event arrives. Uses the most recently
-  received event with a metric as a template. Event ttls decrease constantly if
-  no new events arrive."
+  "Take the sum of every event's metric over interval seconds and divide by the
+  interval size. Emits one event every interval seconds. Starts as soon as an
+  event is received, stops when the most recent event expires. Uses the most
+  recently received event with a metric as a template. Event ttls decrease
+  constantly if no new events arrive."
   [interval & children]
   (assert (< 0 interval))
   (let [last-event (atom nil)
@@ -875,7 +923,10 @@
 (defn ewma-timeless
   "Exponential weighted moving average. Constant space and time overhead.
   Passes on each event received, but with metric adjusted to the moving
-  average. Does not take the time between events into account."
+  average. Does not take the time between events into account. R is the ratio
+  between successive events: r=1 means always return the most recent metric;
+  r=1/2 means the current event counts for half, the previous event for 1/4,
+  the previous event for 1/8, and so on."
   [r & children]
   (let [m (atom 0)
         c-existing (- 1 r)
@@ -886,6 +937,42 @@
                 (swap! m (comp (partial + (* c-new metric-new))
                                (partial * c-existing))))]
         (call-rescue (assoc event :metric m) children)))))
+
+(defn ewma
+  "Exponential weighted moving average. Constant space and time overhead.
+  Passes on each event received, but with metric adjusted to the moving
+  average. Takes into account the time between events."
+  [halflife & children]
+  (let [m (atom {:metric 0})
+        r (expt Math/E (/ (Math/log 1/2) halflife))
+        c-existing r
+        c-new (- 1 r)]
+    (fn stream [event]
+      ; Compute new ewma
+      (swap! m (fn [x]
+        (let [time-new (or (:time event) 0)
+              time-old (or (:time x) time-new)
+              time-diff (- time-new time-old)
+              metric-old (:metric x)
+              m-new (when-let [metric-new (:metric event)]
+                (cond
+                  (pos? time-diff)
+                    (merge x {:time time-new
+                              :metric (+ (* c-new metric-new)
+                                         (* metric-old
+                                            (expt c-existing time-diff)))})
+                  (neg? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* (* c-new metric-new)
+                                            (expt c-existing
+                                                  (Math/abs time-diff))))})
+                  (zero? time-diff)
+                    (merge x {:time time-old
+                              :metric (+ metric-old
+                                         (* c-new metric-new))})))]
+              (call-rescue (merge event m-new) children)
+              (or m-new x)))))))
 
 (defn- top-update
   "Helper for top atomic state updates."
@@ -971,7 +1058,9 @@
            bottom-stream))))
 
 (defn throttle
-  "Passes on n events every dt seconds. Drops events when necessary."
+  "Passes on at most n events every dt seconds. If more than n events arrive in
+  a dt-second fixed window, drops remaining events. Imposes no additional
+  latency; events are either passed on immediately or dropped."
   [n dt & children]
   (part-time-simple
     dt
@@ -1076,13 +1165,19 @@
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
-  service/host combination that passes through it (limited by :ttl). Every
-  second, it passes on *all* events it remembers. When events expire, they are
-  included in the emitted sequence of events *once*, and removed from the state
-  table thereafter.
+  service/host combination that passes through it (limited by :ttl). Every dt
+  seconds (default to 1 second), it passes on *all* events it remembers. When
+  events expire, they are included in the emitted sequence of events *once*,
+  and removed from the state table thereafter.
 
   Use coalesce to combine states that arrive at different times--for instance,
-  to average the CPU use over several hosts."
+  to average the CPU use over several hosts.
+
+  Every 10 seconds, print a sequence of events including all the events which
+  share the same :foo and :bar attributes:
+
+  (by [:foo :bar]
+    (coalesce 10 prn))"
   [& [dt & children]]
   (let [children (if (number? dt) children (cons dt children))
         dt (if (number? dt) dt 1)
@@ -1113,10 +1208,12 @@
     (reset! reference event)))
 
 (defn forward
-  "Sends an event through a client"
+  "Sends an event or a collection of events through a Riemann client."
   [client]
-  (fn stream [event]
-    (riemann.client/send-event client event)))
+  (fn stream [es]
+    (if (map? es)
+      @(riemann.client/send-event client es)
+      @(riemann.client/send-events client es))))
 
 (defn match
   "Passes events on to children only when (f event) matches value, using
@@ -1187,36 +1284,57 @@
   (apply match :state "expired" children))
 
 (defn with
-  "Transforms an event by associng a set of new k:v pairs, and passes the
-  result to children. Use:
+  "Constructs a copy of each incoming event with new values for the given keys,
+  and passes the resulting event on to each child stream. As everywhere in
+  Riemann, events are immutable; only this stream's children will see this
+  version of the event.
 
+  If you only want to set *default* values, use `default`. If you want to
+  update values for a key based on the *current value* of that field in each
+  event, use `adjust`. If you want to update events using arbitrary functions,
+  use `smap`.
+
+  ; Print each event, but with service \"foo\"
   (with :service \"foo\" prn)
-  (with {:service \"foo\" :state \"broken\"} prn)"
+
+  ; Print each event, but with no host and state \"broken\".
+  (with {:host nil :state \"broken\"} prn)"
   [& args]
   (if (map? (first args))
-    ; Merge in a map of new values.
-    (let [[m & children] args]
-      (fn stream [event]
-        ;    Merge on protobufs is broken; nil values aren't applied.
-        ;    (let [e (merge event m)]
-        (let [e (reduce (fn [m, [k, v]]
-                          (if (nil? v) (dissoc m k) (assoc m k v)))
-                        event m)]
-          (call-rescue e children))))
+    (let [[m & children] args
+          transform-event
+          (fn [individual-event]
+            (reduce (fn [m, [k, v]]
+                      (if (nil? v) (dissoc m k) (assoc m k v)))
+                    individual-event m))]
+      (if (empty? m)
+        (fn stream [event]
+          (call-rescue event children))
+        (fn stream [event]
+          (if (vector? event)
+            (call-rescue
+              (into [] (map transform-event event))
+              children)
+            (call-rescue (transform-event event) children)))))
 
     ; Change a particular key.
-    (let [[k v & children] args]
+    (let [[k v & children] args
+          transform-event
+          (fn [individual-event]
+            (if (nil? v) (dissoc individual-event k) (assoc individual-event k v)))]
       (fn stream [event]
-        ;    (let [e (assoc event k v)]
-        (let [e (if (nil? v) (dissoc event k) (assoc event k v))]
-          (call-rescue e children))))))
+        (if (vector? event)
+          (call-rescue (into [] (map transform-event event))
+            children)
+          (call-rescue (transform-event event) children))))))
 
 (defn default
-  "Transforms an event by associng a set of new key:value pairs, wherever the
-  event has a nil value for that key. Passes the result on to children. Use:
+  "Like `with`, but does not override existing (i.e. non-nil) values. Useful
+  when you want to fill in default values for events that might come in without
+  them.
 
-  (default :service \"foo\" prn)
-  (default {:service \"jrecursive\" :state \"chicken\"} prn)"
+  (default :ttl 300 index)
+  (default {:service \"jrecursive\" :state \"chicken\"} index)"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -1289,6 +1407,66 @@
                          (distinct (concat tags (:tags event)))))
            children)))
 
+(defmacro pipe
+  "Sometimes, you want to have a stream split into several paths, then
+  recombine those paths after some transformation. Pipe lets you write
+  these topologies easily.
+
+  We might express a linear stream in Riemann, in which a -> b -> c -> d, as
+
+  (a (b (c d)))
+
+  With pipe, we write
+
+  (pipe ↧ (a ↧)
+          (b ↧)
+          (c ↧)
+          d)
+
+  The first argument ↧ is a *marker* for points where events should flow down
+  into the next stage. A delightful list of marker symbols you might enjoy is
+  available at http://www.alanwood.net/unicode/arrows.html.
+
+  What makes pipe more powerful than the standard Riemann composition rules is
+  that the marker may appear *multiple times* in a stage, and *at any depth in
+  the expression*. For instance, we might want to categorize events based on
+  their metric, and send all those events into the same throttled email stream.
+
+  (let [throttled-emailer (throttle 100 1 (email \"ops@rickenbacker.mil\"))]
+    (splitp < metric
+      0.9 (with :state :critical throttled-emailer)
+      0.5 (with :state :warning  throttled-emailer)
+          (with :state :ok       throttled-emailer)))
+
+  But with pipe, we can write:
+
+  (pipe - (splitp < metric
+                  0.9 (with :state :critical -)
+                  0.5 (with :state :warning  -)
+                      (with :state :ok       -))
+          (throttle 100 1 (email \"ops@rickenbacker.mil\")))
+
+  So pipe lets us do three things:
+
+  0. *Flatten* a deeply nested expression, like Clojure's -> and ->>.
+
+  1. *Omit or simplify* the names for each stage, when we care more about the
+  *structure* of the streams than giving them full descriptions.
+
+  2. Write the stream in the *order in which events flow*.
+
+  Pipe rewrites its stages as a let binding in reverse order; binding each
+  stage to the placeholder in turn. The placeholder must be a compile-time
+  symbol, and obeys the usual let-binding rules about variable shadowing; you
+  can rebind the marker lexically within any stage using let, etc. Yep, this is
+  a swiss arrow in disguise; ssshhhhhhh. ;-)"
+  [marker & stages]
+  `(let [~@(->> stages
+                reverse
+                (interpose marker)
+                (cons marker))]
+         ~marker))
+
 (defmacro by
   "Splits stream by field.
   Every time an event arrives with a new value of field, this macro invokes
@@ -1345,22 +1523,32 @@
   ; Assume states *were* ok the first time we see them.
   (changed :state {:init \"ok\"} prn)
 
-  Note that f can be an arbitrary function:
+  ; Receive the previous event, in addition to the current event, as a vector.
+  (changed :state {:pairs? true}
+           (fn [[event event']]
+             (prn \"changed from\" (:state event) \"to\" (:state event'))))
+
+  ; Note that f can be an arbitrary function:
 
   (changed (fn [e] (> (:metric e) 2)) ...)"
   [pred & children]
-  (let [options  (first children)
-        previous (atom (list (when (map? options)
-                               (:init options))))
-        children (if (map? options)
+  (let [options  (if (map? (first children)) (first children) {})
+        children (if (map? (first children))
                    (rest children)
-                   children)]
-    (fn stream [event]
-      (let [cur  (pred event)
-            kept (swap! previous (comp (partial take 2)
-                                       #(conj % cur)))]
-        (when-not (every? (partial = cur) kept)
-          (call-rescue event children))))))
+                   children)
+        ; Prev value, prev event
+        previous (atom [(:init options) nil])]
+
+    (fn stream [event']
+      (let [value'                 (pred event')
+            [value event :as prev] @previous]
+        (if-not (compare-and-set! previous prev [value' event'])
+          (recur event')
+          (when-not (= value value')
+            (call-rescue (if (:pairs? options)
+                           [event event']
+                           event')
+                         children)))))))
 
 (defmacro changed-state
   "Passes on changes in state for each distinct host and service."
@@ -1374,19 +1562,21 @@
 
   (within [0 1] (fn [event] do-something))"
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/within is deprecated; use (where (< x metric y))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn without
   "Passes on events only when their metric falls outside the given (inclusive)
   range."
   [r & children]
-  (fn stream [event]
-    (when-let [m (:metric event)]
-      (when-not (<= (first r) m (last r))
-        (call-rescue event children)))))
+  (deprecated "streams/without is deprecated; use (where (not (< x metric y)))"
+              (fn stream [event]
+                (when-let [m (:metric event)]
+                  (when-not (<= (first r) m (last r))
+                    (call-rescue event children))))))
 
 (defn over
   "Passes on events only when their metric is greater than x"
@@ -1408,9 +1598,9 @@
   (condp some [k]
     ; Tagged checks that v is a member of tags.
     #{'tagged 'tagged-all} (list 'when (list :tags 'event)
-                             (list 'tagged-all? (list 'flatten [v]) 'event))
+                             (list `tagged-all? (list 'flatten [v]) 'event))
     #{'tagged-any} (list 'when (list :tags 'event)
-                     (list 'tagged-any? (list 'flatten [v]) 'event))
+                     (list `tagged-any? (list 'flatten [v]) 'event))
     ; Otherwise, match.
     (list 'riemann.common/match v (list (keyword k) 'event))))
 
@@ -1481,9 +1671,10 @@
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
     `(let [true-kids# ~true-kids
-           else-kids# ~else-kids]
+           else-kids# ~else-kids
+           predicate# ~f]
       (fn stream# [event#]
-         (let [value# (~f event#)]
+         (let [value# (predicate# event#)]
            (if value#
              (call-rescue event# true-kids#)
              (call-rescue event# else-kids#))
@@ -1502,6 +1693,12 @@
 
   ; Match a event where the host begins with web
   (where (host #\"^web\") ...)
+
+
+  ; Match an event where the service is in a set of services
+  (where (service #{\"service-foo\" \"service-bar\"}) ...)
+  ; which is equivalent to
+  (where (service \"service-foo\" \"service-bar\") ...)
 
   If a child begins with (else ...), the else's body is executed when expr is
   false. For instance:
@@ -1792,9 +1989,15 @@
 
   (project [(service \"enqueues\")
             (service \"dequeues\")]
-    (fn [[enq deq]]
-      (prn (/ (:metric enq)
-              (:metric deq)))))"
+    (smap folds/quotient
+      (with :service \"enqueues per dequeue\"
+        ...)))
+
+  Here we've combined separate events--enqueues and dequeues--into a single
+  event, using the folds/quotient function, which divides the first event's
+  metric by the second. Then we assigned a new service name to that resulting
+  event, and could subsequently filter based on the metric, assign different
+  states, graph, alert, etc."
   [basis & children]
   (let [wrapped (mapv (fn [expr] `(where ~expr)) basis)]
     `(project* ~wrapped ~@children)))
