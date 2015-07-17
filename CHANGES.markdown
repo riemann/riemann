@@ -1,3 +1,51 @@
+# Version 0.2.10
+
+0.2.10 brings long-awaited fixes to the Influx integration, support for sending
+events to Pushover, and improvements to slack and hipchat formatting. There are
+also a few minor usability improvements, and assorted library updates.
+
+## Bugfixes
+
+- RPM package correctly requires JDK 1.7+
+- \*config-file\* is correctly bound when including directories
+
+## Deprecations and API changes
+
+## New features
+
+- New metric for index size
+- Pushover integration
+- riemann.test/lookup: For folks who just want the most recent event for a host
+  & service
+
+## Improvements
+
+- Tunable UDP server so-rcvbuf
+- Mailer gives more helpful feedback when you provide non-string addresses
+- InfluxDB 0.9 support
+- Hipchat supports private servers and uses the v2 API
+- More detailed Slack messages
+- Slack custom formatters can emit markup
+- Email supports both varargs and sequential address lists
+- Better docstrings for throttle
+- TSDB tags are converted to custom fields
+- epoll server can now be disabled with -Dnetty.epoll.enabled=false
+
+## Internals
+
+- Removed old query parser altogether
+- riemann-clojure-client 0.4.1
+- tools.nrepl 0.2.7 -> 0.2.10
+- cheshire 5.4.0 -> 5.5.0
+- capacitor 0.4.2 -> 0.4.3
+- amazonica 0.3.13 -> 0.3.28
+- slingshot 0.12.1 -> 0.12.2
+- clj-http 1.0.1 -> 1.1.2
+- aws-java-sdk 1.9.13 -> 1.10.5.1
+- clj-time 0.9.0 -> 0.10.0
+- slf4j-log4j12 1.7.10 -> 1.7.12
+
+
 # Version 0.2.9
 
 0.2.9 brings a new query engine, packaging improvements, and assorted bugfixes.
