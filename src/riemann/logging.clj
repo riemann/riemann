@@ -50,7 +50,10 @@
 (defn get-layout
   "Fetch a logging layout by name"
   [layout-name]
-  (get layouts (or layout-name :riemann)))
+  (let [layout (get layouts (or layout-name :riemann))]
+    (when (nil? layout)
+      (binding [*out* *err*] (println "invalid logging layout specified: " layout-name)))
+    (or layout (:riemann layouts))))
 
 (defn init
   "Initialize log4j. You will probably call this from the config file. You can
