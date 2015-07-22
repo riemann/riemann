@@ -5,6 +5,7 @@
     [cheshire.core :as json]
     [clj-http.client :as http]
     [clojure.set :as set]
+    [clojure.string :as str]
     [riemann.common :refer [unix-to-iso8601]]))
 
 
@@ -15,9 +16,7 @@
   #{:host :service :time :metric :tags :ttl})
 
 (defn replace-disallowed-9 [field]
-  (clojure.string/replace
-    (clojure.string/replace
-      (clojure.string/replace field " " "\\ ") "=" "\\=") "," "\\,"))
+  (str/escape field {\space "\\ ", \= "\\=", \, "\\,"}))
 
 (defn kv-encode-9 [kv]
   (clojure.string/join "," (map (fn [[key value]]
@@ -34,7 +33,7 @@
   ; encode {"points" [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}], "database" "foo"}
   ; [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}]
   ; {"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}
-  (clojure.string/join (pmap lineprotocol-encode-9 (get events "points"))))
+  (clojure.string/join (map lineprotocol-encode-9 (get events "points"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
