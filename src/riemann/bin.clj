@@ -4,7 +4,8 @@
             riemann.logging
             riemann.time
             [riemann.test :as test]
-            riemann.pubsub)
+            riemann.pubsub
+            [clojure.java.io :as io])
   (:use clojure.tools.logging)
   (:gen-class :name riemann.bin))
 
@@ -41,6 +42,21 @@
         (handle [sig]
                 (info "Caught SIGHUP, reloading")
                 (reload!))))))
+
+(defn pom-version
+  "Return version from Maven POM file."
+  []
+  (let [pom "META-INF/maven/riemann/riemann/pom.properties"
+        props (doto (java.util.Properties.)
+                (.load (-> pom io/resource io/input-stream)))]
+    (.getProperty props "version")))
+
+(defn version
+  "Return version from Leiningen environment or embeddd POM properties."
+  []
+  (or (System/getProperty "riemann.version")
+      (pom-version)))
+
 (defn pid
   "Process identifier, such as it is on the JVM. :-/"
   []
@@ -80,4 +96,9 @@
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
                       (System/exit 0)
-                      (System/exit 1)))))))))
+                      (System/exit 1))))))
+
+     "version" (try
+                 (println (version))
+                 (catch Exception e
+                   (error e "Couldn't read version"))))))
