@@ -41,6 +41,7 @@
                      [test        :as test :refer [tap io tests]]
                      [time        :refer [unix-time linear-time once! every!]]
                      [twilio      :refer [twilio]]
+                     [victorops   :refer [victorops]]
                      [xymon       :refer [xymon]]]
             [riemann.transport [tcp        :as tcp]
                                [udp        :as udp]
