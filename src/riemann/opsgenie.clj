@@ -40,7 +40,8 @@
   "Generate OpsGenie alias based on event"
   [event]
   (hash (str (:host event) " "
-       (:service event))))
+       (:service event) " "
+       (apply str (:tags event)))))
 
 (defn- create-alert
   "Create alert in OpsGenie"
@@ -62,7 +63,7 @@
 
 (defn opsgenie
   "Creates an OpsGenie adapter. Takes your OG service key, and returns a map of
-  functions which trigger and resolve events. clojure/hash from event host and service
+  functions which trigger and resolve events. clojure/hash from event host, service and tags
   will be used as the alias.
 
   (let [og (opsgenie \"my-service-key\" \"recipient@example.com\")]
