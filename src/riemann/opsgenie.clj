@@ -50,6 +50,7 @@
                      :description (description event)
                      :apiKey api-key
                      :alias (api-alias event)
+                     :tags (clojure.string/join "," (:tags event))
                      :recipients recipients})))
 (defn- close-alert
   "Close alert in OpsGenie"
