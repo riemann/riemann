@@ -15,11 +15,11 @@
     [org.clojure/core.cache "0.6.4"]
     [org.clojure/data.priority-map "0.0.7"]
     [org.clojure/java.classpath "0.2.2"]
-    [log4j/log4j "1.2.17" :exclusions [javax.mail/mail
-                                       javax.jms/jms
-                                       com.sun.jdmk/jmxtools
-                                       com.sun.jmx/jmxri]]
-    [net.logstash.log4j/jsonevent-layout "1.7"]
+
+    [org.slf4j/log4j-over-slf4j "1.7.12"]
+    [ch.qos.logback/logback-classic "1.1.3"]
+    [net.logstash.logback/logstash-logback-encoder "4.5"]
+
     [com.cemerick/pomegranate "0.3.0"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
@@ -35,9 +35,7 @@
     [com.amazonaws/aws-java-sdk "1.10.5.1" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.0.24.Final"]
-    [log4j/apache-log4j-extras "1.2.17"]
     [clj-antlr "0.2.2"]
-    [org.slf4j/slf4j-log4j12 "1.7.12"]
     [riemann-clojure-client "0.4.1"]
     [less-awful-ssl "1.0.0"]
     [slingshot "0.12.2"]
