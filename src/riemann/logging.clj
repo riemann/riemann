@@ -165,7 +165,7 @@
                 rolling-policy    (doto (TimeBasedRollingPolicy.)
                                     (.setMaxHistory (or rotate-count 10))
                                     (.setFileNamePattern
-                                     (str file ".%d{yyyy-MM-dd}.%i"))
+                                     (str file ".%d{yyyy-MM-dd}"))
                                     (.setParent log-appender)
                                     (.setContext context)
                                     (.start))
