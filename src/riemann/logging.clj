@@ -35,6 +35,43 @@
   [type]
   (LogstashEncoder.))
 
+(defmethod encoder :json-event
+  [type]
+  (encoder :json-event-v0))
+
+(defmethod encoder :json-event-v0
+  [type]
+  (let [hostname (.. java.net.InetAddress getLocalHost getHostName)]
+    (doto (PatternLayoutEncoder.)
+      (.setPattern (str "{\"@fields\":{\"level\":\"%level\","
+                                      "\"threadName\":\"%thread\","
+                                      "\"mdc\":{%mdc},"
+                                      "\"file\":\"%file\","
+                                      "\"class\":\"%class\","
+                                      "\"line_number\":\"%line\","
+                                      "\"method\":\"%method\","
+                                      "\"loggerName\":\"%logger\"},"
+                         "\"@timestamp\":\"%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC}\","
+                         "\"@message\":\"%message\","
+                         "\"@source_host\":\"" hostname "\"}\n")))))
+
+(defmethod encoder :json-event-v1
+  [type]
+ (let [hostname (.. java.net.InetAddress getLocalHost getHostName)]
+   (doto (PatternLayoutEncoder.)
+     (.setPattern (str "{\"level\":\"%level\","
+                        "\"thread_name\":\"%thread\","
+                        "\"mdc\":{%mdc},"
+                        "\"file\":\"%file\","
+                        "\"class\":\"%class\","
+                        "\"line_number\":\"%line\","
+                        "\"method\":\"%method\","
+                        "\"logger_name\":\"%logger\"},"
+                        "\"@timestamp\":\"%date{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC}\","
+                        "\"@version\":1,"
+                        "\"message\":\"%message\","
+                        "\"source_host\":\"" hostname "\"}\n")))))
+
 (defmethod encoder :riemann
   [type]
   (doto (PatternLayoutEncoder.)
