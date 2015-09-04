@@ -69,6 +69,18 @@
             :time 1428366765
             :metric 42.08}))
       "Minimal event is converted to point fields")
+  (is (= {"measurement" "test service"
+          "time" 1441388186665842890
+          "precision" "n"
+          "tags" {"host" "host-01"}
+          "fields" {"value" 42.08}}
+         (influxdb/event->point-9
+           #{:host}
+           {:host "host-01"
+            :service "test service"
+            :time 1441388186665842890
+            :metric 42.08}))
+      "A UnixNano timestamp produces a precision tag")
   (is (= {"measurement" "service_api_req_latency"
           "time" "2015-04-06T21:15:41.000Z"
           "tags" {"host" "www-dev-app-01.sfo1.example.com"

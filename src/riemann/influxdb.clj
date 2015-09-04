@@ -127,17 +127,17 @@
 
 
 ;; ## InfluxDB 0.9
-
 (defn event->point-9
   "Converts a Riemann event into an InfluxDB point if it has a time, service,
   and metric."
   [tag-fields event]
   (when (and (:time event) (:service event) (:metric event))
-    {"measurement" (:service event)
-     "time" (unix-to-iso8601 (:time event))
-     "tags" (event-tags tag-fields event)
-     "fields" (event-fields tag-fields event)}))
-
+    (let [base {"measurement" (:service event)
+                "tags" (event-tags tag-fields event)
+                "fields" (event-fields tag-fields event)}]
+      (try (assoc base "time" (unix-to-iso8601 (:time event)))
+           (catch Exception e (merge base {"precision" "n"
+                                           "time" (:time event)}))))))
 
 (defn events->points-9
   "Converts a collection of Riemann events into InfluxDB points. Events which
