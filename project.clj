@@ -18,6 +18,7 @@
 
     [org.slf4j/log4j-over-slf4j "1.7.12"]
     [ch.qos.logback/logback-classic "1.1.3"]
+    [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "4.5"]
 
     [com.cemerick/pomegranate "0.3.0"
