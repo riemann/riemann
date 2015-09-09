@@ -163,7 +163,7 @@
          host  (get opts :host "127.0.0.1")
          port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
-         so-rcvbuf (get opts :so-rcvbuf -1)
+         so-rcvbuf (get opts :so-rcvbuf max-size)
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
