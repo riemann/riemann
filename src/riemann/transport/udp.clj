@@ -12,7 +12,8 @@
                              DefaultMessageSizeEstimator
                              ChannelOutboundHandler
                              ChannelInboundHandler
-                             ChannelInboundHandlerAdapter]
+                             ChannelInboundHandlerAdapter
+                             FixedRecvByteBufAllocator]
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
            [io.netty.channel.nio NioEventLoopGroup])
@@ -99,7 +100,10 @@
                   (.handler handler))
                 
                 ; Setup Channel options
-                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
+                (if (> so-rcvbuf 0)
+                  (doto bootstrap
+                    (.option ChannelOption/SO_RCVBUF so-rcvbuf)
+                    (.option ChannelOption/RCVBUF_ALLOCATOR (FixedRecvByteBufAllocator. so-rcvbuf))))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
