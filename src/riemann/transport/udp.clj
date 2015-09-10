@@ -97,13 +97,12 @@
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size))
+                  (.option ChannelOption/RCVBUF_ALLOCATOR
+                           (FixedRecvByteBufAllocator. max-size))
                   (.handler handler))
                 
                 ; Setup Channel options
-                (if (> so-rcvbuf 0)
-                  (doto bootstrap
-                    (.option ChannelOption/SO_RCVBUF so-rcvbuf)
-                    (.option ChannelOption/RCVBUF_ALLOCATOR (FixedRecvByteBufAllocator. so-rcvbuf))))
+                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
                 ; Start bootstrap
                 (->> (InetSocketAddress. host port)
@@ -163,7 +162,7 @@
          host  (get opts :host "127.0.0.1")
          port  (get opts :port 5555)
          max-size (get opts :max-size 16384)
-         so-rcvbuf (get opts :so-rcvbuf max-size)
+         so-rcvbuf (get opts :so-rcvbuf -1)
          channel-group (get opts :channel-group
                             (channel-group
                               (str "udp-server" host ":" port "(" max-size ")")))
