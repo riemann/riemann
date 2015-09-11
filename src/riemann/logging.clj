@@ -63,7 +63,8 @@
                    provided log to that file using the default layout
   :files           A list of files to log to. If provided, a seq is expected
                    containing maps with a :path and an optional :layout key
-                   which can be any of: :riemann, :json-event :json-eventv1
+                   which can be any of: :riemann, :json-event, :json-event-v0
+                   or :json-event-v1
   :logsize-rotate  If size(bytes) is specified rotate based on that size
                    otherwise use default time based.
   Example:
