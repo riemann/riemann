@@ -16,6 +16,7 @@ Runs Riemann with the given configuration file.
 OPTIONS:
   -h    Show this message
   -a    Adds some default aggressive, nonportable JVM optimization flags.
+  -v    Show version and exit
 
 COMMANDS:
   start    Start the Riemann server (this is the default)
@@ -34,6 +35,10 @@ for arg in "$@"; do
     "-h")
       usage
       exit 0
+      ;;
+    "-v")
+      COMMAND="version"
+      CONFIG="show"
       ;;
     -*)
       OPTS="$OPTS $arg"
