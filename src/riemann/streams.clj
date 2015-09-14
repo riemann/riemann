@@ -722,7 +722,7 @@
   event arriving. Inserted events have current time. Stops inserting when
   expired. Uses local times."
   ([interval update & children]
-   (fill-in-last* interval (fn [e] (merge e update)) children)))
+   (apply fill-in-last* interval (fn [e] (merge e update))) children))
 
 (defn interpolate-constant
   "Emits a constant stream of events every interval seconds, starting when an
