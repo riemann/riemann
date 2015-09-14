@@ -722,32 +722,7 @@
   event arriving. Inserted events have current time. Stops inserting when
   expired. Uses local times."
   ([interval update & children]
-   (let [last-event (atom nil)
-         fill (bound-fn fill []
-                (call-rescue (merge @last-event update {:time (unix-time)}) children))
-         new-deferrable (fn new-deferrable []
-                          (every! interval interval fill))
-         deferrable (atom nil)]
-     (fn stream [event]
-       ; Record last event
-       (reset! last-event event)
-
-       (let [d (deref deferrable)]
-         (if d
-           ; We have an active deferrable
-           (if (expired? event)
-             (do
-               (cancel d)
-               (reset! deferrable nil))
-             (defer d interval))
-           ; Create a deferrable
-           (when-not (expired? event)
-             (locking deferrable
-               (when-not (deref deferrable)
-                 (reset! deferrable (new-deferrable)))))))
-
-       ; And forward
-       (call-rescue event children)))))
+   (fill-in-last* interval (fn [e] (merge e update)) children)))
 
 (defn interpolate-constant
   "Emits a constant stream of events every interval seconds, starting when an
