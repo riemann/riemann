@@ -30,6 +30,19 @@
     (format "status%s %s.%s %s %s\n"
             ttl-prefix host service state description)))
 
+(defn event->enable
+  "
+  Convert an event to an Xymon enable message:
+
+  enable HOSTNAME.TESTNAME
+
+  "
+  [{:keys [host service]
+    :or {host "" service ""}}]
+  (let [host (s/replace host "." ",")
+        service (s/replace service #"(\.| )" "_")]
+    (format "enable %s.%s" host service)))
+
 (defn send-line
   "Connects to Xymon server, sends line, then closes the connection.
    This is a blocking operation and should happen on a separate thread."
