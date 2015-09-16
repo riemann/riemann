@@ -6,7 +6,7 @@
             [clojure.math.numeric-tower :refer [ceil]])
   (:import java.net.Socket))
 
-(defn format-line
+(defn event->status
   "Formats an event as a Xymon status message:
 
   status[+LIFETIME][/group:GROUP] HOSTNAME.TESTNAME COLOR <additional text>
@@ -55,5 +55,5 @@
                      :port 1984} opts)]
     (fn [{:keys [state service] :as event}]
       (when (and state service)
-        (let [statusmessage (format-line event)]
+        (let [statusmessage (event->status event)]
           (send-line opts statusmessage))))))
