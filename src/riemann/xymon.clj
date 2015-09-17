@@ -63,10 +63,11 @@
   Fields mapping is the same as event-status'.
   "
   [{:keys [host service duration description]
-    :or {host "" service "*" duration "" description ""}}]
+    :or {host "" service "*" ttl "" description ""}}]
   (let [host (host->xymon host)
         service (service->xymon service)]
-    (format "disable %s.%s %s %s" host service duration description)))
+    (format "disable %s.%s %s %s"
+            host service (int (ceil (/ ttl 60))) description)))
 
 (defn send-line
   "Connects to Xymon server, sends line, then closes the connection.
