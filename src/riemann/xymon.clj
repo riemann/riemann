@@ -6,6 +6,12 @@
             [clojure.math.numeric-tower :refer [ceil]])
   (:import java.net.Socket))
 
+
+(defn host->xymon
+  "Format an hostname for xymon. Basically, replace all dot chars by commas."
+  [host]
+  (s/replace host "." ","))
+
 (defn event->status
   "Formats an event as a Xymon status message:
 
@@ -25,7 +31,7 @@
   [{:keys [ttl host service state description]
     :or {host "" service "" description "" state "unknown"}}]
   (let [ttl-prefix (if ttl (str "+" (int (ceil (/ ttl 60)))) "")
-        host       (s/replace host "." ",")
+        host       (host->xymon host)
         service    (s/replace service #"(\.| )" "_")]
     (format "status%s %s.%s %s %s\n"
             ttl-prefix host service state description)))
@@ -39,7 +45,7 @@
   "
   [{:keys [host service]
     :or {host "" service ""}}]
-  (let [host (s/replace host "." ",")
+  (let [host (host->xymon host)
         service (s/replace service #"(\.| )" "_")]
     (format "enable %s.%s" host service)))
 
