@@ -65,8 +65,9 @@
    "
   [opts]
   (let [opts (merge {:host "127.0.0.1"
-                     :port 1984} opts)]
+                     :port 1984
+                     :formatter event->status} opts)]
     (fn [{:keys [state service] :as event}]
       (when (and state service)
-        (let [statusmessage (event->status event)]
+        (let [statusmessage ((:formatter opts) event)]
           (send-line opts statusmessage))))))
