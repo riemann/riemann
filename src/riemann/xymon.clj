@@ -49,7 +49,7 @@
 
   "
   [{:keys [host service]
-    :or {host "" service ""}}]
+    :or {host "" service "*"}}]
   (let [host (host->xymon host)
         service (service->xymon service)]
     (format "enable %s.%s" host service)))
