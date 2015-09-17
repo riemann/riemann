@@ -8,9 +8,14 @@
 
 
 (defn host->xymon
-  "Format an hostname for xymon. Basically, replace all dot chars by commas."
+  "Format an hostname for Xymon. Basically, replace all dot chars by commas."
   [host]
   (s/replace host "." ","))
+
+(defn service->xymon
+  "Format a service name to be understood by Xymon."
+  [service]
+  (s/replace service #"(\.| )" "_"))
 
 (defn event->status
   "Formats an event as a Xymon status message:
@@ -32,7 +37,7 @@
     :or {host "" service "" description "" state "unknown"}}]
   (let [ttl-prefix (if ttl (str "+" (int (ceil (/ ttl 60)))) "")
         host       (host->xymon host)
-        service    (s/replace service #"(\.| )" "_")]
+        service    (service->xymon service)]
     (format "status%s %s.%s %s %s\n"
             ttl-prefix host service state description)))
 
@@ -46,7 +51,7 @@
   [{:keys [host service]
     :or {host "" service ""}}]
   (let [host (host->xymon host)
-        service (s/replace service #"(\.| )" "_")]
+        service (service->xymon service)]
     (format "enable %s.%s" host service)))
 
 (defn send-line
