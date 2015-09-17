@@ -60,7 +60,8 @@
   Convert an event to a Xymon disable message:
   disable HOSTNAME.TESTNAME DURATION <additional text>
 
-  Fields mapping is the same as event-status'.
+  Fields mapping is the same as event->status'. Also, the event ttl is
+  used as duration, same as LIFETIME in event->status.
   "
   [{:keys [host service duration description]
     :or {host "" service "*" ttl "" description ""}}]
