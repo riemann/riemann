@@ -47,12 +47,26 @@
 
   enable HOSTNAME.TESTNAME
 
+  if no service is provided, the complete host is enabled.
   "
   [{:keys [host service]
     :or {host "" service "*"}}]
   (let [host (host->xymon host)
         service (service->xymon service)]
     (format "enable %s.%s" host service)))
+
+(defn event->disable
+  "
+  Convert an event to a Xymon disable message:
+  disable HOSTNAME.TESTNAME DURATION <additional text>
+
+  Fields mapping is the same as event-status'.
+  "
+  [{:keys [host service duration description]
+    :or {host "" service "*" duration "" description ""}}]
+  (let [host (host->xymon host)
+        service (service->xymon service)]
+    (format "disable %s.%s %s %s" host service duration description)))
 
 (defn send-line
   "Connects to Xymon server, sends line, then closes the connection.
