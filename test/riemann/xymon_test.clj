@@ -30,6 +30,20 @@
     (doseq [[event line] pairs]
       (is (= line (event->status event))))))
 
+(deftest ^:xymon-enable event->enable-test
+  (let [pairs [[{}
+                "enable .*"]
+               [{:host "foo"}
+                "enable foo.*"]
+               [{:host "foo" :service "bar"}
+                "enable foo.bar"]
+               [{:host "foo.example.com" :service "bar"}
+                "enable foo,example,com.bar"]
+               [{:host "foo" :service "b  a.r"}
+                "enable foo.b__a_r"]]]
+    (doseq [[event line] pairs]
+      (is (= line (event->enable event))))))
+
 (deftest ^:xymon ^:integration xymon-test
          (let [k (xymon nil)]
            (k {:host "riemann.local"
