@@ -59,6 +59,21 @@
     (doseq [[event line] pairs]
       (is (= line (event->enable event))))))
 
+(deftest ^:xymon-disable event->disable-test
+  (let [pairs [[{:ttl 123}
+                "disable .* 3 "]
+               [{:host "foo" :ttl 300}
+                "disable foo.* 5 "]
+               [{:host "foo" :service "bar" :ttl 1}
+                "disable foo.bar 1 "]
+               [{:host "foo" :service "bar" :description "desc" :ttl 61}
+                "disable foo.bar 2 desc"]
+               [{:host "foo.example.com" :service "bar service" :ttl 59
+                 :description "desc"}
+                "disable foo,example,com.bar_service 1 desc"]]]
+    (doseq [[event line] pairs]
+      (is (= line (event->disable event))))))
+
 (deftest ^:xymon ^:integration xymon-test
          (let [k (xymon nil)]
            (k {:host "riemann.local"
