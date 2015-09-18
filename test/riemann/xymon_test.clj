@@ -6,6 +6,13 @@
 
 (logging/init)
 
+(deftest ^:xymon-host-xymon host->xymon-test
+  (let [pairs [["foo" "foo"]
+               ["example.com" "example,com"]
+               ["foo.example.com" "foo,example,com"]]]
+    (doseq [[hostname xymon-hostname] pairs]
+      (is (= xymon-hostname (host->xymon hostname))))))
+
 (deftest ^:xymon-format event->status-test
   (let [pairs [[{}
                 "status . unknown \n"]
