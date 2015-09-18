@@ -64,7 +64,7 @@
   used as duration, same as LIFETIME in event->status.
   "
   [{:keys [host service ttl description]
-    :or {host "" service "*" ttl "" description ""}}]
+    :or {host "" service "*" description ""}}]
   (let [host (host->xymon host)
         service (service->xymon service)]
     (format "disable %s.%s %s %s"
