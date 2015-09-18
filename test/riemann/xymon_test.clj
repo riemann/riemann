@@ -6,7 +6,7 @@
 
 (logging/init)
 
-(deftest ^:xymon-format format-line-test
+(deftest ^:xymon-format event->status-test
   (let [pairs [[{}
                 "status . unknown \n"]
                [{:host "foo" :service "bar"}
@@ -28,7 +28,7 @@
                [{:host "example.com" :service "some.metric rate" :state "ok"}
                 "status example,com.some_metric_rate ok \n"]]]
     (doseq [[event line] pairs]
-      (is (= line (format-line event))))))
+      (is (= line (event->status event))))))
 
 (deftest ^:xymon ^:integration xymon-test
          (let [k (xymon nil)]
