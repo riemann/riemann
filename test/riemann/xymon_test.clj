@@ -13,6 +13,14 @@
     (doseq [[hostname xymon-hostname] pairs]
       (is (= xymon-hostname (host->xymon hostname))))))
 
+(deftest ^:xymon-service-xymon service->xymon-test
+  (let [pairs [["foo" "foo"]
+               ["service name" "service_name"]
+               ["service.name" "service_name"]
+               ["s   erv..ice" "s___erv__ice"]]]
+    (doseq [[service xymon-service] pairs]
+      (is (= xymon-service (service->xymon service))))))
+
 (deftest ^:xymon-format event->status-test
   (let [pairs [[{}
                 "status . unknown \n"]
