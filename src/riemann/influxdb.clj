@@ -22,7 +22,7 @@
     (fn [[key value]]
       (if (instance? String value)
         (str (replace-disallowed-9 key) "=" (str "\"" (str/escape value {\" "\\\""}) "\""))
-        (str (replace-disallowed-9 key) "=" (format "%f" value))))
+        (str (replace-disallowed-9 key) "=" (clojure.pprint/cl-format nil "~F" value))))
     kv)))
 
 (defn lineprotocol-encode-9 [event]
@@ -135,7 +135,8 @@
     (not-any?
       (fn [v] (and (instance? Number (val v)) (Double/isNaN (val v))))
       (get p "fields")))
-    (map (partial event->point-9 tag-fields) events)))
+    (remove nil?
+      (map (partial event->point-9 tag-fields) events))))
 
 (defn influxdb-9
   "Returns a function which accepts an event, or sequence of events, and writes
