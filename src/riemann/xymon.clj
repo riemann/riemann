@@ -4,7 +4,7 @@
             [clojure.string        :as s]
             [clojure.tools.logging :refer [error]]
             [clojure.math.numeric-tower :refer [ceil]])
-  (:import java.net.Socket))
+  (:import (java.net Socket InetSocketAddress)))
 
 
 (defn host->xymon
@@ -70,30 +70,53 @@
     (format "disable %s.%s %s %s"
             host service (int (ceil (/ ttl 60))) description)))
 
+(defn- send-line-error-handler
+  [e]
+  (error e "cannot reach xymon host"))
+
 (defn send-line
   "Connects to Xymon server, sends line, then closes the connection.
    This is a blocking operation and should happen on a separate thread."
   [opts line]
   (try
-    (with-open [sock   (Socket. (:host opts) (:port opts))
-                writer (io/writer sock)]
-      (.write writer line)
-      (.flush writer))
+    (let [opts (merge
+                {:host "127.0.0.1" :port 1984 :timeout 5
+                 :error-handler send-line-error-handler}
+                opts)
+          addr (InetSocketAddress. (:host opts) (:port opts))
+          sock (Socket.)]
+      (.setSoTimeout sock (:timeout opts))
+      (.connect sock addr (:timeout opts))
+      (with-open [writer (io/writer sock)]
+        (.write writer line)
+        (.flush writer)))
     (catch Exception e
-      (error e "could not reach xymon host"))))
+      ((:error-handler opts) e))))
+
+(defn send-line-with-to
+  [opts line]
+  (try
+    (let [addr (InetSocketAddress. (:host opts) (:port opts))
+          sock (Socket.)]
+      (.connect sock addr (:timeout opts))
+      (.setSoTimeout sock (:timeout opts))
+      (with-open [writer (io/writer sock)]
+        (.write writer line)
+        (.flush writer))
+      (.close sock))
+    (catch Exception e
+      (error e "cannot not reach xymon host"))))
 
 (defn xymon
   "Returns a function which accepts an event and sends it to Xymon.
    Silently drops events when xymon is down. Attempts to reconnect
    automatically every five seconds. Use:
 
-   (xymon {:host \"127.0.0.1\" :port 1984})
-
+   (xymon {:host \"127.0.0.1\" :port 1984
+           :timeout 5 :formatter event->status})
    "
   [opts]
-  (let [opts (merge {:host "127.0.0.1"
-                     :port 1984
-                     :formatter event->status} opts)]
+  (let [formatter (or (:formatter opts) event->status)]
     (fn [{:keys [state service] :as event}]
       (when (and state service)
         (let [statusmessage ((:formatter opts) event)]
