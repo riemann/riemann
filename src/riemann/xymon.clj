@@ -93,20 +93,6 @@
     (catch Exception e
       ((:error-handler opts) e))))
 
-(defn send-line-with-to
-  [opts line]
-  (try
-    (let [addr (InetSocketAddress. (:host opts) (:port opts))
-          sock (Socket.)]
-      (.connect sock addr (:timeout opts))
-      (.setSoTimeout sock (:timeout opts))
-      (with-open [writer (io/writer sock)]
-        (.write writer line)
-        (.flush writer))
-      (.close sock))
-    (catch Exception e
-      (error e "cannot not reach xymon host"))))
-
 (defn xymon
   "Returns a function which accepts an event and sends it to Xymon.
    Silently drops events when xymon is down. Attempts to reconnect
