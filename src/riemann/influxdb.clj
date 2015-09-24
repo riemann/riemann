@@ -181,7 +181,8 @@
         (cond->
           {:socket-timeout (:timeout opts 5000) ; ms
            :conn-timeout   (:timeout opts 5000) ; ms
-           :content-type   "text/plain"}
+           :content-type   "text/plain"
+	   :insecure? (:insecure opts false)}
           (:username opts)
             (assoc :basic-auth [(:username opts)
                                 (:password opts)]))
@@ -228,6 +229,8 @@
   `:username`       Database user to authenticate as. (optional)
 
   `:password`       Password to authenticate with. (optional)
+
+  `:insecure`       If scheme is https and certficate is self-signed. (optional)
 
   See `influxdb-8` and `influxdb-9` for version-specific options."
   [opts]
