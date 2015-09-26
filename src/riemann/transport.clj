@@ -31,7 +31,9 @@
     (io.netty.util.concurrent Future
                               EventExecutorGroup
                               DefaultEventExecutorGroup
-                              ImmediateEventExecutor)))
+                              ImmediateEventExecutor)
+    (java.net InetAddress
+              UnknownHostException)))
 
 (defn ^DefaultChannelGroup channel-group
   "Make a channel group with a given name."
@@ -173,3 +175,11 @@
       {:ok false :error (str "parse error: " message)})
     (catch Exception ^Exception e
       {:ok false :error (.getMessage e)})))
+
+(defn resolve-host
+  "Resolves a hostname to a random IP"
+  [host]
+  (try
+    (.getHostAddress (rand-nth (InetAddress/getAllByName host)))
+    (catch UnknownHostException e
+      host)))
