@@ -61,8 +61,9 @@
 
 (defmethod encoder :default
   [type]
+  (binding [*out* *err*]
+    (println "invalid logging layout specified: " type))
   (encoder :riemann))
-
 
 (defn set-level
   "Set the level for the given logger, by string name.
@@ -131,7 +132,9 @@
                   file-layout
                   files
                   rotate-count
-                  logsize-rotate]} opts
+                  logsize-rotate]
+           :or   {console-layout :riemann
+                  file-layout    :riemann}} opts
          logger   (get-logger)
          context  (get-context)]
 
