@@ -7,6 +7,9 @@
 
 (logging/init)
 
+; Would the next person working on influxdb kindly update these tests to use
+; riemann.test-utils/with-mock? Would be nice to have something besides just
+; integration tests. --Kyle, Sep 2015 :)
 
 (deftest ^:influxdb-8 ^:integration influxdb-test-8
   (let [k (influxdb/influxdb {:block-start true})]
