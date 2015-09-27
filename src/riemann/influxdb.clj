@@ -15,7 +15,7 @@
   #{:host :service :time :metric :tags :ttl})
 
 (defn replace-disallowed-9 [field]
-  (str/escape field {\space "\\ ", \= "\\=", \, "\\,", \" "\\\""}))
+  (str/escape field {\space "\\ ", \= "\\=", \, "\\,"}))
 
 (defn kv-encode-9 [kv]
   (clojure.string/join "," (map
