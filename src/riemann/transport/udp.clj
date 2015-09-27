@@ -12,7 +12,8 @@
                              DefaultMessageSizeEstimator
                              ChannelOutboundHandler
                              ChannelInboundHandler
-                             ChannelInboundHandlerAdapter]
+                             ChannelInboundHandlerAdapter
+                             FixedRecvByteBufAllocator]
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
            [io.netty.channel.nio NioEventLoopGroup])
@@ -96,6 +97,8 @@
                   (.option ChannelOption/SO_BROADCAST false)
                   (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
                            (DefaultMessageSizeEstimator. max-size))
+                  (.option ChannelOption/RCVBUF_ALLOCATOR
+                           (FixedRecvByteBufAllocator. max-size))
                   (.handler handler))
                 
                 ; Setup Channel options

@@ -6,7 +6,22 @@
 
 (logging/init)
 
-(deftest ^:xymon-format format-line-test
+(deftest ^:xymon-host-xymon host->xymon-test
+  (let [pairs [["foo" "foo"]
+               ["example.com" "example,com"]
+               ["foo.example.com" "foo,example,com"]]]
+    (doseq [[hostname xymon-hostname] pairs]
+      (is (= xymon-hostname (host->xymon hostname))))))
+
+(deftest ^:xymon-service-xymon service->xymon-test
+  (let [pairs [["foo" "foo"]
+               ["service name" "service_name"]
+               ["service.name" "service_name"]
+               ["s   erv..ice" "s___erv__ice"]]]
+    (doseq [[service xymon-service] pairs]
+      (is (= xymon-service (service->xymon service))))))
+
+(deftest ^:xymon-format event->status-test
   (let [pairs [[{}
                 "status . unknown \n"]
                [{:host "foo" :service "bar"}
@@ -28,7 +43,36 @@
                [{:host "example.com" :service "some.metric rate" :state "ok"}
                 "status example,com.some_metric_rate ok \n"]]]
     (doseq [[event line] pairs]
-      (is (= line (format-line event))))))
+      (is (= line (event->status event))))))
+
+(deftest ^:xymon-enable event->enable-test
+  (let [pairs [[{}
+                "enable .*"]
+               [{:host "foo"}
+                "enable foo.*"]
+               [{:host "foo" :service "bar"}
+                "enable foo.bar"]
+               [{:host "foo.example.com" :service "bar"}
+                "enable foo,example,com.bar"]
+               [{:host "foo" :service "b  a.r"}
+                "enable foo.b__a_r"]]]
+    (doseq [[event line] pairs]
+      (is (= line (event->enable event))))))
+
+(deftest ^:xymon-disable event->disable-test
+  (let [pairs [[{:ttl 123}
+                "disable .* 3 "]
+               [{:host "foo" :ttl 300}
+                "disable foo.* 5 "]
+               [{:host "foo" :service "bar" :ttl 1}
+                "disable foo.bar 1 "]
+               [{:host "foo" :service "bar" :description "desc" :ttl 61}
+                "disable foo.bar 2 desc"]
+               [{:host "foo.example.com" :service "bar service" :ttl 59
+                 :description "desc"}
+                "disable foo,example,com.bar_service 1 desc"]]]
+    (doseq [[event line] pairs]
+      (is (= line (event->disable event))))))
 
 (deftest ^:xymon ^:integration xymon-test
          (let [k (xymon nil)]
