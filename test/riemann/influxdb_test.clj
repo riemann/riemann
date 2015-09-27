@@ -101,13 +101,13 @@
 
 
 (deftest line-protocol
-  (is (= "some\\ service,host=\"ugly\\\"hostname\",another=\"tag\" value=0.123456789,a_tag=\"a value\" 1442548067"
+  (is (= "some\\ service,host=ugly\\\"hostname,another=ta\\,g value=0.123456789,a_tag=\"a value\" 1442548067"
          (influxdb/lineprotocol-encode-9
            {"measurement" "some service"
             "time"        1442548067000/1000
             "tags"
               {"host"     "ugly\"hostname"
-               "another"  "tag"}
+               "another"  "ta,g"}
             "fields"
               {"value"    0.123456789
                "a_tag"    "a value"}}))
