@@ -30,7 +30,7 @@
         encoded_tags   (clojure.string/join "," (map
                          (fn [[tag value]] (str (replace-disallowed-9 tag) "=" (replace-disallowed-9 value)))
                          (get event "tags")))]
-    (str (replace-disallowed-9 (get event "measurement")) "," encoded_tags " " encoded_fields " " (get event "time"))))
+    (str (str/escape (get event "measurement") {\space "\\ ", \, "\\,"}) "," encoded_tags " " encoded_fields " " (get event "time"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
