@@ -27,8 +27,10 @@
 
 (defn lineprotocol-encode-9 [event]
   (let [encoded_fields (kv-encode-9 (get event "fields"))
-        encoded_tags   (kv-encode-9 (get event "tags"))]
-    (str (replace-disallowed-9 (get event "measurement")) "," encoded_tags " " encoded_fields " " (get event "time"))))
+        encoded_tags   (clojure.string/join "," (map
+                         (fn [[tag value]] (str (replace-disallowed-9 tag) "=" (replace-disallowed-9 value)))
+                         (get event "tags")))]
+    (str (str/escape (get event "measurement") {\space "\\ ", \, "\\,"}) "," encoded_tags " " encoded_fields " " (get event "time"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
@@ -135,8 +137,7 @@
     (not-any?
       (fn [v] (and (instance? Number (val v)) (Double/isNaN (val v))))
       (get p "fields")))
-    (remove nil?
-      (map (partial event->point-9 tag-fields) events))))
+    (keep (partial event->point-9 tag-fields) events)))
 
 (defn influxdb-9
   "Returns a function which accepts an event, or sequence of events, and writes
