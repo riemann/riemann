@@ -4,11 +4,16 @@
             [cheshire.core :as json])
   (:use [clojure.string :only [escape join upper-case]]))
 
-(defn slack-escape [message]
+
+(defn slack-escape
   "Escape message according to slack formatting spec."
+  [message]
   (escape message {\< "&lt;" \> "&gt;" \& "&amp;"}))
 
-(defn default-formatter [events]
+
+(defn default-formatter
+  "Simple formatter for rendering an event as a Slack attachment."
+  [events]
   {:attachments
    [{:fields
      [{:title "Riemann Event"
@@ -21,7 +26,10 @@
                      "Tag:   " (or (:tag events) "-") "\n"))
        :short true}]}]})
 
-(defn extended-formatter [events]
+
+(defn extended-formatter
+  "Format an event as a Slack attachment with a series of fields."
+  [events]
   {:text "This event requires your attention!",
    :attachments
    [{:fallback
@@ -58,6 +66,7 @@
       {:title "Tags",
        :value (slack-escape (or (:tag events) "-"))
        :short true}]}]})
+
 
 (defn slack
   "Posts events into a slack.com channel using Incoming Webhooks.
