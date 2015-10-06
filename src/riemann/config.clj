@@ -13,7 +13,7 @@
                      [datadog     :refer [datadog]]
                      [email       :refer [mailer]]
                      [folds       :as folds]
-                     [graphite    :as graphite-client]
+                     [graphite    :as graphite-client :refer [graphite]]
                      [hipchat     :refer [hipchat]]
                      [index       :as index]
                      [influxdb    :refer [influxdb]]
@@ -22,7 +22,7 @@
                      [librato     :refer [librato-metrics]]
                      [logentries  :refer [logentries]]
                      [logging     :as logging]
-                     [logstash    :as logstash-client]
+                     [logstash    :as logstash :refer [logstash]]
                      [mailgun     :refer [mailgun]]
                      [nagios      :refer [nagios]]
                      [opentsdb    :refer [opentsdb]]
@@ -57,9 +57,6 @@
   (atom (core/core)))
 (def next-core "The core which will replace the current core."
   (atom (core/core)))
-
-(def graphite #'graphite-client/graphite)
-(def logstash #'logstash-client/logstash)
 
 (defn kwargs-or-map
   "Takes a sequence of arguments like
