@@ -1,17 +1,33 @@
 (ns riemann.bin
   "Main function."
   (:require [riemann.config :as config]
-            riemann.logging
+            [riemann.logging :as logging]
             riemann.time
             [riemann.test :as test]
             riemann.pubsub
-            [clojure.java.io :as io])
-  (:use clojure.tools.logging)
+            [cemerick.pomegranate :as pom]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :refer :all])
   (:gen-class :name riemann.bin))
 
 (def config-file
   "The configuration file loaded by the bin tool"
-  (atom nil))
+  (promise))
+
+(defn set-config-file!
+  "Sets the config file used by Riemann. Adds the config file's enclosing
+  directory to the classpath as well."
+  [file]
+  (info "Loading" (-> file io/file .getCanonicalPath))
+  (assert (deliver config-file file)
+          (str "Config file already set to " (pr-str @config-file)
+               "--can't change it to " (pr-str file)))
+  (let [dir (-> file
+                io/file
+                .getCanonicalPath
+                io/file
+                .getParent)]
+    (pom/add-classpath dir)))
 
 (def reload-lock (Object.))
 
@@ -73,10 +89,11 @@
   ([config]
    (-main "start" config))
   ([command config]
+   (logging/init)
    (case command
      "start" (try
                (info "PID" (pid))
-               (reset! config-file config)
+               (set-config-file! config)
                (handle-signals)
                (riemann.time/start!)
                (riemann.config/include @config-file)
@@ -87,7 +104,7 @@
 
      "test" (try
               (test/with-test-env
-                (reset! config-file config)
+                (set-config-file! config)
                 (riemann.config/include @config-file)
                 (binding [test/*streams* (:streams @config/next-core)]
                   (let [results (clojure.test/run-all-tests #".*-test")]
