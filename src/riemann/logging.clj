@@ -97,7 +97,7 @@
   "Initialize logging. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
 
-  :console          Determine if logging should happen on the console.
+  :console?         Determine if logging should happen on the console.
   :console-layout   Specifying console layout.
   :file             The file to log to. If omitted, log to console only.
   :file-layout      Specifying file layout.
@@ -108,39 +108,49 @@
   :rotate-count     Specifying the number of rotated files to keep. If omitted,
                     keep last 10 rotated files.
 
-  Layout can be :riemann or :json. If layout omitted, default layout :riemann will be used.
+  Layout can be :riemann or :json. If layout is omitted, the default layout
+  :riemann will be used.
 
-  Example:
+  For example:
 
-  (init {:console true :file \"/var/log/riemann.log\"})
-    or
-  (init {:console false :file \"/var/log/riemann.log\" :rotate-count 10})
-    or
-  (init {:console false :file \"/var/log/riemann.log\" :logsize-rotate 1000000000})
-    or
-  (init {:console false :files [{:file \"/var/log/riemann.log\"}, {:file \"/var/log/riemann.json.log\" :file-layout :json}] :logsize-rotate 100 :rotate-count 5})"
-  ([]
-   (set-level                    Level/INFO)
-   (set-level "riemann.client"   Level/DEBUG)
-   (set-level "riemann.server"   Level/DEBUG)
-   (set-level "riemann.streams"  Level/DEBUG)
-   (set-level "riemann.graphite" Level/DEBUG))
+      ; Basic console logging
+      (init)
+
+      ; Also log to a file
+      (init {:file \"/var/log/riemann.log\"})
+
+      ; With rotation
+      (init {:console? false :file \"/var/log/riemann.log\" :rotate-count 10})
+
+      ; Rotate at a certain size
+      (init {:console? false
+             :file \"/var/log/riemann.log\"
+             :logsize-rotate 1000000000})
+
+      ; Multiple files in different formats
+      (init {:console? false
+             :files [{:file \"/var/log/riemann.log\"},
+                     {:file \"/var/log/riemann.json.log\" :file-layout :json}]
+             :logsize-rotate 100
+             :rotate-count 5})"
+  ([] (init {}))
   ([opts]
-    (let [{:keys [console
+    (let [{:keys [console?
                   console-layout
                   file
                   file-layout
                   files
                   rotate-count
                   logsize-rotate]
-           :or   {console-layout :riemann
+           :or   {console?       true
+                  console-layout :riemann
                   file-layout    :riemann}} opts
          logger   (get-logger)
          context  (get-context)]
 
       (.detachAndStopAllAppenders logger)
 
-      (when console
+      (when console?
         (let [encoder             (doto (encoder console-layout)
                                     (.setContext context)
                                     (.start))
@@ -150,7 +160,8 @@
                                     (.start))]
           (.addAppender logger console-appender)))
 
-      (doseq [{:keys [file file-layout]} (conj files {:file file :file-layout file-layout})
+      (doseq [{:keys [file file-layout]}
+              (conj files {:file file :file-layout file-layout})
                :when file]
         (if logsize-rotate
           (let [encoder           (doto (encoder file-layout)
