@@ -70,18 +70,31 @@
     (format "disable %s.%s %s %s"
             host service (int (ceil (/ ttl 60))) description)))
 
-(defn- send-line-error-handler
-  [e]
-  (error e "cannot reach xymon host"))
+(defn *send-line-error-handler*
+  "
+  Logs given exception as an error message.
+
+  *send-line-error-handler* is the default error handler invoked by
+  send-line if none is provided.
+  "
+  [exception]
+  (error exception "cannot reach xymon host"))
 
 (defn send-line
-  "Connects to Xymon server, sends line, then closes the connection.
-   This is a blocking operation and should happen on a separate thread."
+  "
+  Connects to Xymon server, sends line, then closes the connection.
+  This is a blocking operation and should happen on a dedicated
+  thread.
+
+  If any exception is raised during the connect/send process, the
+  result of (:error-handler opts *send-line-error-handler*) is invoked
+  as a function with the exception as its parameter.
+  "
   [opts line]
   (try
     (let [opts (merge
                 {:host "127.0.0.1" :port 1984 :timeout 5
-                 :error-handler send-line-error-handler}
+                 :error-handler *send-line-error-handler*}
                 opts)
           addr (InetSocketAddress. (:host opts) (:port opts))
           sock (Socket.)]
@@ -94,13 +107,14 @@
       ((:error-handler opts) e))))
 
 (defn xymon
-  "Returns a function which accepts an event and sends it to Xymon.
-   Silently drops events when xymon is down. Attempts to reconnect
-   automatically every five seconds. Use:
+  "
+  Returns a function which accepts an event and sends it to Xymon.
+  Silently drops events when xymon is down. Attempts to reconnect
+  automatically every five seconds. Use:
 
-   (xymon {:host \"127.0.0.1\" :port 1984
-           :timeout 5 :formatter event->status})
-   "
+  (xymon {:host \"127.0.0.1\" :port 1984
+          :timeout 5 :formatter event->status})
+  "
   [opts]
   (let [formatter (or (:formatter opts) event->status)]
     (fn [{:keys [state service] :as event}]
