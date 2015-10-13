@@ -8,12 +8,12 @@
 
 
 (defn host->xymon
-  "Format an hostname for Xymon. Basically, replace all dot chars by commas."
+  "Formats an hostname for Xymon. Basically, replaces all dot chars by commas."
   [host]
   (s/replace host "." ","))
 
 (defn service->xymon
-  "Format a service name to be understood by Xymon."
+  "Formats a service name to be understood by Xymon."
   [service]
   (s/replace service #"(\.| )" "_"))
 
