@@ -1,43 +1,23 @@
 (ns riemann.victorops-test
-  (:use riemann.victorops
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [clj-http.client :as client]
+            [clojure.test :refer :all]
+            [riemann.victorops :as vo]
+            [riemann.test-utils :refer [with-mock]]))
 
-(def api-key (System/getenv "VICTOROPS_API_KEY"))
-(def routing-key (System/getenv "VICTOROPS_ROUTING_KEY"))
-
-(when-not api-key
-  (println "export VICTOROPS_API_KEY=\"...\" to run these tests."))
-
-(when-not routing-key
-  (println "export VICTOROPS_ROUTING_KEY=\"...\" to run these tests."))
-
-(logging/init)
-
-(deftest ^:victorops ^:integration test-info
-  (let [vo (victorops api-key routing-key)]
-    ((:info vo) {:host "localhost"
-                :service "victorops info notification"
-                :metric 42
-                :state "info"})))
-
-(deftest ^:victorops ^:integration test-recovery
-  (let [vo (victorops api-key routing-key)]
-    ((:recovery vo) {:host "localhost"
-                    :service "victorops recovery notification"
-                    :metric 0.5
-                    :state "ok"})))
-
-(deftest ^:victorops ^:integration test-warning
-  (let [vo (victorops api-key routing-key)]
-    ((:warning vo) {:host "localhost"
-                    :service "victorops warning notification"
-                    :metric 0.5
-                    :state "warning"})))
-
-(deftest ^:victorops ^:integration test-critical
-  (let [vo (victorops api-key routing-key)]
-    ((:critical vo) {:host "localhost"
-                    :service "victorops critical notification"
-                    :metric 0.5
-                    :state "critical"})))
+(deftest victorops-test
+  (with-mock [calls client/post]
+    (let [vo (vo/victorops "my-dumb-api-key" "my-dumb-routing-key")]
+      ((:info vo) {:host    "my-dumb-host"
+                   :service "victorops info notification"
+                   :metric   42
+                   :time     12345678
+                   :state    "info"})
+      (is (= 1 (count @calls)))
+      (is (= (last @calls)
+             ["https://alert.victorops.com/integrations/generic/20131114/alert/my-dumb-api-key/my-dumb-routing-key"
+              {:body "{\"message_type\":\"INFO\",\"entity_id\":\"my-dumb-host/victorops info notification\",\"timestamp\":12345678,\"state_start_time\":12345678,\"state_message\":\"my-dumb-host victorops info notification is info (42)\",\"entity_is_host\":false,\"monitoring_tool\":\"riemann\"}"
+               :socket-timeout 5000
+               :conn-timeout 5000
+               :content-type :json
+               :accept :json
+               :throw-entire-message? true}])))))
