@@ -109,8 +109,7 @@
 (defn xymon
   "
   Returns a function which accepts an event and sends it to Xymon.
-  Silently drops events when xymon is down. Attempts to reconnect
-  automatically every five seconds. Use:
+  Drops events when Xymon is down. Use:
 
   (xymon {:host \"127.0.0.1\" :port 1984
           :timeout 5 :formatter event->status})
@@ -119,5 +118,5 @@
   (let [formatter (or (:formatter opts) event->status)]
     (fn [{:keys [state service] :as event}]
       (when (and state service)
-        (let [statusmessage ((:formatter opts) event)]
+        (let [statusmessage (formatter event)]
           (send-line opts statusmessage))))))
