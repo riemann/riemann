@@ -120,3 +120,45 @@
       (when (and state service)
         (let [statusmessage (formatter event)]
           (send-line opts statusmessage))))))
+
+(def xymon-max-line 4096)
+
+(def- combo-header "combo\n")
+(def- combo-header-len (count combo-header))
+
+(defn events->combo
+  "
+  Returns a lazy sequence of combo messages. Each message is at most
+  xymon-max-line long.
+  "
+  ([formatter events] (asdf formatter events combo-header combo-header-len))
+  ([formatter events message len]
+   (if (empty? events)
+     (when-not (= len combo-header-len) '(message))
+     (let [next (formatter (first events))
+           next-length (count next)
+           length (+ len next-length 2)
+           events (rest events)]
+       (if (< length xymon-max-line)
+         (recur formatter events (str message next "\n\n") length)
+         (cons message (lazy-seq (asdf formatter events))))))))
+
+(defn send-combo
+  "
+  Turns events into combo messages (using events->combo) and send them
+  to Xymon.
+  "
+  [opts events]
+  (let [formatter (or (:formatter opts) event->status)]
+    (doseq [combo-message (events->combo formatter events)]
+      (send-line opts combo-message))))
+
+(defn xymon-batch
+  "
+  Returns a function which accepts multiple events and send them to
+  xymon as 'combo' messages. Filters events without nil :state
+  or :service.
+  "
+  [opts]
+  (fn [events]
+    (send-combo opts (filter #(and (:service %) (:state %)) events))))
