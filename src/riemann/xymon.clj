@@ -131,7 +131,8 @@
   Returns a lazy sequence of combo messages. Each message is at most
   xymon-max-line long.
   "
-  ([formatter events] (asdf formatter events combo-header combo-header-len))
+  ([formatter events]
+   (events->combo formatter events combo-header combo-header-len))
   ([formatter events message len]
    (if (empty? events)
      (when-not (= len combo-header-len) '(message))
@@ -141,7 +142,7 @@
            events (rest events)]
        (if (< length xymon-max-line)
          (recur formatter events (str message next "\n\n") length)
-         (cons message (lazy-seq (asdf formatter events))))))))
+         (cons message (lazy-seq (events->combo formatter events))))))))
 
 (defn send-combo
   "
