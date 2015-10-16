@@ -77,8 +77,9 @@
   *send-line-error-handler* is the default error handler invoked by
   send-line if none is provided.
   "
-  [exception]
-  (error exception "cannot reach xymon host"))
+  [opts exception]
+  (error exception (format "cannot reach xymon host (%s:%s)"
+                           (:host opts) (:port opts))))
 
 (defn send-line
   "
@@ -104,7 +105,7 @@
           (.write writer line)
           (.flush writer)))
       (catch Exception e
-        ((:error-handler opts) e)))))
+        ((:error-handler opts) opts e)))))
 
 (defn xymon
   "
