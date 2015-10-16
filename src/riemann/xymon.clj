@@ -91,20 +91,20 @@
   as a function with the exception as its parameter.
   "
   [opts line]
-  (try
-    (let [opts (merge
-                {:host "127.0.0.1" :port 1984 :timeout 5
-                 :error-handler *send-line-error-handler*}
-                opts)
-          addr (InetSocketAddress. (:host opts) (:port opts))
-          sock (Socket.)]
-      (.setSoTimeout sock (:timeout opts))
-      (.connect sock addr (:timeout opts))
-      (with-open [writer (io/writer sock)]
-        (.write writer line)
-        (.flush writer)))
-    (catch Exception e
-      ((:error-handler opts) e))))
+  (let [opts (merge
+              {:host "127.0.0.1" :port 1984 :timeout 5
+               :error-handler *send-line-error-handler*}
+              opts)]
+    (try
+      (let [addr (InetSocketAddress. (:host opts) (:port opts))
+            sock (Socket.)]
+        (.setSoTimeout sock (:timeout opts))
+        (.connect sock addr (:timeout opts))
+        (with-open [writer (io/writer sock)]
+          (.write writer line)
+          (.flush writer)))
+      (catch Exception e
+        ((:error-handler opts) e)))))
 
 (defn xymon
   "
