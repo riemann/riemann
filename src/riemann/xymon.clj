@@ -70,31 +70,31 @@
     (format "disable %s.%s %s %s"
             host service (int (ceil (/ ttl 60))) description)))
 
-(defn *send-line-error-handler*
+(defn *send-message-error-handler*
   "
   Logs given exception as an error message.
 
-  *send-line-error-handler* is the default error handler invoked by
-  send-line if none is provided.
+  *send-message-error-handler* is the default error handler invoked by
+  send-single-message if none is provided.
   "
   [opts exception]
   (error exception (format "cannot reach xymon host (%s:%s)"
                            (:host opts) (:port opts))))
 
-(defn send-line
+(defn send-single-message
   "
-  Connects to Xymon server, sends line, then closes the connection.
-  This is a blocking operation and should happen on a dedicated
-  thread.
+  Connects to a Xymon server, sends message, then closes the
+  connection. This is a blocking operation and should happen on a
+  dedicated thread.
 
   If any exception is raised during the connect/send process, the
-  result of (:error-handler opts *send-line-error-handler*) is invoked
-  as a function with the exception as its parameter.
+  result of (:error-handler opts *send-message-error-handler*) is
+  invoked as a function with opts and the exception as its parameter.
   "
-  [opts line]
+  [opts message]
   (let [opts (merge
               {:host "127.0.0.1" :port 1984 :timeout 5
-               :error-handler *send-line-error-handler*}
+               :error-handler *send-message-error-handler*}
               opts)]
     (try
       (let [addr (InetSocketAddress. (:host opts) (:port opts))
@@ -102,10 +102,29 @@
         (.setSoTimeout sock (:timeout opts))
         (.connect sock addr (:timeout opts))
         (with-open [writer (io/writer sock)]
-          (.write writer line)
+          (.write writer message)
           (.flush writer)))
       (catch Exception e
         ((:error-handler opts) opts e)))))
+
+(defn send-message
+  "
+  Sends given message to Xymon host(s).
+
+  If (:hosts opts) is a sequence _and_ (:host opts) is false, sends
+  the message to all hosts described in (:hosts opts). When
+  provided (:host opts) should be a list of map and
+  send-single-message will invoked with (merge opts <item in :hosts>).
+
+  If (:host opts) is not false, sends the message to opts.
+  "
+  [opts message]
+  (if (and (seq (:hosts opts))
+           (not (:host opts)))
+    (let [hosts (:hosts opts)
+          opts (discard opts :hosts)]
+      (map (fn [host] (send-message (merge opts host) message)) hosts))
+    (send-single-message opts message)))
 
 (defn xymon
   "
@@ -120,9 +139,9 @@
     (fn [{:keys [state service] :as event}]
       (when (and state service)
         (let [statusmessage (formatter event)]
-          (send-line opts statusmessage))))))
+          (send-message opts statusmessage))))))
 
-(def xymon-max-line 4096)
+(def message-max-length 4096)
 
 (def- combo-header "combo\n")
 (def- combo-header-len (count combo-header))
@@ -130,7 +149,7 @@
 (defn events->combo
   "
   Returns a lazy sequence of combo messages. Each message is at most
-  xymon-max-line long.
+  message-max-length long.
   "
   ([formatter events]
    (events->combo formatter events combo-header combo-header-len))
@@ -141,7 +160,7 @@
            next-length (count next)
            length (+ len next-length 2)
            events (rest events)]
-       (if (< length xymon-max-line)
+       (if (< length message-max-length)
          (recur formatter events (str message next "\n\n") length)
          (cons message (lazy-seq (events->combo formatter events))))))))
 
@@ -153,7 +172,7 @@
   [opts events]
   (let [formatter (or (:formatter opts) event->status)]
     (doseq [combo-message (events->combo formatter events)]
-      (send-line opts combo-message))))
+      (send-message opts combo-message))))
 
 (defn xymon-batch
   "
