@@ -176,8 +176,9 @@
 
 (defn xymon-batch
   "
-  Returns a function which accepts multiple events and send them to
-  xymon as 'combo' messages. Filters events with nil :state
+
+  Returns a function which accepts a vector of events and which sends
+  them to Xymon as 'combo' messages. Filters events with nil :state
   or :service.
   "
   [opts]
