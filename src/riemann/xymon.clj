@@ -42,8 +42,7 @@
             ttl-prefix host service state description)))
 
 (defn event->enable
-  "
-  Convert an event to an Xymon enable message:
+  "Converts an event to an Xymon enable message:
 
   enable HOSTNAME.TESTNAME
 
@@ -56,8 +55,8 @@
     (format "enable %s.%s" host service)))
 
 (defn event->disable
-  "
-  Convert an event to a Xymon disable message:
+  "Converts an event to a Xymon disable message:
+
   disable HOSTNAME.TESTNAME DURATION <additional text>
 
   Fields mapping is the same as event->status'. Also, the event ttl is
@@ -71,8 +70,7 @@
             host service (int (ceil (/ ttl 60))) description)))
 
 (defn *send-message-error-handler*
-  "
-  Logs given exception as an error message.
+  "Logs given exception as an error message.
 
   *send-message-error-handler* is the default error handler invoked by
   send-single-message if none is provided.
@@ -82,8 +80,7 @@
                            (:host opts) (:port opts))))
 
 (defn send-single-message
-  "
-  Connects to a Xymon server, sends message, then closes the
+  "Connects to a Xymon server, sends message, then closes the
   connection. This is a blocking operation and should happen on a
   dedicated thread.
 
@@ -108,8 +105,7 @@
         ((:error-handler opts) opts e)))))
 
 (defn send-message
-  "
-  Sends given message to Xymon host(s).
+  "Sends given message to Xymon host(s).
 
   If (:hosts opts) is a sequence _and_ (:host opts) is false, sends
   the message to all hosts described in (:hosts opts). When
@@ -127,8 +123,7 @@
     (send-single-message opts message)))
 
 (defn xymon
-  "
-  Returns a function which accepts an event and sends it to Xymon.
+  "Returns a function which accepts an event and sends it to Xymon.
   Drops events when Xymon is down. Use:
 
   (xymon {:host \"127.0.0.1\" :port 1984
@@ -147,8 +142,7 @@
 (def- combo-header-len (count combo-header))
 
 (defn events->combo
-  "
-  Returns a lazy sequence of combo messages. Each message is at most
+  "Returns a lazy sequence of combo messages. Each message is at most
   message-max-length long.
   "
   ([formatter events]
@@ -165,9 +159,8 @@
          (cons message (lazy-seq (events->combo formatter events))))))))
 
 (defn send-combo
-  "
-  Turns events into combo messages (using events->combo) and send them
-  to Xymon.
+  "Turns events into combo messages (using events->combo) and send
+  them to Xymon.
   "
   [opts events]
   (let [formatter (or (:formatter opts) event->status)]
@@ -175,11 +168,12 @@
       (send-message opts combo-message))))
 
 (defn xymon-batch
-  "
+  "Returns a function which accepts an event or a vector of events and
+  which sends them to Xymon, as 'combo' messages if needed. Filters
+  events with nil :state or :service.
 
-  Returns a function which accepts a vector of events and which sends
-  them to Xymon as 'combo' messages. Filters events with nil :state
-  or :service.
+  (xymon {:host \"127.0.0.1\" :port 1984
+          :timeout 5 :formatter event->status})
   "
   [opts]
   (fn [events]
