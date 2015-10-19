@@ -122,20 +122,6 @@
       (map (fn [host] (send-message (merge opts host) message)) hosts))
     (send-single-message opts message)))
 
-(defn xymon
-  "Returns a function which accepts an event and sends it to Xymon.
-  Drops events when Xymon is down. Use:
-
-  (xymon {:host \"127.0.0.1\" :port 1984
-          :timeout 5 :formatter event->status})
-  "
-  [opts]
-  (let [formatter (or (:formatter opts) event->status)]
-    (fn [{:keys [state service] :as event}]
-      (when (and state service)
-        (let [statusmessage (formatter event)]
-          (send-message opts statusmessage))))))
-
 (def message-max-length 4096)
 
 (def- combo-header "combo\n")
@@ -150,31 +136,33 @@
   ([formatter events message len]
    (if (empty? events)
      (when-not (= len combo-header-len) '(message))
-     (let [next (formatter (first events))
+     (let [next-message (formatter (first events))
            next-length (count next)
            length (+ len next-length 2)
            events (rest events)]
-       (if (< length message-max-length)
-         (recur formatter events (str message next "\n\n") length)
-         (cons message (lazy-seq (events->combo formatter events))))))))
+       (cond
+         ;; single message case // drop the combo
+         (and (= len combo-header-len) (empty? events))
+         '(next-message)
+         ;; keep appending to message
+         (< length message-max-length)
+         (recur formatter events (str message next-message "\n\n") length)
+         ;; create list of messages
+         :else (cons message (lazy-seq (events->combo formatter events))))))))
 
-(defn send-combo
-  "Turns events into combo messages (using events->combo) and send
-  them to Xymon.
-  "
-  [opts events]
-  (let [formatter (or (:formatter opts) event->status)]
-    (doseq [combo-message (events->combo formatter events)]
-      (send-message opts combo-message))))
-
-(defn xymon-batch
+(defn xymon
   "Returns a function which accepts an event or a vector of events and
   which sends them to Xymon, as 'combo' messages if needed. Filters
-  events with nil :state or :service.
+  events with nil :state or :service. Use:
 
   (xymon {:host \"127.0.0.1\" :port 1984
           :timeout 5 :formatter event->status})
   "
   [opts]
-  (fn [events]
-    (send-combo opts (filter #(and (:service %) (:state %)) events))))
+  (let [formatter (or (:formatter opts) event->status)]
+    (fn [events]
+      (doseq [message (events->combo
+                       formatter
+                       (filter #(and (:service %) (:state %))
+                               (if (sequential? events) events [events])))]
+        (send-message opts message)))))
