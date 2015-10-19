@@ -119,7 +119,7 @@
            (not (:host opts)))
     (let [hosts (:hosts opts)
           opts (dissoc opts :hosts)]
-      (map (fn [host] (send-message (merge opts host) message)) hosts))
+      (map (fn [host] (send-single-message (merge opts host) message)) hosts))
     (send-single-message opts message)))
 
 (def message-max-length 4096)
@@ -132,10 +132,11 @@
   message-max-length long.
   "
   ([formatter events]
-   (events->combo formatter events combo-header combo-header-len))
+   (if (seq events)
+     (events->combo formatter events combo-header combo-header-len)))
   ([formatter events message len]
    (if (empty? events)
-     (when-not (= len combo-header-len) '(message))
+     '(message)
      (let [next-message (formatter (first events))
            next-length (count next)
            length (+ len next-length 2)
