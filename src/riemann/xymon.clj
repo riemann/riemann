@@ -124,8 +124,8 @@
 
 (def message-max-length 4096)
 
-(def- combo-header "combo\n")
-(def- combo-header-len (count combo-header))
+(def ^:private combo-header "combo\n")
+(def ^:private combo-header-len (count combo-header))
 
 (defn events->combo
   "Returns a lazy sequence of combo messages. Each message is at most
