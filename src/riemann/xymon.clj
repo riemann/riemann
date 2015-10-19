@@ -69,10 +69,10 @@
     (format "disable %s.%s %s %s"
             host service (int (ceil (/ ttl 60))) description)))
 
-(defn *send-message-error-handler*
+(defn send-message-error
   "Logs given exception as an error message.
 
-  *send-message-error-handler* is the default error handler invoked by
+  send-message-error is the default error handler invoked by
   send-single-message if none is provided.
   "
   [opts exception]
@@ -85,13 +85,13 @@
   dedicated thread.
 
   If any exception is raised during the connect/send process, the
-  result of (:error-handler opts *send-message-error-handler*) is
-  invoked as a function with opts and the exception as its parameter.
+  result of (:error-handler opts send-message-error) is invoked as a
+  function with opts and the exception as its parameter.
   "
   [opts message]
   (let [opts (merge
               {:host "127.0.0.1" :port 1984 :timeout 5
-               :error-handler *send-message-error-handler*}
+               :error-handler send-message-error}
               opts)]
     (try
       (let [addr (InetSocketAddress. (:host opts) (:port opts))
