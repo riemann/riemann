@@ -118,7 +118,7 @@
   (if (and (seq (:hosts opts))
            (not (:host opts)))
     (let [hosts (:hosts opts)
-          opts (discard opts :hosts)]
+          opts (dissoc opts :hosts)]
       (map (fn [host] (send-message (merge opts host) message)) hosts))
     (send-single-message opts message)))
 
