@@ -35,7 +35,7 @@
     (java.net InetAddress
               UnknownHostException)))
 
-(defonce ioutil-lock
+(def ioutil-lock
   "There's a bug in JDK 6, 7, and 8 which can cause a deadlock initializing
   sse-server and netty concurrently; we serialize them with this lock.
   https://github.com/aphyr/riemann/issues/617"
