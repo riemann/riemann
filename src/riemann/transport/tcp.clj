@@ -29,6 +29,7 @@
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]
         [riemann.transport :only [handle
+                                  ioutil-lock
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
@@ -128,11 +129,8 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            ; Work around
-            ; https://gist.github.com/AkihiroSuda/56ebabe71528b0186ea2 by
-            ; acquiring a Runtime lock early.
-            (locking (java.lang.Runtime/getRuntime)
+          (locking ioutil-lock
+            (locking this
               (when-not @killer
                 (let [event-loop-group-fn (:event-loop-group-fn
                                             netty-implementation)

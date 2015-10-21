@@ -9,10 +9,10 @@
             [riemann.instrumentation  :refer [Instrumented]]
             [riemann.service          :refer [Service ServiceEquiv]]
             [riemann.time             :refer [unix-time]]
+            [riemann.transport        :refer [ioutil-lock]]
             [clojure.tools.logging    :refer [info]]
             [clj-http.util            :refer [url-decode]]
-            [clojure.string           :refer [split]])
-  (:import sun.nio.ch.IOUtil))
+            [clojure.string           :refer [split]]))
 
 (def event-to-server-sent-event
   "Prepare an event for sending out on the wire."
@@ -92,11 +92,8 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            ; Acquire a runtime lock we'll need *later* because of a JDK
-            ; deadlock:
-            ; https://gist.github.com/AkihiroSuda/56ebabe71528b0186ea2
-            (locking (java.lang.Runtime/getRuntime)
+          (locking ioutil-lock
+            (locking this
               (when-not @server
                 (reset! server (http/run-server
                                  (sse-handler core stats headers)

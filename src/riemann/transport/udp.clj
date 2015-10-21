@@ -24,6 +24,7 @@
         [riemann.service       :only [Service ServiceEquiv]]
         [riemann.time          :only [unix-time]]
         [riemann.transport     :only [handle
+                                      ioutil-lock
                                       channel-group
                                       datagram->byte-buf-decoder
                                       protobuf-decoder
@@ -85,45 +86,41 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            ; Work around
-            ; https://gist.github.com/AkihiroSuda/56ebabe71528b0186ea2 by
-            ; acquiring a Runtime lock early.
-            (locking (java.lang.Runtime/getRuntime)
+          (locking ioutil-lock
+            (locking this
+              (when-not @killer
+                (let [worker-group (NioEventLoopGroup.)
+                      bootstrap (Bootstrap.)]
 
-            (when-not @killer
-              (let [worker-group (NioEventLoopGroup.)
-                    bootstrap (Bootstrap.)]
+                  ; Configure bootstrap
+                  (doto bootstrap
+                    (.group worker-group)
+                    (.channel NioDatagramChannel)
+                    (.option ChannelOption/SO_BROADCAST false)
+                    (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
+                             (DefaultMessageSizeEstimator. max-size))
+                    (.option ChannelOption/RCVBUF_ALLOCATOR
+                             (FixedRecvByteBufAllocator. max-size))
+                    (.handler handler))
 
-                ; Configure bootstrap
-                (doto bootstrap
-                  (.group worker-group)
-                  (.channel NioDatagramChannel)
-                  (.option ChannelOption/SO_BROADCAST false)
-                  (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
-                           (DefaultMessageSizeEstimator. max-size))
-                  (.option ChannelOption/RCVBUF_ALLOCATOR
-                           (FixedRecvByteBufAllocator. max-size))
-                  (.handler handler))
+                  ; Setup Channel options
+                  (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
-                ; Setup Channel options
-                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
+                  ; Start bootstrap
+                  (->> (InetSocketAddress. host port)
+                       (.bind bootstrap)
+                       (.sync)
+                       (.channel)
+                       (.add channel-group))
 
-                ; Start bootstrap
-                (->> (InetSocketAddress. host port)
-                     (.bind bootstrap)
-                     (.sync)
-                     (.channel)
-                     (.add channel-group))
+                  (info "UDP server" host port max-size so-rcvbuf "online")
 
-                (info "UDP server" host port max-size so-rcvbuf "online")
-
-                ; fn to close server
-                (reset! killer
-                        (fn killer []
-                          (-> channel-group .close .awaitUninterruptibly)
-                          @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size so-rcvbuf "shut down"))))))))
+                  ; fn to close server
+                  (reset! killer
+                          (fn killer []
+                            (-> channel-group .close .awaitUninterruptibly)
+                            @(shutdown-event-executor-group worker-group)
+                            (info "UDP server" host port max-size so-rcvbuf "shut down"))))))))
 
   (stop! [this]
          (locking this
