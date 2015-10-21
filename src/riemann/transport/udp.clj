@@ -86,6 +86,11 @@
 
   (start! [this]
           (locking this
+            ; Work around
+            ; https://gist.github.com/AkihiroSuda/56ebabe71528b0186ea2 by
+            ; acquiring a Runtime lock early.
+            (locking (java.lang.Runtime/getRuntime)
+
             (when-not @killer
               (let [worker-group (NioEventLoopGroup.)
                     bootstrap (Bootstrap.)]
@@ -100,7 +105,7 @@
                   (.option ChannelOption/RCVBUF_ALLOCATOR
                            (FixedRecvByteBufAllocator. max-size))
                   (.handler handler))
-                
+
                 ; Setup Channel options
                 (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
@@ -118,7 +123,7 @@
                         (fn killer []
                           (-> channel-group .close .awaitUninterruptibly)
                           @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size so-rcvbuf "shut down")))))))
+                          (info "UDP server" host port max-size so-rcvbuf "shut down"))))))))
 
   (stop! [this]
          (locking this

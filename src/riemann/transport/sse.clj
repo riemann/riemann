@@ -93,11 +93,15 @@
 
   (start! [this]
           (locking this
-            (when-not @server
-              (reset! server (http/run-server
-                              (sse-handler core stats headers)
-                              {:host host :port port}))
-              (info "SSE server" host port "online"))))
+            ; Acquire a runtime lock we'll need *later* because of a JDK
+            ; deadlock:
+            ; https://gist.github.com/AkihiroSuda/56ebabe71528b0186ea2
+            (locking (java.lang.Runtime/getRuntime)
+              (when-not @server
+                (reset! server (http/run-server
+                                 (sse-handler core stats headers)
+                                 {:host host :port port}))
+                (info "SSE server" host port "online")))))
 
   (stop! [this]
          (locking this
@@ -153,9 +157,6 @@
      :or   {host    "127.0.0.1"
             port    5558
             headers {}}}]
-
-   ; Work around a deadlock when SSE-server and netty are started in parallel
-   (IOUtil/load)
 
      (SSEServer.
       host
