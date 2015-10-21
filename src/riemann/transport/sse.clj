@@ -11,7 +11,8 @@
             [riemann.time             :refer [unix-time]]
             [clojure.tools.logging    :refer [info]]
             [clj-http.util            :refer [url-decode]]
-            [clojure.string           :refer [split]]))
+            [clojure.string           :refer [split]])
+  (:import sun.nio.ch.IOUtil))
 
 (def event-to-server-sent-event
   "Prepare an event for sending out on the wire."
@@ -134,7 +135,7 @@
                               (:latencies in)))))))
 
 (defn sse-server
-  "Starts a new SSE server for a core. Starts immediately.
+  "Creates a new SSE server for a core.
 
   Options:
   :host    The address to listen on (default 127.0.0.1)
@@ -152,6 +153,10 @@
      :or   {host    "127.0.0.1"
             port    5558
             headers {}}}]
+
+   ; Work around a deadlock when SSE-server and netty are started in parallel
+   (IOUtil/load)
+
      (SSEServer.
       host
       port
