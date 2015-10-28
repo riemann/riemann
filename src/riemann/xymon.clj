@@ -138,7 +138,7 @@
    (if (empty? events)
      '(message)
      (let [next-message (formatter (first events))
-           next-length (count next)
+           next-length (count next-message)
            length (+ len next-length 2)
            events (rest events)]
        (cond
