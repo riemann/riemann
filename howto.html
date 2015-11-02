@@ -696,8 +696,8 @@ set :bind, "1.2.3.4"
     riemann.test's version of <code>deftest</code> and <code>inject!</code> for
     inserting events into the config's streams.</p>
 
-    <p>You can define regular clojure tests too; no need to call `inject`.
-    Every namespace ending in "-test" is eligible for testing.</p>
+    <p>You can define regular clojure tests too; no need to call <code>inject</code>.
+    Every namespace ending in <code>-test</code> is eligible for testing.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1010,7 +1010,7 @@ client << {service: "thumbnailer rate",
 <div class="row">
   <div class="sixcol">
     <p>Even easier: use the <code>pipe</code> stream, which compiles to the
-    same code as the `let` expression above:</p>
+    same code as the <code>let</code> expression above:</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -2541,8 +2541,8 @@ configurable in both the client and server; client values *must* be smaller
 than the server's.</p>
 
 <p>The server will accept a repeated list of Events, and respond with a
-confirmation message with either an acknowledgement or an error. Check the `ok`
-boolean in the message; if false, message.error will be a descriptive
+confirmation message with either an acknowledgement or an error. Check the <code>ok</code>
+boolean in the message; if false, <code>message.error</code> will be a descriptive
 string.</p>
 
 <p>Because protocol buffers is a strongly typed protocol, the metric of an
