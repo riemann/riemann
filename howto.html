@@ -2492,13 +2492,13 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   <div class="sixcol last">
 {% highlight clj %}
 (def credentials {:account "your_org", :token "your_token"})
-(def slack (slack credentials {:username "Riemann bot"
+(def slacker (slack credentials {:username "Riemann bot"
                                  :channel "#ops"
                                  :icon ":smile:"}))
 
 (streams
     (where (state "critical")
-      slack))
+      slacker))
 {% endhighlight %}
   </div>
 </div>
