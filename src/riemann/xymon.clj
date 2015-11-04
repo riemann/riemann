@@ -136,7 +136,7 @@
      (events->combo formatter events combo-header combo-header-len)))
   ([formatter events message len]
    (if (empty? events)
-     '(message)
+     (list message)
      (let [next-message (formatter (first events))
            next-length (count next-message)
            length (+ len next-length 2)
@@ -144,7 +144,7 @@
        (cond
          ;; single message case // drop the combo
          (and (= len combo-header-len) (empty? events))
-         '(next-message)
+         (list next-message)
          ;; keep appending to message
          (< length message-max-length)
          (recur formatter events (str message next-message "\n\n") length)
