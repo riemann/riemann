@@ -153,7 +153,7 @@
 
 (defn xymon
   "Returns a function which accepts an event or a vector of events and
-  which sends them to Xymon, as 'combo' messages if needed. Filters
+  which sends them to Xymon, as 'combo' messages if specified. Filters
   events with nil :state or :service. Use:
 
   (xymon {:host \"127.0.0.1\" :port 1984
@@ -163,10 +163,12 @@
   java.net.Socket documentation.
   "
   [opts]
-  (let [formatter (or (:formatter opts) event->status)]
+  (let [formatter (or (:formatter opts) event->status)
+        formatter (if (:combo opts false)
+                    (partial events->combo formatter)
+                    (partial map formatter))]
     (fn [events]
-      (doseq [message (events->combo
-                       formatter
+      (doseq [message (formatter
                        (filter #(and (:service %) (:state %))
                                (if (sequential? events) events [events])))]
         (send-message opts message)))))
