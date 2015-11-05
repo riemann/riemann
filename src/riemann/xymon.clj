@@ -90,7 +90,7 @@
   "
   [opts message]
   (let [opts (merge
-              {:host "127.0.0.1" :port 1984 :timeout 5
+              {:host "127.0.0.1" :port 1984 :timeout 5000
                :error-handler send-message-error}
               opts)]
     (try
@@ -157,7 +157,10 @@
   events with nil :state or :service. Use:
 
   (xymon {:host \"127.0.0.1\" :port 1984
-          :timeout 5 :formatter event->status})
+          :timeout 5000 :formatter event->status})
+
+  The :timeout value is expressed in milliseconds, as specified in
+  java.net.Socket documentation.
   "
   [opts]
   (let [formatter (or (:formatter opts) event->status)]
