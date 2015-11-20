@@ -127,29 +127,37 @@
 (def ^:private combo-header "combo\n")
 (def ^:private combo-header-len (count combo-header))
 
+(defn- make-combo [messages]
+  (if (= (count messages) 1)            ; messages must not be empty
+    (first messages)
+    (str combo-header (clojure.string/join "\n\n" messages) "\n\n")))
+
 (defn events->combo
   "Returns a lazy sequence of combo messages. Each message is at most
   message-max-length long.
   "
-  ([formatter events]
-   (if (seq events)
-     (events->combo formatter events combo-header combo-header-len)))
-  ([formatter events message len]
-   (if (empty? events)
-     (list message)
+  ([formatter events] (events->combo formatter events [] combo-header-len))
+  ([formatter events messages len]
+   (cond
+     (seq events)
+     ;; We have more events, consume next one.
      (let [next-message (formatter (first events))
            next-length (count next-message)
            length (+ len next-length 2)
            events (rest events)]
-       (cond
-         ;; single message case // drop the combo
-         (and (= len combo-header-len) (empty? events))
-         (list next-message)
+       (if (< length message-max-length)
          ;; keep appending to message
-         (< length message-max-length)
-         (recur formatter events (str message next-message "\n\n") length)
-         ;; create list of messages
-         :else (cons message (lazy-seq (events->combo formatter events))))))))
+         (recur formatter events (conj messages next-message) length)
+         ;; message is getting too big, so we create a combo and
+         ;; iterate over the rest of the sequence.
+         (cons (make-combo messages)
+               (lazy-seq (events->combo
+                          formatter events [next-message]
+                          (+ next-length combo-header-len 2))))))
+     ;; Stop case, no message found // drop combo
+     (empty? messages) messages
+     ;; Stop case, multiple messages joined as a combo
+     :else (list (make-combo messages)))))
 
 (defn xymon
   "Returns a function which accepts an event or a vector of events and
