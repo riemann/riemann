@@ -79,7 +79,8 @@
 (defn graphite-metric
   "convert riemann metric value to graphite"
   [event]
-  (float (:metric event)))
+  (let [val (:metric event)]
+    (if (integer? val) val (double val))))
 
 (defn graphite
   "Returns a function which accepts an event and sends it to Graphite.
