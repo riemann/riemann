@@ -74,6 +74,20 @@
                   {:service "foo bar 0.999"})
                 "foo.bar.999")))
 
+(deftest graphite-metric-test
+  (is (= (graphite-metric
+           {:metric 1000})
+         1000.0))
+  (is (= (graphite-metric
+           {:metric -2})
+         -2.0))
+  (is (= (graphite-metric
+           {:metric 8500000001})
+         (float 8500000001)))
+  (is (= (graphite-metric
+           {:metric 3.14159})
+         (float 3.14159))))
+
 (deftest ^:graphite ^:integration graphite-test
          (let [g (graphite {:block-start true})]
            (g {:host "riemann.local"

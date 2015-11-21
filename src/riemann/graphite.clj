@@ -76,6 +76,11 @@
                                                 frac))))
       event)))
 
+(defn graphite-metric
+  "convert riemann metric value to graphite"
+  [event]
+  (float (:metric event)))
+
 (defn graphite
   "Returns a function which accepts an event and sends it to Graphite.
   Silently drops events when graphite is down. Attempts to reconnect
@@ -107,7 +112,8 @@
                      :protocol :tcp
                      :claim-timeout 0.1
                      :pool-size 4
-                     :path graphite-path-percentiles} opts)
+                     :path graphite-path-percentiles
+                     :metric graphite-metric} opts)
         pool (fixed-pool
                (fn []
                  (info "Connecting to " (select-keys opts [:host :port]))
@@ -132,7 +138,7 @@
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
-                                                (float (:metric event))
+                                                (graphite-metric event)
                                                 (int (:time event))])
                                      "\n")]
                      (send-line client string)))))))
