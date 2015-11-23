@@ -82,7 +82,10 @@
                [["foo" "bar" "asdf"]
                 ["combo\nfoo_s\n\nbar_s\n\nasdf_s\n\n"]]
                [[long-message long-message]
-                [long-message_s long-message_s]]]]
+                [long-message_s long-message_s]]
+               [[long-message "foo" long-message]
+                [(str long-message_s "\n\nfoo_s\n\n")
+                 long-message_s]]]]
     (doseq [[events result] pairs]
       (is (= result
              (events->combo formatter events))))))
