@@ -119,7 +119,8 @@
            (not (:host opts)))
     (let [hosts (:hosts opts)
           opts (dissoc opts :hosts)]
-      (map (fn [host] (send-single-message (merge opts host) message)) hosts))
+      (doseq [host hosts]
+        (send-single-message (merge opts host) message)))
     (send-single-message opts message)))
 
 (def message-max-length 4096)
