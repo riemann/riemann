@@ -130,7 +130,7 @@
 (defn- make-combo [messages]
   (if (= (count messages) 1)            ; messages must not be empty
     (first messages)
-    (str combo-header (clojure.string/join "\n\n" messages) "\n\n")))
+    (str combo-header (s/join "\n\n" messages) "\n\n")))
 
 (defn events->combo
   "Returns a lazy sequence of combo messages. Each message is at most
@@ -171,10 +171,8 @@
   java.net.Socket documentation.
   "
   [opts]
-  (let [formatter (or (:formatter opts) event->status)
-        formatter (if (:combo opts false)
-                    (partial events->combo formatter)
-                    (partial map formatter))]
+  (let [formatter (partial (if (:combo opts false) events->combo map)
+                           (or (:formatter opts) event->status))]
     (fn [events]
       (doseq [message (formatter
                        (filter #(and (:service %) (:state %))
