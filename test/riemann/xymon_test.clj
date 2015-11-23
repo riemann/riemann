@@ -2,7 +2,8 @@
   (:use riemann.xymon
         [riemann.time :only [unix-time]]
         clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [clojure.string]))
 
 (logging/init)
 
@@ -84,7 +85,7 @@
                [[long-message long-message]
                 [long-message_s long-message_s]]
                [[long-message "foo" long-message]
-                [(str long-message_s "\n\nfoo_s\n\n")
+                [(str "combo\n" long-message_s "\n\nfoo_s\n\n")
                  long-message_s]]]]
     (doseq [[events result] pairs]
       (is (= result
