@@ -860,7 +860,7 @@
   event.  If point is 1, takes the highest metric event. 0.5 is the median
   event, and so forth. Forwards each of these events to children. The service
   name has the point appended to it; e.g. 'response time' becomes 'response
-  time .95'."
+  time 0.95'."
   [interval points & children]
   (part-time-fast interval
                 (fn setup [] (atom []))
