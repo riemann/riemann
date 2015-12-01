@@ -1,5 +1,5 @@
 (ns riemann.influxdb
-  "Forwards events to InfluxDB. Supports both 0.8 and 0.9 APIs."
+  "Forwards and get events to/from InfluxDB. Supports both 0.8 and 0.9 APIs."
   (:require
     [capacitor.core :as capacitor]
     [cheshire.core :as json]
@@ -108,13 +108,15 @@
                     opts)
         series (:series opts)
         client (capacitor/make-client opts)]
-
+    (println "The client was created")
+    (if (= (:method opts) "GET")
+      (capacitor/get-query client (:query opts))
     (fn stream [events]
       (let [events (if (sequential? events) events (list events))
             points (events->points-8 series events)]
         (when-not (empty? points)
           (doseq [[series points] points]
-            (capacitor/post-points client series "s" points)))))))
+            (capacitor/post-points client series "s" points))))))))
 
 ;; ## InfluxDB 0.9
 
@@ -154,8 +156,13 @@
   `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
   [opts]
   (let [write-url
-        (str (cond->
+         (str (cond->
           (format "%s://%s:%s/write?db=%s&precision=s" (:scheme opts) (:host opts) (:port opts) (:db opts))
+          (:retention opts)
+            (str "&rp=" (:retention opts))))
+         read-url
+          (str (cond->
+          (format "%s://%s:%s/query?db=%s&q=%s&u=%s&p=%s&epoch=%s" (:scheme opts) (:host opts) (:port opts) (:db opts) (:query opts) (:username opts) (:password opts) (:epoch opts))
           (:retention opts)
             (str "&rp=" (:retention opts))))
 
@@ -171,6 +178,10 @@
 
         tag-fields
         (:tag-fields opts #{:host})]
+    (if (= (:method opts) "GET")
+        (let [result (http/get read-url)
+              bodyResult (get result :body)]
+          (json/parse-string bodyResult))
     (fn stream
       [events]
       (let [events (if (sequential? events) events (list events))
@@ -178,7 +189,7 @@
         (http/post write-url
           (assoc http-opts :body (->> points
             (map lineprotocol-encode-9)
-            (clojure.string/join "\n"))))))))
+            (clojure.string/join "\n")))))))))
 
 ;; ## Stream Construction
 
@@ -211,13 +222,18 @@
 
   `:insecure`       If scheme is https and certficate is self-signed. (optional)
 
+  `:method`         Indicates if execute a write POST or a read GET (default: `POST`)
+
+  `:query`          If the method is GET query to execute (for the version 0.9 the query must be urlencoded)
+
   See `influxdb-8` and `influxdb-9` for version-specific options."
   [opts]
   (let [opts (merge {:version :0.8
                      :db "riemann"
                      :scheme "http"
                      :host "localhost"
-                     :port 8086}
+                     :port 8086
+                     :method "POST"}
                     opts)]
     (case (:version opts)
       :0.8 (influxdb-8 opts)
