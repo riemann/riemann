@@ -61,6 +61,7 @@
 (deftest point-conversion
   (is (nil? (influxdb/event->point-9 #{} {:service "foo test", :time 1}))
       "Event with no metric is converted to nil")
+
   (is (= {"measurement" "test service"
           "time" 1428366765
           "tags" {"host" "host-01"}
@@ -72,6 +73,19 @@
             :time 1428366765
             :metric 42.08}))
       "Minimal event is converted to point fields")
+  
+  (is (= {"measurement" "test service"
+          "time" 14283499995
+          "tags" {"host" "host-01"}
+          "fields" {"value" 42.08}}
+         (influxdb/event->point-9
+           #{:host}
+           {:host "host-01"
+            :measurement "test service"
+            :time 14283499995
+            :metric 42.08}))
+      "Event with measurement provided instead of service")
+
   (is (= {"measurement" "service_api_req_latency"
           "time" 1428354941
           "tags" {"host" "www-dev-app-01.sfo1.example.com"
@@ -99,8 +113,26 @@
             :loc "sfo1"
             :foo "frobble"}))
       "Full event is converted to point fields")
+
   (is (empty? (influxdb/events->points-9 #{} [{:service "foo test"}]))
       "Nil points are filtered from result"))
+
+
+(deftest get-write-url 
+  (is (= "http://localhost:8086/write?db=riemann&precision=s"
+      (influxdb/get-write-url-9 {:db "riemann"
+                        :scheme "http"
+                        :host "localhost"
+                        :port 8086}))
+      "get-write-url-9 defaults to using seconds when unspecified")
+
+  (is (= "http://localhost:8086/write?db=riemann&precision=ns"
+         (influxdb/get-write-url-9 {:db "riemann"
+                        :scheme "http"
+                        :host "localhost"
+                        :port 8086
+                        :precision "ns"}))
+      ))
 
 
 (deftest line-protocol
