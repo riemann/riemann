@@ -1,0 +1,13 @@
+[Unit]
+Description=Riemann
+After=network.target
+
+[Service]
+User=riemann
+EnvironmentFile=/etc/sysconfig/riemann
+ExecStart=/usr/bin/riemann /etc/riemann/riemann.config
+ExecReload=/bin/kill -HUP ${MAINPID}
+ExecStop=/bin/kill -WINCH ${MAINPID}
+
+[Install]
+WantedBy=multi-user.target
