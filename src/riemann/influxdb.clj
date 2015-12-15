@@ -108,7 +108,6 @@
                     opts)
         series (:series opts)
         client (capacitor/make-client opts)]
-    (println "The client was created")
     (if (= (:method opts) "GET")
       (capacitor/get-query client (:query opts))
     (fn stream [events]
