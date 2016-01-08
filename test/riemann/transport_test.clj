@@ -12,10 +12,13 @@
             [riemann.transport.sse :refer [sse-server]]
             [cheshire.core :as json]
             [riemann.client :as client]
+            [riemann.codec :as codec]
             [riemann.index :as index])
   (:import (java.net Socket
+                     SocketException
                      InetAddress)
-           (java.io IOException)))
+           (java.io IOException
+                    DataOutputStream)))
 
 (logging/init)
 
@@ -194,3 +197,40 @@
         (finally
           (.close sock)
           (stop! core))))))
+
+(defn tcp-client-ignoring-acks
+  "A TCP client that send events to server but does not read acks received"
+  [client-opts server-opts]
+  ;; TODO use plain socket to connect to server and send hand-crafted protobuf messages
+  ;; using something similar to the following: protobuf messages can be read from/written to
+  ;; byte arrays
+  (let [server (tcp-server server-opts)
+        index (wrap-index (index/index))
+        core (transition! (core) {:index index
+                                  :services [server]
+                                  :streams [index]})]
+    (let  [sock (Socket. "localhost" (:port client-opts))
+           out  (DataOutputStream. (.getOutputStream sock))
+           msg  (codec/encode-pb-msg {:events [
+                                               {:host "localhost"
+                                                :service "foo"
+                                                :metric 42}]})]
+      (try
+        (loop [stop false]
+          (when (not stop)
+            (do
+              (.writeInt out (.getSerializedSize msg))
+              (.writeTo msg out)
+              (recur false))))
+        (finally
+          (stop! core))))))
+
+(deftest prevent-outbound-buffer-overflow-test
+  (let [server {:port 15555}
+        client {:port 15555}]
+ 
+      ; Fails when connection is closed by server
+      (is (thrown? SocketException
+                   (tcp-client-ignoring-acks client                   
+                                             server))))
+    )
