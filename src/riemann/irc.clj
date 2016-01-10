@@ -98,9 +98,7 @@
                (-> opts
                    (select-keys [:block-start])
                    (assoc :size (:pool-size opts))
-                   (assoc :regenerate-interval (:reconnect-interval opts))))
-        path (:path opts)]
-
+                   (assoc :regenerate-interval (:reconnect-interval opts))))]
     (fn [event]
         (with-pool [client pool (:claim-timeout opts)]
           (send-line client (:channel opts) (irc-message event))))))
