@@ -1,64 +1,106 @@
 (ns riemann.irc
-  "Forwards events to IRC"
-  (:use [clojure.string :only [join upper-case]])
-  (:import (java.net Socket)
-           (java.io PrintWriter InputStreamReader BufferedReader)))
+  "Forwards events to IRC."
+  (:refer-clojure :exclude [replace])
+  (:import
+   (java.net Socket
+             DatagramSocket
+             DatagramPacket
+             InetAddress)
+   (java.io Writer OutputStreamWriter))
+   (:use [clojure.string :only [join upper-case]]
+        clojure.tools.logging
+        riemann.pool
+        riemann.common
+        [riemann.transport :only [resolve-host]]))
+
+(defprotocol IrcClient
+  (open [client]
+        "Creates an IRC client")
+  (login [client nick channel]
+         "Logs into IRC")
+  (send-line [client channel line]
+        "Sends a formatted line to IRC")
+  (close [client]
+         "Cleans up (closes sockets etc.)"))
+
+(defrecord IrcConnection [^String host ^int port]
+  IrcClient
+  (open [this]
+    (let [sock (Socket. host port)]
+      (assoc this
+             :socket sock
+             :out (OutputStreamWriter. (.getOutputStream sock)))))
+  (login [this nick channel]
+    (let [out (:out this)]
+      (.write ^OutputStreamWriter out ^String (str "NICK " nick "\n"))
+      (.write ^OutputStreamWriter out ^String (str "USER " nick " 0 * :" nick "\n"))
+      (.write ^OutputStreamWriter out ^String (str "JOIN " channel "\n"))
+      (.flush ^OutputStreamWriter out)))
+  (send-line [this channel line]
+    (let [out (:out this)]
+      (.write ^OutputStreamWriter out ^String (str "PRIVMSG " channel " :" line "\n"))
+      (.flush ^OutputStreamWriter out)))
+  (close [this]
+    (.close ^OutputStreamWriter (:out this))
+    (.close ^Socket (:socket this))))
 
 (defn irc-message
   "Formats an event into a string"
   [e]
   (str (join " " ["Riemann alert on" (str (:host e)) "-" (str (:service e)) "is" (upper-case (str (:state e))) "- Description:" (str (:description e))])))
 
-; IRC client code from http://nakkaya.com/2010/02/10/a-simple-clojure-irc-client/
-
-(declare conn-handler)
-
-(defn connect [server port]
-  (let [socket (Socket. server port)
-        in (BufferedReader. (InputStreamReader. (.getInputStream socket)))
-        out (PrintWriter. (.getOutputStream socket))
-        conn (ref {:in in :out out})]
-    (doto (Thread. #(conn-handler conn)) (.start))
-    conn))
-
-(defn write [conn msg]
-  (doto (:out @conn)
-    (.println (str msg "\r"))
-    (.flush)))
-
-(defn conn-handler [conn]
-  (while (nil? (:exit @conn))
-    (let [msg (.readLine (:in @conn))]
-      (println msg)
-      (cond
-       (re-find #"^ERROR :Closing Link:" msg)
-       (dosync (alter conn merge {:exit true}))
-       (re-find #"^PING" msg)
-       (write conn (str "PONG "  (re-find #":.*" msg)))))))
-
-(defn login [conn nick]
-  (write conn (str "NICK " nick))
-  (write conn (str "USER " nick " 0 * :" nick)))
-
-(defn join-chan [conn channel]
-  (write conn (str "JOIN " channel)))
-
-(defn privmsg [conn channel message-string]
-  (write conn (str "PRIVMSG " channel " :" message-string)))
-
 (defn irc
-  "Creates an adapter to forward events to IRC. The IRC event will
-  contain the host, state, service, metric and description.
+  "Returns a function which accepts an event and sends it to IRC.
+  Silently drops events when IRC is down. Attempts to reconnect
+  automatically every five seconds. Use:
 
-  Requires: server, port, name of IRC user to send events, and channel name.
+  (irc {:host \"chat.freenode.net\" :port 6667})
 
-  Can be configured like so:
+  Options:
 
-  (def sendirc (irc \"chat.freenode.net\", 6667, \"riemann-bot\", \"#riemannbot\"))"
-  [server port nick channel]
-  (def irc-connection (connect server port))
-  (login irc-connection nick)
-  (join-chan irc-connection channel)
-  (fn [e]
-    (let [message-string (irc-message e)]
-      (privmsg irc-connection channel message-string))))
+  :nick                 The nick to use to send messages. Defaults to 'riemann-bot'.
+
+  :channel              The channel to join.
+
+  :pool-size            The number of connections to keep open. Default 1.
+
+  :reconnect-interval   How many seconds to wait between attempts to connect.
+                        Default 5.
+
+  :claim-timeout        How many seconds to wait for an IRC connection from
+                        the pool. Default 0.1.
+
+  :block-start          Wait for the pool's initial connections to open
+                        before returning."
+
+  [opts]
+  (let [opts (merge {:host "chat.freenode.net"
+                     :port 6667
+                     :nick "riemann-bot"
+                     :channel "#riemannbot"
+                     :claim-timeout 0.1
+                     :pool-size 1} opts)
+        pool (fixed-pool
+               (fn []
+                 (info "Connecting to " (select-keys opts [:host :port]))
+                 (let [host (resolve-host (:host opts))
+                       port (:port opts)
+                       nick (:nick opts)
+                       channel (:channel opts)
+                       client (open (IrcConnection. host port))
+                       conn (login client nick channel)]
+                   (info "Connected to" host)
+                   client))
+               (fn [client]
+                 (info "Closing connection to "
+                       (select-keys opts [:host :port]))
+                 (close client))
+               (-> opts
+                   (select-keys [:block-start])
+                   (assoc :size (:pool-size opts))
+                   (assoc :regenerate-interval (:reconnect-interval opts))))
+        path (:path opts)]
+
+    (fn [event]
+        (with-pool [client pool (:claim-timeout opts)]
+          (send-line client (:channel opts) (irc-message event))))))
