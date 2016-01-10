@@ -69,6 +69,8 @@
     (channelWritabilityChanged [^ChannelHandlerContext ctx]
       (let [channel (.channel ctx)]
         (when (not (.isWritable channel))
+          (warn "forcefully closing connection from " (.remoteAddress channel)
+                ". Client might be not reading acks fast enough or network is broken")
           (.close channel))))
     
     (channelRead [^ChannelHandlerContext ctx ^Object message]
