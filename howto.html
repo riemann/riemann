@@ -1642,13 +1642,17 @@ on events that remain the same for the specified time period.</p>
   </div>
 </div>
 
-
 <h3>Alerting when a certain percentage of events happen</h3>
 
-<p>Sometimes you'll have a service that will fail. You might expect one or two
-failures, but if you get over a certain percentage of failures you want to be
-notified. In this case you can use a <code>fixed-time-window</code>.</p>
+<div class="row">
+  <div class="sixcol">
+   <p>Sometimes you'll have a service that will fail. You might expect one or
+   two failures, but if you get over a certain percentage of failures you want
+   to be notified. In this case you can use a
+   <code>fixed-time-window</code>.</p>
+  </div>
 
+  <div class="sixcol last">
 {% highlight clj %}
 (streams
   (where (and (service "signin")
@@ -1679,6 +1683,8 @@ notified. In this case you can use a <code>fixed-time-window</code>.</p>
         ; transitions:
         (changed-state (email "ops@trioptimum.com"))))))
 {% endhighlight %}
+  </div>
+</div>
 
 <h3 id="arbitrary-functions-as-streams">Arbitrary functions as streams</h3>
 <div class="row">
@@ -2492,13 +2498,13 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
   <div class="sixcol last">
 {% highlight clj %}
 (def credentials {:account "your_org", :token "your_token"})
-(def slack (slack credentials {:username "Riemann bot"
+(def slacker (slack credentials {:username "Riemann bot"
                                  :channel "#ops"
                                  :icon ":smile:"}))
 
 (streams
     (where (state "critical")
-      slack))
+      slacker))
 {% endhighlight %}
   </div>
 </div>
