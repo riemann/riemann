@@ -42,7 +42,7 @@
   (let [events [{:host "no-service.riemann.local"
                  :service "kairosdb test"
                  :state "ok"
-                 :description "Missing service, not transmitted"
+                 :description "It's working"
                  :metric 4
                  :time (unix-time)}
                 {:host "riemann.local"
@@ -50,6 +50,16 @@
                  :state "ok"
                  :description "Situation nominal"
                  :metric 5
+                 :time (unix-time)}
+                {:host "riemann.local"
+                 :service "kairosdb test"
+                 :state "ok"
+                 :description "No metric; should be excluded"
+                 :time (unix-time)}
+                {:host "riemann.local"
+                 :state "ok"
+                 :metric 8000
+                 :description "No service; should be excluded"
                  :time (unix-time)}]
         output (atom [])
         mock-client (reify KairosDBClient
@@ -57,9 +67,6 @@
                       (close [this] this)
                       (send-metrics [this metrics] (swap! output conj metrics)))]
     (with-redefs [riemann.kairosdb/make-kairosdb-client (fn [_ _ _] mock-client)]
-      (let [k (kairosdb {:protocol :tcp
-                         :batch true
-                         :batch-opts {:n 2 :dt 60}})]
-        (doseq [event events]
-          (k event)))
+      (let [k (kairosdb {:protocol :tcp})]
+        (k events))
       (is (= (map count @output) [2])))))

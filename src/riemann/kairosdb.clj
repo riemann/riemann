@@ -8,8 +8,7 @@
              InetAddress)
    (java.io Writer OutputStreamWriter))
   (:require [clj-http.client :as client]
-            [cheshire.core :as json]
-            [riemann.streams :refer [batch where]])
+            [cheshire.core :as json])
   (:use [clojure.string :only [split join replace]]
         clojure.tools.logging
         riemann.pool
@@ -92,9 +91,9 @@
     :http (open (KairosDBHTTPClient. host port))))
 
 (defn kairosdb
-  "Returns a function which accepts an event and sends it to KairosDB.
-  Silently drops events when KairosDB is down. Attempts to reconnect
-  automatically every five seconds. Use:
+  "Returns a function which accepts a single event or collection of events
+  and sends them to KairosDB. Silently drops events when KairosDB is down.
+  Attempts to reconnect automatically every five seconds. Use:
 
   (kairosdb {:host \"kairosdb.local\" :port 4242 :protocol :tcp})
 
@@ -128,14 +127,7 @@
   :ttl                  A function which, given an event, returns the TTL in
                         seconds.
                         Note: TTL is only supported in the HTTP API, and is
-                              ignored when sent via Telnet.
-
-  :batch                Batch metrics into KairosDB. Consider using this when
-                        :protocol is :http. Default false.
-
-  :batch-opts           Map containing :n and :dt, which correspond to Riemann's
-                        `streams/batch` parameters. Used only when :batch is true.
-                        Default {:n 100 :dt 1}"
+                              ignored when sent via Telnet."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 4242
@@ -144,9 +136,7 @@
                      :pool-size 4
                      :tags kairosdb-tags
                      :metric-name kairosdb-metric-name
-                     :ttl (constantly 0)
-                     :batch false
-                     :batch-opts {:n 100 :dt 1}} opts)
+                     :ttl (constantly 0)} opts)
         pool (fixed-pool
               (fn []
                 (info "Connecting to " (select-keys opts [:protocol :host :port]))
@@ -163,24 +153,18 @@
                   (assoc :regenerate-interval (:reconnect-interval opts))))
         metric-name (:metric-name opts)
         tags (:tags opts)
-        ttl (:ttl opts)
-        batch-opts (:batch-opts opts)]
+        ttl (:ttl opts)]
     (letfn [(make-metric [event]
               {:name (metric-name event)
                :timestamp (long (* 1000 (:time event)))
                :value (float (:metric event))
                :tags (tags event)
                :ttl (ttl event)})]
-      (where (and (:metric event) (:service event))
-             (if (:batch opts)
-               (batch (:n batch-opts) (:dt batch-opts)
-                      (fn [events]
-                        (with-pool [client pool (:claim-timeout opts)]
-                          (send-metrics client
-                                        (map
-                                         make-metric
-                                         events)))))
-               (fn [event]
-                 (with-pool [client pool (:claim-timeout opts)]
-                   (send-metrics client
-                                 [(make-metric event)]))))))))
+      (fn [es]
+        (when-let [es (seq (filter (every-pred :service :metric)
+                                   (if (map? es)
+                                     [es]
+                                     es)))]
+          (with-pool [client pool (:claim-timeout opts)]
+            (send-metrics client
+                          (map make-metric es))))))))
