@@ -50,7 +50,7 @@
 
   The :formatter is an optional argument.
 
-  (let [pd (pagerduty :service-key \"my-service-key\" :formatter pd-format-event )]
+  (let [pd (pagerduty { :service-key \"my-service-key\" :formatter pd-format-event})]
     (changed-state
       (where (state \"ok\") (:resolve pd))
       (where (state \"critical\") (:trigger pd))))"
