@@ -32,9 +32,9 @@ layout: default
     <p>Once you know where to look, you can learn more by reading the <a
       href="api">API docs</a> (especially <a
       href="api/riemann.streams.html">riemann.streams</a>), and <a
-      href="https://github.com/aphyr/riemann/tree/master/src/riemann">the
+      href="https://github.com/riemann/riemann/tree/master/src/riemann">the
       source</a>.  I try hard to write readable code. The <a
-      href="https://github.com/aphyr/riemann/tree/master/test/riemann">test
+      href="https://github.com/riemann/riemann/tree/master/test/riemann">test
       suite</a> is also a great place to look for use examples.</p>
   </div>
 </div>
@@ -193,7 +193,7 @@ sudo service riemann reload
 
 <div class="row">
   <div class="sixcol">
-    <p>To change the address that the dashboard binds to, <a href="https://github.com/aphyr/riemann-dash">edit riemann-dash's config.rb</a>.</p>
+    <p>To change the address that the dashboard binds to, <a href="https://github.com/riemann/riemann-dash">edit riemann-dash's config.rb</a>.</p>
   </div>
   <div class="sixcol last">
 {% highlight rb %}
@@ -771,7 +771,7 @@ Ran 1 tests containing 1 assertions.
   </div>
   <div class="sixcol last">
 {% highlight sh %}
-git clone git://github.com/aphyr/riemann.git
+git clone git://github.com/riemann/riemann.git
 cd riemann
 lein repl :connect 127.0.0.1:5557
 {% endhighlight %}
@@ -830,7 +830,7 @@ user=> (riemann.bin/reload!)
 
 <div class="row">
   <div class="sixcol">
-    <p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a>
+    <p><a href="https://github.com/riemann/riemann-tools">Riemann-tools</a>
     includes a program called riemann-health, which measures the local host's
     cpu, memory, and disk use. You can install it from rubygems.</p>
   </div>
@@ -858,7 +858,7 @@ riemann-health --host 1.2.3.4
     <p>Riemann-health reports utilization <i>fractions</i> by default, ranging
     from zero to one. Load average is divided by the number of cores, and disk
     use by capacity. You can adjust the polling interval, what percentage of
-    cpu use is considered critical, and more. <code>riemann-health
+    CPU usage is considered critical, and more. <code>riemann-health
     --help</code> will tell you more.</p>
   </div>
 </div>
@@ -867,21 +867,21 @@ riemann-health --host 1.2.3.4
 
 <div class="row">
   <div class="sixcol">
-    <p><a href="https://github.com/aphyr/riemann-tools">Riemann-tools</a>
-    includes riemann-riak, which uses riak's HTTP stats interface, some
+    <p><a href="https://github.com/riemann/riemann-tools">Riemann-tools</a>
+    includes riemann-riak, which uses Riak's HTTP stats interface, some
     filesystem checks, and optionally, some erlang RPC requests to measure
     Riak's get and put latencies, request throughput, ring status, and disk
     use. Run riemann-riak on each Riak node.</p>
 
-    <p>Riemann-riak comes with defaults for the riak .deb packages shipped by
+    <p>Riemann-riak comes with defaults for the Riak .deb packages shipped by
     Basho, but it's tunable for other configurations. See <code>riemann-riak
     --help</code> for more options.</p>
   </div>
   <div class="sixcol last">
-    {% highlight sh %}
-    gem install riemann-tools
-    riemann-riak --host 1.2.3.4
-    {% endhighlight %}
+{% highlight sh %}
+gem install riemann-tools
+riemann-riak --host 1.2.3.4
+{% endhighlight %}
   </div>
 </div>
 
@@ -1976,7 +1976,7 @@ rate
   <div class="sixcol">
     <p>If we're writing a new function to generate streams, we might have our
     downstream children passed in as an argument; see any function in <a
-    href="https://github.com/aphyr/riemann/blob/master/src/riemann/streams.clj">riemann.streams</a>
+    href="https://github.com/riemann/riemann/blob/master/src/riemann/streams.clj">riemann.streams</a>
   for an example. If we're just defining a one-off stream inline, we can
   <i>bind</i> the child to a variable using <code>let</code>.</p>
   </div>
@@ -2537,7 +2537,7 @@ view.</p>
 <p>A TCP connection to Riemann is a stream of messages. Each message is a 4
 byte network-endian integer *length*, followed by a Protocol Buffer Message of
 *length* bytes. See the <a
-  href="https://github.com/aphyr/riemann-java-client/blob/master/riemann-java-client/src/main/proto/riemann/proto.proto">protocol
+  href="https://github.com/riemann/riemann-java-client/blob/master/riemann-java-client/src/main/proto/riemann/proto.proto">protocol
   buffer definition</a> for the details.</p>
 
 <p>Over UDP, the length header is omitted; just send the protobuf Message
@@ -2568,11 +2568,11 @@ to add a nanosecond field as well.</p>
 submit a Message with your query in message.query.string. Search queries will
 return a message with repeated Events matching that expression. A null
 expression will return no states. For some example queries, see <a
-  href="https://github.com/aphyr/riemann/blob/master/test/riemann/query_test.clj">The
+  href="https://github.com/riemann/riemann/blob/master/test/riemann/query_test.clj">The
   query test suite</a>.</p>
 
 <p>You might find it useful to read the <a
-  href="https://github.com/aphyr/riemann-ruby-client">Ruby client</a> source as
+  href="https://github.com/riemann/riemann-ruby-client">Ruby client</a> source as
 a guide to writing your own client.</p>
 
 <h3>Work with the Riemann source</h3>
@@ -2584,7 +2584,7 @@ quickly. If you just want to run the latest version, go ahead and clone the
 official repo:</p>
 
 {% highlight sh %}
-git clone git://github.com/aphyr/riemann.git
+git clone git://github.com/riemann/riemann.git
 cd riemann
 {% endhighlight %}
 
@@ -2604,9 +2604,9 @@ use <code>lein pkg</code>; .debs and .tar.gz files, plus md5sums, will appear
 in <code>target/</code>.
 
 <p>The protocol buffer codec and clojure client live in <a
-  href="https://github.com/aphyr/riemann-clojure-client">riemann-clojure-client</a>,
+  href="https://github.com/riemann/riemann-clojure-client">riemann-clojure-client</a>,
 which wraps the java protobuf code and java client in <a
-  href="https://github.com/aphyr/riemann-java-client">riemann-java-client</a>.
+  href="https://github.com/riemann/riemann-java-client">riemann-java-client</a>.
 Both of these are available on clojars and most of the time you can ignore
 them. However, if you need to change the protocol or client, you can fork these
 projects and make your changes there.</p>
@@ -2624,7 +2624,7 @@ riemann-clojure-clientproject.clj files.</p>
 
 <h3>Fix a bug or add a feature</h3>
 
-<p>First, <a href="https://github.com/aphyr/riemann">fork Riemann on
+<p>First, <a href="https://github.com/riemann/riemann">fork Riemann on
   github</a>. Clone your fork and create a new topic branch for your fix:</p>
 
 {% highlight sh %}
@@ -2664,7 +2664,7 @@ changes.</p>
 <h3>Help write documentation</h3>
 
 <p>Riemann's web site and documentation are in the gh-pages branch of the
-riemann repository. <a href="https://github.com/aphyr/riemann">Fork riemann on
+riemann repository. <a href="https://github.com/riemann/riemann">Fork riemann on
   github</a>, clone your fork, and check out the branch:</p>
 
 {% highlight sh %}
