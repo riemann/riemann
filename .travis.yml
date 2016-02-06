@@ -1,0 +1,14 @@
+language: ruby
+rvm:
+- 2.1
+
+install: gem install jekyll
+script: jekyll build
+
+branches:
+  only:
+  - gh-pages     # test the gh-pages branch
+
+env:
+  global:
+  - NOKOGIRI_USE_SYSTEM_LIBRARIES=true

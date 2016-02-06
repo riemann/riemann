@@ -1,3 +1,4 @@
 safe: true
-highlighter: pygments
+highlighter: rouge
 markdown: kramdown
+exclude: [vendor]
