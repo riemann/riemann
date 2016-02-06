@@ -277,11 +277,11 @@ user=> ([1 2 3] 1)
 {% endhighlight %}
 
 <p>Here we've retrieved the value, <code>2</code>, at index <code>1</code>.</p>
-<p>We can create or convert an existing structure, like a list, into a vector with the <code>vector</code> function.</p>
+<p>We can create a vector with the <code>vector</code> function or convert an existing structure, like a list, into a vector with the <code>vec</code> function.</p>
 {% highlight clj %}
 user=> (vector 1 2 3)
 [1 2 3]
-user=> (vector (list 1 2 3))
+user=> (vec (list 1 2 3))
 [1 2 3]
 {% endhighlight %}
 
