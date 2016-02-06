@@ -209,7 +209,7 @@ li {
   margin: 1em 0 1em 40px;
 }
 
-.video-container, table, img, div.highlight, code pre, p {
+.video-container, table, img, figure.highlight, code pre, p {
   display: block;
   margin: 1em 0;
 }
@@ -242,7 +242,7 @@ code a {
 code .unfocus {
   color: #600;
 }
-div.highlight, code pre {
+figure.highlight, code pre {
   background-color: #eee;
   display: block;
   padding: 6px;
