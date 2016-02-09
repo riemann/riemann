@@ -54,6 +54,11 @@
   ChannelInboundHandlerAdapter which calls (handler core stats
   channel-handler-context message) for each received message.
 
+  To prevent Netty outbound buffer from filling up in the case of clients not 
+  reading ack messages, we close the channel when it becomes unwritable. Clients
+  should then be ready to reconnect if need be as they will receive some form
+  of exception in this case.
+
   Automatically handles channel closure, and handles exceptions thrown by the
   handler by logging an error and closing the channel."
   [core stats ^ChannelGroup channel-group handler]
@@ -61,6 +66,13 @@
     (channelActive [ctx]
       (.add channel-group (.channel ctx)))
 
+    (channelWritabilityChanged [^ChannelHandlerContext ctx]
+      (let [channel (.channel ctx)]
+        (when (not (.isWritable channel))
+          (warn "forcefully closing connection from " (.remoteAddress channel)
+                ". Client might be not reading acks fast enough or network is broken")
+          (.close channel))))
+    
     (channelRead [^ChannelHandlerContext ctx ^Object message]
       (try
         (handler @core stats ctx message)
@@ -93,6 +105,7 @@
     (.. ctx
       ; Actually handle request
       (writeAndFlush (handle core message))
+
       ; Record time from parse to write completion
       (addListener
         (reify ChannelFutureListener
