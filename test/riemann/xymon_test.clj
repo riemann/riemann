@@ -2,7 +2,8 @@
   (:use riemann.xymon
         [riemann.time :only [unix-time]]
         clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [clojure.string]))
 
 (logging/init)
 
@@ -73,6 +74,22 @@
                 "disable foo,example,com.bar_service 1 desc"]]]
     (doseq [[event line] pairs]
       (is (= line (event->disable event))))))
+
+(deftest ^:xymon-combo events->combo-test
+  (let [formatter #(str % "_s")
+        long-message (clojure.string/join (repeat 2048 "o"))
+        long-message_s (str long-message "_s")
+        pairs [[["foo"] ["foo_s"]]
+               [["foo" "bar" "asdf"]
+                ["combo\nfoo_s\n\nbar_s\n\nasdf_s\n\n"]]
+               [[long-message long-message]
+                [long-message_s long-message_s]]
+               [[long-message "foo" long-message]
+                [(str "combo\n" long-message_s "\n\nfoo_s\n\n")
+                 long-message_s]]]]
+    (doseq [[events result] pairs]
+      (is (= result
+             (events->combo formatter events))))))
 
 (deftest ^:xymon ^:integration xymon-test
          (let [k (xymon nil)]
