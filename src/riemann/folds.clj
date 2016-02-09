@@ -1,13 +1,13 @@
 (ns riemann.folds
   "Functions for combining states.
-  
+
   Folds usually come in two variants: a friendly version like sum, and a strict
   version like sum*. Strict variants will throw when one of their events is
   nil, missing a metric, or otherwise invalid. In typical use, however, you
   won't *have* all the necessary information to pass on an event. Friendly
   variants will do their best to ignore these error conditions where sensible,
   returning partially complete events or nil instead of throwing.
-  
+
   Called with an empty list, folds which would return a single event return
   nil."
   (:use [riemann.common])
@@ -36,7 +36,7 @@
   in \" 1\". If the points is a map, eg (sorted-sample events {0 \".min\" 1
   \".max\"}, the the values will be appened to the service name directly.
   Useful for extracting histograms and percentiles.
-  
+
   When s is empty, returns an empty list."
   [s points]
   (let [[points pnames] (if (vector? points)
@@ -66,7 +66,7 @@
 (defn fold
   "Fold with a reduction function over metrics. Ignores nil events and events
   with nil metrics.
-  
+
   If there are *no* non-nil events, returns nil."
   [f events]
   (when-let [e (some identity events)]
@@ -78,7 +78,7 @@
   If the first event has a nil :metric, or if any remaining event is nil, or
   has a nil metric, returns the first event, but with :metric nil and a
   :description of the error.
- 
+
   If the first event is nil, returns nil."
   [f events]
   (when-let [e (first events)]
@@ -162,6 +162,26 @@
       (when (seq metrics)
         (assoc e :metric (/ (reduce + metrics)
                             (clojure.core/count metrics)))))))
+
+(defn adjust-occurence
+  [state {:keys [metric] :as event}]
+  (update-in state [metric] conj event))
+
+(defn modes
+  "Keep track of repeating metrics. Yields a sequence of events with the highest
+   occuring metrics."
+  [events]
+  (let [occurs (reduce adjust-occurence {} events)
+        freqs  (for [o (vals occurs)] [(clojure.core/count o) (first o)])]
+    (->> (sort-by first > freqs)
+         (partition-by first)
+         (first)
+         (map second))))
+
+(defn mode
+  "Yield any mode returned by modes."
+  [events]
+  (first (modes events)))
 
 (defn median
   "Returns the median event from events, by metric."
