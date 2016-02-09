@@ -6,11 +6,22 @@
 (def XOR nsca/XOR_ENCRYPTION)
 (def TRIPLE_DES nsca/TRIPLE_DES_ENCRYPTION)
 
+(defn state->nagios-state
+  [state]
+  (or
+   (get {:ok       "ok"
+         :warning  "warning"
+         :error    "critical"
+         :critical "critical"
+         :unknown  "unknown"}
+        (if state (keyword state) :unknown))
+   "unknown"))
+
 (defn event->nagios
   "Converts an event into a Nagios message"
   [e]
   (nsca/nagios-message (str (:host e))
-                       (str (:state e))
+                       (state->nagios-state (:state e))
                        (str (:service e))
                        (str (:description e))))
 
