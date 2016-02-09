@@ -1678,7 +1678,7 @@ on events that remain the same for the specified time period.</p>
                   :state   (condp < fraction
                              0.7 "critical"
                              0.3 "warning"
-                                 "ok")}))
+                                 "ok")}))))
         ; Now we can use those "signin failures" events to alert on state
         ; transitions:
         (changed-state (email "ops@trioptimum.com"))))))
