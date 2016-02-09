@@ -37,7 +37,7 @@
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.0.34.Final"]
     [clj-antlr "0.2.2"]
-    [riemann-clojure-client "0.4.1"]
+    [riemann-clojure-client "0.4.2"]
     [less-awful-ssl "1.0.0"]
     [slingshot "0.12.2"]
     [clj-campfire "2.2.0"]
