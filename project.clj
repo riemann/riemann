@@ -8,7 +8,7 @@
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
-    [org.clojure/clojure "1.6.0"]
+    [org.clojure/clojure "1.8.0"]
     [org.clojure/math.numeric-tower "0.0.4"]
     [org.clojure/tools.logging "0.3.1"]
     [org.clojure/tools.nrepl "0.2.11"]
@@ -26,7 +26,7 @@
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.0"]
     [org.spootnik/http-kit "2.1.18.1"]
-    [clj-http "1.1.2" :exclusions [org.clojure/tools.reader]]
+    [clj-http "2.0.1"]
     [cheshire "5.5.0"]
     [clj-librato "0.0.5"]
     [clj-time "0.10.0"]
@@ -35,7 +35,7 @@
     [com.draines/postal "1.11.3"]
     [com.amazonaws/aws-java-sdk "1.10.5.1" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
-    [io.netty/netty-all "4.0.30.Final"]
+    [io.netty/netty-all "4.0.34.Final"]
     [clj-antlr "0.2.2"]
     [riemann-clojure-client "0.4.1"]
     [less-awful-ssl "1.0.0"]
@@ -45,6 +45,7 @@
     [amazonica "0.3.28" :exclusions [joda-time]]
     [capacitor "0.4.3" :exclusions [http-kit]]]
   :plugins [[codox "0.6.1"]
+            [lein-difftest "2.0.0"]
             [lein-rpm "0.0.5"
              :exclusions [org.apache.maven/maven-plugin-api
                           org.codehaus.plexus/plexus-container-default
@@ -88,7 +89,7 @@
                    :opsgenie :opsgenie
                    :boundary :boundary
                    :all (fn [_] true)}
-  :javac-options     ["-target" "1.6" "-source" "1.6"]
+;;  :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
   :java-source-path "src/riemann/"
 ;  :aot [riemann.bin]
