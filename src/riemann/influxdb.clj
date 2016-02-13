@@ -8,7 +8,6 @@
     [clojure.string :as str]
     [riemann.common :refer [unix-to-iso8601]]))
 
-
 ;; ## Helper Functions
 
 (def special-fields
@@ -19,21 +18,19 @@
   (str/escape field {\space "\\ ", \= "\\=", \, "\\,"}))
 
 (defn kv-encode-9 [kv]
-  (clojure.string/join "," (map (fn [[key value]]
-   (str (replace-disallowed-9 key) "=" (replace-disallowed-9 value))) kv)))
+  (clojure.string/join "," (map
+    (fn [[key value]]
+      (if (instance? String value)
+        (str (replace-disallowed-9 key) "=" (str "\"" (str/escape value {\" "\\\""}) "\""))
+        (str (replace-disallowed-9 key) "=" (clojure.pprint/cl-format nil "~F" value))))
+    kv)))
 
 (defn lineprotocol-encode-9 [event]
   (let [encoded_fields (kv-encode-9 (get event "fields"))
-        encoded_tags  (kv-encode-9 (get event "tags"))]
-
-    (str (get event "name") "," encoded_tags " " encoded_fields  "\n")))
-
-
-(defn lineprotocol-encode-list-9 [events]
-  ; encode {"points" [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}], "database" "foo"}
-  ; [{"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}]
-  ; {"name" "xyzzy", "time" "2015-06-26T07:06:45.000Z", "tags" {"host" "h"}, "fields" {"value" 0.6514667122989345, "state" "ok", "description" "at 2015-06-26 09:06:45 +0200"}}
-  (clojure.string/join (map lineprotocol-encode-9 (get events "points"))))
+        encoded_tags   (clojure.string/join "," (map
+                         (fn [[tag value]] (str (replace-disallowed-9 tag) "=" (replace-disallowed-9 value)))
+                         (get event "tags")))]
+    (str (str/escape (get event "measurement") {\space "\\ ", \, "\\,"}) "," encoded_tags " " encoded_fields " " (get event "time"))))
 
 (defn event-tags
   "Generates a map of InfluxDB tags from a Riemann event. Any fields in the
@@ -43,7 +40,6 @@
   (->> (select-keys event tag-fields)
        (map #(vector (name (key %)) (str (val %))))
        (into {})))
-
 
 (defn event-fields
   "Generates a map of InfluxDB fields from a Riemann event. The event's
@@ -59,8 +55,6 @@
              (into {}))
         (assoc "value" (:metric event)))))
 
-
-
 ;; ## InfluxDB 0.8
 
 (defn event->point-8
@@ -75,7 +69,6 @@
        :value (:metric event)}
       (apply dissoc event special-fields))))
 
-
 (defn events->points-8
   "Takes a series fn that finds the series for a given event, and a sequence of
   events, and emits a map of series names to vectors of points for that series."
@@ -89,7 +82,6 @@
                   m)))
             (transient {})
             events)))
-
 
 (defn influxdb-8
   "Returns a function which accepts an event, or sequence of events, and sends
@@ -124,8 +116,6 @@
           (doseq [[series points] points]
             (capacitor/post-points client series "s" points)))))))
 
-
-
 ;; ## InfluxDB 0.9
 
 (defn event->point-9
@@ -134,71 +124,61 @@
   [tag-fields event]
   (when (and (:time event) (:service event) (:metric event))
     {"measurement" (:service event)
-     "time" (unix-to-iso8601 (:time event))
+     "time" (long (:time event))
      "tags" (event-tags tag-fields event)
      "fields" (event-fields tag-fields event)}))
 
-
 (defn events->points-9
   "Converts a collection of Riemann events into InfluxDB points. Events which
-  map to nil are removed from the final collection."
+  map to nil are removed from the final collection.  Also filter out NaNs that
+  influxdb can't deal with currently."
   [tag-fields events]
-  (vec (remove nil? (map (partial event->point-9 tag-fields) events))))
-
+  (filter (fn [p]
+    (not-any?
+      (fn [v] (and (instance? Number (val v)) (Double/isNaN (val v))))
+      (get p "fields")))
+    (keep (partial event->point-9 tag-fields) events)))
 
 (defn influxdb-9
   "Returns a function which accepts an event, or sequence of events, and writes
   them to InfluxDB. Compatible with the 0.9.x series.
-
   (influxdb-9 {:host \"influxdb.example.com\"
                :db \"my_db\"
                :retention \"raw\"
                :tag-fields #{:host :sys :env}})
-
   0.9 Options:
-
   `:retention`      Name of retention policy to use. (optional)
-
   `:tag-fields`     A set of event fields to map into InfluxDB series tags.
                     (default: `#{:host}`)
-
   `:tags`           A common map of tags to apply to all points. (optional)
-
   `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
   [opts]
   (let [write-url
-        (format "%s://%s:%s/write?db=%s" (:scheme opts) (:host opts) (:port opts) (:db opts))
-
-        payload-base
-        (cond->
-          {"database" (:db opts)}
+        (str (cond->
+          (format "%s://%s:%s/write?db=%s&precision=s" (:scheme opts) (:host opts) (:port opts) (:db opts))
           (:retention opts)
-            (assoc "retentionPolicy" (:retention opts))
-          (seq (:tags opts))
-            (assoc "tags" (:tags opts)))
+            (str "&rp=" (:retention opts))))
 
         http-opts
         (cond->
           {:socket-timeout (:timeout opts 5000) ; ms
            :conn-timeout   (:timeout opts 5000) ; ms
-           :content-type   "text/plain"}
+           :content-type   "text/plain"
+           :insecure? (:insecure opts false)}
           (:username opts)
             (assoc :basic-auth [(:username opts)
                                 (:password opts)]))
 
-        tag-fields (:tag-fields opts #{:host})]
+        tag-fields
+        (:tag-fields opts #{:host})]
     (fn stream
       [events]
       (let [events (if (sequential? events) events (list events))
             points (events->points-9 tag-fields events)]
-        (when-not (empty? points)
-          (->> points
-               (assoc payload-base "points")
-               (lineprotocol-encode-list-9)
-               (assoc http-opts :Ω)
-               (http/post write-url)))))))
-
-
+        (http/post write-url
+          (assoc http-opts :body (->> points
+            (map lineprotocol-encode-9)
+            (clojure.string/join "\n"))))))))
 
 ;; ## Stream Construction
 
@@ -228,6 +208,8 @@
   `:username`       Database user to authenticate as. (optional)
 
   `:password`       Password to authenticate with. (optional)
+
+  `:insecure`       If scheme is https and certficate is self-signed. (optional)
 
   See `influxdb-8` and `influxdb-9` for version-specific options."
   [opts]

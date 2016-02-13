@@ -6,5 +6,5 @@ Find out more at [http://riemann.io](http://riemann.io)
 
 ===
 
-[![Build Status](https://travis-ci.org/aphyr/riemann.png)](https://travis-ci.org/aphyr/riemann)
+[![Build Status](https://travis-ci.org/riemann/riemann.png)](https://travis-ci.org/riemann/riemann)
 

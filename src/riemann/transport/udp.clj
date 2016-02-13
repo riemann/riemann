@@ -12,7 +12,8 @@
                              DefaultMessageSizeEstimator
                              ChannelOutboundHandler
                              ChannelInboundHandler
-                             ChannelInboundHandlerAdapter]
+                             ChannelInboundHandlerAdapter
+                             FixedRecvByteBufAllocator]
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
            [io.netty.channel.nio NioEventLoopGroup])
@@ -23,6 +24,7 @@
         [riemann.service       :only [Service ServiceEquiv]]
         [riemann.time          :only [unix-time]]
         [riemann.transport     :only [handle
+                                      ioutil-lock
                                       channel-group
                                       datagram->byte-buf-decoder
                                       protobuf-decoder
@@ -84,38 +86,41 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            (when-not @killer
-              (let [worker-group (NioEventLoopGroup.)
-                    bootstrap (Bootstrap.)]
+          (locking ioutil-lock
+            (locking this
+              (when-not @killer
+                (let [worker-group (NioEventLoopGroup.)
+                      bootstrap (Bootstrap.)]
 
-                ; Configure bootstrap
-                (doto bootstrap
-                  (.group worker-group)
-                  (.channel NioDatagramChannel)
-                  (.option ChannelOption/SO_BROADCAST false)
-                  (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
-                           (DefaultMessageSizeEstimator. max-size))
-                  (.handler handler))
-                
-                ; Setup Channel options
-                (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
+                  ; Configure bootstrap
+                  (doto bootstrap
+                    (.group worker-group)
+                    (.channel NioDatagramChannel)
+                    (.option ChannelOption/SO_BROADCAST false)
+                    (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
+                             (DefaultMessageSizeEstimator. max-size))
+                    (.option ChannelOption/RCVBUF_ALLOCATOR
+                             (FixedRecvByteBufAllocator. max-size))
+                    (.handler handler))
 
-                ; Start bootstrap
-                (->> (InetSocketAddress. host port)
-                     (.bind bootstrap)
-                     (.sync)
-                     (.channel)
-                     (.add channel-group))
+                  ; Setup Channel options
+                  (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
-                (info "UDP server" host port max-size so-rcvbuf "online")
+                  ; Start bootstrap
+                  (->> (InetSocketAddress. host port)
+                       (.bind bootstrap)
+                       (.sync)
+                       (.channel)
+                       (.add channel-group))
 
-                ; fn to close server
-                (reset! killer
-                        (fn killer []
-                          (-> channel-group .close .awaitUninterruptibly)
-                          @(shutdown-event-executor-group worker-group)
-                          (info "UDP server" host port max-size so-rcvbuf "shut down")))))))
+                  (info "UDP server" host port max-size so-rcvbuf "online")
+
+                  ; fn to close server
+                  (reset! killer
+                          (fn killer []
+                            (-> channel-group .close .awaitUninterruptibly)
+                            @(shutdown-event-executor-group worker-group)
+                            (info "UDP server" host port max-size so-rcvbuf "shut down"))))))))
 
   (stop! [this]
          (locking this

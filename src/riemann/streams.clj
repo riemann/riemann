@@ -683,15 +683,15 @@
       ; And forward
       (call-rescue event children)))))
 
-(defn fill-in-last
-  "Passes on all events. Fills in gaps in event stream with copies of the last
-  event merged with the given data, wherever interval seconds pass without an
-  event arriving. Inserted events have current time. Stops inserting when
-  expired. Uses local times."
-  ([interval update & children]
+(defn fill-in-last*
+  "Passes on all events. Fills in gaps in event stream with copies of
+  the last event updated with the given updater function, wherever
+  interval seconds pass without an event arriving. Inserted events
+  have current time. Stops inserting when expired. Uses local times."
+  ([interval updater & children]
    (let [last-event (atom nil)
          fill (bound-fn fill []
-                (call-rescue (merge @last-event update {:time (unix-time)}) children))
+                (call-rescue (merge (updater @last-event) {:time (unix-time)}) children))
          new-deferrable (fn new-deferrable []
                           (every! interval interval fill))
          deferrable (atom nil)]
@@ -715,6 +715,14 @@
 
        ; And forward
        (call-rescue event children)))))
+
+(defn fill-in-last
+  "Passes on all events. Fills in gaps in event stream with copies of the last
+  event merged with the given data, wherever interval seconds pass without an
+  event arriving. Inserted events have current time. Stops inserting when
+  expired. Uses local times."
+  ([interval update & children]
+   (apply fill-in-last* interval (fn [e] (merge e update)) children)))
 
 (defn interpolate-constant
   "Emits a constant stream of events every interval seconds, starting when an
@@ -852,7 +860,7 @@
   event.  If point is 1, takes the highest metric event. 0.5 is the median
   event, and so forth. Forwards each of these events to children. The service
   name has the point appended to it; e.g. 'response time' becomes 'response
-  time .95'."
+  time 0.95'."
   [interval points & children]
   (part-time-fast interval
                 (fn setup [] (atom []))

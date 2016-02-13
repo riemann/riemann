@@ -31,7 +31,15 @@
     (io.netty.util.concurrent Future
                               EventExecutorGroup
                               DefaultEventExecutorGroup
-                              ImmediateEventExecutor)))
+                              ImmediateEventExecutor)
+    (java.net InetAddress
+              UnknownHostException)))
+
+(def ioutil-lock
+  "There's a bug in JDK 6, 7, and 8 which can cause a deadlock initializing
+  sse-server and netty concurrently; we serialize them with this lock.
+  https://github.com/aphyr/riemann/issues/617"
+  (Object.))
 
 (defn ^DefaultChannelGroup channel-group
   "Make a channel group with a given name."
@@ -173,3 +181,11 @@
       {:ok false :error (str "parse error: " message)})
     (catch Exception ^Exception e
       {:ok false :error (.getMessage e)})))
+
+(defn resolve-host
+  "Resolves a hostname to a random IP"
+  [host]
+  (try
+    (.getHostAddress (rand-nth (InetAddress/getAllByName host)))
+    (catch UnknownHostException e
+      host)))

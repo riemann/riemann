@@ -9,6 +9,7 @@
             [riemann.instrumentation  :refer [Instrumented]]
             [riemann.service          :refer [Service ServiceEquiv]]
             [riemann.time             :refer [unix-time]]
+            [riemann.transport        :refer [ioutil-lock]]
             [clojure.tools.logging    :refer [info]]
             [clj-http.util            :refer [url-decode]]
             [clojure.string           :refer [split]]))
@@ -91,12 +92,13 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            (when-not @server
-              (reset! server (http/run-server
-                              (sse-handler core stats headers)
-                              {:host host :port port}))
-              (info "SSE server" host port "online"))))
+          (locking ioutil-lock
+            (locking this
+              (when-not @server
+                (reset! server (http/run-server
+                                 (sse-handler core stats headers)
+                                 {:host host :port port}))
+                (info "SSE server" host port "online")))))
 
   (stop! [this]
          (locking this
@@ -134,7 +136,7 @@
                               (:latencies in)))))))
 
 (defn sse-server
-  "Starts a new SSE server for a core. Starts immediately.
+  "Creates a new SSE server for a core.
 
   Options:
   :host    The address to listen on (default 127.0.0.1)
@@ -152,6 +154,7 @@
      :or   {host    "127.0.0.1"
             port    5558
             headers {}}}]
+
      (SSEServer.
       host
       port

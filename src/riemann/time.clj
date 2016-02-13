@@ -131,6 +131,7 @@
   ([interval f]
    (every! interval 0 f))
   ([interval delay f]
+   (assert (not (neg? delay)))
    (schedule! (Every. (task-id)
                       f
                       (+ (unix-time) delay)

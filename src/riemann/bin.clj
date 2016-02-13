@@ -1,16 +1,33 @@
 (ns riemann.bin
   "Main function."
   (:require [riemann.config :as config]
-            riemann.logging
+            [riemann.logging :as logging]
             riemann.time
             [riemann.test :as test]
-            riemann.pubsub)
-  (:use clojure.tools.logging)
+            riemann.pubsub
+            [cemerick.pomegranate :as pom]
+            [clojure.java.io :as io]
+            [clojure.tools.logging :refer :all])
   (:gen-class :name riemann.bin))
 
 (def config-file
   "The configuration file loaded by the bin tool"
-  (atom nil))
+  (promise))
+
+(defn set-config-file!
+  "Sets the config file used by Riemann. Adds the config file's enclosing
+  directory to the classpath as well."
+  [file]
+  (info "Loading" (-> file io/file .getCanonicalPath))
+  (assert (deliver config-file file)
+          (str "Config file already set to " (pr-str @config-file)
+               "--can't change it to " (pr-str file)))
+  (let [dir (-> file
+                io/file
+                .getCanonicalPath
+                io/file
+                .getParent)]
+    (pom/add-classpath dir)))
 
 (def reload-lock (Object.))
 
@@ -41,6 +58,21 @@
         (handle [sig]
                 (info "Caught SIGHUP, reloading")
                 (reload!))))))
+
+(defn pom-version
+  "Return version from Maven POM file."
+  []
+  (let [pom "META-INF/maven/riemann/riemann/pom.properties"
+        props (doto (java.util.Properties.)
+                (.load (-> pom io/resource io/input-stream)))]
+    (.getProperty props "version")))
+
+(defn version
+  "Return version from Leiningen environment or embeddd POM properties."
+  []
+  (or (System/getProperty "riemann.version")
+      (pom-version)))
+
 (defn pid
   "Process identifier, such as it is on the JVM. :-/"
   []
@@ -57,12 +89,11 @@
   ([config]
    (-main "start" config))
   ([command config]
-   (when (nil? (System/getProperty "log4j.configuration"))
-     (riemann.logging/init))
+   (logging/init)
    (case command
      "start" (try
                (info "PID" (pid))
-               (reset! config-file config)
+               (set-config-file! config)
                (handle-signals)
                (riemann.time/start!)
                (riemann.config/include @config-file)
@@ -73,11 +104,16 @@
 
      "test" (try
               (test/with-test-env
-                (reset! config-file config)
+                (set-config-file! config)
                 (riemann.config/include @config-file)
                 (binding [test/*streams* (:streams @config/next-core)]
                   (let [results (clojure.test/run-all-tests #".*-test")]
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
                       (System/exit 0)
-                      (System/exit 1)))))))))
+                      (System/exit 1))))))
+
+     "version" (try
+                 (println (version))
+                 (catch Exception e
+                   (error e "Couldn't read version"))))))

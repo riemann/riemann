@@ -2,6 +2,7 @@
   (:use clojure.test)
   (:require [riemann.logging :as logging]
             [riemann.slack :as slack]
+            [cheshire.core :as json]
             [clj-http.client :as client]))
 
 
@@ -50,8 +51,9 @@
         (let [slacker (slack/slack "any" "any" "test-user" "#test-channel")]
           (slacker {:host "localhost", :service "mailer", :state "error",
                     :description "Mailer failed", :metric 42, :tags ["first", "second"]})
-          (is (= (:body @post-request)
-                 "{\"attachments\":[{\"fields\":[{\"title\":\"Riemann Event\",\"value\":\"Host:   localhost\\nService:   mailer\\nState:   error\\nDescription:   Mailer failed\\nMetric:   42\\nTag:   -\\n\",\"short\":true}]}],\"channel\":\"#test-channel\",\"username\":\"test-user\",\"icon_emoji\":\":warning:\"}"))))
+          (is (= (json/parse-string (:body @post-request))
+                 {"attachments" [{"fields" [{"title" "Riemann Event"
+                                             "value" "Host:   localhost\nService:   mailer\nState:   error\nDescription:   Mailer failed\nMetric:   42\nTag:   -\n" "short" true}]}] "channel" "#test-channel" "username" "test-user" "icon_emoji" ":warning:"}))))
 
       (testing "allows formatting characters in main message text with custom formatter"
         (let [formatter (fn [e] {:text (str "<http://health.check.api/" (:service e) "|" (:service e) ">")})
@@ -72,10 +74,10 @@
                                    {:username "test-user", :channel "#test-channel", :icon ":ogre:"
                                     :formatter (constantly {})})]
           (slacker [{:host "localhost", :service "mailer"}])
-          (is (= (:body @post-request)
-                 (str "{\"channel\":\"#test-channel\","
-                      "\"username\":\"test-user\","
-                      "\"icon_emoji\":\":ogre:\"}")))))
+          (is (= (json/parse-string (:body @post-request))
+                 {"channel" "#test-channel"
+                  "username" "test-user"
+                  "icon_emoji" ":ogre:"}))))
 
       (testing "formats multiple events with a custom formatter"
         (let [slacker (slack/slack
@@ -89,9 +91,9 @@
                                        :attachments [{:pretext "pretext"}]})})]
           (slacker [{:host "localhost", :service "mailer", :tags ["first" "second"]}
                     {:host "localhost", :service "mailer", :tags ["third" "fourth"]}])
-          (is (= (:body @post-request)
-                 (str "{\"attachments\":[{\"pretext\":\"pretext\"}],"
-                       "\"text\":\"[\\\"first\\\" \\\"second\\\"][\\\"third\\\" \\\"fourth\\\"]\","
-                       "\"channel\":\"#another-channel\","
-                       "\"username\":\"another-user\","
-                       "\"icon_emoji\":\":ship:\"}"))))))))
+          (is (= (json/parse-string (:body @post-request))
+                 {"attachments" [{"pretext" "pretext"}]
+                  "text" "[\"first\" \"second\"][\"third\" \"fourth\"]"
+                  "channel" "#another-channel"
+                  "username" "another-user"
+                  "icon_emoji" ":ship:"})))))))

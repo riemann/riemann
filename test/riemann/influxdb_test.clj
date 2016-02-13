@@ -7,6 +7,9 @@
 
 (logging/init)
 
+; Would the next person working on influxdb kindly update these tests to use
+; riemann.test-utils/with-mock? Would be nice to have something besides just
+; integration tests. --Kyle, Sep 2015 :)
 
 (deftest ^:influxdb-8 ^:integration influxdb-test-8
   (let [k (influxdb/influxdb {:block-start true})]
@@ -59,7 +62,7 @@
   (is (nil? (influxdb/event->point-9 #{} {:service "foo test", :time 1}))
       "Event with no metric is converted to nil")
   (is (= {"measurement" "test service"
-          "time" "2015-04-07T00:32:45.000Z"
+          "time" 1428366765
           "tags" {"host" "host-01"}
           "fields" {"value" 42.08}}
          (influxdb/event->point-9
@@ -70,7 +73,7 @@
             :metric 42.08}))
       "Minimal event is converted to point fields")
   (is (= {"measurement" "service_api_req_latency"
-          "time" "2015-04-06T21:15:41.000Z"
+          "time" 1428354941
           "tags" {"host" "www-dev-app-01.sfo1.example.com"
                   "sys" "www"
                   "env" "dev"
@@ -98,3 +101,17 @@
       "Full event is converted to point fields")
   (is (empty? (influxdb/events->points-9 #{} [{:service "foo test"}]))
       "Nil points are filtered from result"))
+
+
+(deftest line-protocol
+  (is (= "some\\ service,host=ugly\"host\\=name,another=ta\\,g value=0.123456789,a_tag=\"a value\" 1442548067"
+         (influxdb/lineprotocol-encode-9
+           {"measurement" "some service"
+            "time"        1442548067000/1000
+            "tags"
+              {"host"     "ugly\"host=name"
+               "another"  "ta,g"}
+            "fields"
+              {"value"    0.123456789
+               "a_tag"    "a value"}}))
+    "Point field is converted to line encoding"))

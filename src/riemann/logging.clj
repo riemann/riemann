@@ -1,160 +1,217 @@
 (ns riemann.logging
-  "Configures log4j to log to a file. It's a trap!"
-  ; With thanks to arohner
-  (:import (org.apache.log4j
-             Logger
-             BasicConfigurator
-             EnhancedPatternLayout
+  (:import (org.slf4j
+             LoggerFactory)
+           (ch.qos.logback.classic
              Level
+             Logger)
+           (ch.qos.logback.core
              ConsoleAppender
-             FileAppender
-             SimpleLayout)
-           (net.logstash.log4j JSONEventLayoutV0
-                               JSONEventLayoutV1)
-           (org.apache.log4j.spi RootLogger))
-  (:import (org.apache.log4j.rolling TimeBasedRollingPolicy
-                                     SizeBasedTriggeringPolicy
-                                     FixedWindowRollingPolicy
-                                     RollingFileAppender))
-  (:import org.apache.commons.logging.LogFactory)
+             FileAppender)
+           (ch.qos.logback.core.encoder
+             LayoutWrappingEncoder)
+           (ch.qos.logback.core.rolling
+             RollingFileAppender
+             TimeBasedRollingPolicy
+             FixedWindowRollingPolicy
+             SizeBasedTriggeringPolicy)
+           (ch.qos.logback.classic.encoder
+             PatternLayoutEncoder)
+           (net.logstash.logback
+             JSONEventLayoutV0
+             JSONEventLayoutV1)
+           (net.logstash.logback.encoder
+             LogstashEncoder))
   (:require wall.hack))
 
+(defn get-logger
+  ([]
+    (LoggerFactory/getLogger Logger/ROOT_LOGGER_NAME))
+  ([logger]
+    (LoggerFactory/getLogger logger)))
+
+(defn- get-context
+  []
+  (LoggerFactory/getILoggerFactory))
+
+
+(defmulti encoder identity)
+
+(defmethod encoder :json
+  [type]
+  (LogstashEncoder.))
+
+(defmethod encoder :json-event
+  [type]
+  (encoder :json-event-v0))
+
+(defmethod encoder :json-event-v0
+  [type]
+  (doto (LayoutWrappingEncoder.)
+    (.setLayout (JSONEventLayoutV0.))))
+
+(defmethod encoder :json-event-v1
+  [type]
+  (doto (LayoutWrappingEncoder.)
+    (.setLayout (JSONEventLayoutV1.))))
+
+(defmethod encoder :riemann
+  [type]
+  (doto (PatternLayoutEncoder.)
+    (.setPattern "%p [%d] %t - %c - %m%n%throwable")))
+
+(defmethod encoder :default
+  [type]
+  (binding [*out* *err*]
+    (println "invalid logging layout specified: " type))
+  (encoder :riemann))
+
 (defn set-level
-  "Set the level for the given logger, by string name. Use:
+  "Set the level for the given logger, by string name.
+
+  Example:
+
+  (set-level Level/INFO)
+    or
   (set-level \"riemann.client\", Level/DEBUG)"
   ([level]
-   (. (Logger/getRootLogger) (setLevel level)))
+    (. (get-logger)
+      (setLevel level)))
   ([logger level]
-   (. (Logger/getLogger logger) (setLevel level))))
+    (. (get-logger logger)
+      (setLevel level))))
 
 (defmacro suppress
   "Turns off logging for the evaluation of body."
   [loggers & body]
   (let [[logger & more] (flatten [loggers])]
     (if logger
-      `(let [old-level# (.getLevel (Logger/getLogger ~logger))]
+      `(let [old-level# (.getLevel (get-logger ~logger))]
          (try
-           (set-level ~logger Level/FATAL)
+           (set-level ~logger Level/ERROR)
            (suppress ~more ~@body)
            (finally
              (set-level ~logger old-level#))))
       `(do ~@body))))
 
-(def ^{:doc "available logging patterns"}
-  layouts
-  {:riemann       (EnhancedPatternLayout. "%p [%d] %t - %c - %m%n%throwable")
-   :json-event    (JSONEventLayoutV0.)
-   :json-event-v0 (JSONEventLayoutV0.)
-   :json-event-v1 (JSONEventLayoutV1.)})
-
-(defn get-layout
-  "Fetch a logging layout by name"
-  [layout-name]
-  (get layouts (or layout-name :riemann)))
-
 (defn init
-  "Initialize log4j. You will probably call this from the config file. You can
+  "Initialize logging. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
 
-  :console         Determine if logging should happen on the console
-  :console-layout  On the off-chance that someone runs riemann within runit,
-                   keep the option of specifying the layout
-  :file            The file to log to. If omitted, logs to console only. If
-                   provided log to that file using the default layout
-  :files           A list of files to log to. If provided, a seq is expected
-                   containing maps with a :path and an optional :layout key
-                   which can be any of: :riemann, :json-event :json-eventv1
-  :logsize-rotate  If size(bytes) is specified rotate based on that size
-                   otherwise use default time based.
-  Example:
+  :console?         Determine if logging should happen on the console.
+  :console-layout   Specifying console layout.
+  :file             The file to log to. If omitted, log to console only.
+  :file-layout      Specifying file layout.
+  :files            A list of files to log to. If provided, a seq or vector is
+                    expected containing maps with a :file and an :file-layout
+  :logsize-rotate   If size (in bytes) is specified use size based rotation
+                    otherwise use default time based rotation.
+  :rotate-count     Specifying the number of rotated files to keep. If omitted,
+                    keep last 10 rotated files.
 
-  (init {:console false :file \"/var/log/riemann.log\"})
-    or
-  (init {:console false :file \"/var/log/riemann.log\" :logsize-rotate 1000000000})"
-  [& opts]
-  ;; Reset loggers
-  (let [{:keys [file
-                files
-                console-layout
-                logsize-rotate]
-         :as opts} (if (and (= 1 (count opts))
-                            (map? (first opts)))
-                     (first opts)
-                     (apply array-map opts))
-         console (get opts :console true)
-         logger (doto (Logger/getRootLogger) (.removeAllAppenders))]
+  Layout can be :riemann or :json. If layout is omitted, the default layout
+  :riemann will be used.
 
-    (when console
-      (.addAppender logger (ConsoleAppender. (get-layout console-layout))))
+  For example:
 
-    (when file
-      (if logsize-rotate
-        (let [rolling-policy (doto (FixedWindowRollingPolicy.)
-                               (.setActiveFileName file)
-                               (.setMaxIndex 5)
-                               (.setFileNamePattern
-                                (str file "%d{yyyy-MM-dd}.%i.gz"))
-                               (.activateOptions))
-              triggering-policy (doto (SizeBasedTriggeringPolicy.)
-                                  (.setMaxFileSize logsize-rotate)
-                                  (.activateOptions))
-              log-appender (doto (RollingFileAppender.)
-                             (.setRollingPolicy rolling-policy)
-                             (.setTriggeringPolicy triggering-policy)
-                             (.setLayout (get-layout :riemann))
-                             (.activateOptions))]
-          (.addAppender logger log-appender))
+      ; Basic console logging
+      (init)
 
-        (let [rolling-policy (doto (TimeBasedRollingPolicy.)
-                               (.setActiveFileName file)
-                               (.setFileNamePattern
-                                (str file ".%d{yyyy-MM-dd}.gz"))
-                               (.activateOptions))
-              log-appender (doto (RollingFileAppender.)
-                             (.setRollingPolicy rolling-policy)
-                             (.setLayout (get-layout :riemann))
-                             (.activateOptions))]
-          (.addAppender logger log-appender))))
+      ; Also log to a file
+      (init {:file \"/var/log/riemann.log\"})
 
-    (when files
-      (doseq [{:keys [path layout]} files
-              :let [layout (get-layout layout)]]
+      ; With rotation
+      (init {:console? false :file \"/var/log/riemann.log\" :rotate-count 10})
+
+      ; Rotate at a certain size
+      (init {:console? false
+             :file \"/var/log/riemann.log\"
+             :logsize-rotate 1000000000})
+
+      ; Multiple files in different formats
+      (init {:console? false
+             :files [{:file \"/var/log/riemann.log\"},
+                     {:file \"/var/log/riemann.json.log\" :file-layout :json}]
+             :logsize-rotate 100
+             :rotate-count 5})"
+  ([] (init {}))
+  ([opts]
+    (let [{:keys [console?
+                  console-layout
+                  file
+                  file-layout
+                  files
+                  rotate-count
+                  logsize-rotate]
+           :or   {console?       true
+                  console-layout :riemann
+                  file-layout    :riemann}} opts
+         logger   (get-logger)
+         context  (get-context)]
+
+      (.detachAndStopAllAppenders logger)
+
+      (when console?
+        (let [encoder             (doto (encoder console-layout)
+                                    (.setContext context)
+                                    (.start))
+              console-appender    (doto (ConsoleAppender.)
+                                    (.setContext context)
+                                    (.setEncoder encoder)
+                                    (.start))]
+          (.addAppender logger console-appender)))
+
+      (doseq [{:keys [file file-layout]}
+              (conj files {:file file :file-layout file-layout})
+               :when file]
         (if logsize-rotate
-          (let [rolling-policy (doto (FixedWindowRollingPolicy.)
-                                 (.setActiveFileName file)
-                                 (.setMaxIndex 5)
-                                 (.setFileNamePattern
-                                  (str file "%d{yyyy-MM-dd}.%i.gz"))
-                                 (.activateOptions))
+          (let [encoder           (doto (encoder file-layout)
+                                    (.setContext context)
+                                    (.start))
+                log-appender      (doto (RollingFileAppender.)
+                                    (.setFile file)
+                                    (.setContext context)
+                                    (.setEncoder encoder))
+                rolling-policy    (doto (FixedWindowRollingPolicy.)
+                                    (.setMinIndex 1)
+                                    (.setMaxIndex (or rotate-count 10))
+                                    (.setFileNamePattern
+                                     (str file ".%i"))
+                                    (.setParent log-appender)
+                                    (.setContext context)
+                                    (.start))
                 triggering-policy (doto (SizeBasedTriggeringPolicy.)
-                                    (.setMaxFileSize logsize-rotate)
-                                    (.activateOptions))
-                log-appender (doto (RollingFileAppender.)
-                               (.setRollingPolicy rolling-policy)
-                               (.setTriggeringPolicy triggering-policy)
-                               (.setLayout (get-layout :riemann))
-                               (.activateOptions))]
+                                    (.setMaxFileSize (str logsize-rotate))
+                                    (.setContext context)
+                                    (.start))
+                log-appender      (doto log-appender
+                                    (.setRollingPolicy rolling-policy)
+                                    (.setTriggeringPolicy triggering-policy)
+                                    (.start))]
             (.addAppender logger log-appender))
-
-          (let [rolling-policy (doto (TimeBasedRollingPolicy.)
-                                 (.setActiveFileName path)
-                                 (.setFileNamePattern
-                                  (str path ".%d{yyyy-MM-dd}.gz"))
-                                 (.activateOptions))
-                log-appender (doto (RollingFileAppender.)
-                               (.setRollingPolicy rolling-policy)
-                               (.setLayout layout)
-                               (.activateOptions))]
+          (let [encoder           (doto (encoder file-layout)
+                                    (.setContext context)
+                                    (.start))
+                log-appender      (doto (RollingFileAppender.)
+                                    (.setFile file)
+                                    (.setContext context)
+                                    (.setEncoder encoder))
+                rolling-policy    (doto (TimeBasedRollingPolicy.)
+                                    (.setMaxHistory (or rotate-count 10))
+                                    (.setFileNamePattern
+                                     (str file ".%d{yyyy-MM-dd}"))
+                                    (.setParent log-appender)
+                                    (.setContext context)
+                                    (.start))
+                log-appender      (doto log-appender
+                                    (.setRollingPolicy rolling-policy)
+                                    (.start))]
             (.addAppender logger log-appender)))))
 
-      ;; Set levels.
-      (.setLevel logger Level/INFO)
-
-    (set-level "riemann.client" Level/DEBUG)
-    (set-level "riemann.server" Level/DEBUG)
-    (set-level "riemann.streams" Level/DEBUG)
+    (set-level                    Level/INFO)
+    (set-level "riemann.client"   Level/DEBUG)
+    (set-level "riemann.server"   Level/DEBUG)
+    (set-level "riemann.streams"  Level/DEBUG)
     (set-level "riemann.graphite" Level/DEBUG)))
-
 
 (defn nice-syntax-error
   "Rewrites clojure.lang.LispReader$ReaderException to have error messages that

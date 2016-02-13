@@ -17,7 +17,7 @@
   (testing "Transform event to Nagios message"
     (is (= expected (event->nagios test-event))))
   (testing "Malformed events are rejected"
-    (is (thrown? IllegalArgumentException (event->nagios (merge test-event {:state "borken"}))))))
+    (is (thrown? IllegalArgumentException (event->nagios (dissoc test-event :host))))))
 
 (deftest test-stream
   (testing "Events get transformed and are sent"

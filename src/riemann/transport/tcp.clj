@@ -29,6 +29,7 @@
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.time :only [unix-time]]
         [riemann.transport :only [handle
+                                  ioutil-lock
                                   protobuf-decoder
                                   protobuf-encoder
                                   msg-decoder
@@ -53,6 +54,11 @@
   ChannelInboundHandlerAdapter which calls (handler core stats
   channel-handler-context message) for each received message.
 
+  To prevent Netty outbound buffer from filling up in the case of clients not 
+  reading ack messages, we close the channel when it becomes unwritable. Clients
+  should then be ready to reconnect if need be as they will receive some form
+  of exception in this case.
+
   Automatically handles channel closure, and handles exceptions thrown by the
   handler by logging an error and closing the channel."
   [core stats ^ChannelGroup channel-group handler]
@@ -60,6 +66,13 @@
     (channelActive [ctx]
       (.add channel-group (.channel ctx)))
 
+    (channelWritabilityChanged [^ChannelHandlerContext ctx]
+      (let [channel (.channel ctx)]
+        (when (not (.isWritable channel))
+          (warn "forcefully closing connection from " (.remoteAddress channel)
+                ". Client might be not reading acks fast enough or network is broken")
+          (.close channel))))
+    
     (channelRead [^ChannelHandlerContext ctx ^Object message]
       (try
         (handler @core stats ctx message)
@@ -92,6 +105,7 @@
     (.. ctx
       ; Actually handle request
       (writeAndFlush (handle core message))
+
       ; Record time from parse to write completion
       (addListener
         (reify ChannelFutureListener
@@ -128,42 +142,44 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            (when-not @killer
-              (let [event-loop-group-fn (:event-loop-group-fn netty-implementation)
-                    boss-group (event-loop-group-fn)
-                    worker-group (event-loop-group-fn)
-                    bootstrap (ServerBootstrap.)]
+          (locking ioutil-lock
+            (locking this
+              (when-not @killer
+                (let [event-loop-group-fn (:event-loop-group-fn
+                                            netty-implementation)
+                      boss-group (event-loop-group-fn)
+                      worker-group (event-loop-group-fn)
+                      bootstrap (ServerBootstrap.)]
 
-                ; Configure bootstrap
-                (doto bootstrap
-                  (.group boss-group worker-group)
-                  (.channel (:channel netty-implementation))
-                  (.option ChannelOption/SO_REUSEADDR true)
-                  (.option ChannelOption/TCP_NODELAY true)
-                  (.childOption ChannelOption/SO_REUSEADDR true)
-                  (.childOption ChannelOption/TCP_NODELAY true)
-                  (.childOption ChannelOption/SO_KEEPALIVE true)
-                  (.childHandler initializer))
+                  ; Configure bootstrap
+                  (doto bootstrap
+                    (.group boss-group worker-group)
+                    (.channel (:channel netty-implementation))
+                    (.option ChannelOption/SO_REUSEADDR true)
+                    (.option ChannelOption/TCP_NODELAY true)
+                    (.childOption ChannelOption/SO_REUSEADDR true)
+                    (.childOption ChannelOption/TCP_NODELAY true)
+                    (.childOption ChannelOption/SO_KEEPALIVE true)
+                    (.childHandler initializer))
 
-                ; Start bootstrap
-                (->> (InetSocketAddress. host port)
-                     (.bind bootstrap)
-                     (.sync)
-                     (.channel)
-                     (.add channel-group))
-                (info "TCP server" host port "online")
+                  ; Start bootstrap
+                  (->> (InetSocketAddress. host port)
+                       (.bind bootstrap)
+                       (.sync)
+                       (.channel)
+                       (.add channel-group))
+                  (info "TCP server" host port "online")
 
-                ; fn to close server
-                (reset! killer
-                        (fn killer []
-                          (.. channel-group close awaitUninterruptibly)
-                          ; Shut down workers and boss concurrently.
-                          (let [w (shutdown-event-executor-group worker-group)
-                                b (shutdown-event-executor-group boss-group)]
-                            @w
-                            @b)
-                          (info "TCP server" host port "shut down")))))))
+                  ; fn to close server
+                  (reset! killer
+                          (fn killer []
+                            (.. channel-group close awaitUninterruptibly)
+                            ; Shut down workers and boss concurrently.
+                            (let [w (shutdown-event-executor-group worker-group)
+                                  b (shutdown-event-executor-group boss-group)]
+                              @w
+                              @b)
+                            (info "TCP server" host port "shut down"))))))))
 
   (stop! [this]
          (locking this

@@ -172,3 +172,13 @@
   (is (= {:metric 2}  (maximum [{:metric 2}])))
   (is (= {:metric 5}  (maximum [{:metric 2} {:metric 5} {:metric -4}
                                 {:metric 0}]))))
+
+(deftest modes-test
+  (is (= [{:metric 2}] (vec (modes [{:metric 1} {:metric 2} {:metric 3} {:metric 4} {:metric 2}]))))
+  (is (= #{{:metric 3} {:metric 2}} (set (modes [{:metric 1} {:metric 2} {:metric 3} {:metric 3} {:metric 4} {:metric 2}]))))
+  (is (empty? (modes []))))
+
+(deftest mode-test
+  (is (= {:metric 2} (mode [{:metric 1} {:metric 2} {:metric 3} {:metric 4} {:metric 2}])))
+  (is (#{{:metric 2} {:metric 3}} (mode [{:metric 1} {:metric 2} {:metric 3} {:metric 3} {:metric 4} {:metric 2}])))
+  (is (nil? (mode []))))

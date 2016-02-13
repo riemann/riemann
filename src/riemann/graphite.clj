@@ -10,7 +10,8 @@
   (:use [clojure.string :only [split join replace]]
         clojure.tools.logging
         riemann.pool
-        riemann.common))
+        riemann.common
+        [riemann.transport :only [resolve-host]]))
 
 (defprotocol GraphiteClient
   (open [client]
@@ -75,6 +76,12 @@
                                                 frac))))
       event)))
 
+(defn graphite-metric
+  "convert riemann metric value to graphite"
+  [event]
+  (let [val (:metric event)]
+    (if (integer? val) val (double val))))
+
 (defn graphite
   "Returns a function which accepts an event and sends it to Graphite.
   Silently drops events when graphite is down. Attempts to reconnect
@@ -106,16 +113,17 @@
                      :protocol :tcp
                      :claim-timeout 0.1
                      :pool-size 4
-                     :path graphite-path-percentiles} opts)
+                     :path graphite-path-percentiles
+                     :metric graphite-metric} opts)
         pool (fixed-pool
                (fn []
                  (info "Connecting to " (select-keys opts [:host :port]))
-                 (let [host (:host opts)
+                 (let [host (resolve-host (:host opts))
                        port (:port opts)
                        client (open (condp = (:protocol opts)
                                       :tcp (GraphiteTCPClient. host port)
                                       :udp (GraphiteUDPClient. host port)))]
-                   (info "Connected")
+                   (info "Connected to" host)
                    client))
                (fn [client]
                  (info "Closing connection to "
@@ -131,7 +139,7 @@
       (when (:metric event)
         (with-pool [client pool (:claim-timeout opts)]
                    (let [string (str (join " " [(path event)
-                                                (float (:metric event))
+                                                (graphite-metric event)
                                                 (int (:time event))])
                                      "\n")]
                      (send-line client string)))))))
