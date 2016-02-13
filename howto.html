@@ -1942,6 +1942,15 @@ rate
     <p>New users sometimes have trouble understanding the execution mode. For
     example, you might write a config like this, which is supposed to apply the
     local Riemann server's current time to every event.</p>
+
+    <p>However, this code doesn't do what you might expect. It assigns the
+    <i>same</i> time--the time that Riemann last reloaded its config--to every
+    event. Why?</p>
+
+    <p>Riemann evaluates the config once at <i>configuration time</i>, building
+    up a set of streams and setting up services like logging, the TCP server,
+    and so on. Once the config is processed, Riemann begins passing events to
+    those streams.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1954,19 +1963,9 @@ rate
 
 <div class="row">
   <div class="sixcol">
-    <p>However, this code doesn't do what you might expect. It assigns the
-    <i>same</i> time--the time that Riemann last reloaded its config--to every
-    event. Why?</p>
-
-    <p>Riemann evaluates the config once at <i>configuration time</i>, building
-    up a set of streams and setting up services like logging, the TCP server,
-    and so on. Once the config is processed, Riemann begins passing events to
-    those streams.</p>
-
     <p>So, at config time, Riemann follows the normal rules of
     Clojure evaluation, and calls <code>(unix-time)</code> to obtain the
     current server clock.</p>
-
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -1979,21 +1978,18 @@ rate
 
 <div class="row">
   <div class="sixcol">
-    <p>Then it calls <code>(with :time 12345 index)</code> to build a stream that takes events, assigns the time 12345, and sends them to the index.</p>
+    <p>Then it calls <code>(with :time 12345 index)</code> to build a stream
+    that takes events, assigns the time 12345, and sends them to the index.</p>
+
+    <p>Finally, Riemann calls <code>(streams)</code> with that function, telling
+    Riemann to apply that stream to all incoming events: assigning the same
+    time to all events.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
 (streams
   #<fn-taking-an-event>)
 {% endhighlight %}
-  </div>
-</div>
-
-<div class="row">
-  <div class="sixcol">
-    <p>Finally, we call <code>(streams)</code> with that function, telling
-    Riemann to apply that stream to all incoming events: assigning the same
-    time to all events.</p>
   </div>
 </div>
 
