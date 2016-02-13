@@ -39,9 +39,8 @@
 (defn- api-alias
   "Generate OpsGenie alias based on event"
   [event]
-  (hash (str (:host event) " "
-       (:service event) " "
-       (apply str (:tags event)))))
+  (hash (str (:host event) \uffff (:service event) \uffff
+       (clojure.string/join \uffff (sort (:tags event))))))
 
 (defn- create-alert
   "Create alert in OpsGenie"
