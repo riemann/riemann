@@ -1,3 +1,5 @@
+.idea
+*.iml
 .cake
 .attach_pid*
 pom.xml
