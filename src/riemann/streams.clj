@@ -37,6 +37,7 @@
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
             [riemann.index :as index]
+            [riemann.ttl-cache :refer [ttl-cache-factory]]
             riemann.client
             riemann.logging
             [clojure.set :as set])
@@ -1492,22 +1493,28 @@
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
   `(let [new-fork# (fn [] [~@children])]
-     (by-fn ~fields new-fork#)))
+     (by-fn ~fields new-fork# hash-map)))
 
-(defn by-fn [fields new-fork]
+(defmacro expiring-by
+  "Same as (by) but accepts ttl as an additional first argument which sets the lifespan of each fork"
+  [ttl fields & children]
+  `(let [new-fork# (fn [] [~@children])]
+     (by-fn ~fields new-fork# #(ttl-cache-factory {} :ttl (* ~ttl 1000)))))
+
+(defn by-fn [fields new-fork table-factory]
   (let [fields (flatten [fields])
         f (if (= 1 (count fields))
             ; Just use the first function given applied to the event
             (first fields)
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
-        table (atom {})]
-     (fn stream [event]
-       (let [fork-name (f event)
-             fork (if-let [fork (@table fork-name)]
-                    fork
-                    ((swap! table assoc fork-name (new-fork)) fork-name))]
-         (call-rescue event fork)))))
+        table (atom (table-factory))]
+    (fn stream [event]
+      (let [fork-name (f event)
+            fork (if-let [fork (get @table fork-name)]
+                  fork
+                  (get (swap! table assoc fork-name (new-fork)) fork-name))]
+        (call-rescue event fork)))))
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous
