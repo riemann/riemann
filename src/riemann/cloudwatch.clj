@@ -33,7 +33,7 @@
 
   :namespace   AWS CloudWatch namespace."
   [opts]
-  (let [opts (if (or (contains? opts :access-key) (contains? opts :access-key))
+  (let [opts (if (or (contains? opts :access-key) (contains? opts :secret-key))
                (merge 
                     {:access-key "aws-access-key"
                      :secret-key "aws-secret-key"
