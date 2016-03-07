@@ -19,7 +19,6 @@
   (depends a & bs) means that if a matches the current event (and only the
   current event, not the full index), b must match the current event and index.
   "
-  (:use riemann.index)
   (:require [riemann.streams :as streams]))
 
 (defprotocol Rule

@@ -1,4 +1,5 @@
 (ns riemann.index-test
+  (:refer-clojure :exclude [update])
   (:use riemann.index
         riemann.core
         riemann.query

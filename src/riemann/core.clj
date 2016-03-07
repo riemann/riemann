@@ -214,11 +214,11 @@
          (index/expire source))
        (search [this query-ast]
          (index/search source query-ast))
-       (update [this event]
+       (insert [this event]
          (when-not (:time event)
            (throw (ex-info "cannot index event with no time"
                            {:event event})))
-         (index/update source event)
+         (index/insert source event)
          (when registry
            (ps/publish! registry "index" event)))
        (lookup [this host service]
@@ -249,7 +249,7 @@
 
        clojure.lang.IFn
        (invoke [this event]
-         (index/update this event)))))
+         (index/insert this event)))))
 
 (defn delete-from-index
   "Deletes similar events from the index. By default, deletes events with the
