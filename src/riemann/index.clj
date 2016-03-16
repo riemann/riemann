@@ -10,7 +10,9 @@
   Index: indexing and querying events
   Seqable: returning a list of events
   Service: lifecycle management"
+  (:refer-clojure :exclude [update])
   (:require [riemann.query :as query]
+            [riemann.common :refer [deprecated]]
             [riemann.instrumentation :refer [Instrumented]])
   (:use [riemann.time :only [unix-time]]
          riemann.service)
@@ -28,7 +30,7 @@
     "Return a seq of expired states from this index, removing each.")
   (search [this query-ast]
     "Returns a seq of events from the index matching this query AST")
-  (update [this event]
+  (insert [this event]
     "Updates index with event")
   (lookup [this host service]
     "Lookup an indexed event from the index"))
@@ -86,7 +88,7 @@
             (filter matching (.values hm)))))
 
 
-      (update [this event]
+      (insert [this event]
         (if (= "expired" (:state event))
           (delete this event)
           (.put hm [(:host event) (:service event)] event)))
@@ -118,3 +120,8 @@
   "Create a new index (currently: an nhbm index)"
   []
   (nbhm-index))
+
+(defn update
+  [index-instance event]
+  (deprecated "Update is now a reserved name in clojure, please use update!"
+              (insert index-instance event)))

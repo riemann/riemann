@@ -1,12 +1,16 @@
 (ns riemann.deps-test
+  (:require [riemann.index  :as index]
+            [riemann.core   :refer [wrap-index]]
+            [riemann.common :refer [event]]
+            [riemann.deps   :refer :all]
+            [clojure.test   :refer :all])
   (:use riemann.deps
-        riemann.index
         riemann.core
         [riemann.common :only [event]]
         clojure.test))
 
 (defn context [events]
-  (let [i (wrap-index (nbhm-index))]
+  (let [i (wrap-index (index/nbhm-index))]
     (doseq [e events]
       (i (event e)))
     i))
@@ -106,7 +110,7 @@
 
 (deftest tag-test
          (let [rule (depends {:service "x"} {:service "y"})
-               index (wrap-index (nbhm-index))
+               index (wrap-index (index/nbhm-index))
                out (atom #{})
                append-out (partial swap! out conj)
                s (deps-tag index rule append-out)]
@@ -126,7 +130,7 @@
 (comment
 (deftest suppress-test
          (let [rule (depends {:service "x"} {:service "y"})
-               index (wrap-index (nbhm-index))
+               index (wrap-index (index/nbhm-index))
                out (atom #{})
                append-out (partial swap! out conj)
                s (suppress-dependent-failures {:index index

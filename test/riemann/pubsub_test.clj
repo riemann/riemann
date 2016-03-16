@@ -1,10 +1,10 @@
 (ns riemann.pubsub-test
-  (:use riemann.pubsub
-        riemann.core
-        riemann.index
-        [riemann.common :only [event]]
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.index   :as index]
+            [riemann.logging :as logging]
+            [riemann.core    :refer [transition! core wrap-index]]
+            [riemann.common  :refer [event]]
+            [riemann.pubsub  :refer :all]
+            [clojure.test    :refer :all]))
 
 (deftest one-to-one
          (let [r   (pubsub-registry)
@@ -61,7 +61,7 @@
 
 (deftest index-subscription-test
   (let [ps   (pubsub-registry)
-        i    (wrap-index (index) ps)
+        i    (wrap-index (index/index) ps)
         core (logging/suppress
               ["riemann.core" "riemann.pubsub"]
               (transition! (core) {:index i :pubsub ps}))
