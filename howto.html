@@ -1857,7 +1857,7 @@ on events that remain the same for the specified time period.</p>
   </div>
   <div class="sixcol last">
 {% highlight clj %}
-(defn maintenance-mode [host]
+(defn maintenance-mode? [host]
   ; Using (list) to build a query dynamically
   (->> (list 'and (list '= 'host host)
                   '(= service "maintenance-mode"))
