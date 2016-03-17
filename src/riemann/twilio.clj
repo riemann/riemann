@@ -12,9 +12,9 @@
   (client/post (format messages-url (:account twilio-opts))
      {:basic-auth [(:account twilio-opts) (:service-key twilio-opts)]
      :form-params
-     {:from (:from msg-opts)
-      :to (:to msg-opts)
-      :body (:body msg-opts)}
+     {:From (:from msg-opts)
+      :To (:to msg-opts)
+      :Body (:body msg-opts)}
      :socket-timeout 5000
      :conn-timeout 5000
      :accept :json
