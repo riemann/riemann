@@ -1527,11 +1527,16 @@
     (fn stream [event]
       (let [fork-name (f event)
             expires (+ (:time event 0) (:ttl event 0))
-            fork (if-let [fork (get @table fork-name)]
-                   {:stream (:stream fork) :expires (max expires (:expires fork))}
-                   {:stream (new-fork) :expires expires})]
-        (swap! table assoc fork-name fork)
-        (call-rescue event (:stream fork))))))
+            fork (-> table
+                   (swap!
+                     (fn [table fork-name]
+                       (assoc table fork-name
+                         (if-let [fork (get table fork-name)]
+                           {:stream (:stream fork) :expires (max expires (:expires fork))}
+                           {:stream (new-fork) :expires expires})))
+                     fork-name)
+                   (get fork-name))]
+          (call-rescue event (:stream fork))))))
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous
