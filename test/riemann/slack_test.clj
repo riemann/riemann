@@ -53,7 +53,11 @@
                     :description "Mailer failed", :metric 42, :tags ["first", "second"]})
           (is (= (json/parse-string (:body @post-request))
                  {"attachments" [{"fields" [{"title" "Riemann Event"
-                                             "value" "Host:   localhost\nService:   mailer\nState:   error\nDescription:   Mailer failed\nMetric:   42\nTag:   -\n" "short" true}]}] "channel" "#test-channel" "username" "test-user" "icon_emoji" ":warning:"}))))
+                                             "value" "Host:   localhost\nService:   mailer\nState:   error\nDescription:   Mailer failed\nMetric:   42\nTag:   -\n" "short" true}]
+                                  "fallback" "*Host:* localhost *Service:* mailer *State:* error *Description:* Mailer failed *Metric:* 42"}]
+                  "channel" "#test-channel"
+                  "username" "test-user"
+                  "icon_emoji" ":warning:"}))))
 
       (testing "allows formatting characters in main message text with custom formatter"
         (let [formatter (fn [e] {:text (str "<http://health.check.api/" (:service e) "|" (:service e) ">")})
