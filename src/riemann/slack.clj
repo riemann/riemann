@@ -11,7 +11,7 @@
   (escape message {\< "&lt;" \> "&gt;" \& "&amp;"}))
 
 (defn slack-fallback
-  ""
+  "Minimal, plain-text event formatting. Used for dumb clients such as IRC."
   [events]
   (slack-escape
     (str
