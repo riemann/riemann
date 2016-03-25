@@ -33,7 +33,7 @@
 (defn- format-event [{:keys [message] :as conf} event]
   "Creates an event suitable for posting to hipchat."
   (merge {:color (message-colour event) :from "riemann"}
-         (-> conf (dissoc :server) (dissoc :room_id))
+         (dissoc conf :server :room_id)
          (when-not message
            {:message (format-message (flatten [event]))})))
 
