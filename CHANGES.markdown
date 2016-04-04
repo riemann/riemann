@@ -1,3 +1,52 @@
+# Version 0.2.11
+
+This update includes a variety of bug fixes and improvements. Also
+included is VictorOps integration, improvements to the Graphite, Xymon,
+InfluxDB, Hipchat and Nagios integrations.
+
+Internally the project has been updated for Clojure 1.8.
+ 
+## Bugfixes
+
+- time: prevent negative delays in every!. fixes #368
+- Coerce graphite metric to double, when not an int
+- Fix InfluxDB 0.9 tags
+
+## Deprecations and API changes
+
+- `update` is now a reserved keyword in Clojure.
+- riemann.config: use :refer instead of def for logstash & graphite
+- Fix logging, use logback instead log4j
+
+## Improvement
+
+- Added tags to the OpsGenie integration.
+- Xymon: fixes, scalability, multiple xymon host, error handling
+- hipchat: provide a default from field and do not leak server params
+- nagios: provide a default state for events
+- Added support for a PagerDuty formatter for events
+- Allow overriding graphite metric conversion method
+- Allow graphite to take a function as host name
+- Xymon: ability to support more message types. Enable/Disable messages
+  implementation
+- Add insecure flag for influxdb in case cert is self-signed for https
+- Add -v and version command to display Lein or POM version
+- logging: improve console logging
+- folds: add modes and mode
+
+## New features
+
+- VictorOps integration
+- Add config directory to classpath; we won't need to use `include` any more
+- fill-in-last*: apply arbitrary function to last event 
+
+## Internals
+
+- Move to Clojure 1.8
+- riemann-clojure-client "0.4.2"
+- nREPL dep to 0.2.11
+- netty to 4.0.30.Final
+
 # Version 0.2.10
 
 0.2.10 brings long-awaited fixes to the Influx integration, support for sending
