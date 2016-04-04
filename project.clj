@@ -25,7 +25,7 @@
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.0"]
-    [org.spootnik/http-kit "2.1.18.1"]
+    [http-kit "2.1.19"]
     [clj-http "2.0.1"]
     [cheshire "5.5.0"]
     [clj-librato "0.0.5"]
@@ -35,7 +35,7 @@
     [com.draines/postal "1.11.3"]
     [com.amazonaws/aws-java-sdk "1.10.5.1" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
-    [io.netty/netty-all "4.0.34.Final"]
+    [io.netty/netty-all "4.0.36.Final"]
     [clj-antlr "0.2.2"]
     [riemann-clojure-client "0.4.2"]
     [less-awful-ssl "1.0.0"]
