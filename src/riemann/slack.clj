@@ -10,12 +10,24 @@
   [message]
   (escape message {\< "&lt;" \> "&gt;" \& "&amp;"}))
 
+(defn slack-fallback
+  "Minimal, plain-text event formatting. Used for dumb clients such as IRC."
+  [events]
+  (slack-escape
+    (str
+      "*Host:* " (or (:host events) "-")
+      " *Service:* " (or (:service events) "-")
+      " *State:* " (or (:state events) "-")
+      " *Description:* " (or (:description events) "-")
+      " *Metric:* " (or (:metric events) "-"))))
+
 
 (defn default-formatter
   "Simple formatter for rendering an event as a Slack attachment."
   [events]
   {:attachments
-   [{:fields
+   [{:fallback (slack-fallback events)
+     :fields
      [{:title "Riemann Event"
        :value (slack-escape
                 (str "Host:   " (or (:host events) "-") "\n"
@@ -32,19 +44,7 @@
   [events]
   {:text "This event requires your attention!",
    :attachments
-   [{:fallback
-     (slack-escape
-       (str
-         "*Service:* "
-         (:service events)
-         "*Description:* "
-         (:description events)
-         " *Host:* "
-         (:host events)
-         " *Metric:* "
-         (:metric events)
-         " *State:* "
-         (:state events))),
+   [{:fallback (slack-fallback events)
      :text (slack-escape (or (:description events) "")),
      :pretext "Event Details:",
      :color
