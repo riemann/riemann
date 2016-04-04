@@ -1501,7 +1501,21 @@
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
-  `(let [new-fork# (fn [] [~@children])]
+  `(let [new-fork# (fn [_#] [~@children])]
+     (by-fn ~fields new-fork#)))
+
+(defmacro by-builder
+  "Splits stream by provided function.
+   This is a variation of `by` where forms are executed when a fork
+   is created to yield the children.
+
+   This allows you to perform operations based on the fork-name, i.e:
+   the output of the given fields.
+
+   (by-builder [host :host] (forward (get relay-by-host host)))
+   "
+  [[sym fields] & forms]
+  `(let [new-fork# (fn [~sym] [(do ~@forms)])]
      (by-fn ~fields new-fork#)))
 
 (defn by-fn [fields new-fork]
@@ -1516,7 +1530,7 @@
        (let [fork-name (f event)
              fork (if-let [fork (@table fork-name)]
                     fork
-                    ((swap! table assoc fork-name (new-fork)) fork-name))]
+                    ((swap! table assoc fork-name (new-fork fork-name)) fork-name))]
          (call-rescue event fork)))))
 
 (defn changed
