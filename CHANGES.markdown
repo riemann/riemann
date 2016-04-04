@@ -19,6 +19,7 @@ Internally the project has been updated for Clojure 1.8.
   will generate a deprecation warning and automatically use `insert`.
 - riemann.config: use :refer instead of def for logstash & graphite
 - Fix logging, use logback instead log4j
+- `by-fn` now expects the new-fork argument to be a 1-arity function
 
 ## Improvement
 
@@ -35,6 +36,9 @@ Internally the project has been updated for Clojure 1.8.
 - Add -v and version command to display Lein or POM version
 - logging: improve console logging
 - folds: add modes and mode
+- Cloudwatch can now use instance profiles for authentication
+- Slack can now output simple status lines for text clients
+- The Twilio client was adapted to updated API behavior
 
 ## New features
 
@@ -47,7 +51,7 @@ Internally the project has been updated for Clojure 1.8.
 - Move to Clojure 1.8
 - riemann-clojure-client "0.4.2"
 - nREPL dep to 0.2.11
-- netty to 4.0.30.Final
+- netty to 4.0.36.Final
 
 # Version 0.2.10
 
