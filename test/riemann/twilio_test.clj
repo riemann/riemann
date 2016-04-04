@@ -31,9 +31,9 @@
       (are [key result] (= result (key @result-atom))
            :url (str "https://api.twilio.com/2010-04-01/Accounts/" account "/Messages.json")
            :basic-auth [account service-key]
-           :from (str "+15005550006")
-           :to (list recipient)
-           :body default-body-result))
+           :From (str "+15005550006")
+           :To (list recipient)
+           :Body default-body-result))
 
     (testing "ensure message overrides are used"
       (let [body-formatter-result "this is the body"
@@ -46,8 +46,8 @@
             sms (messenger recipient)]
         (mock-post result-atom sms event)
         (are [rkey result] (= result (rkey @result-atom))
-           :body body-formatter-result
-           :from from-override)))
+           :Body body-formatter-result
+           :From from-override)))
 
     (testing "ensure twilio options are split out when given only one map"
       (let [from-override "+15005550006"
@@ -56,5 +56,5 @@
                                      :from from-override})
             sms (messenger recipient)]
         (mock-post result-atom sms event)
-        (is (= (:from @result-atom)
+        (is (= (:From @result-atom)
                from-override))))))
