@@ -20,6 +20,8 @@
 
   (cloudwatch {:access-key \"AKJALPVWYQ6BFMVLSZDA\"
                :secret-key \"ZFEemkafy0paNMx5JcinMUiOC4dcMKhxXCL85DhM\"})
+  
+  (cloudwatch {}) will make use of IAM Instance Profile.
 
   Options:
 
@@ -31,10 +33,15 @@
 
   :namespace   AWS CloudWatch namespace."
   [opts]
-  (let [opts (merge {:access-key "aws-access-key"
+  (let [opts (if (or (contains? opts :access-key) (contains? opts :secret-key))
+               (merge 
+                    {:access-key "aws-access-key"
                      :secret-key "aws-secret-key"
                      :endpoint   "monitoring.us-east-1.amazonaws.com"
-                     :namespace  "Riemann"} opts)]
+                     :namespace  "Riemann"} opts)
+               (merge 
+                    {:endpoint   "monitoring.us-east-1.amazonaws.com"
+                     :namespace  "Riemann"} opts))]
     (fn [event]
       (when (:metric event)
         (when (:service event)
