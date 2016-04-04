@@ -136,14 +136,14 @@ sudo service riemann reload
   <div class="sixcol">
     <p>We present here a minimal configuration which only prints incoming events to
       standard output. This configuration can prove useful when debugging clients to
-      make sure expected events are reaching riemann.</p>
+      make sure expected events are reaching Riemann.</p>
 
     <p>This example includes a full configuration, later examples will focus on streams.
       The following actions are performed:
 
       <ul>
-        <li><code>logging/init</code>: Setting-up logging to log to standard out.</li>
-        <li><code>tcp-server</code>: Starting a riemann TCP server on port 5555 (the default).</li>
+        <li><code>logging/init</code>: Setting-up logging to log to standard output (<code>STDOUT</code>).</li>
+        <li><code>tcp-server</code>: Starting a Riemann TCP server on port 5555 (the default).</li>
         <li><code>instrumentation</code>: Disabling internal event production.</li>
       </ul>
     </p>
