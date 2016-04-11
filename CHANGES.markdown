@@ -14,7 +14,9 @@ Internally the project has been updated for Clojure 1.8.
 
 ## Deprecations and API changes
 
-- `update` is now a reserved keyword in Clojure.
+- `update` is now a reserved keyword in Clojure. Please use `insert`
+  instead. If you have a configuration which uses `update` then Riemann
+  will generate a deprecation warning and automatically use `insert`.
 - riemann.config: use :refer instead of def for logstash & graphite
 - Fix logging, use logback instead log4j
 
