@@ -123,5 +123,5 @@
 
 (defn update
   [index-instance event]
-  (deprecated "Update is now a reserved name in clojure, please use update!"
+  (deprecated "Update is now a reserved name in clojure, please use insert!"
               (insert index-instance event)))
