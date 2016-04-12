@@ -64,7 +64,7 @@
        :value (slack-escape (or (:description events) "-"))
        :short true}
       {:title "Tags",
-       :value (slack-escape (or (:tags events) "-"))
+       :value (slack-escape (or (str (:tags events)) "-"))
        :short true}]}]})
 
 
