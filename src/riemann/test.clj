@@ -242,6 +242,6 @@
 
 (defmacro test-stream-intervals
   "Verifies that run-stream-intervals, taking inputs/intervals, forwards
-  outputs to chldren."
+  outputs to children."
   [stream inputs-and-intervals outputs]
   `(test/is (~'= (run-stream-intervals ~stream ~inputs-and-intervals) ~outputs)))
