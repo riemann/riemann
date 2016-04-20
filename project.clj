@@ -1,7 +1,7 @@
-(defproject riemann "0.2.11-SNAPSHOT"
+(defproject riemann "0.2.11"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
-  :url "http://github.com/aphyr/riemann"
+  :url "http://github.com/riemann/riemann"
 ;  :warn-on-reflection true
 ;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-verbose:gc" "-XX:+PrintGCDetails"]
   :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+UseParNewGC" "-XX:+UseConcMarkSweepGC" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+UseFastAccessorMethods" "-XX:+CMSClassUnloadingEnabled"]
@@ -94,8 +94,7 @@
   :java-source-path "src/riemann/"
 ;  :aot [riemann.bin]
   :main riemann.bin
-  :codox {:output-dir "site/api"
-          :src-dir-uri "http://github.com/aphyr/riemann/blob/master/"
-          :src-linenum-anchor-prefix "L"
-          :defaults {:doc/format :markdown}}
+  :codox {:output-path "site/api"
+          :source-uri "https://github.com/riemann/riemann/blob/{version}/{filepath}#L{line}"
+          :metadata {:doc/format :markdown}}
 )
