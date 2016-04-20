@@ -5,7 +5,7 @@ included is VictorOps integration, improvements to the Graphite, Xymon,
 InfluxDB, Hipchat and Nagios integrations.
 
 Internally the project has been updated for Clojure 1.8.
- 
+
 ## Bugfixes
 
 - time: prevent negative delays in every!. fixes #368
@@ -39,12 +39,13 @@ Internally the project has been updated for Clojure 1.8.
 - Cloudwatch can now use instance profiles for authentication
 - Slack can now output simple status lines for text clients
 - The Twilio client was adapted to updated API behavior
+- Docstring typo fixes
 
 ## New features
 
 - VictorOps integration
 - Add config directory to classpath; we won't need to use `include` any more
-- fill-in-last*: apply arbitrary function to last event 
+- fill-in-last*: apply arbitrary function to last event
 
 ## Internals
 
