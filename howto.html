@@ -151,7 +151,7 @@ sudo service riemann reload
     <p>Since streams expects a list of functions to call with individual events, we can
        output any input by calling <code>prn</code> on them.
     </p>
-      
+
   </div>
   <div class="sixcol last">
 {% highlight clj %}
@@ -160,8 +160,8 @@ sudo service riemann reload
 (instrumentation {:enabled? false})
 
 (streams
- prn) 
-{% endhighlight %}    
+ prn)
+{% endhighlight %}
   </div>
 </div>
 
@@ -299,6 +299,31 @@ set :bind, "1.2.3.4"
     with legacy systems. The graphite protocol can only represent a small
     subset of the Riemann data model; you'll have to do additional work to
     reconstruct meaningful events.</p>
+  </div>
+</div>
+
+<h3>What ports does Riemann use?</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann runs servers by default on several ports.
+
+      <ul>
+        <li>TCP on port 5555.</li>
+        <li>UDP on port 5555.</li>
+        <li>Websockets on port 5556.</li>
+        <li>REPL on port 5557.</li>
+      </ul>
+
+    Each server's port can be altered in your configuration.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clj %}
+(let [host "0.0.0.0"
+      iport 1234]
+  (tcp-server {:host host :port iport})
+  (udp-server {:host host :port iport}))
+{% endhighlight %}
   </div>
 </div>
 
