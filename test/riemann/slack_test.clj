@@ -47,17 +47,37 @@
           (is (= (:url @post-request)
                  "https://test-account.slack.com/services/hooks/incoming-webhook?token=test-token"))))
 
-      (testing "formats event by default"
+      (testing "formats event by default with default formatter"
         (let [slacker (slack/slack "any" "any" "test-user" "#test-channel")]
           (slacker {:host "localhost", :service "mailer", :state "error",
                     :description "Mailer failed", :metric 42, :tags ["first", "second"]})
           (is (= (json/parse-string (:body @post-request))
                  {"attachments" [{"fields" [{"title" "Riemann Event"
-                                             "value" "Host:   localhost\nService:   mailer\nState:   error\nDescription:   Mailer failed\nMetric:   42\nTag:   -\n" "short" true}]
+                                             "value" "Host:   localhost\nService:   mailer\nState:   error\nDescription:   Mailer failed\nMetric:   42\nTags:   [\"first\" \"second\"]\n" "short" true}]
                                   "fallback" "*Host:* localhost *Service:* mailer *State:* error *Description:* Mailer failed *Metric:* 42"}]
                   "channel" "#test-channel"
                   "username" "test-user"
                   "icon_emoji" ":warning:"}))))
+
+      (testing "formats event with bundled extended formatter"
+        (let [slacker (slack/slack any-account (with-formatter slack/extended-formatter))]
+          (slacker {:host "localhost", :service "mailer", :state "error",
+                    :description "Mailer failed", :metric 42, :tags ["first", "second"]})
+          (is (= (json/parse-string (:body @post-request))
+                  {"text" "This event requires your attention!"
+                   "attachments" [{"text" "Mailer failed"
+                                   "pretext" "Event Details:"
+                                   "color" "warning"
+                                   "fields" [{"title" "Host" "value" "localhost" "short" true}
+                                             {"title" "Service" "value" "mailer" "short" true}
+                                             {"title" "Metric" "value" 42 "short" true}
+                                             {"title" "State" "value" "error" "short" true}
+                                             {"title" "Description" "value" "Mailer failed" "short" true}
+                                             {"title" "Tags" "value" "[\"first\" \"second\"]" "short" true}]
+                                   "fallback" "*Host:* localhost *Service:* mailer *State:* error *Description:* Mailer failed *Metric:* 42"}]
+                   "channel" "any"
+                   "username" "any"
+                   "icon_emoji" ":warning:"}))))
 
       (testing "allows formatting characters in main message text with custom formatter"
         (let [formatter (fn [e] {:text (str "<http://health.check.api/" (:service e) "|" (:service e) ">")})
