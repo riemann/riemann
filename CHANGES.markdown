@@ -18,8 +18,12 @@ Internally the project has been updated for Clojure 1.8.
   instead. If you have a configuration which uses `update` then Riemann
   will generate a deprecation warning and automatically use `insert`.
 - riemann.config: use :refer instead of def for logstash & graphite
-- Fix logging, use logback instead log4j
+- Fix logging, use logback instead log4j, (import log levels from
+  `ch.qos.logback.classic` instead of `org.apache.log4j`)
 - `by-fn` now expects the new-fork argument to be a 1-arity function
+- pagerduty requires the service-key to be passed as a key named `service-key`
+  rather than directly as a string.
+  eg: `(let [pd (pagerduty :service-key "my-service-key")]`
 
 ## Improvement
 
@@ -66,6 +70,8 @@ also a few minor usability improvements, and assorted library updates.
 - \*config-file\* is correctly bound when including directories
 
 ## Deprecations and API changes
+
+- Hipchat plugin now requires a v2 auth token
 
 ## New features
 
