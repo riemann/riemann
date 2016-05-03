@@ -104,11 +104,20 @@
                                    :formatter (fn [es] {:text (apply str (map :state es))})))
 
   (rollup 5 60 slacker)
+
+  The last parameter of the arity-3 version of the function is a map
+  of parameters passed directly to clj-http. For example, you can set
+  socket and connection timeouts like so:
+
+  (slack {...} {...} {:socket-timeout 1000 :conn-timeout 1000})
   "
   ([account_name token username channel] (slack {:account account_name, :token token}
                                                 {:username username, :channel channel}))
+  ([account-info message-info]
+   (slack account-info message-info {}))
   ([{:keys [webhook_uri account token]}
-    {:keys [username channel icon formatter] :or {formatter default-formatter}}]
+    {:keys [username channel icon formatter] :or {formatter default-formatter}}
+    http-params]
    (fn [events]
      (let [{:keys [text attachments] :as result} (formatter events)
            icon (:icon result (or icon ":warning:"))
@@ -117,9 +126,10 @@
        (client/post (if webhook_uri
                       webhook_uri
                       (str "https://" account ".slack.com/services/hooks/incoming-webhook?token=" token))
-                    {:form-params
-                     {:payload (json/generate-string
-                                 (merge
-                                  {:channel channel, :username username, :icon_emoji icon}
-                                  (when text {:text text})
-                                  (dissoc result :icon :text)))}})))))
+                    (merge http-params
+                           {:form-params
+                            {:payload (json/generate-string
+                                       (merge
+                                        {:channel channel, :username username, :icon_emoji icon}
+                                        (when text {:text text})
+                                        (dissoc result :icon :text)))}}))))))
