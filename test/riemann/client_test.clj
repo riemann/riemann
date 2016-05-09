@@ -48,7 +48,7 @@
 
       (try
         (is (thrown-with-msg?
-              com.aphyr.riemann.client.ServerError
+              io.riemann.riemann.client.ServerError
               #"^mismatched input 'no' expecting \{<EOF>, 'or', 'and'\}$"
               @(query client "oh no not again")))
         (finally

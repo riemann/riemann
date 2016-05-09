@@ -157,7 +157,7 @@
     ; Works with valid config
     (test-tcp-client client server)
 
-    (logging/suppress ["com.aphyr.riemann.client.TcpTransport"]
+    (logging/suppress ["io.riemann.riemann.client.TcpTransport"]
       ; Fails with mismatching client key/cert
       (is (thrown? IOException
                    (test-tcp-client (assoc client :key (:key server))

@@ -1,3 +1,10 @@
+# Version 0.2.12
+
+## Deprecations and API changes
+
+- The `com.aphyr` namespace used by the Riemamn Java client has been
+  updated to `io.riemann`. The client is now updated in Riemann.
+
 # Version 0.2.11
 
 This update includes a variety of bug fixes and improvements. Also
