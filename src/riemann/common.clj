@@ -3,7 +3,7 @@
   definitions and codecs, some vector set ops, etc."
   (:import [java.util Date]
            (java.io InputStream)
-           [io.riemann.riemann Proto$Query Proto$Event Proto$Msg]
+           [com.aphyr.riemann Proto$Query Proto$Event Proto$Msg]
            [java.net InetAddress])
   (:require clj-time.core
             clj-time.format

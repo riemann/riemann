@@ -14,7 +14,7 @@
     (java.util List)
     (java.util.concurrent TimeUnit
                           Executors)
-    (io.riemann.riemann Proto$Msg)
+    (com.aphyr.riemann Proto$Msg)
     (io.netty.channel ChannelInitializer
                       Channel
                       ChannelPipeline
