@@ -221,40 +221,6 @@ Return a list of all events in the server's index."
       (finally
         (client/close! client)))))
 
-(defn tcp-client-ignoring-acks
-  "A TCP client that send events to server but does not read acks received"
-  [client-opts server-opts]
-  (let [server (tcp-server server-opts)
-        index (wrap-index (index/index))
-        core (transition! (core) {:index index
-                                  :services [server]
-                                  :streams [index]})]
-    (let  [sock (Socket. "localhost" (:port client-opts))
-           out  (DataOutputStream. (.getOutputStream sock))
-           msg  (codec/encode-pb-msg {:events [
-                                               {:host "localhost"
-                                                :service "foo"
-                                                :metric 42}]})]
-      (try
-        (loop [stop false]
-          (when (not stop)
-            (do
-              (.writeInt out (.getSerializedSize msg))
-              (.writeTo msg out)
-              (recur false))))
-        (finally
-          (stop! core))))))
-
-(deftest prevent-outbound-buffer-overflow-test
-  (let [server {:port 15555}
-        client {:port 15555}]
- 
-      ; Fails when connection is closed by server
-      (is (thrown? SocketException
-                   (tcp-client-ignoring-acks client                   
-                                             server)))))
-  
-
 (deftest can-send-large-queries-result
   (let [server {:port 15555}
         client {:port 15555}
