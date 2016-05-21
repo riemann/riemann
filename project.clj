@@ -80,6 +80,7 @@
                    :bench :bench
                    :focus :focus
                    :slack :slack
+                   :druid :druid
                    :cloudwatch :cloudwatch
                    :datadog :datadog
                    :stackdriver :stackdriver
