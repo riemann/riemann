@@ -115,38 +115,38 @@ md5sum -c riemann-0.2.11.tar.bz2.md5
 
       <p>We can send events with <code>&lt;&lt;</code>. For example, let's log an HTTP request.</p>
 
-    <code><pre><span class="unfocus">ruby-1.9.3 :002 &gt;</span> r &lt;&lt; { 
-host: "www1", 
-service: "http req", 
-metric: 2.53, 
-state: "critical", 
-description: "Request took 2.53 seconds.", 
+    <code><pre><span class="unfocus">ruby-1.9.3 :002 &gt;</span> r &lt;&lt; {
+host: "www1",
+service: "http req",
+metric: 2.53,
+state: "critical",
+description: "Request took 2.53 seconds.",
 tags: ["http"]
 }</pre></code>
 
       <p>On the dashboard, critical events (like the one we just submitted)
       show up in red. All of these fields are optional, by the way. The ruby
-      client will assume your events come from the local hostname unless you
+      client will assume your events come from the local host name unless you
       pass <code>host: nil</code>.</p>
 
       <p>Now let's ask for all events that have a service beginning with
       "http".</p>
 
 <code><pre><span class="unfocus">ruby-1.9.3 :003 &gt;</span> r['service =~ "http%"']
-<span class="unfocus">[&lt;Riemann::Event time: 1330041937, 
-state: "critical", 
-service: "http req", 
-host: "www1", 
-description: "Request took 2.53 seconds.", 
-tags: ["http"], 
-ttl: 300.0, 
+<span class="unfocus">[&lt;Riemann::Event time: 1330041937,
+state: "critical",
+service: "http req",
+host: "www1",
+description: "Request took 2.53 seconds.",
+tags: ["http"],
+ttl: 300.0,
 metric_f: 2.5299999713897705&gt;]</span></pre></code>
 
       <p>There's the event we submitted. You could send these events from Rack
       middleware to log every request to your app, or track exceptions. Riemann
       can be configured to calculate rates, averages, min/max, distributions,
       and more.</p>
-      
+
     </div>
     <div class="sixcol last">
 
@@ -204,7 +204,7 @@ metric_f: 2.5299999713897705&gt;]</span></pre></code>
       <p>James Turnbull has written a <a
       href="http://kartar.net/2014/12/an-introduction-to-riemann/">beautiful
       introduction to Riemann</a> which takes you through the whole setup
-    process and monitoring some basic services.</p>
+      process and monitoring some basic services.</p>
 
       <p>Riemann comes with a standard config that listens on the local ipv4
       interface and indexes all events, but that's just the the start. You can

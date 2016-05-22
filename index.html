@@ -62,7 +62,7 @@ title: Riemann - A network monitoring system
 (where (or (service #"^api")
            (service #"^app"))
   (where (tagged "exception")
-    (rollup 5 3600 
+    (rollup 5 3600
       (email "dev@foo.com"))
     (else
       (changed-state
@@ -86,7 +86,7 @@ title: Riemann - A network monitoring system
       bottlenecks in production. For everyone fed up with traditional
       approaches; who want something fast, expressive, and powerful.</p>
     </div>
-    
+
     <div class="sixcol last">
       <h2>All systems go</h2>
       <img src="images/dash.png" alt="Dashboard shows an overview of CPU, memory, and application metrics." />
@@ -101,7 +101,7 @@ title: Riemann - A network monitoring system
   <div class="row">
     <div class="sixcol">
       <h2>Phone, SMS and email alerts</h2>
-      
+
 {% highlight clj %}
 (rollup 5 3600
   (email "dev@startup.com"))
@@ -141,7 +141,7 @@ title: Riemann - A network monitoring system
 {% highlight ruby %}
 r = Riemann::Client.new
 r << {service: "www", state: "down", metric: 10000}
-r['state = "down"'] 
+r['state = "down"']
 # => [#<Riemann::Event @service="www" ... >]
 {% endhighlight %}
 
@@ -154,7 +154,7 @@ r['state = "down"']
 
     <div class="sixcol last">
       <h2>Query states</h2>
-    
+
 {% highlight clj %}
 state = "error rate" and (not host =~ "www.%")
 {% endhighlight %}

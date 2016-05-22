@@ -27,7 +27,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
     daemons can watch your servers and send events about disk capacity, CPU
     use, and memory consumption. Every second. It's like top for
     hundreds of machines at once.</p>
-    
+
     <p class="callout">Riemann filters, combines, and acts on flows of events
     to understand your systems.</p>
   </div>
@@ -39,7 +39,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
 
 </div> <!-- main container -->
 <div class="light">
-  
+
 <div class="container">
   <div class="row">
     <div class="sixcol">
@@ -89,14 +89,14 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
          href="http://riemann.io/howto.html#custom-event-attributes">Howto:
          Custom event attributes</a> for more details.</p>
     </div>
-    
+
     <div class="sixcol last">
       <h2>The index</h2>
       <p>The index is a table of the current state of all services tracked by
       Riemann. Each event is uniquely indexed by its host and service. The
       index just keeps track of the most recent event for a given (host,
       service) pair.</p>
-      
+
       <p>Streams run quickly and retain as little state as possible. The index
       is Riemann's state table; its picture of the world. The dashboard,
       network clients, and streams can all query the index to see what the
@@ -124,7 +124,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
       file. You can think of <code>(streams)</code> as the <i>top level</i>
       stream, the source from which all events flow. In this
       documentation, we'll often leave it implied.</p>
-      
+
       <p>Here's a simple stream which sends critical events from any service
       beginning with "riak" to delacroix@vonbraun.com.</p>
 
@@ -185,7 +185,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
       one fork for each unique host and service, so all the events from host 1
       and service
       1 flow together.</p>
-    
+
       <p>Since we haven't given <code>(by)</code> any child streams yet, it'll
       just drop every event on the floor. Most streams can take any number of
       children, so it's common to see something like <code>(by [:host :service]
@@ -237,7 +237,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
       <img src="images/rollup-diagram.jpg" alt="Rolling up events" />
     </div>
   </div>
-  
+
   <div class="row">
     <div class="twelvecol">
       <p class="callout">To learn more, see the <a
@@ -250,7 +250,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
   <div class="row">
     <div class="sixcol">
       <h2>Queries</h2>
-      
+
       <p>Clients can query the index for particular events using a simple query
       language. Dashboard views are each powered by a single query. Queries can
       be applied on the index of past events, but can also tap into the stream
@@ -261,7 +261,7 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#092eb7', end
 state = "ok"
 
 # Wildcards
-(service =~ "disk%") or 
+(service =~ "disk%") or
 (state != "critical" and host =~ "%.trioptimum.com")
 
 # Standard operator precedence applies
