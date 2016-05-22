@@ -8,7 +8,6 @@
   (:require [clj-http.client :as http]
             [clojure.java.io :as io]
             [riemann.logging :as logging]
-            [clojure.tools.logging :as log]
             [riemann.pubsub :as pubsub]
             [riemann.transport.sse :refer [sse-server]]
             [cheshire.core :as json]
@@ -199,33 +198,12 @@
           (.close sock)
           (stop! core))))))
 
-(defn tcp-client-large-query
-  "Run a TCP server, inject a number of events in index then query the server.
-Return a list of all events in the server's index."
-  [number-of-messages client-opts server-opts] 
-  (let  [server (tcp-server server-opts)
-         index (wrap-index (index/index))
-         core (transition! (core) {:index index
-                                   :services [server]
-                                   :streams [index]})
-         client (apply client/tcp-client (mapcat identity client-opts))]
-    (try
-      (dorun
-       (for [x (range 0 number-of-messages)
-             :let [event {:host "laserkat" :service (str  "hi" x) :state "ok" :metric x}]]
-         (do
-           (client/send-event client event))))
-      (log/info (str  "sent " number-of-messages " events, querying"))
-      (-> client
-          (client/query "host = \"laserkat\"")
-          deref
-          count)
-      (finally
-        (client/close! client)))))
-
 (defn tcp-client-ignoring-acks
   "A TCP client that send events to server but does not read acks received"
   [client-opts server-opts]
+  ;; TODO use plain socket to connect to server and send hand-crafted protobuf messages
+  ;; using something similar to the following: protobuf messages can be read from/written to
+  ;; byte arrays
   (let [server (tcp-server server-opts)
         index (wrap-index (index/index))
         core (transition! (core) {:index index
@@ -256,12 +234,3 @@ Return a list of all events in the server's index."
                    (tcp-client-ignoring-acks client                   
                                              server))))
     )
-
-(deftest can-send-large-queries-result
-  (let [server {:port 15555}
-        client {:port 15555}
-        number-of-events 5000]
-      (is (=  number-of-events
-              (tcp-client-large-query number-of-events client server))
-          )
-      ))
