@@ -210,10 +210,12 @@ Return a list of all events in the server's index."
                                    :streams [index]})
          client (apply client/tcp-client (mapcat identity client-opts))]
     (try
-      (let [events (for [x (range 0 number-of-messages)]
-                     {:host "laserkat" :service (str  "hi" x) :state "ok" :metric x})
-            sent @(client/send-events client events)]
-        (log/info (str  "sent " (count events) " events: " sent ", querying")))
+      (dorun
+       (for [x (range 0 number-of-messages)
+             :let [event {:host "laserkat" :service (str  "hi" x) :state "ok" :metric x}]]
+         (do
+           (client/send-event client event))))
+      (log/info (str  "sent " number-of-messages " events, querying"))
       (-> client
           (client/query "host = \"laserkat\"")
           deref
@@ -252,15 +254,14 @@ Return a list of all events in the server's index."
       ; Fails when connection is closed by server
       (is (thrown? SocketException
                    (tcp-client-ignoring-acks client                   
-                                             server)))))
-  
+                                             server))))
+    )
 
 (deftest can-send-large-queries-result
   (let [server {:port 15555}
         client {:port 15555}
-        number-of-events 100000]
-    (is (=  number-of-events
-            (tcp-client-large-query number-of-events client server))
-        )
-    ))
-  
+        number-of-events 5000]
+      (is (=  number-of-events
+              (tcp-client-large-query number-of-events client server))
+          )
+      ))
