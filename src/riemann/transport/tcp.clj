@@ -69,11 +69,9 @@
     (channelWritabilityChanged [^ChannelHandlerContext ctx]
       (let [channel (.channel ctx)]
         (when (not (.isWritable channel))
-          (info "outbound buffer from " (.remoteAddress channel)
-                " is filling up cannot be written to, client might be not reading acks fast enough: let's drop ACKs!")
-          (info "outbound buffer from " (.remoteAddress channel)
-                " becomes writable")
-          )))
+          (warn "forcefully closing connection from " (.remoteAddress channel)
+                ". Client might be not reading acks fast enough or network is broken")
+          (.close channel))))
     
     (channelRead [^ChannelHandlerContext ctx ^Object message]
       (try
@@ -99,30 +97,21 @@
     {:event-loop-group-fn #(NioEventLoopGroup.)
      :channel NioServerSocketChannel}))
 
-
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and
-  writes a response back on this channel.
-
-  If response `msg` is a simple ACK, e.g. a `{:ok true}` message and the channel is not 
-  writeable, we drop the message to prevent outbound buffer from overflowing in case of 
-  misbehaving clients"
+  writes a response back on this channel."
   [core stats ^ChannelHandlerContext ctx ^Object message]
-  (let [t1 (:decode-time message)
-        msg (handle core message)]
-    
-    (when (or (-> ctx .channel .isWritable)
-            (not (= {:ok true} msg)))
-      
-      ;; Actually write response
-      (->  (.writeAndFlush ctx msg)
-           ;; Record time from parse to write completion
-           (.addListener
-            (reify ChannelFutureListener
-              (operationComplete [this fut]
-                (metrics/update! stats
-                                 (- (System/nanoTime) t1)))))))
-    ))
+  (let [t1 (:decode-time message)]
+    (.. ctx
+      ; Actually handle request
+      (writeAndFlush (handle core message))
+
+      ; Record time from parse to write completion
+      (addListener
+        (reify ChannelFutureListener
+          (operationComplete [this fut]
+            (metrics/update! stats
+                             (- (System/nanoTime) t1))))))))
 
 (defrecord TCPServer [^String host
                       ^int port
