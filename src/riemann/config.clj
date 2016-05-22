@@ -37,6 +37,7 @@
                      [slack       :refer [slack]]
                      [sns         :refer [sns-publisher]]
                      [stackdriver :refer [stackdriver]]
+                     [prometheus  :refer [prometheus]]
                      [streams     :refer :all]
                      [test        :as test :refer [tap io tests]]
                      [time        :refer [unix-time linear-time once! every!]]
