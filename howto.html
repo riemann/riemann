@@ -165,22 +165,85 @@ sudo service riemann reload
   </div>
 </div>
 
-<h3>Including configuration from multiple files</h3>
+<h3>Including functions from multiple sources</h3>
 <div class="row">
   <div class="sixcol">
     <p>Often your Riemann configuration file will get quite large as you add
     streams and handle more events. Additionally, if you're managing Riemann
     with a configuration management tool like Puppet or Chef then it can be
     complex to template a large configuration file. To help with this Riemann
-    also supports including other configuration files in your main
-    configuration file. This is done with the <a
-      href="http://riemann.io/api/riemann.config.html#var-include">include</a>
-    variable. The <code>include</code> variable will include a single file or
-    directory of configuration files. If you specify a directory then it will
-    load all files ending in <code>.config</code> or <code>.clj</code>
-    contained in that directory.</p>
+    also supports including functions via Clojure's namespacing model.</p>
+
+		<p>To enable this, the contents of the directory containing the
+    <code>riemann.config</code> configuration file are included in the
+    <code>CLASSPATH</code>.</p>
   </div>
-    <div class="sixcol last">
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>To use other functions then create a source directory for them. For example,
+    to create functions specific to your organization you might create a
+    <code>examplecom.etc</code> namespace.</p>
+  </div>
+ <div class="sixcol last">
+ {% highlight sh %}
+ sudo mkdir -p /etc/riemann/examplecom/etc
+ {% endhighlight %}
+ </div>
+</div>
+<div class="row">
+ <div class="sixcol">
+   <p>Then create a namespace containing the functions we wish to include in a
+   file in this directory, for example <code>email.clj</code>.</p>
+ </div>
+<div class="sixcol last">
+{% highlight clj %}
+; Create a new function with ns
+(ns examplecom.etc.email
+  (:require [riemann.email :refer :all]))
+
+(def email (mailer {:from "reimann@example.com"}))
+{% endhighlight %}
+</div>
+</div>
+<div class="row">
+ <div class="sixcol">
+   <p>We would then require this namespace in our <code>riemann.config</code>.
+   With this we could use the <code>email</code> variable inside our Riemann
+   configuration.</p>
+
+	 <p>You can read more about Clojure's <a
+   href="http://www.braveclojure.com/organization/">namespacing and how it
+   works</a>.</p>
+
+   <p>This approach is supported in Riemann 0.2.11 and later.</p>
+ </div>
+<div class="sixcol last">
+{% highlight clj %}
+; Require the example.etc.email functions
+(require '[examplecom.etc.email :refer :all])
+{% endhighlight %}
+</div>
+</div>
+
+<h3>Including configuration from multiple files (DEPRECATED)</h3>
+<div class="row">
+  <div class="sixcol">
+		<p>In Riemann, prior to 0.2.11, there was support for including other
+    configuration files in your main configuration file. This is done with the <a
+    href="http://riemann.io/api/riemann.config.html#var-include">include</a>
+    variable. The <code>include</code> variable will include a single file or
+    directory of configuration files. If you specify a directory then it will load
+    all files ending in <code>.config</code> or <code>.clj</code> contained in that
+    directory.</p>
+
+		<p>This method was used in Riemann versions prior to 0.2.11. In 0.2.11 and
+    later everything in the <code>/etc/riemann</code> directory is now included in
+    the <code>CLASSPATH</code>. You can now use <a
+    href="#including-functions-from-multiple-sources">standard Clojure namespaces
+    to include additional functions</a>.</p>
+  </div>
+<div class="sixcol last">
 {% highlight clj %}
 ; Include relative to the current config file or current working directory
 (include "foo.clj")
