@@ -28,29 +28,6 @@
   [& metrics]
   (vec (map (fn [m] {:metric m}) metrics)))
 
-(deftest combine-test
-  (logging/suppress
-    ["riemann.streams"]
-    (let [r (atom nil)
-          sum (combine folds/sum (register r))
-          min (combine folds/minimum (register r))
-          max (combine folds/maximum (register r))
-          mean (combine folds/mean (register r))
-          median (combine folds/median (register r))
-          events [{:metric 1}
-                  {:metric 0}
-                  {:metric -2}]]
-      (sum events)
-      (is (= (deref r) {:metric -1}))
-      (min events)
-      (is (= (deref r) {:metric -2}))
-      (max events)
-      (is (= (deref r) {:metric 1}))
-      (mean events)
-      (is (= (deref r) {:metric -1/3}))
-      (median events)
-      (is (= (deref r) {:metric 0})))))
-
 (deftest smap*-test
          (testing "passes nil values"
                   (test-stream (smap* identity)
@@ -1128,28 +1105,6 @@
            (doseq [event events]
              (s event))
            (is (= 6 (deref i)))))
-
-(deftest within-test
-(logging/suppress ["riemann.streams"]
-         (let [output (ref [])
-               r (within [1 2]
-                         (fn [e] (dosync (alter output conj e))))
-               metrics [0.5 1 1.5 2 2.5]
-               expect [1 1.5 2]]
-
-           (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
-
-(deftest without-test
-(logging/suppress ["riemann.streams"]
-         (let [output (ref [])
-               r (without [1 2]
-                         (fn [e] (dosync (alter output conj e))))
-               metrics [0.5 1 1.5 2 2.5]
-               expect [0.5 2.5]]
-
-           (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
 (deftest over-test
 (logging/suppress ["riemann.streams"]

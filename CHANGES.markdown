@@ -1,3 +1,10 @@
+# Unreleased
+
+## Deprecations and API changes
+
+- Removed deprecated functions: `within`, `without` and `combine`. These
+  were deprecated in 2014.
+
 # Version 0.2.11
 
 This update includes a variety of bug fixes and improvements. Also

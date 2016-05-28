@@ -162,13 +162,6 @@
       (when-not (nil? value)
         (call-rescue value children)))))
 
-(defn combine
-  "Returns a function which takes a seq of events.
-  Combines events with f, then forwards the result to children."
-  [f & children]
-  (deprecated "combine is deprecated in favor of smap or smap*"
-              (apply smap* f children)))
-
 (defn smapcat
   "Streaming mapcat. Calls children with each event in (f event), which should
   return a sequence. For instance, to set the state of any services with
@@ -1577,28 +1570,6 @@
   [& children]
   `(by [:host :service]
        (changed :state ~@children)))
-
-(defn within
-  "Passes on events only when their metric falls within the given inclusive
-  range.
-
-  (within [0 1] (fn [event] do-something))"
-  [r & children]
-  (deprecated "streams/within is deprecated; use (where (< x metric y))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when (<= (first r) m (last r))
-                    (call-rescue event children))))))
-
-(defn without
-  "Passes on events only when their metric falls outside the given (inclusive)
-  range."
-  [r & children]
-  (deprecated "streams/without is deprecated; use (where (not (< x metric y)))"
-              (fn stream [event]
-                (when-let [m (:metric event)]
-                  (when-not (<= (first r) m (last r))
-                    (call-rescue event children))))))
 
 (defn over
   "Passes on events only when their metric is greater than x"
