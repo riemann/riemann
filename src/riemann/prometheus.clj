@@ -5,8 +5,12 @@
 
 ;; Helper Functions
 
+(def special-fields
+  "A set of event fields in Riemann with special handling logic."
+  #{:service :metric :tags :time :ttl})
+
 (defn replace-disallowed
-  "Replaces all existence of space with underscore."
+  "Replaces all existence of disallowed characters with underscore."
   [field]
   (str/escape field {\space "_", \. "_", \: "_" \- "_"}))
 
@@ -19,16 +23,25 @@
   "Accepts riemann event and converts it into prometheus datapoint."
   [event]
   (when (and (:metric event) (:service event))
-    (str (generate-metricname event) \space (:metric event) \newline)))
+    (str (generate-metricname event) \space (float (:metric event)) \newline)))
 
+(defn create-label
+  "Creates a Prometheus label out of a Riemann event."
+  [filtered-event]
+  (str/join "" (map #(if-not (nil? (second %)) (str "/" (name (first %)) "/" (second %))) filtered-event)))
+
+(defn filter-event
+  "Filter attributes from a Riemann event."
+  [event]
+  (select-keys event (filter #(if-not (contains? special-fields %) %) (keys event))))
 
 (defn generate-labels
-  "Generates the Prometheus labels from Riemann tags."
-  [tagv]
-  (let [tagk (->> (range)
-                  (-> tagv count)
-                  (vec))]
-    (clojure.string/join "" (map #(str "/tag" %1 "/" %2) tagk tagv))))
+  "Generates the Prometheus labels from Riemann event attributes."
+  [opts event]
+  (let [instance  (str "/instance/" (:host opts))
+        tags      (if-not (empty? (:tags event))(str "/tags/" (str/join (:separator opts) (:tags event))))
+        labels    (create-label (filter-event event))]
+    (str instance tags labels)))
 
 (defn generate-url
   "Generates the URL to which datapoint should be posted."
@@ -39,7 +52,7 @@
         endp   "/metrics/job/"
         job    (:job opts)
         lhost  (str "/host/" (:host event))
-        ltags  (generate-labels (:tags event))]
+        ltags  (generate-labels opts event)]
     (str scheme host ":" port endp job lhost ltags)))
 
 (defn post-datapoint
@@ -59,17 +72,19 @@
    (prometheus {:host \"prometheus.example.com\"})
 
    Options:
-   `:host` Prometheus Pushgateway Server IP (default: \"localhost\")
-   `:port` Prometheus Pushgateway Server Port (default: 9091)
-   `:job`  Group Name to be assigned (default: \"riemann\")
+   `:host`       Prometheus Pushgateway Server IP (default: \"localhost\")
+   `:port`       Prometheus Pushgateway Server Port (default: 9091)
+   `:job`        Group Name to be assigned (default: \"riemann\")
+   `:separator`  Separator to be used for Riemann tags (default: \",\")
   "
   [opts]
-  (let [opts (merge {:host "localhost"
-                     :port 9091
-                     :job  "riemann"}
+  (let [opts (merge {:host      "localhost"
+                     :port      9091
+                     :job       "riemann"
+                     :separator ","}
                     opts)]
     (fn [event]
       (let [url (generate-url opts event)
             datapoint (generate-datapoint event)]
-        (when (and (:metric event) (:service event))
+        (if-not (nil? datapoint)
           (post-datapoint url datapoint))))))
