@@ -17,7 +17,9 @@
 (defn generate-metricname
   "Generates the metric name as per prometheus specification."
   [event]
-  (replace-disallowed (:service event)))
+  (-> event
+      :service
+      replace-disallowed))
 
 (defn generate-datapoint
   "Accepts riemann event and converts it into prometheus datapoint."
@@ -28,12 +30,16 @@
 (defn create-label
   "Creates a Prometheus label out of a Riemann event."
   [filtered-event]
-  (str/join "" (map #(if-not (nil? (second %)) (str "/" (name (first %)) "/" (second %))) filtered-event)))
+  (-> ""
+      (str/join (->> filtered-event
+                     (map #(if-not (nil? (second %)) (str "/" (name (first %)) "/" (second %))))))))
 
 (defn filter-event
   "Filter attributes from a Riemann event."
   [event]
-  (select-keys event (filter #(if-not (contains? special-fields %) %) (keys event))))
+  (-> event
+      (select-keys (->> (keys event)
+                        (filter #(if-not (contains? special-fields %) %))))))
 
 (defn generate-labels
   "Generates the Prometheus labels from Riemann event attributes."
