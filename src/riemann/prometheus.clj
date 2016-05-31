@@ -30,16 +30,16 @@
 (defn create-label
   "Creates a Prometheus label out of a Riemann event."
   [filtered-event]
-  (-> ""
-      (str/join (->> filtered-event
-                     (map #(if-not (nil? (second %)) (str "/" (name (first %)) "/" (second %))))))))
+  (->> filtered-event
+       (map #(if-not (nil? (second %)) (str "/" (name (first %)) "/" (second %))))
+       (str/join "")))
 
 (defn filter-event
   "Filter attributes from a Riemann event."
   [event]
-  (-> event
-      (select-keys (->> (keys event)
-                        (filter #(if-not (contains? special-fields %) %))))))
+  (->> (keys event)
+       (filter #(if-not (contains? special-fields %) %))
+       (select-keys event)))
 
 (defn generate-labels
   "Generates the Prometheus labels from Riemann event attributes."
