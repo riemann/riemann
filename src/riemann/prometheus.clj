@@ -36,9 +36,9 @@
 
 (defn filter-event
   "Filter attributes from a Riemann event."
-  [event]
+  [opts event]
   (->> (keys event)
-       (filter #(if-not (contains? special-fields %) %))
+       (filter #(if-not (contains? (:exclude-fields opts) %) %))
        (select-keys event)))
 
 (defn generate-labels
@@ -52,9 +52,9 @@
                               empty?) (->> (:tags event)
                                            (str/join (:separator opts))
                                            (str "/tags/")))
-        labels    (-> event
-                      filter-event
-                      create-label)]
+        labels    (->> event
+                       (filter-event opts)
+                       create-label)]
     (str instance tags labels)))
 
 (defn generate-url
@@ -86,16 +86,18 @@
    (prometheus {:host \"prometheus.example.com\"})
 
    Options:
-   `:host`       Prometheus Pushgateway Server IP (default: \"localhost\")
-   `:port`       Prometheus Pushgateway Server Port (default: 9091)
-   `:job`        Group Name to be assigned (default: \"riemann\")
-   `:separator`  Separator to be used for Riemann tags (default: \",\")
+   `:host`           Prometheus Pushgateway Server IP (default: \"localhost\")
+   `:port`           Prometheus Pushgateway Server Port (default: 9091)
+   `:job`            Group Name to be assigned (default: \"riemann\")
+   `:separator`      Separator to be used for Riemann tags (default: \",\")
+   `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels
   "
   [opts]
-  (let [opts (merge {:host      "localhost"
-                     :port      9091
-                     :job       "riemann"
-                     :separator ","}
+  (let [opts (merge {:host            "localhost"
+                     :port            9091
+                     :job             "riemann"
+                     :separator       ","
+                     :exclude-fields  special-fields}
                     opts)]
     (fn [event]
       (let [url (generate-url opts event)
