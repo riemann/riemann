@@ -44,9 +44,17 @@
 (defn generate-labels
   "Generates the Prometheus labels from Riemann event attributes."
   [opts event]
-  (let [instance  (str "/instance/" (:host opts))
-        tags      (if-not (empty? (:tags event))(str "/tags/" (str/join (:separator opts) (:tags event))))
-        labels    (create-label (filter-event event))]
+  (let [instance  (->> opts
+                       :host
+                       (str "/instance/"))
+        tags      (if-not (-> event
+                              :tags
+                              empty?) (->> (:tags event)
+                                           (str/join (:separator opts))
+                                           (str "/tags/")))
+        labels    (-> event
+                      filter-event
+                      create-label)]
     (str instance tags labels)))
 
 (defn generate-url
