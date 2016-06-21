@@ -24,10 +24,10 @@
 (deftest override-formatting-test
   (let [message (#'riemann.sns/compose-message
                  {:body (fn [events]
-                          (apply str "body " 
+                          (apply str "body "
                                  (map :service events)))
-                  :subject (fn [events] 
-                             (apply str "subject " 
+                  :subject (fn [events]
+                             (apply str "subject "
                                     (map :service events)))
                   :arn ["my:arn"]}
                  {:service "foo"})]
@@ -54,6 +54,14 @@
 (deftest sns-publisher-sync-test
   (let [a (promise)
         sns (sns-publisher fake-aws-opts)
+        stream (sns "test:arn")]
+    (with-redefs [riemann.sns/aws-sns-publish #(deliver a [%2 %3 %4])]
+      (stream fake-event))
+    (is (= @a ["test:arn" fake-event-body fake-event-subject]))))
+
+(deftest sns-publisher-default-chain-test
+  (let [a (promise)
+        sns (sns-publisher)
         stream (sns "test:arn")]
     (with-redefs [riemann.sns/aws-sns-publish #(deliver a [%2 %3 %4])]
       (stream fake-event))
@@ -100,12 +108,14 @@
         done (promise)
         fail (promise)
         sns-sync (sns-publisher aws-opts)
+        sns-default-chain (sns-publisher {})
         sns-async (sns-publisher aws-opts {} {:async true})
         sns-callbacks (sns-publisher aws-opts {} {:async true
                                                   :success #(deliver done [%2])
                                                   :error #(deliver fail [%1])})
         event (merge fake-event {:time (unix-time)})]
     ((sns-sync env-arn) (merge event {:service "sns sync test"}))
+    ((sns-default-chain env-arn) (merge event {:service "sns default credential chain test"}))
     ((sns-async env-arn) (merge event {:service "sns async test"}))
     ((sns-callbacks env-arn) (merge event {:service "sns async callback test"}))
     ((sns-callbacks (str env-arn ":non:existent")) (merge event {:service "sns async callback test"}))

@@ -4,7 +4,8 @@
   (your-publisher \"your::arn\"). Or simply call sns-publish or
   sns-publish-async directly."
   (:import (com.amazonaws AmazonWebServiceClient)
-           [com.amazonaws.auth BasicAWSCredentials]
+           (com.amazonaws.auth BasicAWSCredentials
+                               DefaultAWSCredentialsProviderChain)
            [com.amazonaws.regions RegionUtils]
            [com.amazonaws.handlers AsyncHandler]
            (com.amazonaws.services.sns AmazonSNS
@@ -45,9 +46,12 @@
   (RegionUtils/getRegion name))
 
 (defn- aws-credentials [credentials]
-  (BasicAWSCredentials.
-   (:access-key credentials)
-   (:secret-key credentials)))
+  (if (or (nil? (:access-key credentials))
+          (nil? (:secret-key credentials)))
+    (DefaultAWSCredentialsProviderChain.)
+    (BasicAWSCredentials.
+     (:access-key credentials)
+     (:secret-key credentials))))
 
 (defn- aws-client
   [klass opts]
@@ -101,7 +105,7 @@
     (doseq [arn arns]
        (publish arn))))
 
-(def aws-credential-keys #{:access-key :secret-key :region}) 
+(def aws-credential-keys #{:access-key :secret-key :region})
 (def aws-async-keys #{:async :success :error})
 (def aws-keys (union aws-credential-keys aws-async-keys))
 
@@ -156,19 +160,19 @@
                            :secret-key \"your-secret-key\"
                            :subject \"something went wrong\"
                            :async true}))
-  
+
   By default, riemann uses (riemann.common/subject events) and
   (riemann.common/body events) to format messages.
   You can set your own subject or body formatter functions by including
   :subject or :body in msg-opts. These formatting functions take a sequence of
   events and return a string.
 
-  (def sns (sns-publisher {} {:body (fn [events] 
+  (def sns (sns-publisher {} {:body (fn [events]
                                       (apply prn-str events))}))"
   ([] (sns-publisher {}))
   ([opts]
      (let [{aws-opts   :aws-opts
-            async-opts :async-opts 
+            async-opts :async-opts
             msg-opts   :msg-opts} (sift-opts opts)]
        (sns-publisher aws-opts msg-opts async-opts)))
   ([aws-opts msg-opts & [async-opts]]
