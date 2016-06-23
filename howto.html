@@ -1942,8 +1942,8 @@ on events that remain the same for the specified time period.</p>
   "Is Riemann currently in maintenance mode?"
   []
   ; Take an expression representing a query for maintenance mode
-  (->> '(and (= host nil)
-             (= service "maintenance-mode"))
+  (->> '(and (= :host nil)
+             (= :service "maintenance-mode"))
        ; Search the current Riemann core's index for any matching events
        (riemann.index/search (:index @core))
        ; Take the first match
@@ -1981,8 +1981,8 @@ on events that remain the same for the specified time period.</p>
 {% highlight clj %}
 (defn maintenance-mode? [host]
   ; Using (list) to build a query dynamically
-  (->> (list 'and (list '= 'host host)
-                  '(= service "maintenance-mode"))
+  (->> (list 'and (list '= ':host host)
+                  '(= :service "maintenance-mode"))
        ...))
 
 (where (not (maintenance-mode? host))
