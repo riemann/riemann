@@ -1496,7 +1496,7 @@
   Be aware that (by) over unbounded values can result in
   *many* substreams being created, so you wouldn't want to write
   (by metric prn): you'd get a separate prn for *every* unique metric that
-  came in."
+  came in.  Also, (by) streams are never garbage-collected."
   [fields & children]
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
