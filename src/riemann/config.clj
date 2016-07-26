@@ -224,6 +224,9 @@
 
 (defn reinject
   "A stream which applies any events it receives back into the current core.
+  You almost never need this: it makes it easy to create infinite loops, and
+  it's rarely the case that you *need* top-level recursion. Where possible,
+  prefer a stream that passes events to children.
 
   (with :metric 1 reinject)"
   [event]
