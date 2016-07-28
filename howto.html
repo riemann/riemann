@@ -2238,7 +2238,7 @@ rate
 (fixed-time-window 60
   (smap (fn [events]
           (let [errors   (filter (comp #{"warning" "critical"} :state) events)
-                fraction (/ (count errors) events)]
+                fraction (/ (count errors) (count events))]
             ; Build a new event using a map of fields and values.
             (event {:service "error percent"
                     :metric fraction})))
