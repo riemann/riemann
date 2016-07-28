@@ -3,7 +3,7 @@
         [riemann.common :exclude [match]]
         riemann.time.controlled
         riemann.time
-        [riemann.test :refer [run-stream run-stream-intervals test-stream 
+        [riemann.test :refer [run-stream run-stream-intervals test-stream
                               with-test-stream test-stream-intervals]]
         clojure.test)
   (:require [riemann.index :as index]
@@ -27,29 +27,6 @@
   "Generate events with given metrics"
   [& metrics]
   (vec (map (fn [m] {:metric m}) metrics)))
-
-(deftest combine-test
-  (logging/suppress
-    ["riemann.streams"]
-    (let [r (atom nil)
-          sum (combine folds/sum (register r))
-          min (combine folds/minimum (register r))
-          max (combine folds/maximum (register r))
-          mean (combine folds/mean (register r))
-          median (combine folds/median (register r))
-          events [{:metric 1}
-                  {:metric 0}
-                  {:metric -2}]]
-      (sum events)
-      (is (= (deref r) {:metric -1}))
-      (min events)
-      (is (= (deref r) {:metric -2}))
-      (max events)
-      (is (= (deref r) {:metric 1}))
-      (mean events)
-      (is (= (deref r) {:metric -1/3}))
-      (median events)
-      (is (= (deref r) {:metric 0})))))
 
 (deftest smap*-test
          (testing "passes nil values"
@@ -87,7 +64,7 @@
 
 (deftest exception-stream-test
          (testing "direct fn"
-                  (logging/suppress 
+                  (logging/suppress
                     ["riemann.streams" "riemann.streams-test"]
 
                     (let [out        (atom [])
@@ -96,7 +73,7 @@
                                    #(swap! exceptions conj %)
                                    (fn [e]
                                      (swap! out conj e)
-                                     (throw 
+                                     (throw
                                        (RuntimeException. "foo"))))]
                       (stream :hi)
 
@@ -107,11 +84,11 @@
                         (is (= (:state e)   "error"))
                         (is (= (:time e)    0))
                         (is (re-find #".*RuntimeException.*" (:description e)))
-                        (is (= #{"exception" "java.lang.RuntimeException"} 
+                        (is (= #{"exception" "java.lang.RuntimeException"}
                                (set (:tags e))))))))
 
          (testing "scheduled fn"
-                  (logging/suppress 
+                  (logging/suppress
                     "riemann.streams"
                     (reset-time!)
                     (let [e     (atom nil)
@@ -177,10 +154,10 @@
 
          (testing "resets"
                   (test-stream (counter 100)
-                               [{:metric 1} 
+                               [{:metric 1}
                                 {:metric 200 :tags ["reset"]}
                                 {:metric 5}]
-                               [{:metric 101} 
+                               [{:metric 101}
                                 {:metric 200 :tags ["reset"]}
                                 {:metric 205}])))
 
@@ -210,7 +187,7 @@
          (test-stream (match identity 2)
                       [1 2 3]
                       [2])
-         
+
          ; Maps
          (test-stream (match identity {:state #"^mi", :host "other"})
                       [{}
@@ -263,7 +240,7 @@
                        {}]
                       [{:tags ["meow" "bark"]}
                        {:tags ["meow"]}])
-         
+
          (testing "return values"
                   (is (true? ((tagged-all ["meow" "bark"])
                                 {:tags ["meow" "bark" "grr"]})))
@@ -312,7 +289,7 @@
                                 {:metric 2 :state :ok}]
                         stream (split* (sup 10) (with :state :critical
                                                       (partial swap! res conj))
-                                       (sup 5) (with :state :warn 
+                                       (sup 5) (with :state :warn
                                                      (partial swap! res conj))
                                        (with :state :ok
                                              (partial swap! res conj)))]
@@ -325,7 +302,7 @@
                         events [{:metric 15} {:metric 8} {:metric 2}]
                         expect [{:metric 15 :state :critical}
                                 {:metric 8 :state :warn}]
-                        stream (split* 
+                        stream (split*
                                  (sup 10) (with :state :critical
                                                 (partial swap! res conj))
                                  (sup 5) (with :state :warn
@@ -351,10 +328,10 @@
                                        (partial swap! res conj)))]
                     (dorun (map stream events))
                     (is (= expect @res))))
-         
+
          (testing "evaluates streams once"
                   (let [res (atom [])
-                        stream (split 
+                        stream (split
                                  true
                                  (let [state (atom 0)]
                                    (fn [_]
@@ -374,11 +351,11 @@
                                 {:metric 8 :state :warn}
                                 {:metric 2 :state :ok}]
                         stream (splitp <= metric
-                                       10 (with :state :crit 
+                                       10 (with :state :crit
                                                 (partial swap! res conj))
-                                       5  (with :state :warn 
+                                       5  (with :state :warn
                                                 (partial swap! res conj))
-                                       (with :state :ok 
+                                       (with :state :ok
                                              (partial swap! res conj)))]
                     (dorun (map stream events))
                     (is (= expect @res))))
@@ -388,7 +365,7 @@
                                ((splitp = true
                                         false :doesnt-happen)
                                   :foo))))
-         
+
          (testing "Evaluates child streams once at creation time"
                   (let [a (atom 0)
                         b (atom 0)
@@ -431,7 +408,7 @@
            ; Run stream
            (doseq [e events] (s e))
 
-           (is (= @good 
+           (is (= @good
                   [{:service "good" :metric 0}
                    {:service "bad" :metric 3}]))
            (is (= @bad
@@ -483,7 +460,7 @@
                                 {:service "food"}]
                                [{:service "foo"}
                                 {:service "food"}]))
-        
+
          (testing "functions"
                   (test-stream (where (and metric (even? metric)))
                                [{}
@@ -639,8 +616,8 @@
                   (is (= true ((where (tagged-any ["foo" "bar"])) {:tags ["foo" "bar"]})))
                   (is (= false ((where (tagged-any ["foo" "bar"])) {:tags ["blah"]})))
 
-                  (is (= true ((where (service "foo") 
-                                      (fn [event] 2)) 
+                  (is (= true ((where (service "foo")
+                                      (fn [event] 2))
                                  {:service "foo"})))
                   (is (= false ((where (service "foo")
                                        (else (fn [event] 2)))
@@ -862,7 +839,7 @@
            ["a" "a" "b" "c" "c" "d" "e"]))))
 
 (deftest interpolate-constant-test
-         (test-stream-intervals 
+         (test-stream-intervals
            (interpolate-constant 0.01)
            []
            [])
@@ -876,17 +853,17 @@
          ; Should forward first state and ignore immediate successors
          (is (= (map :metric (run-stream-intervals
                                (interpolate-constant 0.1)
-                               [{:metric 1} 0.05 
+                               [{:metric 1} 0.05
                                 {:metric 2} nil
                                 {:metric 3}]))
                 [1]))
 
          ; Should fill in missing states regularly
-         (is (= (map :metric (run-stream-intervals 
+         (is (= (map :metric (run-stream-intervals
                                (interpolate-constant 0.1)
                                (interpose 0.22 (em 1 2 3 4))))
                 [1 1 1 2 2 3 3]))
-         
+
          ; Should forward final "expired" state.
          (is (= (map :metric (run-stream-intervals
                                (interpolate-constant 0.1)
@@ -917,7 +894,7 @@
          ; Do nothing the first time
          (test-stream (ddt) [{:metric 1 :time 0}] [])
          ; Differentiate
-         (test-stream (ddt) 
+         (test-stream (ddt)
                       [{:metric 0 :time 0}
                        {:metric 0 :time 1}
                        {:metric 2 :time 2}
@@ -928,10 +905,10 @@
 
 (deftest ddt-interval-test
          (testing "Quick burst without crossing interval"
-                  (is (= (map :metric (run-stream-intervals 
+                  (is (= (map :metric (run-stream-intervals
                                         (ddt 0.1)
                                         [{:metric 1} nil
-                                         {:metric 2} nil 
+                                         {:metric 2} nil
                                          {:metric 3}]))
                          [])))
 
@@ -944,9 +921,9 @@
                      {:time 2 :metric -5} 1]
                     [{:time 1 :metric 1}
                      {:time 2 :metric -5}]))
-        
+
          (testing "n events per interval"
-                  (test-stream-intervals 
+                  (test-stream-intervals
                     (ddt 1)
                     [{:time 0 :metric -1} 1/100
                      {:time 1/2 :metric 100} 1/2 ; Ignored
@@ -986,15 +963,15 @@
 
            ; Verify output states
            (let [o (deref output)]
-             
+
              ; All events recorded
              (is (approx-equal total (reduce + (map :metric o))))
 
              ; Middle events should have the correct rate.
-             (is (every? (fn [measured-rate] 
+             (is (every? (fn [measured-rate]
                            (approx-equal gen-rate measured-rate))
                          (map :metric (drop 1 (drop-last o)))))
-           
+
              ; First and last events should be complementary
              (let [first-last (+ (:metric (first o))
                                  (:metric (last o)))]
@@ -1012,7 +989,7 @@
                        (fn [event] (dosync (reset! output event))))
 
                ; Generate events
-               workers (map (fn [t] (future 
+               workers (map (fn [t] (future
                                       (dotimes [i (/ total threads)]
                                         (r {:metric 1 :time (unix-time)}))))
                             (range threads))]
@@ -1129,28 +1106,6 @@
              (s event))
            (is (= 6 (deref i)))))
 
-(deftest within-test
-(logging/suppress ["riemann.streams"]
-         (let [output (ref [])
-               r (within [1 2]
-                         (fn [e] (dosync (alter output conj e))))
-               metrics [0.5 1 1.5 2 2.5]
-               expect [1 1.5 2]]
-           
-           (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
-
-(deftest without-test
-(logging/suppress ["riemann.streams"]
-         (let [output (ref [])
-               r (without [1 2]
-                         (fn [e] (dosync (alter output conj e))))
-               metrics [0.5 1 1.5 2 2.5]
-               expect [0.5 2.5]]
-           
-           (doseq [m metrics] (r {:metric m}))
-           (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
-
 (deftest over-test
 (logging/suppress ["riemann.streams"]
          (let [output (ref [])
@@ -1158,7 +1113,7 @@
                          (fn [e] (dosync (alter output conj e))))
                metrics [0.5 1 1.5 2 2.5]
                expect [2 2.5]]
-           
+
            (doseq [m metrics] (r {:metric m}))
            (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
@@ -1169,7 +1124,7 @@
                          (fn [e] (dosync (alter output conj e))))
                metrics [0.5 1 1.5 2 2.5]
                expect [0.5 1]]
-           
+
            (doseq [m metrics] (r {:metric m}))
            (is (= expect (vec (map (fn [s] (:metric s)) (deref output))))))))
 
@@ -1259,7 +1214,7 @@
            (test-stream (top 2 :metric)
                         [(a 1) (b 2) (c 3) (a 1)          (b 2)]
                         [(a 1) (b 2) (c 3) (expire (a 1)) (b 2)])
-         
+
            ; Allowing in a smaller event when there's room
            (test-stream (top 2 :metric)
                         [(a 2) (b 2) (c 1)          (a 5) (c 1)          (a 0) (c 1)]
@@ -1305,7 +1260,7 @@
          (test-stream-intervals (throttle 3 2)
                                 [{:state "1"} 0
                                  {:state "2"} 0
-                                 {:state "3"} 1       ; t = 0 
+                                 {:state "3"} 1       ; t = 0
                                  {:state "4"} 1       ; t = 1
                                  {:state "5"} 1       ; t = 2
                                  {:state "expired"} 0 ; t = 3
@@ -1315,11 +1270,11 @@
                                 [{:state "1"}
                                  {:state "2"}
                                  {:state "3"}
-                                 
+
                                  {:state "5"}
                                  {:state "expired"}
                                  {:state "expired"}
-                                 
+
                                  {:state "expired"}]))
 
 (deftest rollup-test
@@ -1330,11 +1285,11 @@
              [[:a] [:b :c] [:d :e :f]]))
 
          (testing "basic rollups"
-                  (test-stream-intervals 
+                  (test-stream-intervals
                     (rollup 2 1)
                     [ 1 0 2 0 3 1   4 0 5 0 6 0 7 1       :foo 10]
                     [[1] [2]   [3] [4]           [5 6 7] [:foo]  ]))
-         ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]] 
+         ;          [[1] [2]   [3] [4] [5]       [6 7] [:foo]]
 
          (testing "expired events"
                   (test-stream-intervals
@@ -1394,7 +1349,7 @@
            (s c1)
            (advance! 6.1)
            (is (= (set @out) #{a2 b1 c1}))
-           
+
            (s b2)
            (advance! 7.1)
            (is (= (set @out) #{b2 c1}))))
@@ -1404,7 +1359,7 @@
          (test-stream (stable 3 :x)
                       [{:x 1 :time 0} {:x 1 :time 1} {:x 1 :time 2}]
                       [])
- 
+
          ; Constant values are emitted after dt seconds
          (test-stream (stable 3 :x)
                       [{:x 1 :time 0} {:x 1 :time 1} {:x 1 :time 3}]
@@ -1499,13 +1454,13 @@
             {:service "bar" :state "expired"}]
            [[{:service "foo" :state "ok"}
              nil]
-            [{:service "foo" :state "ok"} 
+            [{:service "foo" :state "ok"}
              {:service "bar" :state "ok"}]
-            [{:service "foo" :state "ok"} 
+            [{:service "foo" :state "ok"}
              {:service "bar" :state "expired" :time 0}]
             [{:service "foo" :state "expired" :time 0}
              nil]
-            [nil 
+            [nil
              {:service "bar" :state "expired" :time 0}]])
 
          ; Expiration test: expires own events when the time comes.
@@ -1588,7 +1543,7 @@
          ; n-width windows
          (test-stream (moving-time-window 2) [] [])
          (test-stream (moving-time-window 2) [{:time 1}] [[{:time 1}]])
-         (test-stream (moving-time-window 2) 
+         (test-stream (moving-time-window 2)
                       [{:time 1} {:time 2} {:time 3} {:time 4}]
                       [[{:time 1}]
                        [{:time 1} {:time 2}]
@@ -1620,13 +1575,13 @@
          ; n-width windows
          (test-stream (fixed-time-window 2) [] [])
          (test-stream (fixed-time-window 2) [{:time 1}] [])
-         (test-stream (fixed-time-window 2) 
+         (test-stream (fixed-time-window 2)
                       [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5}]
                       [[{:time 1} {:time 2}]
                        [{:time 3} {:time 4}]])
 
          ; With a gap
-         (test-stream (fixed-time-window 2) [{:time 1} {:time 7}] 
+         (test-stream (fixed-time-window 2) [{:time 1} {:time 7}]
                       [[{:time 1}] [] []])
 
          ; With out-of-order events
@@ -1653,14 +1608,14 @@
          ; n-width windows
          (test-stream (fixed-offset-time-window 2) [] [])
          (test-stream (fixed-offset-time-window 2) [{:time 1}] [])
-         (test-stream (fixed-offset-time-window 2) 
+         (test-stream (fixed-offset-time-window 2)
                       [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5} {:time 6}]
                       [[{:time 1}]
                        [{:time 2} {:time 3}]
                        [{:time 4} {:time 5}]])
 
          ; With a gap
-         (test-stream (fixed-offset-time-window 2) [{:time 1} {:time 7}] 
+         (test-stream (fixed-offset-time-window 2) [{:time 1} {:time 7}]
                       [[{:time 1}] [] []])
 
          ; With out-of-order events
