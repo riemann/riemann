@@ -1,3 +1,6 @@
+.DS_Store
+.ruby-version
+_site
 .idea
 *.iml
 .cake
