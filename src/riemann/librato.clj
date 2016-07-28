@@ -3,6 +3,7 @@
   (:require [clojure.string :as string])
   (:use [clj-librato.metrics :only [collate annotate connection-manager
                                     update-annotation]]
+        [clojure.tools.logging :only [error]]
         clojure.math.numeric-tower))
 
 (defn safe-name
@@ -18,10 +19,12 @@
 (defn event->gauge
   "Converts an event to a gauge."
   [event]
-  {:name          (safe-name (:service event))
-   :source        (safe-name (:host event))
-   :value         (:metric event)
-   :measure-time  (round (:time event))})
+  (if-not (:metric event)
+    (error "Can't send events without metrics")
+    {:name          (safe-name (:service event))
+     :source        (safe-name (:host event))
+     :value         (:metric event)
+     :measure-time  (round (:time event))}))
 
 (def event->counter event->gauge)
 
