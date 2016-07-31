@@ -7,16 +7,16 @@
 
 (defn post-datapoint
   "Post the riemann metrics as datapoints."
-  [host port dataset json-data]
-  (let [p (str port)
-        scheme "http://"
+  [host port dataset json-data http-opts]
+  (let [scheme "http://"
         endpoint "/v1/post/"
-        url (str scheme host ":" p endpoint dataset)
-        http-options {:body json-data
-                      :content-type :json
-                      :conn-timeout 5000
-                      :socket-timeout 5000
-                      :throw-entire-message? true}]
+        url (str scheme host ":" port endpoint dataset)
+        http-options (assoc (merge {:conn-timeout 5000
+                                    :socket-timeout 5000
+                                    :throw-entire-message? true}
+                                   http-opts)
+                            :body json-data
+                            :content-type :json)]
     (http/post url http-options)))
 
 (defn generate-event [event]
@@ -61,4 +61,4 @@
                      [event])
             post-data (mapv generate-event events)
             json-data (generate-string post-data)]
-        (post-datapoint (:host opts) (:port opts) (:dataset opts) json-data)))))
+        (post-datapoint (:host opts) (:port opts) (:dataset opts) json-data (get opts :http-options {}))))))
