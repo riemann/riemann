@@ -11,6 +11,7 @@
                      [common      :as common :refer [event]]
                      [core        :as core]
                      [datadog     :refer [datadog]]
+                     [druid       :refer [druid]]
                      [email       :refer [mailer]]
                      [folds       :as folds]
                      [graphite    :as graphite-client :refer [graphite]]
