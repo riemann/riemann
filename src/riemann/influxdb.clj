@@ -20,9 +20,9 @@
 (defn kv-encode-9 [kv]
   (clojure.string/join "," (map
     (fn [[key value]]
-      (if (instance? String value)
-        (str (replace-disallowed-9 key) "=" (str "\"" (str/escape value {\" "\\\""}) "\""))
-        (str (replace-disallowed-9 key) "=" (clojure.pprint/cl-format nil "~F" value))))
+      (if (number? value)
+        (str (replace-disallowed-9 key) "=" (clojure.pprint/cl-format nil "~F" value))
+        (str (replace-disallowed-9 key) "=" (str "\"" (str/escape (str value) {\" "\\\""}) "\""))))
     kv)))
 
 (defn lineprotocol-encode-9 [event]
