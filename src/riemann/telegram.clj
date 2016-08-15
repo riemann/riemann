@@ -1,7 +1,7 @@
 (ns ^{:doc "Send events to Telegram"}
   riemann.telegram
   (:require [clj-http.client :as client]
-            [clojure.string :refer [join]]))
+            [clojure.string :refer [escape join]]))
 
 (def ^:private api-url "https://api.telegram.org/bot%s/%s")
 
