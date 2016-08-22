@@ -38,6 +38,7 @@
                      [sns         :refer [sns-publisher]]
                      [stackdriver :refer [stackdriver]]
                      [streams     :refer :all]
+                     [telegram    :refer [telegram]]
                      [test        :as test :refer [tap io tests]]
                      [time        :refer [unix-time linear-time once! every!]]
                      [twilio      :refer [twilio]]
