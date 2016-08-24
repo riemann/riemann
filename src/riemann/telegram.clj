@@ -45,4 +45,10 @@
   (streams
     (rollup 5 3600 (telegram {:token token :chat_id chat_id})))"
   [{:keys [token chat_id]}]
-  (fn [e] (post token chat_id e)))
+  (fn [e]
+    (let [events (if (sequential? e)
+		   e
+		   [e])]
+      (doseq [event events]
+	(post token chat_id event)
+	(Thread/sleep 1000)))))
