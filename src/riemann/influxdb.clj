@@ -21,7 +21,7 @@
   (clojure.string/join "," (map
     (fn [[key value]]
       (if (instance? String value)
-        (str (replace-disallowed-9 key) "=" (str "\"" (str/escape value {\" "\\\""}) "\""))
+        (str (replace-disallowed-9 key) "=" (pr-str value))
         (str (replace-disallowed-9 key) "=" (clojure.pprint/cl-format nil "~F" value))))
     kv)))
 
