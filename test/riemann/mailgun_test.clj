@@ -37,6 +37,24 @@
            :subject default-subject-result
            :text default-body-result))
 
+    (testing "ensure the data posted to mailgun contains html field when body formatter returns html map"
+      (let [html-content-result "<h1>HTML</h1>"
+            body-formatter-result {:type :html
+                                   :content html-content-result}
+            body-formatter (fn [_] body-formatter-result)
+            mailer (mailgun/mailgun {:sandbox sandbox
+                                     :service-key service-key}
+                                    {:body body-formatter})
+            email (mailer recipient)]
+        (mock-post result-atom email event)
+        (are [key result] (= result (key @result-atom))
+             :url (str "https://api.mailgun.net/v2/" sandbox "/messages")
+             :basic-auth ["api" service-key]
+             :from (str "Riemann <riemann@" sandbox ">")
+             :to (list recipient)
+             :subject default-subject-result
+             :html html-content-result)))
+
     (testing "ensure message overrides are used"
       (let [body-formatter-result "this is the body"
             body-formatter (fn [_] body-formatter-result)

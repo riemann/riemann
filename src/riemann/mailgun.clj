@@ -9,17 +9,21 @@
 (defn- post
   "POST to the Mailgun events API."
   [mgun-opts msg-opts]
-  (client/post (format event-url (:sandbox mgun-opts))
-    {:basic-auth ["api" (:service-key mgun-opts)]
-     :form-params
-     {:from (format (:from msg-opts) (:sandbox mgun-opts))
-      :to (:to msg-opts)
-      :subject (:subject msg-opts)
-      :text (:body msg-opts)}
-     :socket-timeout 5000
-     :conn-timeout 5000
-     :accept :json
-     :throw-entire-message? true}))
+  (let [body (:body msg-opts)
+        [body-type content] (if (= (:type body) :html)
+                              [:html (:content body)]
+                              [:text body])]
+    (client/post (format event-url (:sandbox mgun-opts))
+      {:basic-auth ["api" (:service-key mgun-opts)]
+       :form-params
+       {:from (format (:from msg-opts) (:sandbox mgun-opts))
+        :to (:to msg-opts)
+        :subject (:subject msg-opts)
+        body-type content}
+       :socket-timeout 5000
+       :conn-timeout 5000
+       :accept :json
+       :throw-entire-message? true})))
 
 
 (defn mailgun-event
@@ -69,7 +73,14 @@
   events and return a string.
 
   (def email (mailgun {} {:body (fn [events] 
-                                 (apply prn-str events))}))"
+                                 (apply prn-str events))}))
+  
+  This api uses text body by default. If you want to use HTML body, you can set
+  a body formatter function returns a map of fields :type and :content.
+
+  (def email (mailgun {} {:body (fn [events] 
+                                 {:type :html
+                                  :content \"<h1>HTML Body</h1>\"})}))"
   ([] (mailgun {}))
   ([opts]
         (let [mg-keys #{:sandbox :service-key}
