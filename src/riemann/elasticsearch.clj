@@ -40,8 +40,19 @@
   :es-endpoint     Elasticsearch, default is \"http://127.0.0.1:9200\".
   :es-index        Index name, default is \"riemann\".
   :index-suffix    Index-suffix, default is \"-yyyy.MM.dd\".
-  :type            Type to send to index, default is \"event\"."
+  :type            Type to send to index, default is \"event\".
 
+  Example:
+
+  (elasticsearch
+    ; ES options
+    {:es-endpoint \"https:example-elastic.com\"
+     :index-suffix \"-yyyy.MM\"}
+    ; (optional) custom event formatter
+    (fn [event]
+      (let
+        [newtags (concat (:tags event) [\"extra-tag\"])]
+        (merge event {:tags newtags}))))"
   [opts & maybe-formatter]
   (let
     [opts (merge {:es-endpoint "http://127.0.0.1:9200"
