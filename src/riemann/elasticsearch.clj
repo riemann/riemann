@@ -32,7 +32,8 @@
 
 (defn elasticsearch
   "Returns a function which accepts an event and sends it to
-  Elasticsearch.
+  Elasticsearch. Custom event formatter can be provided as
+  optional second argument.
 
   Options:
 
@@ -41,13 +42,14 @@
   :index-suffix    Index-suffix, default is \"-yyyy.MM.dd\".
   :type            Type to send to index, default is \"event\"."
 
-  [opts]
+  [opts & maybe-formatter]
   (let
     [opts (merge {:es-endpoint "http://127.0.0.1:9200"
                   :es-index "riemann"
                   :index-suffix "-yyyy.MM.dd"
                   :type "event"}
-                 opts)]
+                 opts)
+     event-formatter (if (first maybe-formatter) (first maybe-formatter) format-event)]
 
     (fn[event] (post
                  (format "%s/%s%s/%s"
@@ -55,4 +57,4 @@
                          (:es-index opts)
                          (time-format/unparse (time-format/formatter (:index-suffix opts)) (datetime-from-event event))
                          (:type opts))
-                 (format-event event)))))
+                 (event-formatter event)))))

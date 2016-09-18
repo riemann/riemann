@@ -53,3 +53,19 @@
                  :conn-timeout 5000
                  :socket-timeout 5000
                  :throw-entire-message? true}]))))))
+
+(deftest ^:elasticsearch elasticsearch-event-formatter-test
+  (with-mock [calls clj-http.client/post]
+    (let [formatter identity
+          elastic (elasticsearch {} formatter)
+          json-event (json/generate-string input-event)]
+
+      (testing "custom formatter use"
+        (elastic input-event)
+        (is (= (last @calls)
+               ["http://127.0.0.1:9200/riemann-2016.01.01/event"
+                {:body json-event
+                 :content-type :json
+                 :conn-timeout 5000
+                 :socket-timeout 5000
+                 :throw-entire-message? true}]))))))
