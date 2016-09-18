@@ -39,6 +39,7 @@
                      [sns         :refer [sns-publisher]]
                      [stackdriver :refer [stackdriver]]
                      [prometheus  :refer [prometheus]]
+                     [elasticsearch :refer [elasticsearch]]
                      [streams     :refer :all]
                      [test        :as test :refer [tap io tests]]
                      [time        :refer [unix-time linear-time once! every!]]
