@@ -34,3 +34,11 @@
           :description "Still testing multiple events"
           :metric 44
           :state "ok"}])))
+
+(deftest ^:telegram ^:integration html_event
+  (let [tg (telegram {:token api-token :chat_id chat-id :parse_mode "html"})]
+    (tg {:host "localhost"
+         :service "telegram html parse mode test"
+         :description "Testing <b>html</b> formatted <code>event</code>"
+         :metric 45
+         :state "ok"})))

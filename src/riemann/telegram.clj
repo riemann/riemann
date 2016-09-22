@@ -5,29 +5,44 @@
 
 (def ^:private api-url "https://api.telegram.org/bot%s/%s")
 
-(defn- format-message [ev]
+(defn- html-parse-mode []
+  "Formats html message."
+  (fn [e]
+    (str
+      "<strong>Host:</strong> " (or (:host e) "-") "\n"
+      "<strong>Service:</strong> " (or (:service e) "-") "\n"
+      "<strong>State:</strong> " (or (:state e) "-") "\n"
+      "<strong>Metric:</strong> " (or (:metric e) "-") "\n"
+      "<strong>Description:</strong> " (or (:description e) "-"))))
+
+(defn- markdown-parse-mode []
+  "Formats markdown message."
+  (fn [e]
+    (str
+      "*Host:* " (or (:host e) "-") "\n"
+      "*Service:* " (or (:service e) "-") "\n"
+      "*State:* " (or (:state e) "-") "\n"
+      "*Metric:* " (or (:metric e) "-") "\n"
+      "*Description:* " (or (:description e) "-"))))
+
+(defn- format-message [parse-mode event]
   "Formats a message, accepts a single
   event or a sequence of events."
   (join "\n\n"
         (map
-          (fn [e]
-            (str
-              "<strong>Host:</strong> " (or (:host e) "-") "\n"
-              "<strong>Service:</strong> " (or (:service e) "-") "\n"
-              "<strong>State:</strong> " (or (:state e) "-") "\n"
-              "<strong>Metric:</strong> " (or (:metric e) "-") "\n"
-              "<strong>Description:</strong> "
-                (escape (or (:description e) "-") {\< "&lt;", \> "&gt;", \& "&amp;"}))) 
-          (flatten [ev]))))
+          (if (re-matches #"(?i)html" parse-mode)
+            (html-parse-mode)
+            (markdown-parse-mode))
+            (flatten [event]))))
 
 (defn- post
   "POST to the Telegram API."
-  [token chat_id event]
+  [token chat_id event parse_mode]
   (client/post (format api-url token "sendMessage")
-               {:form-params {:chat_id chat_id 
-                              :parse_mode "HTML"
-                              :text (format-message event)}
-		:throw-entire-message? true}))
+               {:form-params {:chat_id chat_id
+                              :parse_mode (or parse_mode "markdown")
+                              :text (format-message parse_mode event)}
+                :throw-entire-message? true}))
 
 (defn telegram
   "Send events to Telegram chat. Uses your bot token and returns a function,
@@ -44,11 +59,12 @@
 
   (streams
     (rollup 5 3600 (telegram {:token token :chat_id chat_id})))"
-  [{:keys [token chat_id]}]
+  [{:keys [token chat_id parse_mode]
+    :or {parse_mode "markdown"}}]
   (fn [e]
     (let [events (if (sequential? e)
-		   e
-		   [e])]
+       e
+       [e])]
       (doseq [event events]
-	(post token chat_id event)
-	(Thread/sleep 1000)))))
+        (post token chat_id event parse_mode)
+        (Thread/sleep 1000)))))
