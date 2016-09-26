@@ -58,13 +58,24 @@
   (def chat_id \"0123456\")
 
   (streams
-    (rollup 5 3600 (telegram {:token token :chat_id chat_id})))"
-  [{:keys [token chat_id parse_mode]
-    :or {parse_mode "markdown"}}]
-  (fn [e]
-    (let [events (if (sequential? e)
-       e
-       [e])]
+    (rollup 5 3600 (telegram {:token token :chat_id chat_id})))
+
+  Example:
+
+  (def telegram-async
+    (batch 10 1
+      (async-queue!
+        :telegram-async                         ; A name for the forwarder
+          {:queue-size     1e4                  ; 10,000 events max
+           :core-pool-size 5                    ; Minimum 5 threads
+           :max-pools-size 100}                 ; Maximum 100 threads
+          (telegram {:token \"275347130:AAEdWBudgeQCV87O0ag9luwwFGcN2Efeqk4\"
+                     :chat_id \"261032559\" }))))
+  "
+  [opts]
+  (fn [event]
+    (let [events (if (sequential? event)
+                   event
+                   [event])]
       (doseq [event events]
-        (post token chat_id event parse_mode)
-        (Thread/sleep 1000)))))
+        (post (:token opts) (:chat_id opts) event (or (:parse_mode opts) "markdown"))))))
