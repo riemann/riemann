@@ -18,7 +18,7 @@
    :metric (:metric event)
    :state (:state event)
    :tags (:tags event)
-   ":@timestamp" (time-format/unparse (time-format/formatters :date-time) (datetime-from-event event))})
+   (keyword "@timestamp") (time-format/unparse (time-format/formatters :date-time) (datetime-from-event event))})
 
 (defn- post
   "POST to Elasticsearch."
