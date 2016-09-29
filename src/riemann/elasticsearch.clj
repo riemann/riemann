@@ -8,7 +8,7 @@
 (defn- datetime-from-event
   "Returns the datetime from event correcting (secs -> millisecs) before conversion."
   [event]
-  (time-coerce/from-long (* 1000 (:time event))))
+  (time-coerce/from-long (long (* 1000 (:time event)))))
 
 (defn- format-event
   "Formats an event for Elasticsearch, drops \"description\" and re-formats \"time\"."

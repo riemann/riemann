@@ -13,13 +13,14 @@
                            :service "testservice"
                            :metric 1337
                            :state "leet"
-                           :time 1451606400})
+                           ; quarter second past 1451606400 to include Ratio timestamps
+                           :time 5806425601/4})
 (def ^:const output-event {:host "testhost"
                            :service "testservice"
                            :metric 1337
                            :state "leet"
                            :tags nil
-                           ":@timestamp" "2016-01-01T00:00:00.000Z"})
+                           "@timestamp" "2016-01-01T00:00:00.250Z"})
 
 (deftest ^:elasticsearch elasticsearch-default-test
   (with-mock [calls clj-http.client/post]
