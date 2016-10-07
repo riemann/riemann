@@ -49,6 +49,8 @@
   "When an exception is caught, it's converted to an event and sent here."
   nil)
 
+(declare part-time-simple)
+
 (defn expired?
   "There are two ways an event can be considered expired.
   First, if it has state \"expired\".
@@ -382,7 +384,23 @@
 
   Events without times accrue in the current window."
   [n & children]
-  (apply fixed-time-window-fn n (fn [n event] (:time event)) children))
+  (when (zero? n)
+    (throw (IllegalArgumentException. "Can't have a zero-width time window.")))
+  (let [last-end-time (atom (unix-time))]
+    (part-time-simple
+     n
+     (fn reset [previous-state] [])
+
+     (fn add [buffer event]
+       (if (and (:time event) (< (:time event) @last-end-time))
+         buffer
+         (conj buffer event)))
+
+     (fn side-effects [_ _])
+
+     (fn finish [buffer start-time end-time]
+       (swap! last-end-time (constantly end-time))
+       (call-rescue buffer children)))))
 
 (defn fixed-offset-time-window
   "Like fixed-time-window, but divides wall clock time into discrete windows.
