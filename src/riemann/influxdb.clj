@@ -152,25 +152,27 @@
                     (default: `#{:host}`)
   `:tags`           A common map of tags to apply to all points. (optional)
   `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
-  [opts]
+  [{:keys [db scheme host port username password insecure ; Common options
+           retention tag-fields tags timeout]             ; 0.9 options
+    :or {insecure   false
+         tag-fields #{:host} ; tag-fields default to #{:host}
+         timeout    5000}
+    :as opts}]
   (let [write-url
         (str (cond->
-          (format "%s://%s:%s/write?db=%s&precision=s" (:scheme opts) (:host opts) (:port opts) (:db opts))
-          (:retention opts)
-            (str "&rp=" (:retention opts))))
+          (format "%s://%s:%s/write?db=%s&precision=s" scheme host port db)
+          retention
+            (str "&rp=" retention)))
 
         http-opts
         (cond->
-          {:socket-timeout (:timeout opts 5000) ; ms
-           :conn-timeout   (:timeout opts 5000) ; ms
+          {:socket-timeout timeout ; ms
+           :conn-timeout   timeout ; ms
            :content-type   "text/plain"
-           :insecure? (:insecure opts false)}
-          (:username opts)
-            (assoc :basic-auth [(:username opts)
-                                (:password opts)]))
-
-        tag-fields
-        (:tag-fields opts #{:host})]
+           :insecure?      insecure}
+          ; If username exists, set basic-auth
+          username
+            (assoc :basic-auth [username password]))]
     (fn stream
       [events]
       (let [events (if (sequential? events) events (list events))
