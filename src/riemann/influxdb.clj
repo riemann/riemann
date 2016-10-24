@@ -38,6 +38,7 @@
   entry in the tag map."
   [tag-fields event]
   (->> (select-keys event tag-fields)
+       (remove (fn [[k v]] (or (nil? v) (= "" v))))
        (map #(vector (name (key %)) (str (val %))))
        (into {})))
 
@@ -50,7 +51,7 @@
   (let [ignored-fields (set/union special-fields tag-fields)]
     (-> event
         (->> (remove (comp ignored-fields key))
-             (remove #(nil? (val %)))
+             (remove (fn [[k v]] (or (nil? v) (= "" v))))
              (map #(vector (name (key %)) (val %)))
              (into {}))
         (assoc "value" (:metric event)))))

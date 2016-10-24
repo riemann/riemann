@@ -100,7 +100,34 @@
             :foo "frobble"}))
       "Full event is converted to point fields")
   (is (empty? (influxdb/events->points-9 #{} [{:service "foo test"}]))
-      "Nil points are filtered from result"))
+      "Nil points are filtered from result")
+  (is (= {"measurement" "service_api_req_latency"
+          "time" 1428354941
+          "tags" {"host" "www-dev-app-01.sfo1.example.com"
+                  "role" "app"
+                  "env" "dev"}
+          "fields" {"value" 0.8025
+                    "description" "A text description!"
+                    "state" "ok"
+                    "foo" "frobble"}}
+         (influxdb/event->point-9
+           #{:host :sys :env :role :loc}
+           {:host "www-dev-app-01.sfo1.example.com"
+            :service "service_api_req_latency"
+            :time 1428354941
+            :metric 0.8025
+            :state "ok"
+            :description "A text description!"
+            :ttl 60
+            :tags ["one" "two" "red"]
+            :sys nil
+            :env "dev"
+            :role "app"
+            :loc ""
+            :foo "frobble"
+            :bar nil
+            :hello ""}))
+      ":sys and :loc tags and removed because nil or empty str. Same for :bar and :hello fields"))
 
 
 (deftest line-protocol
