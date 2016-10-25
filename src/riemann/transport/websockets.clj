@@ -183,7 +183,7 @@
           (locking this
             (when-not @server
               (reset! server (http/run-server (ws-handler core stats)
-                                              {:host host
+                                              {:ip host
                                                :port port}))
               (info "Websockets server" host port "online"))))
 
