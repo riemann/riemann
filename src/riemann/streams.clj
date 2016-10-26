@@ -68,9 +68,9 @@
        (try
          (child# ~event)
          (catch Throwable e#
-           (warn e# (str child# " threw"))
            (if-let [ex-stream# *exception-stream*]
-             (ex-stream# (exception->event e# ~event))))))
+             (ex-stream# (exception->event e# ~event))
+             (warn e# (str child# " threw"))))))
      ; TODO: Why return true?
      true))
 
