@@ -52,6 +52,12 @@ layout: default
     <div class="twelvecol">
       <h2>Contributors to the next release</h2>
 
+      <p>Mathieu Corbn (mcorbin) fixed a decoding issue with the UDP graphite
+      server, added proper host binding to the websocket server, and suppressed
+      logging of exceptions when they're being processed by exception-stream.
+      Mathieu also changed the influx client to strip tags and fields when
+      empty.</p>
+
       <p>Arthur Ulfeldt (thearthur) switched the synchronous
         datadog client to be a batching, asynchronously queued one.</p>
 
