@@ -74,13 +74,15 @@
   name, tags) from; to fill in default states or TTLs, and so on.
 
   If parser-fn is nil, defaults to identity."
-  [parser-fn]
+  [parser-fn protocol]
   (let [parser-fn (or parser-fn identity)]
     (proxy [MessageToMessageDecoder] []
       (decode [context message out]
         (try+
           (.add out
-                (-> message
+                (-> (if (= protocol :udp)
+                      (.toString (.content message) CharsetUtil/UTF_8)
+                      message)
                     decode-graphite-line
                     parser-fn))
           (catch Object e
@@ -126,7 +128,7 @@
              ^:shared string-encoder (StringEncoder.
                                        CharsetUtil/UTF_8)
              ^:shared graphite-decoder (graphite-frame-decoder
-                                         (:parser-fn opts))
+                                         (:parser-fn opts) protocol)
              ^{:shared true :executor shared-event-executor} handler
              graphite-message-handler)]
        (server (merge opts
