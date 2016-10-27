@@ -97,7 +97,7 @@
               (when-not @server
                 (reset! server (http/run-server
                                  (sse-handler core stats headers)
-                                 {:host host :port port}))
+                                 {:ip host :port port}))
                 (info "SSE server" host port "online")))))
 
   (stop! [this]
@@ -140,9 +140,6 @@
 
   Options:
   :host    The address to listen on (default 127.0.0.1)
-           Currently does nothing; this option depends on an incomplete
-           feature in Aleph, the underlying networking library. Aleph will
-           currently bind to all interfaces, regardless of this value.
   :port    The port to listen on (default 5558)
   :headers Additional headers to send with the reply. By default
            Content-Type is set to text/event-stream and Cache-Control to
