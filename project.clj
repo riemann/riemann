@@ -20,7 +20,7 @@
     [ch.qos.logback/logback-classic "1.1.3"]
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "4.5"]
-
+    [org.influxdb/influxdb-java "2.4"]
     [com.cemerick/pomegranate "0.3.0"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
