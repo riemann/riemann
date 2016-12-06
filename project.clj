@@ -44,7 +44,7 @@
     [clj-nsca "0.0.3"]
     [amazonica "0.3.28" :exclusions [joda-time]]
     [capacitor "0.4.3" :exclusions [http-kit]]]
-  :plugins [[codox "0.6.1"]
+  :plugins [[lein-codox "0.10.2"]
             [lein-difftest "2.0.0"]
             [lein-rpm "0.0.5"
              :exclusions [org.apache.maven/maven-plugin-api
