@@ -1,4 +1,4 @@
-(defproject riemann "0.2.12-SNAPSHOT"
+(defproject riemann "0.2.12"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "http://github.com/riemann/riemann"

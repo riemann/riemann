@@ -1,14 +1,65 @@
-# Unreleased
+# Version 0.2.12
+
+This version includes Prometheus, Druid and Elasticsearch plugins. It
+adds HTML body support for Mailgun, KairosDB HTTP integration,
+
+This version also contains a number of bug fixes and deprecates the
+`within`, `without`, and `combine` streams.
+
+We've also renamed com.aphyr to io.riemann.
+
+## Features and enhancements
+
+- Added Prometheus Plugin
+  [\#692](https://github.com/riemann/riemann/pull/692)
+- Added Druid plugin
+  [\#691](https://github.com/riemann/riemann/pull/691)
+- Add support for KairosDB HTTP integration and metric TTLs
+  [\#627](https://github.com/riemann/riemann/pull/627)
+- Add riemann.elasticsearch
+  [\#722](https://github.com/riemann/riemann/pull/722)
+- Add HTML body support for mailgun
+  [\#719](https://github.com/riemann/riemann/pull/719)
+- Add the ability to read SNS credentials from the default credential
+  chain [\#701](https://github.com/riemann/riemann/pull/701)
+- Updating netty to 4.1.0
+  [\#694](https://github.com/riemann/riemann/pull/694)
+- Allow explicit config of Slack HTTP connection params
+  [\#681](https://github.com/riemann/riemann/pull/681)
+- Add batch forwarding for datadog
+  [\#679](https://github.com/riemann/riemann/pull/679)
+
+## Bug fixes
+
+- Suppress exception logging if the exception is handled by `exception-stream` [\#726](https://github.com/riemann/riemann/issues/726)
+- Improve error messages for librato with missing metrics [\#374](https://github.com/riemann/riemann/issues/374)
+- Fix sse listening address [\#737](https://github.com/riemann/riemann/pull/737)
+- Fix RuntimeException in udp graphite-server [\#736](https://github.com/riemann/riemann/pull/736) 
+- Fix websocket listening address [\#735](https://github.com/riemann/riemann/pull/735) 
+- Remove tags and fields if value is nil or empty [\#734](https://github.com/riemann/riemann/pull/734)
+- Don't log exceptions if in exception-stream [\#729](https://github.com/riemann/riemann/pull/729) 
+- Revert previous 'fix' closing unwritable channels [\#724](https://github.com/riemann/riemann/pull/724)
+- Fix nested escaping of strings [\#717](https://github.com/riemann/riemann/pull/717) 
+- Link to '/' rather than index.html [\#711](https://github.com/riemann/riemann/pull/711) 
+- Fix fraction divisor in generating events example [\#708](https://github.com/riemann/riemann/pull/708)
+- Add ChannelOption/SO\_BACKLOG to TCP server [\#706](https://github.com/riemann/riemann/pull/706) 
+- Clarify GC behavior of \(by\) streams [\#704](https://github.com/riemann/riemann/pull/704) 
+- Correction in maintenance-mode function [\#702](https://github.com/riemann/riemann/pull/702) 
+- Add the ability to read SNS credentials from the default credential chain [\#701](https://github.com/riemann/riemann/pull/701)
+- Fixes \#374 - Librato error without metric [\#695](https://github.com/riemann/riemann/pull/695) 
+- Updating netty to 4.1.0 [\#694](https://github.com/riemann/riemann/pull/694) 
 
 ## Deprecations and API changes
 
 - Removed deprecated functions: `within`, `without` and `combine`. These
   were deprecated in 2014.
+- Renamed com.aphyr to io.riemann in Riemann core
+  [\#685](https://github.com/riemann/riemann/pull/685)
 
 # Version 0.2.11
 
 This update includes a variety of bug fixes and improvements. Also
-included is VictorOps integration, improvements to the Graphite, Xymon,
+included is a VictorOps integration, improvements to the Graphite, Xymon,
 InfluxDB, Hipchat and Nagios integrations.
 
 Internally the project has been updated for Clojure 1.8.
