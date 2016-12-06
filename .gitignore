@@ -1,1 +1,4 @@
 _site/
+pkg/
+target/
+.ruby-version
