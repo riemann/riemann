@@ -21,6 +21,14 @@ h2 {
     font-size: 25px;
 }
 
+h5.license {
+    margin: 9px 0 22px 0;
+    color: #555;
+    font-weight: normal;
+    font-size: 12px;
+    font-style: italic;
+}
+
 .document h1, .namespace-index h1 {
     font-size: 32px;
     margin-top: 12px;
@@ -433,20 +441,28 @@ p {
 }
 
 .markdown p, .markdown li, .markdown dt, .markdown dd, .markdown td {
-    line-height: 18px;
+    line-height: 22px;
+}
+
+.markdown li {
+    padding: 2px 0;
 }
 
 .markdown h2 {
     font-weight: normal;
     font-size: 25px;
+    margin: 30px 0 10px 0;
 }
 
-#content .markdown h3 {
+.markdown h3 {
+    font-weight: normal;
     font-size: 20px;
+    margin: 30px 0 0 0;
 }
 
 .markdown h4 {
     font-size: 15px;
+    margin: 22px 0 -4px 0;
 }
 
 .doc, .public, .namespace .index {
@@ -454,27 +470,27 @@ p {
     overflow-x: visible;
 }
 
-.markdown code, .src-link a {
-    background: #f6f6f6;
+.markdown pre > code {
+    display: block;
+    padding: 10px;
+}
+
+.markdown pre > code, .src-link a {
     border: 1px solid #e4e4e4;
     border-radius: 2px;
 }
 
-.markdown pre, pre.deps {
-    background: #f4f4f4;
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    padding: 5px 10px;
-    margin: 0 10px;
+.markdown code:not(.hljs), .src-link a {
+    background: #f6f6f6;
 }
 
 pre.deps {
     display: inline-block;
-}
-
-.markdown pre code {
-    background: transparent;
-    border: none;
+    margin: 0 10px;
+    border: 1px solid #e4e4e4;
+    border-radius: 2px;
+    padding: 10px;
+    background-color: #f6f6f6;
 }
 
 .markdown hr {
