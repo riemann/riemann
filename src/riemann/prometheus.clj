@@ -9,11 +9,10 @@
   "A set of event fields in Riemann with special handling logic."
   #{:service :metric :tags :time :ttl})
 
-
 (defn replace-disallowed
   "Replaces all existence of disallowed characters with underscore."
   [field]
-   (str/replace (str/replace field #"[^a-zA-Z0-9_]" "_") #"[_]{2,}" "_"))
+  (str/replace (str/replace field #"[^a-zA-Z0-9_]" "_") #"[_]{2,}" "_"))
 
 (defn generate-metricname
   "Generates the metric name as per prometheus specification."
