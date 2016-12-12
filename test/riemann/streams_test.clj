@@ -1319,6 +1319,14 @@
       [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
       [[:a :b] [:c] [:d :e] [:f]])))
 
+(deftest extract-coalesce-args-test
+  (is (= {:dt 1 :children ["foo"]} (extract-coalesce-args "foo" nil)))
+  (is (= {:dt 1 :children ["foo"]} (extract-coalesce-args 1 ["foo"])))
+  (is (= {:dt 5 :children ["foo"]} (extract-coalesce-args 5 ["foo"])))
+  (is (= {:dt 5 :children ["foo"]} (extract-coalesce-args {:dt 5} ["foo"])))
+  (is (= {:dt 1 :stream-name :foo :children ["foo"]} (extract-coalesce-args {:stream-name :foo} ["foo"])))
+  (is (= {:dt 3 :stream-name :foo :children ["foo"]} (extract-coalesce-args {:dt 3 :stream-name :foo} ["foo"]))))
+
 (deftest coalesce-test
          (let [out (atom [])
                s (coalesce #(reset! out %))
@@ -1353,6 +1361,40 @@
            (s b2)
            (advance! 7.1)
            (is (= (set @out) #{b2 c1}))))
+
+(deftest coalesce-state-test
+         (reset-stream-states!)
+         (let [out (atom [])
+               s (coalesce {:stream-name :coalesce-test} #(reset! out %))
+               a1 {:service :a :state "one" :time 0}
+               b1 {:service :b :state "one" :time 0}
+               c1 {:service :c :state "one" :time 0}
+               b2 {:service :b :state "two" :time 0}]
+           (s a1)
+           (advance! 1.1)
+           (is (= (set @out) (set (.values (:coalesce-test @next-stream-state))) #{a1}))
+
+           (s b1)
+           (advance! 2.1)
+           (is (= (set @out) (set (.values (:coalesce-test @next-stream-state))) #{a1 b1})))
+
+         (stream-state-transition!) ;; simulate riemann reload
+
+         (let [out (atom [])
+               s (coalesce {:stream-name :coalesce-test} #(reset! out %))
+               a1 {:service :a :state "one" :time 0}
+               b1 {:service :b :state "one" :time 0}
+               a2 {:service :a :state "two" :time 3 :ttl 2}
+               c1 {:service :c :state "one" :time 0}
+               b2 {:service :b :state "two" :time 0}]
+
+           (is (= (set (.values (:coalesce-test @stream-state))) #{a1 b1}))
+           (is (= (set (.values (:coalesce-test @next-stream-state))) #{a1 b1}))
+
+           (s a2)
+           (advance! 3.1)
+           (is (= (set @out) #{a2 b1} (set (.values (:coalesce-test @next-stream-state))))))
+         (reset-stream-states!))
 
 (deftest stable-test
          ; Doesn't emit until dt seconds have passed.
@@ -1691,3 +1733,32 @@
                                  {:time 9 :host :baz :metric 5}
                                  {:time 1 :host :foo :metric -4}
                                  {:time 100 :host :foo :metric 89}]))
+
+(deftest set-next-stream-state-test
+  (reset-stream-states!)
+  (set-next-stream-state! :foo "bar")
+  (is (= @next-stream-state {:foo "bar"}))
+  (set-next-stream-state! :foo "baz")
+  (is (= @next-stream-state {:foo "baz"}))
+  (set-next-stream-state! :bar "baz")
+  (is (= @next-stream-state {:foo "baz" :bar "baz"}))
+  (reset-stream-states!))
+
+(deftest get-or-create-stream-state-test
+  (reset-stream-states!)
+  (reset! stream-state {:foo "bar"})
+  (is (= (get-or-create-stream-state :foo "bar1") "bar"))
+  (is (= @next-stream-state {:foo "bar"}))
+  (is (= (get-or-create-stream-state :bar "foo") "foo"))
+  (is (= @next-stream-state {:foo "bar" :bar "foo"}))
+  (is (= (get-or-create-stream-state nil "baz") "baz"))
+  (is (= @next-stream-state {:foo "bar" :bar "foo"}))
+  (reset-stream-states!))
+
+(deftest stream-state-transition-test
+  (reset-stream-states!)
+  (reset! next-stream-state {:foo "bar" :baz "foo"})
+  (stream-state-transition!)
+  (is (= @next-stream-state {}))
+  (is (= @stream-state {:foo "bar" :baz "foo"}))
+  (reset-stream-states!))
