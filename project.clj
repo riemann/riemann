@@ -86,6 +86,7 @@
                    :stackdriver :stackdriver
                    :xymon :xymon
                    :shinken :shinken
+                   :telegram :telegram
                    :blueflood :blueflood
                    :opsgenie :opsgenie
                    :boundary :boundary
