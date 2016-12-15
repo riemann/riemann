@@ -293,11 +293,6 @@
   (locking core
     (reset! next-core (core/core))))
 
-(defn clear-stream-state!
-  "Resets the streams states atoms"
-  []
-  (stream-state-transition!))
-
 (defn apply!
   "Applies pending changes to the core. Transitions the current core to the
   next one, and resets the next core."

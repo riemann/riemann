@@ -40,7 +40,6 @@
       (riemann.config/validate-config @config-file)
       (riemann.time/reset-tasks!)
       (riemann.config/clear!)
-      (riemann.config/clear-stream-state!)
       (riemann.pubsub/sweep! (:pubsub @riemann.config/core))
       (riemann.config/include @config-file)
       (riemann.config/apply!)

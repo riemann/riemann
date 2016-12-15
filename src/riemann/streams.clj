@@ -1164,43 +1164,43 @@
             [ok expired] (swap! past update)]
         (child event (concat expired (vals ok)))))))
 
-(def stream-state (atom {}))
-(def next-stream-state (atom {}))
+(defonce stream-state (atom {}))
 
-(defn set-next-stream-state!
-  "Set the `next-stream-name` key in stream-state to `state`
-  `stream-name` must be a keyword"
+(defn set-stream-state!
+  "Ensure that there is a stored value for a named stream.
+   Yields the stored value."
   [stream-name state]
-  (swap! next-stream-state assoc stream-name state))
+  (get
+   (swap! stream-state assoc stream-name state)
+   stream-name))
 
 (defn reset-stream-states!
-  "Reset the `stream-state` and `next-stream-state` atoms to `{}`"
+  "Clear previously saved stream states"
   []
-  (reset! stream-state {})
-  (reset! next-stream-state {}))
+  (reset! stream-state {}))
 
-(defn stream-state-transition!
-  "Copy the `next-stream-state` to `stream-state`
-  reset the `next-stream-state` value to `{}`"
-  []
-  (reset! stream-state @next-stream-state)
-  (reset! next-stream-state {}))
+(defn named-stream-state
+  "Get a stream by name, if no previous value existed for this
+   named stream, use the 0-arity constructor `ctor` to initialize it."
+  [stream-name ctor]
+  (if-let [state (get @stream-state stream-name)]
+    state
+    (set-stream-state! stream-name (ctor))))
 
-(defn get-or-create-stream-state
-  "Returns the value associated to the `stream-name` key in `stream-state` or `default-value` if the key does not exists.
-  Update the `next-stream-state` atom."
-  [stream-name default-value]
-  (let [state (get @stream-state stream-name default-value)]
-    (when stream-name (set-next-stream-state! stream-name state))
-    state))
+(defn expire-stream-state
+  "Utility function to expire a stream state by name.
+   This is meant to be called after a reload if a stream has changed name,
+   to expire the previous one."
+  [stream-name]
+  (swap! stream-state dissoc stream-name))
 
 (defn extract-coalesce-args
   "returns a map containing the coalesce args."
-  [dt children]
+  [args children]
   (cond
-    (number? dt) {:dt dt :children children}
-    (map? dt) (assoc dt :dt (:dt dt 1) :children children)
-    :default {:dt 1 :children (cons dt children)}))
+    (number? args) {:dt args :children children}
+    (map? args)    (assoc args :dt (:dt args 1) :children children)
+    :default       {:dt 1 :children (cons args children)}))
 
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
@@ -1228,8 +1228,8 @@
 "
   [& [dt & children]]
   (let [{:keys [dt stream-name children]} (extract-coalesce-args dt children)
-        chm (get-or-create-stream-state stream-name
-                                        (java.util.concurrent.ConcurrentHashMap.))
+        ctor  (fn [] (java.util.concurrent.ConcurrentHashMap.))
+        chm   (if stream-name (named-stream-state stream-name ctor) (ctor))
         callback (fn callback []
                    (let [es (vec (.values chm))
                          expired (filter expired? es)]
