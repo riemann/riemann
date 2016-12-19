@@ -1059,9 +1059,10 @@
            bottom-stream))))
 
 (defn throttle
-  "Passes on at most n events every dt seconds. If more than n events arrive in
-  a dt-second fixed window, drops remaining events. Imposes no additional
-  latency; events are either passed on immediately or dropped."
+  "Passes on at most n events, or vectors of events, every dt seconds. If more
+  than n events (or vectors) arrive in a dt-second fixed window, drops
+  remaining events. Imposes no additional latency; events are either passed on
+  immediately or dropped."
   [n dt & children]
   (part-time-simple
     dt
