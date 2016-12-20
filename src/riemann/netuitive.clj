@@ -64,7 +64,7 @@
         :netuitive-forwarder    ; A name for the forwarder
         {:queue-size     1e4  ; 10,000 events max
          :core-pool-size 5    ; Minimum 5 threads
-         :max-pools-size 100} ; Maxium 100 threads
+         :max-pools-size 100} ; Maximum 100 threads
         (netuitive {:api-key \"0123456789abcdef01234567890abcde\" :url \"https://api.app.netuitive.com/ingest/\" :type \"Riemann\"}))))"
   [opts]
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
