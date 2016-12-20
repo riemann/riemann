@@ -9,8 +9,7 @@
 (defn parsetime
    "Converts ratio time in seconds to epoch time in millis"
    [time]
-   biginteger (* 1000 time))
-
+   (long (* 1000 time)))
 
 (defn netuitive-metric-name
   "Constructs a metric-name from an event."
@@ -23,7 +22,7 @@
    "Post the riemann metrics to Netuitive."
    [api-key url data]
    (let [url (str (or url gateway-url) api-key) http-options {:body data :content-type :json}]
-   (client/post url http-options {:save-request? true :debug true :debug-body true})))
+      (client/post url http-options {:save-request? true :debug true :debug-body true})))
 
 (defn generate-tag 
    "Create Netuitive tag in the form name:<tag> value:true"
@@ -33,20 +32,19 @@
 
 (defn generate-event 
    "Structure for ingest to Netuitive as JSON" 
-   [event] 
-   (def type (or (:elementtype event) "Riemann")) 
-   (def metricId (netuitive-metric-name event))
-   { 
-      :id (str type ":" (:host event)) 
-      :name (:host event) 
-      :type type 
-      :metrics [ { :id metricId } ] 
-      :samples [ { :metricId metricId 
-                   :timestamp (parsetime (:time event)) 
-                   :val (:metric event) } ] 
-      :tags (mapv generate-tag (:tags event)) 
-   } 
-) 
+   [event]
+   (let [type (:elementtype event)   
+         metricId (netuitive-metric-name event)]
+       { 
+          :id (str type ":" (:host event)) 
+          :name (:host event) 
+          :type type 
+          :metrics [{:id metricId}] 
+          :samples [{:metricId metricId 
+                       :timestamp (parsetime (:time event)) 
+                       :val (:metric event)}] 
+          :tags (mapv generate-tag (:tags event)) 
+       }))
 
 (defn netuitive
   "Return a function which accepts either single events or batches of
@@ -69,9 +67,7 @@
   [opts]
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
     (fn [event]
-      (let [events (if (sequential? event)
-                     event
-                     [event])
-            post-data (mapv generate-event (mapv #(assoc % :elementtype (:type opts)) events))
+      (let [events (if (sequential? event) event [event])
+            post-data (mapv generate-event (mapv #(assoc % :elementtype (:type opts "Riemann")) events))
             json-data (generate-string post-data)]
-                (post-datapoint (:api-key opts) (:url opts) json-data)))))
+               (post-datapoint (:api-key opts) (:url opts) json-data)))))
