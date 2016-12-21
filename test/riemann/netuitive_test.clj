@@ -2,15 +2,9 @@
   (:use riemann.netuitive
         clojure.test))
 
-(def test-event {:host "riemann.local" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})
-
-(deftest ^:netuitive netuitive-test
-
-   (let [k (netuitive {:api-key "netuitive-test-key" :url "https://api.app.netuitive.com/ingest/"})]
-     (k test-event))
-		   
-   (let [k (netuitive {:api-key "netuitive-test-key"})]
-     (k test-event))
+(def test-event {:host "riemann.local" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})	
+   
+(deftest ^:netuitive netuitive-unit-tests
 		   
    (is (= (:type (generate-event test-event {})) "Riemann"))
    (is (= (:id (generate-event test-event {})) "Riemann:riemann.local"))
@@ -27,3 +21,11 @@
    (is (= (:type (generate-event test-event {:type "SERVER"})) "SERVER"))
    
    (is (= (netuitive-metric-name test-event) "netuitive.test")))
+
+(deftest ^:integration ^:netuitive netuitive-test
+
+   (let [k (netuitive {:api-key "netuitive-test-key" :url "https://api.app.netuitive.com/ingest/"})]
+     (k test-event))
+		   
+   (let [k (netuitive {:api-key "netuitive-test-key"})]
+     (k test-event)))
