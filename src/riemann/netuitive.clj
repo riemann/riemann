@@ -4,8 +4,6 @@
   (:require [clj-http.client :as client]
             [cheshire.core :refer [generate-string]]))
 
-(def ^:private gateway-url "https://api.app.netuitive.com/ingest/")
-
 (defn parsetime
    "Converts ratio time in seconds to epoch time in millis"
    [time]
@@ -21,7 +19,8 @@
 (defn post-datapoint
    "Post the riemann metrics to Netuitive."
    [api-key url data]
-   (let [url (str (or url gateway-url) api-key) http-options {:body data :content-type :json}]
+   (let [url (str url api-key) 
+         http-options {:body data :content-type :json}]
       (client/post url http-options {:save-request? true :debug true :debug-body true})))
 
 (defn generate-tag 
@@ -68,4 +67,4 @@
       (let [events (if (sequential? event) event [event])
             post-data (mapv #(generate-event % opts) events)
             json-data (generate-string post-data)]
-               (post-datapoint (:api-key opts) (:url opts) json-data)))))
+        (post-datapoint (:api-key opts) (:url opts) json-data)))))
