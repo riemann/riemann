@@ -32,19 +32,17 @@
 
 (defn generate-event 
    "Structure for ingest to Netuitive as JSON" 
-   [event]
-   (let [type (:elementtype event)   
-         metricId (netuitive-metric-name event)]
-       { 
-          :id (str type ":" (:host event)) 
-          :name (:host event) 
-          :type type 
-          :metrics [{:id metricId}] 
-          :samples [{:metricId metricId 
-                       :timestamp (parsetime (:time event)) 
-                       :val (:metric event)}] 
-          :tags (mapv generate-tag (:tags event)) 
-       }))
+   [event opts]
+   (let [type (:type opts "Riemann")   
+         metric-id (netuitive-metric-name event)]
+       {:id (str type ":" (:host event)) 
+        :name (:host event) 
+        :type type
+        :metrics [{:id metric-id}] 
+        :samples [{:metricId metric-id 
+                   :timestamp (parsetime (:time event)) 
+                   :val (:metric event)}] 
+        :tags (mapv generate-tag (:tags event))}))
 
 (defn netuitive
   "Return a function which accepts either single events or batches of
@@ -59,7 +57,7 @@
   (def netuitive-forwarder
     (batch 100 1/10
       (async-queue!
-        :netuitive-forwarder    ; A name for the forwarder
+        :netuitive-forwarder  ; A name for the forwarder
         {:queue-size     1e4  ; 10,000 events max
          :core-pool-size 5    ; Minimum 5 threads
          :max-pools-size 100} ; Maximum 100 threads
@@ -68,6 +66,6 @@
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
     (fn [event]
       (let [events (if (sequential? event) event [event])
-            post-data (mapv generate-event (mapv #(assoc % :elementtype (:type opts "Riemann")) events))
+            post-data (mapv #(generate-event % opts) events)
             json-data (generate-string post-data)]
                (post-datapoint (:api-key opts) (:url opts) json-data)))))
