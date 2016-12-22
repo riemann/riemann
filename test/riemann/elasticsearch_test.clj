@@ -70,3 +70,43 @@
                  :conn-timeout 5000
                  :socket-timeout 5000
                  :throw-entire-message? true}]))))))
+
+(deftest ^:elasticsearch elasticsearch-valid-credentials-test
+  (with-mock [calls clj-http.client/post]
+    (let [elastic (elasticsearch {:es-endpoint "https://example-elastic.com"
+                                  :es-index "test-riemann"
+                                  :index-suffix "-yyyy.MM"
+                                  :type "test-type"
+                                  :username "foo"
+                                  :password "bar"})
+          json-event (json/generate-string output-event)]
+
+      (testing "correct basic-auth constructed from valid credentials"
+        (elastic input-event)
+        (is (= (last @calls)
+               ["https://example-elastic.com/test-riemann-2016.01/test-type"
+                {:body json-event
+                 :content-type :json
+                 :conn-timeout 5000
+                 :socket-timeout 5000
+                 :throw-entire-message? true
+                 :basic-auth ["foo" "bar"]}]))))))
+
+(deftest ^:elasticsearch elasticsearch-invalid-credentials-test
+  (with-mock [calls clj-http.client/post]
+    (let [elastic (elasticsearch {:es-endpoint "https://example-elastic.com"
+                                  :es-index "test-riemann"
+                                  :index-suffix "-yyyy.MM"
+                                  :type "test-type"
+                                  :username "foo"}) ; password is missing
+          json-event (json/generate-string output-event)]
+
+      (testing "invalid credentials are ignored"
+        (elastic input-event)
+        (is (= (last @calls)
+               ["https://example-elastic.com/test-riemann-2016.01/test-type"
+                {:body json-event
+                 :content-type :json
+                 :conn-timeout 5000
+                 :socket-timeout 5000
+                 :throw-entire-message? true}]))))))
