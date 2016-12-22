@@ -22,12 +22,15 @@
 
 (defn- post
   "POST to Elasticsearch."
-  [esindex formatted-event]
-  (let [http-options {:body (json/generate-string formatted-event)
-                      :content-type :json
-                      :conn-timeout 5000
-                      :socket-timeout 5000
-                      :throw-entire-message? true}]
+  [credentials esindex formatted-event]
+  (let [base-http-options {:body (json/generate-string formatted-event)
+                           :content-type :json
+                           :conn-timeout 5000
+                           :socket-timeout 5000
+                           :throw-entire-message? true}
+        http-options (if credentials
+                       (assoc base-http-options :basic-auth credentials)
+                       base-http-options)]
     (http/post esindex http-options)))
 
 (defn elasticsearch
@@ -41,6 +44,8 @@
   :es-index        Index name, default is \"riemann\".
   :index-suffix    Index-suffix, default is \"-yyyy.MM.dd\".
   :type            Type to send to index, default is \"event\".
+  :username        Username to authenticate with.
+  :password        Password to authenticate with.
 
   Example:
 
@@ -63,6 +68,8 @@
      event-formatter (if (first maybe-formatter) (first maybe-formatter) format-event)]
 
     (fn[event] (post
+                 (if (and (:username opts) (:password opts))
+                   [(:username opts) (:password opts)])
                  (format "%s/%s%s/%s"
                          (:es-endpoint opts)
                          (:es-index opts)
