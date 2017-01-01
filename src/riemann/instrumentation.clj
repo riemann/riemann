@@ -10,7 +10,7 @@
                                       uniform-reservoir]]))
 
 (defprotocol Instrumented
-  "These things can can be asked to report events about their performance and
+  "These things can be asked to report events about their performance and
   health."
   (events [this]
           "Returns a sequence of events describing the current state of the
