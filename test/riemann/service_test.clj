@@ -68,8 +68,8 @@
            (is (= [:start-2 :core] (send :start-2)))
 
            ; Should shut down cleanly
-           (let [f (future 
-                     (Thread/sleep 50) 
+           (let [f (future
+                     (Thread/sleep 50)
                      (.put in :stop))]
              (stop! s)
              @f)
@@ -155,34 +155,42 @@
              (is (= (instrumentation/events s)
                     [{:service "riemann executor cat accepted rate"
                       :metric 3/5
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat completed rate"
                       :metric 3/5
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat rejected rate"
                       :metric 0
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat queue capacity"
                       :metric 2
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat queue size"
                       :metric 0
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat queue used"
                       :metric 0
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat threads active"
                       :metric 0
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}
                      {:service "riemann executor cat threads alive"
                       :metric 1
+                      :tags ["riemann"]
                       :state "ok"
                       :time 5}]))
 

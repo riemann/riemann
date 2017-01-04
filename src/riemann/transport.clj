@@ -152,11 +152,12 @@
 
     (reify Instrumented
       (events [this]
-        (let [base {:state "ok" :time (unix-time)}]
+        (let [base {:state "ok"
+                    :tags  ["riemann"]
+                    :time  (unix-time)}]
                    (map (partial merge base)
                         [{:service (str svc "threads active")
-                          :metric (.. executor executorCount)}]))
-        ))))
+                          :metric (.. executor executorCount)}]))))))
 
 (defn handle
   "Handles a msg with the given core."

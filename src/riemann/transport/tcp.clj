@@ -182,6 +182,7 @@
           (let [svc  (str "riemann server tcp " host ":" port)
                 in   (metrics/snapshot! stats)
                 base {:state "ok"
+                      :tags ["riemann"]
                       :time (:time in)}]
             (map (partial merge base)
                  (concat [{:service (str svc " conns")

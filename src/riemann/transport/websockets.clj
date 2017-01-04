@@ -198,6 +198,7 @@
           ; Take snapshots of our current stats.
           (let [svc (str "riemann server ws " host ":" port)
                 base {:time (unix-time)
+                      :tags ["riemann"]
                       :state "ok"}
                 out (metrics/snapshot! (:out stats))
                 in  (metrics/snapshot! (:in stats))]

@@ -220,34 +220,42 @@
             s (partial str "riemann executor " (clojure.core/name name) " ")]
         [{:service (s "accepted rate")
           :metric  (/ daccepted dtime)
+          :tags    ["riemann"]
           :state   "ok"
           :time    time}
          {:service (s "completed rate")
           :metric  (/ dcompleted dtime)
+          :tags    ["riemann"]
           :state   "ok"
           :time    time}
          {:service (s "rejected rate")
           :metric  (/ drejected dtime)
+          :tags    ["riemann"]
           :state   (if (pos? drejected) "warning" "ok")
           :time    time}
          {:service (s "queue capacity")
           :metric  queue-capacity
+          :tags    ["riemann"]
           :state   "ok"
           :time    time}
          {:service (s "queue size")
           :metric  queue-size
+          :tags    ["riemann"]
           :state   queue-used-state
           :time    time}
          {:service (s "queue used")
           :metric  queue-used
+          :tags    ["riemann"]
           :state   queue-used-state
           :time    time}
          {:service (s "threads active")
           :metric  threads-active
+          :tags    ["riemann"]
           :state   "ok"
           :time    time}
          {:service (s "threads alive")
           :metric  (.getPoolSize executor)
+          :tags    ["riemann"]
           :state   "ok"
           :time    time}]))))
 
