@@ -133,6 +133,7 @@
           (let [svc  (str "riemann server udp " host ":" port)
                 in   (metrics/snapshot! stats)
                 base {:state "ok"
+                      :tags ["riemann"]
                       :time (:time in)}]
             (map (partial merge base)
                  (concat [{:service (str svc " in rate")
