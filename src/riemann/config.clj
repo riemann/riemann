@@ -26,6 +26,7 @@
                      [logstash    :as logstash :refer [logstash]]
                      [mailgun     :refer [mailgun]]
                      [nagios      :refer [nagios]]
+                     [netuitive   :refer [netuitive]]
                      [opentsdb    :refer [opentsdb]]
                      [opsgenie    :refer [opsgenie]]
                      [pagerduty   :refer [pagerduty]]
