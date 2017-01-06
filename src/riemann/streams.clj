@@ -49,6 +49,36 @@
   "When an exception is caught, it's converted to an event and sent here."
   nil)
 
+(defonce stream-state (atom {}))
+
+(defn set-stream-state!
+  "Ensure that there is a stored value for a named stream.
+   Yields the stored value."
+  [stream-name state]
+  (get
+   (swap! stream-state assoc stream-name state)
+   stream-name))
+
+(defn reset-stream-states!
+  "Clear previously saved stream states"
+  []
+  (reset! stream-state {}))
+
+(defn named-stream-state
+  "Get a stream by name, if no previous value existed for this
+   named stream, use the 0-arity constructor `ctor` to initialize it."
+  [stream-name ctor]
+  (if-let [state (get @stream-state stream-name)]
+    state
+    (set-stream-state! stream-name (ctor))))
+
+(defn expire-stream-state
+  "Utility function to expire a stream state by name.
+   This is meant to be called after a reload if a stream has changed name,
+   to expire the previous one."
+  [stream-name]
+  (swap! stream-state dissoc stream-name))
+
 (defn expired?
   "There are two ways an event can be considered expired.
   First, if it has state \"expired\".
@@ -581,13 +611,20 @@
   and end times for that window. Finish will be called exactly once per window,
   and may be impure.
 
-  When no events arrive in a given time window, no functions are called."
+  When no events arrive in a given time window, no functions are called.
+
+  The `dt` parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads."
   ([dt reset add finish]
    (part-time-simple dt reset add (fn [state event]) finish))
   ([dt reset add side-effects finish]
-   (let [anchor (unix-time)
-         state (atom {:window (reset nil)})
-
+   (let [{:keys [dt stream-name]} (cond
+                                    (number? dt) {:dt dt}
+                                    :default     dt) ;; dt should be a map here
+         ctor  (fn [] {:state  (atom {:window (reset nil)})
+                       :anchor (unix-time)})
+         {:keys [state anchor]} (if stream-name
+                                  (named-stream-state stream-name ctor) ;; get state
+                                  (ctor))
          ; Called every dt seconds to flush the window.
          tick (fn tick []
                 (let [last-state (atom nil)
@@ -597,8 +634,11 @@
                                        {:window (reset (:window state))}))
                       s @last-state]
                   ; And finalize the last window
-                  (finish (:window s) (:start s) (:end s))))]
-
+                  (finish (:window s) (:start s) (:end s))))
+         _ (let [s @state] ;; reschedule the current tick
+             (when (or (= :first (:scheduled s))
+                       (= :done  (:scheduled s)))
+               (once! (:end s) tick)))]
      (fn stream [event]
        ; Race to claim the first write to this window
        (let [state (swap! state (fn [state]
@@ -1062,7 +1102,9 @@
   "Passes on at most n events, or vectors of events, every dt seconds. If more
   than n events (or vectors) arrive in a dt-second fixed window, drops
   remaining events. Imposes no additional latency; events are either passed on
-  immediately or dropped."
+  immediately or dropped.
+
+  The `dt` parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads."
   [n dt & children]
   (part-time-simple
     dt
@@ -1089,7 +1131,9 @@
 
   ... and events 4 and 5 are rolled over into the next period:
 
-    -> (f [4 5])"
+    -> (f [4 5])
+
+  The `dt` parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads."
   [n dt & children]
   (part-time-simple
     dt
@@ -1118,7 +1162,9 @@
   "Batches up events into vectors, bounded both by size and by time. Once
   either n events have accumulated, or dt seconds passed, flushes the current
   batch to all child streams. Child streams should accept a sequence of
-  events."
+  events.
+
+  The `dt` parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads."
   [n dt & children]
   (part-time-simple dt
     ; First, the batch to conj onto. Second, a full batch, if ready
@@ -1165,36 +1211,6 @@
             [ok expired] (swap! past update)]
         (child event (concat expired (vals ok)))))))
 
-(defonce stream-state (atom {}))
-
-(defn set-stream-state!
-  "Ensure that there is a stored value for a named stream.
-   Yields the stored value."
-  [stream-name state]
-  (get
-   (swap! stream-state assoc stream-name state)
-   stream-name))
-
-(defn reset-stream-states!
-  "Clear previously saved stream states"
-  []
-  (reset! stream-state {}))
-
-(defn named-stream-state
-  "Get a stream by name, if no previous value existed for this
-   named stream, use the 0-arity constructor `ctor` to initialize it."
-  [stream-name ctor]
-  (if-let [state (get @stream-state stream-name)]
-    state
-    (set-stream-state! stream-name (ctor))))
-
-(defn expire-stream-state
-  "Utility function to expire a stream state by name.
-   This is meant to be called after a reload if a stream has changed name,
-   to expire the previous one."
-  [stream-name]
-  (swap! stream-state dissoc stream-name))
-
 (defn extract-coalesce-args
   "returns a map containing the coalesce args."
   [args children]
@@ -1219,7 +1235,7 @@
   (by [:foo :bar]
     (coalesce 10 prn))
 
-  The first parameter can be a number (dt value) or a map. The map keys are `dt` and `stream-name`. The `stream-name` value is used to keep the stream state between Riemann reloads.
+  The first parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads.
 
   Coalesce call by called with :
 
@@ -2059,7 +2075,9 @@
 
   Ignores expired events.
 
-  See http://en.wikipedia.org/wiki/Apdex for details."
+  See http://en.wikipedia.org/wiki/Apdex for details.
+
+  The `dt` parameter can be a number (dt value) or a map. The map keys are `:dt` and `:stream-name`. The `:stream-name` value is used to keep the stream state between Riemann reloads."
   [dt satisfied? tolerated? & children]
   (part-time-simple
     dt

@@ -1690,6 +1690,27 @@
                   [96 :t99 :t100 101]
                   [101 :t101 :t102 106]]))))
 
+(deftest part-time-simple-state-test
+  (reset-stream-states!)
+  ; Record windows of [start-time e1 e2 e3 end-time]
+  (advance! 1)
+  (let [effects (atom [])
+        p (part-time-simple
+           {:dt 5 :stream-name :foo}
+           (fn [_] [])
+           conj
+           (fn [window start end] (swap! effects conj
+                                         (concat [start] window [end]))))]
+    (advance! 1) (p :t1)
+    (testing "named stream part-time-simple stored values"
+      (is (= {:window [:t1] :start 1 :end 6 :scheduled :first} @(:state (:foo @stream-state))))
+      (is (= 1 (:anchor (:foo @stream-state)))))
+    (advance! 6) (p :t6)
+    (testing "named stream part-time-simple stored values"
+      (is (= {:window [:t6] :start 6 :end 11 :scheduled :first} @(:state (:foo @stream-state))))
+      (is (= 1 (:anchor (:foo @stream-state))))))
+  (reset-stream-states!))
+
 (deftest apdex-test
          (test-stream-intervals
            (apdex 1 (state "ok") (state "warning"))
