@@ -149,15 +149,18 @@
 (defonce instrumentation
   (let [^DefaultEventExecutorGroup executor shared-event-executor
         svc "riemann netty event-executor "]
-
     (reify Instrumented
       (events [this]
         (let [base {:state "ok"
                     :tags  ["riemann"]
-                    :time  (unix-time)}]
+                    :time  (unix-time)}
+              queue-size (reduce + (map #(.pendingTasks %)
+                                        (iterator-seq (.iterator executor))))]
                    (map (partial merge base)
                         [{:service (str svc "threads active")
-                          :metric (.. executor executorCount)}]))))))
+                          :metric (.. executor executorCount)}
+                         {:service (str svc "queue size")
+                          :metric queue-size}]))))))
 
 (defn handle
   "Handles a msg with the given core."
