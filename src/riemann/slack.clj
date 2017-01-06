@@ -35,7 +35,7 @@
                      "State:   " (or (:state events) "-") "\n"
                      "Description:   " (or (:description events) "-") "\n"
                      "Metric:   " (or (:metric events) "-") "\n"
-                     "Tags:   " (or (:tags events) "-") "\n"))
+                     "Tags:   " (into [] (:tags events)) "\n"))
        :short true}]}]})
 
 
@@ -64,7 +64,7 @@
        :value (slack-escape (or (:description events) "-"))
        :short true}
       {:title "Tags",
-       :value (slack-escape (or (str (:tags events)) "-"))
+       :value (slack-escape (str (into [] (:tags events))))
        :short true}]}]})
 
 
