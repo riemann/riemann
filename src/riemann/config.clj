@@ -18,6 +18,7 @@
                      [hipchat     :refer [hipchat]]
                      [index       :as index]
                      [influxdb    :refer [influxdb]]
+                     [kafka       :refer [kafka]]
                      [kairosdb    :refer [kairosdb]]
                      [keenio      :refer [keenio]]
                      [librato     :refer [librato-metrics]]
