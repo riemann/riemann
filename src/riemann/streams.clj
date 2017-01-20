@@ -1165,44 +1165,6 @@
             [ok expired] (swap! past update)]
         (child event (concat expired (vals ok)))))))
 
-(defonce stream-state (atom {}))
-
-(defn set-stream-state!
-  "Ensure that there is a stored value for a named stream.
-   Yields the stored value."
-  [stream-name state]
-  (get
-   (swap! stream-state assoc stream-name state)
-   stream-name))
-
-(defn reset-stream-states!
-  "Clear previously saved stream states"
-  []
-  (reset! stream-state {}))
-
-(defn named-stream-state
-  "Get a stream by name, if no previous value existed for this
-   named stream, use the 0-arity constructor `ctor` to initialize it."
-  [stream-name ctor]
-  (if-let [state (get @stream-state stream-name)]
-    state
-    (set-stream-state! stream-name (ctor))))
-
-(defn expire-stream-state
-  "Utility function to expire a stream state by name.
-   This is meant to be called after a reload if a stream has changed name,
-   to expire the previous one."
-  [stream-name]
-  (swap! stream-state dissoc stream-name))
-
-(defn extract-coalesce-args
-  "returns a map containing the coalesce args."
-  [args children]
-  (cond
-    (number? args) {:dt args :children children}
-    (map? args)    (assoc args :dt (:dt args 1) :children children)
-    :default       {:dt 1 :children (cons args children)}))
-
 (defn coalesce
   "Combines events over time. Coalesce remembers the most recent event for each
   service/host combination that passes through it (limited by :ttl). Every dt
@@ -1217,20 +1179,11 @@
   share the same :foo and :bar attributes:
 
   (by [:foo :bar]
-    (coalesce 10 prn))
-
-  The first parameter can be a number (dt value) or a map. The map keys are `dt` and `stream-name`. The `stream-name` value is used to keep the stream state between Riemann reloads.
-
-  Coalesce call by called with :
-
-  (coalesce children)                             ;; default dt = 1
-  (coalesce 10 children)                          ;; dt = 10
-  (coalesce {:dt 5 :stream-name :name} children   ;; dt = 5 and the stream name is :name
-"
+    (coalesce 10 prn))"
   [& [dt & children]]
-  (let [{:keys [dt stream-name children]} (extract-coalesce-args dt children)
-        ctor  (fn [] (java.util.concurrent.ConcurrentHashMap.))
-        chm   (if stream-name (named-stream-state stream-name ctor) (ctor))
+  (let [children (if (number? dt) children (cons dt children))
+        dt (if (number? dt) dt 1)
+        chm (java.util.concurrent.ConcurrentHashMap.)
         callback (fn callback []
                    (let [es (vec (.values chm))
                          expired (filter expired? es)]
