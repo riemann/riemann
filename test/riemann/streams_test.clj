@@ -1319,14 +1319,6 @@
       [:a 1 :b 1 :c 1 :d 1 :e 1 :f 1]
       [[:a :b] [:c] [:d :e] [:f]])))
 
-(deftest extract-coalesce-args-test
-  (is (= {:dt 1 :children ["foo"]} (extract-coalesce-args "foo" nil)))
-  (is (= {:dt 1 :children ["foo"]} (extract-coalesce-args 1 ["foo"])))
-  (is (= {:dt 5 :children ["foo"]} (extract-coalesce-args 5 ["foo"])))
-  (is (= {:dt 5 :children ["foo"]} (extract-coalesce-args {:dt 5} ["foo"])))
-  (is (= {:dt 1 :stream-name :foo :children ["foo"]} (extract-coalesce-args {:stream-name :foo} ["foo"])))
-  (is (= {:dt 3 :stream-name :foo :children ["foo"]} (extract-coalesce-args {:dt 3 :stream-name :foo} ["foo"]))))
-
 (deftest coalesce-test
          (let [out (atom [])
                s (coalesce #(reset! out %))
@@ -1361,25 +1353,6 @@
            (s b2)
            (advance! 7.1)
            (is (= (set @out) #{b2 c1}))))
-
-(deftest coalesce-state-test
-  (reset-stream-states!)
-  (let [out (atom [])
-        s (coalesce {:stream-name :coalesce-test} #(reset! out %))
-        a1 {:service :a :state "one" :time 0}
-        b1 {:service :b :state "one" :time 0}]
-
-    (s a1)
-    (advance! 1.1)
-
-    (testing "named stream coalesce stored values"
-      (is (= (set @out) (set (.values (:coalesce-test @stream-state))) #{a1}))
-
-      (s b1)
-      (advance! 2.1)
-      (is (= (set @out) (set (.values (:coalesce-test @stream-state))) #{a1 b1})))
-
-    (reset-stream-states!)))  ;; cleanup
 
 (deftest stable-test
          ; Doesn't emit until dt seconds have passed.
@@ -1718,28 +1691,3 @@
                                  {:time 9 :host :baz :metric 5}
                                  {:time 1 :host :foo :metric -4}
                                  {:time 100 :host :foo :metric 89}]))
-
-(deftest set-next-stream-state-test
-  (reset-stream-states!)
-  (set-stream-state! :foo "bar")
-  (is (= @stream-state {:foo "bar"}))
-  (set-stream-state! :foo "baz")
-  (is (= @stream-state {:foo "baz"}))
-  (set-stream-state! :bar "baz")
-  (is (= @stream-state {:foo "baz" :bar "baz"}))
-  (reset-stream-states!))
-
-(deftest get-or-create-stream-state-test
-  (reset-stream-states!)
-  (reset! stream-state {:foo "bar"})
-  (is (= (named-stream-state :foo (fn [] "bar1")) "bar"))
-  (is (= @stream-state {:foo "bar"}))
-  (is (= (named-stream-state :bar (fn [] "foo")) "foo"))
-  (is (= @stream-state {:foo "bar" :bar "foo"}))
-  (reset-stream-states!))
-
-(deftest stream-state-transition-test
-  (reset-stream-states!)
-  (reset! stream-state {:foo "bar" :baz "foo"})
-  (reset-stream-states!)
-  (is (= @stream-state {})))
