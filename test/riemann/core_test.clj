@@ -199,7 +199,7 @@
                        {:metric -1000.0}
                        {:metric Double/MAX_VALUE}
                        {:metric Long/MIN_VALUE}
-                       {:time 1234}
+                       {:time 1234.0}
                        {:ttl 12.0}]]
 
            (try
