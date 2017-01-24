@@ -16,7 +16,7 @@ I try to keep master as clean and runnable as possible. Riemann has an exhaustiv
 
 Cloning official repo:
 
-    git clone git://github.com/aphyr/riemann.git
+    git clone git://github.com/riemann/riemann.git
     cd riemann
 
 You'll also need a JVM, and leiningen 2--the Clojure build system.  [Leiningen 2 installation instructions](https://github.com/technomancy/leiningen#installation)
@@ -58,7 +58,7 @@ This builds target/riemann-{version}-STANDALONE.jar.  Copy this jar as needed.
 
 The protocol buffer codec and clojure client live in riemann-clojure-client, which wraps the java protobuf code and java client in riemann-java-client. Both of these are available on clojars and most of the time you can ignore them.
 
-However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [clojure client](https://github.com/aphyr/riemann-clojure-client)
+However, if you need to change the protocol or client, you can fork these projects and make your changes there.  Github projects for [protocol buffer codec](https://github.com/flatland/clojure-protobuf) and [clojure client](https://github.com/riemann/riemann-clojure-client)
 
 ## Building `riemann-java-client`
 
@@ -68,7 +68,7 @@ When you've made changes to the java client, install it with `mvn install`; then
 
 # Fix a bug or add a feature
 
-First, fork [Riemann](https://github.com/aphyr/riemann) on github. Clone your fork and create a new topic branch for your fix:
+First, fork [Riemann](https://github.com/riemann/riemann) on github. Clone your fork and create a new topic branch for your fix:
 
     git clone git@github.com:your-github-username/riemann.git
     cd riemann
