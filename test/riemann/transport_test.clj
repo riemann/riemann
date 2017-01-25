@@ -114,7 +114,7 @@
           event  (event {:service "hi" :state "ok" :metric 1.23})]
       (try
         (client/send-event client event)
-        (is (= event (deref sink 1000 :timed-out)))
+        (is (= (update event :time double) (deref sink 1000 :timed-out)))
         (finally
           (client/close! client)
           (stop! core))))))
