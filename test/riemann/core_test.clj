@@ -239,11 +239,10 @@
                           (query client)
                           deref
                           set)]
-               (is (= r
-                      #{(event {:metric 2, :time 3})
-                        (event {:host "kitten" :tags ["whiskers" "paws"] :time 2})
-                        (event {:host "cat", :service "miao", :time 3})})))
-
+               (is (= r (set (map #(update % :time double)
+                                  #{(event {:metric 2, :time 3})
+                                    (event {:host "kitten" :tags ["whiskers" "paws"] :time 2})
+                                    (event {:host "cat", :service "miao", :time 3})})))))
              (finally
                (close! client)
                (logging/suppress ["riemann.core"
