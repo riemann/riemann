@@ -48,7 +48,7 @@
   which are not standard Riemann properties or in `tag-fields` will also be
   present."
   [tag-fields event]
-  (let [ignored-fields (set/union special-fields tag-fields)]
+  (let [ignored-fields (set/union special-fields tag-fields [:measurement])]
     (-> event
         (->> (remove (comp ignored-fields key))
              (remove (fn [[k v]] (or (nil? v) (= "" v))))
@@ -119,12 +119,19 @@
 
 ;; ## InfluxDB 0.9
 
+(defn get-write-url-9 
+  [opts]
+  (str (cond->
+          (format "%s://%s:%s/write?db=%s&precision=%s" (:scheme opts) (:host opts) (:port opts) (:db opts) (:precision opts "s"))
+          (:retention opts)
+            (str "&rp=" (:retention opts))))) 
+
 (defn event->point-9
   "Converts a Riemann event into an InfluxDB point if it has a time, service,
   and metric."
   [tag-fields event]
-  (when (and (:time event) (:service event) (:metric event))
-    {"measurement" (:service event)
+  (when (and (:time event) (or (:measurement event) (:service event)) (:metric event))
+    {"measurement" (:measurement event (:service event))
      "time" (long (:time event))
      "tags" (event-tags tag-fields event)
      "fields" (event-fields tag-fields event)}))
@@ -152,13 +159,11 @@
   `:tag-fields`     A set of event fields to map into InfluxDB series tags.
                     (default: `#{:host}`)
   `:tags`           A common map of tags to apply to all points. (optional)
-  `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
+  `:timeout`        HTTP timeout in milliseconds. (default: `5000`)
+  `:measurement`    The name of the measurement to be used by influx
+  `:precision`      The precision (n,u,ms,s,m,h) of the timestamp to be sent to influxdb (default: `s`)"
   [opts]
-  (let [write-url
-        (str (cond->
-          (format "%s://%s:%s/write?db=%s&precision=s" (:scheme opts) (:host opts) (:port opts) (:db opts))
-          (:retention opts)
-            (str "&rp=" (:retention opts))))
+  (let [write-url (get-write-url-9 opts)
 
         http-opts
         (cond->
