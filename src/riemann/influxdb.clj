@@ -152,34 +152,62 @@
   `:tag-fields`     A set of event fields to map into InfluxDB series tags.
                     (default: `#{:host}`)
   `:tags`           A common map of tags to apply to all points. (optional)
+  `:db-fn`          Fn that applied on event to decide which database to send. (optional)
+                    If return is not a string, fallback to :db.
+  `:rp-fn`          Fn that applied on event to decide which retention policy to use. (optional)
+                    If return is not a string, fallback to :retention.
   `:timeout`        HTTP timeout in milliseconds. (default: `5000`)"
-  [opts]
-  (let [write-url
-        (str (cond->
-          (format "%s://%s:%s/write?db=%s&precision=s" (:scheme opts) (:host opts) (:port opts) (:db opts))
-          (:retention opts)
-            (str "&rp=" (:retention opts))))
-
-        http-opts
+  [{:keys [db scheme host port username password insecure ; Common options
+           retention tag-fields tags db-fn rp-fn timeout] ; 0.9 options
+    :or {insecure   false
+         tag-fields #{:host} ; tag-fields default to #{:host}
+         timeout    5000}
+    :as opts}]
+  (let [http-opts
         (cond->
-          {:socket-timeout (:timeout opts 5000) ; ms
-           :conn-timeout   (:timeout opts 5000) ; ms
+          {:socket-timeout timeout ; ms
+           :conn-timeout   timeout ; ms
            :content-type   "text/plain"
-           :insecure? (:insecure opts false)}
-          (:username opts)
-            (assoc :basic-auth [(:username opts)
-                                (:password opts)]))
+           :insecure?      insecure}
+          ; If username exists, set basic-auth
+          username
+            (assoc :basic-auth [username password]))
 
-        tag-fields
-        (:tag-fields opts #{:host})]
+        ; Apply 'f to 'input, if 'output doesn't satisfy 'pred, then return fallback
+        ; Help me: This feels like a clojure built-in function but I cannot find it
+        apply-with-fallback
+        (fn [f pred fallback]
+          (fn [input]
+            (let [output (f input)]
+              (if (pred output)
+                output
+                fallback))))
+
+        ; Wrap db-fn and rp-fn for fallback
+        db-fn-
+        (if (fn? db-fn)
+          (apply-with-fallback db-fn string? db)
+          (constantly db))
+
+        rp-fn-
+        (if (fn? rp-fn)
+          (apply-with-fallback rp-fn string? retention)
+          (constantly retention))]
     (fn stream
       [events]
-      (let [events (if (sequential? events) events (list events))
-            points (events->points-9 tag-fields events)]
-        (http/post write-url
-          (assoc http-opts :body (->> points
-            (map lineprotocol-encode-9)
-            (clojure.string/join "\n"))))))))
+      (let [events (if (sequential? events) events (list events))]
+        (doseq [[[event-db event-rp] grouped-events] (group-by (juxt db-fn- rp-fn-) events)]
+          (let [points (events->points-9 tag-fields grouped-events)
+                http-url
+                (str (cond->
+                  (format "%s://%s:%s/write?db=%s&precision=s" scheme host port event-db)
+                  event-rp
+                    (str "&rp=" event-rp)))]
+            (clojure.tools.logging/debugf "Posting %d events to %s" (count points) http-url)
+            (http/post http-url
+            (assoc http-opts :body (->> points
+              (map lineprotocol-encode-9)
+              (clojure.string/join "\n"))))))))))
 
 ;; ## Stream Construction
 
