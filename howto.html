@@ -556,7 +556,7 @@ set :bind, "1.2.3.4"
     route.</p>
 
     <p>You can detect this (and alert on it) by watching the service called
-    "riemann netty execution-handler queue size"; if it starts getting above a
+    "riemann netty event-executor queue size"; if it starts getting above a
     thousand events or so, you're likely overloading Riemann. This queue size
     is directly related to the latency distribution given by "riemann streams
     latency 0.5" and friends, and "riemann streams rate". The higher the
@@ -909,7 +909,7 @@ user=> (riemann.bin/reload!)
     servers measures *message* rate, not *event* rate.</p>
 
     <p>The main queue connecting Netty IO threads to the parsing/execution
-    threadpool is measured by <code>riemann netty execution-handler queue
+    threadpool is measured by <code>riemann netty event-executor queue
     size</code>, and is a critical measure of whether the streaming system is
   overloaded relative to inbound request load.</p>
 
