@@ -8,14 +8,16 @@
 
 (defn- post
   "POST to the PagerDuty events API."
-  [request]
+  [request options]
   (client/post event-url
-               {:body (json/generate-string request)
-                :socket-timeout 5000
-                :conn-timeout 5000
-                :content-type :json
-                :accept :json
-                :throw-entire-message? true}))
+               (merge
+                {:body (json/generate-string request)
+                 :socket-timeout 5000
+                 :conn-timeout 5000
+                 :content-type :json
+                 :accept :json
+                 :throw-entire-message? true}
+                options)))
 
 (defn format-event
   "Formats an event for PagerDuty"
@@ -40,8 +42,9 @@
   service will be used as the incident key. The PD description will be the service,
   state, and metric. The full event will be attached as the details.
 
-  You can override this by specifying a formatter. The formatter must be a function that
-  accepts an event and emits a hash.
+  You can override this by specifying a formatter. The formatter must be a function that accepts an event and emits a hash.
+
+  You can also pass more http options (like proxy) using the `:options` key.
 
   (defn pd-format-event
     [event]
@@ -54,7 +57,7 @@
     (changed-state
       (where (state \"ok\") (:resolve pd))
       (where (state \"critical\") (:trigger pd))))"
-  [{:keys [service-key formatter] :or {formatter format-event}}]
-  {:trigger     (fn [e] (post (send-event service-key :trigger formatter e)))
-   :acknowledge (fn [e] (post (send-event service-key :acknowledge formatter e)))
-   :resolve     (fn [e] (post (send-event service-key :resolve formatter e)))})
+  [{:keys [service-key formatter options] :or {formatter format-event options {}}}]
+  {:trigger     (fn [e] (post (send-event service-key :trigger formatter e) options))
+   :acknowledge (fn [e] (post (send-event service-key :acknowledge formatter e) options))
+   :resolve     (fn [e] (post (send-event service-key :resolve formatter e) options))})
