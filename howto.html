@@ -2636,12 +2636,12 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 <div class="row">
   <div class="sixcol">
 
-  <p>Create a client with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service.</p>
+  <p>Create a <a href="http://riemann.io/api/riemann.pagerduty.html#var-pagerduty">client</a> with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service.</p>
   </div>
 
   <div class="sixcol last">
 {% highlight clj %}
-(let [pd (pagerduty "my-service-key")]
+(let [pd (pagerduty {:service-key "my-service-key"})]
   (streams
     (changed-state
       (where (state "ok")
