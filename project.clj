@@ -43,7 +43,6 @@
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
     [amazonica "0.3.28" :exclusions [joda-time]]
-    [capacitor "0.4.3" :exclusions [http-kit]]
     [spootnik/kinsky "0.1.16"]]
   :plugins [[lein-codox "0.10.2"]
             [lein-difftest "2.0.0"]
