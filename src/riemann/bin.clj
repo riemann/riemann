@@ -88,7 +88,7 @@
    (-main "riemann.config"))
   ([config]
    (-main "start" config))
-  ([command config]
+  ([command config & [test-name]]
    (logging/init)
    (case command
      "start" (try
@@ -107,7 +107,8 @@
                 (set-config-file! config)
                 (riemann.config/include @config-file)
                 (binding [test/*streams* (:streams @config/next-core)]
-                  (let [results (clojure.test/run-all-tests #".*-test")]
+                  (let [test-name-pattern (if test-name (re-pattern test-name) #".*-test")
+                        results (clojure.test/run-all-tests test-name-pattern)]
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
                       (System/exit 0)
