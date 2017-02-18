@@ -21,27 +21,27 @@
 (defn post-datapoint
    "Post the Riemann metrics to Netuitive."
    [api-key url data]
-   (let [url (str url api-key) 
+   (let [url (str url api-key)
          http-options {:body data :content-type :json}]
       (client/post url http-options {:save-request? true :debug true :debug-body true})))
 
-(defn generate-tag 
+(defn generate-tag
    "Create Netuitive tag in the form name:<tag> value:true"
-   [tag] 
+   [tag]
    {:name tag :value :true})
 
-(defn generate-event 
-   "Structure for ingest to Netuitive as JSON" 
+(defn generate-event
+   "Structure for ingest to Netuitive as JSON"
    [event opts]
-   (let [type (:type opts "Riemann")   
+   (let [type (:type opts "Riemann")
          metric-id (netuitive-metric-name event)]
-       {:id (str type ":" (:host event)) 
-        :name (:host event) 
+       {:id (str type ":" (:host event))
+        :name (:host event)
         :type type
-        :metrics [{:id metric-id}] 
-        :samples [{:metricId metric-id 
-                   :timestamp (parsetime (:time event)) 
-                   :val (:metric event)}] 
+        :metrics [{:id metric-id}]
+        :samples [{:metricId metric-id
+                   :timestamp (parsetime (:time event))
+                   :val (:metric event)}]
         :tags (mapv generate-tag (:tags event))}))
 
 (defn netuitive
