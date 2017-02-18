@@ -22,7 +22,24 @@
       (binding [test/*streams* (:streams @config/next-core)]
         (run-test f)))))
 
-(defn set-up
+(defn set-up-fixture
+  "A fixture to be used with `clojure.test/deftest`.
+
+   Environmental variable `config` must be set.
+   Its value should be a path to riemann config file.
+
+   Example:
+   ```
+   (ns my-namespace
+     (:require [clojure.test :refer :all]
+               [riemann.test-runner :as test-runner]))
+
+   (use-fixtures :once test-runner/set-up)
+
+   (deftest some-test
+     ; your test
+     )
+   ```"
   [f]
   (let [env-config (System/getenv "config")]
     (if env-config
