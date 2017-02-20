@@ -18,7 +18,7 @@
                      [hipchat     :refer [hipchat]]
                      [index       :as index]
                      [influxdb    :refer [influxdb]]
-                     [kafka       :refer [kafka]]
+                     [kafka       :as kafka :refer [kafka]]
                      [kairosdb    :refer [kairosdb]]
                      [keenio      :refer [keenio]]
                      [librato     :refer [librato-metrics]]
@@ -173,6 +173,31 @@
   (sse-server {:port 5556})"
   [& opts]
   (service! (sse/sse-server (kwargs-or-map opts))))
+
+(defn kafka-consumer
+  "Add a new kafka consumer with opts to the default core.
+
+  (kafka-consumer {:consumer.config {:bootstrap.servers \"localhost:9092\"
+                                     :group.id \"riemann\"}
+                   :topics [\"riemann\"]})
+ 
+  Options:
+   
+  For a full list of :consumer.config options see the kafka consumer docs.
+  NOTE: The :enable.auto.commit option is ignored and defaults to true.
+
+  :consumer.config      Consumer configuration 
+    :bootstrap.servers  Bootstrap configuration, default is \"localhost:9092\"
+    :group.id           Consumer group id, default is \"riemann\"
+  :topics               Topics to consume from, default is [\"riemann\"]
+  :key.deserializer     Key deserializer function, defaults to the 
+                        keyword-deserializer.
+  :value.deserializer   Value deserializer function, defaults to 
+                        json-deserializer.
+  :poll.timeout.ms      Polling timeout, default is 100."
+
+  [& opts]
+  (service! (kafka/kafka-consumer (kwargs-or-map opts))))
 
 (defn streams
   "Add any number of streams to the default core."
