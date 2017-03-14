@@ -2636,12 +2636,16 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 <div class="row">
   <div class="sixcol">
 
-  <p>Create a <a href="http://riemann.io/api/riemann.pagerduty.html#var-pagerduty">client</a> with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service.</p>
+    <p>Create a <a href="http://riemann.io/api/riemann.pagerduty.html#var-pagerduty">client</a> with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service.</p>
+
+    <p>You can also pass http options using the <code>:options</code> key.</p>
   </div>
 
   <div class="sixcol last">
 {% highlight clj %}
-(let [pd (pagerduty {:service-key "my-service-key"})]
+(let [pd (pagerduty {:service-key "my-service-key"
+                     :options {:proxy-host "127.0.0.1"
+                               :proxy-port 8118}})]
   (streams
     (changed-state
       (where (state "ok")
@@ -2847,7 +2851,7 @@ vim howto.html
 {% highlight sh %}
 sudo apt-get install python-pygments jekyll
 cd riemann
-jekyll
+jekyll serve
 {% endhighlight %}
 
 <p>... and open _site/howto.html in a web browser. When you're satisfied with
