@@ -1,9 +1,11 @@
 (ns riemann.kafka-test
   (:use riemann.kafka
         [riemann.time :only [unix-time]]
+        [riemann.common :only [event]]
         clojure.test)
   (:require [kinsky.client :as client]
-            [riemann.logging :as logging]))
+            [riemann.logging :as logging]
+            [riemann.core :as core]))
 
 (logging/init)
 
@@ -32,51 +34,69 @@
 ; ssl.truststore.password=test1234
 
 (deftest ^:kafka ^:integration kafka-integration-plain-test
-  (let [consumer (client/consumer {:bootstrap.servers "localhost:9092"
-                                   :group.id "plaingroup"}
-                                  (client/keyword-deserializer)
-                                  (client/json-deserializer))
+  (let [consumer (kafka-consumer {:consumer.config {:bootstrap.servers "localhost:9092"
+                                                    :group.id "plaingroup"
+                                                    :auto.commit.interval.ms 100}
+                                  :poll.timeout.ms 1000})
+        sink (promise)
+        core (core/transition! (core/core)
+                               {:services [consumer]
+                                :streams [(partial deliver sink)]})
         producer (kafka)
         kafka-output (producer "riemann" "mykey")]
-    (testing "kafka plain with json serializer, riemann topic and custom key"
-      (kafka-output first-event)
-      (client/commit! consumer (list {:topic "riemann" :partition 0 :offset 0}))
-      (client/subscribe! consumer "riemann")
-      (let [result (client/poll! consumer 1000)]
-        (is (= "firstservice" 
-               (get-in (last (get-in result [:by-topic "riemann"])) [:value :service])))
-        (is (= "myhost" 
-               (get-in (last (get-in result [:by-topic "riemann"])) [:value :host])))
-        (is (= 1.0 
-               (get-in (last (get-in result [:by-topic "riemann"])) [:value :metric])))
-        (is (= "critical" 
-               (get-in (last (get-in result [:by-topic "riemann"])) [:value :state])))))))
+    (try 
+      (testing "kafka plain with json serializer, riemann topic and custom key"
+        ; Producer writes to riemann topic
+        (kafka-output first-event)
+        ; Verify event arrives
+        (let [event (deref sink 1000 :timed-out)]
+          (is (= "firstservice"
+                 (:service event)))
+          (is (= "myhost"
+                 (:host event)))
+          (is (= 1.0
+                 (:metric event)))
+          (is (= "critical"
+                 (:state event)))))
+      (finally 
+        ; Wait for kafka auto commit
+        (Thread/sleep 1000)
+        (core/stop! core)))))
 
 (deftest ^:kafka ^:integration kafka-integration-ssl-test
-  (let [consumer (client/consumer {:bootstrap.servers "localhost:9093"
-                                   :security.protocol "SSL"
-                                   :ssl.truststore.location "test/data/kafka/kafka.client.truststore.jks"
-                                   :ssl.truststore.password "test1234"
-                                   :group.id "sslgroup"}
-                                  (client/keyword-deserializer)
-                                  (client/edn-deserializer))
+  (let [consumer (kafka-consumer {:consumer.config {:bootstrap.servers "localhost:9093"
+                                                    :security.protocol "SSL"
+                                                    :ssl.truststore.location "test/data/kafka/kafka.client.truststore.jks"
+                                                    :ssl.truststore.password "test1234"
+                                                    :group.id "sslgroup"
+                                                    :auto.commit.interval.ms 100}
+                                  :topics ["custom"]
+                                  :value.deserializer client/edn-deserializer
+                                  :poll.timeout.ms 1000})
+        sink (promise)
+        core (core/transition! (core/core)
+                               {:services [consumer]
+                                :streams [(partial deliver sink)]})
         producer (kafka {:bootstrap.servers "localhost:9093"
                          :security.protocol "SSL"
                          :ssl.truststore.location "test/data/kafka/kafka.client.truststore.jks"
                          :ssl.truststore.password "test1234"
                          :value.serializer client/edn-serializer})
         kafka-output (producer "custom")]
-    (testing "kafka ssl with edn serializer, custom topic and nil key"
-      (kafka-output second-event)
-      (client/commit! consumer (list {:topic "custom" :partition 0 :offset 0}))
-      (client/subscribe! consumer "custom")
-      (let [result (client/poll! consumer 1000)]
-        (is (= "secondservice" 
-               (get-in (last (get-in result [:by-topic "custom"])) [:value :service])))
-        (is (= "myhost" 
-               (get-in (last (get-in result [:by-topic "custom"])) [:value :host])))
-        (is (= 2.0 
-               (get-in (last (get-in result [:by-topic "custom"])) [:value :metric])))
-        (is (= "warning" 
-               (get-in (last (get-in result [:by-topic "custom"])) [:value :state])))))))
+    (try
+      (testing "kafka ssl with edn serializer, custom topic and nil key"
+        (kafka-output second-event)
+        (let [event (deref sink 1000 :timed-out)]
+          (is (= "secondservice" 
+                 (:service event)))
+          (is (= "myhost" 
+                 (:host event)))
+          (is (= 2.0 
+                 (:metric event)))
+          (is (= "warning" 
+                 (:state event)))))
+      (finally
+        ; Wait for kafka auto commit
+        (Thread/sleep 1000)
+        (core/stop! core)))))
 
