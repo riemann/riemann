@@ -782,6 +782,8 @@ set :bind, "1.2.3.4"
     like rate, rollup, etc will take effect atomically as the virtual clock
     advances.</p>
 
+    <p>You can also inject events into specific streams using <code>(inject! [stream] events)</code>.
+
     <p>Under the hood, <code>tests</code> expands to a new ns declaration based
     on the current namespace--if the current namespace is <code>foo</code>,
     tests take place in <code>foo-test</code>. <code>tests</code> automatically
@@ -801,6 +803,23 @@ set :bind, "1.2.3.4"
            {:index [{:service "test"
                      :time    1
                      :ttl     3}]}))))
+{% endhighlight %}
+
+{% highlight clj %}
+(def foo-stream
+  (where (service "foo")
+    (tap :foo)))
+
+(tests
+  (deftest foo-test
+    ;; inject in foo-stream only
+    (let [result (inject! [riemann.config/foo-stream]
+                   [{:host "localhost"
+                     :service "foo"
+                     :metric 10}])]
+      (is (= (:foo result) [{:host "localhost"
+                             :service "foo"
+                             :metric 10}])))))
 {% endhighlight %}
 
 {% highlight sh %}
