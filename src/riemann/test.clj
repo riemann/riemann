@@ -189,7 +189,9 @@
            ~'(:require [riemann.test :refer [deftest inject! io tap run-stream lookup]]
                        [riemann.streams :refer :all]
                        [riemann.folds :as folds]
+                       [pjstadig.humane-test-output :as output]
                        [clojure.test :refer [is are]]))
+         (output/activate!)
          ~@body
          (ns ~old-ns))))
 
