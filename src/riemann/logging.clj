@@ -20,7 +20,9 @@
              JSONEventLayoutV0
              JSONEventLayoutV1)
            (net.logstash.logback.encoder
-             LogstashEncoder))
+             LogstashEncoder)
+           (java.net URL)
+           (ch.qos.logback.classic.joran JoranConfigurator))
   (:require wall.hack))
 
 (defn get-logger
@@ -93,6 +95,90 @@
              (set-level ~logger old-level#))))
       `(do ~@body))))
 
+(defn configure-from-file
+  "Configure logging from a configuration file"
+  [context config-file]
+  (doto (JoranConfigurator.)
+    (.setContext context)
+    (.doConfigure (URL. config-file))))
+
+(defn configure-from-opts
+  "Configure logging from opts"
+  [logger context opts]
+  (let [{:keys [console?
+                console-layout
+                file
+                file-layout
+                files
+                rotate-count
+                logsize-rotate]
+         :or   {console?       true
+                console-layout :riemann
+                file-layout    :riemann}} opts]
+
+        (do
+          (when console?
+            (let [encoder           (doto (encoder console-layout)
+                                      (.setContext context)
+                                      (.start))
+                  console-appender  (doto (ConsoleAppender.)
+                                      (.setContext context)
+                                      (.setEncoder encoder)
+                                      (.start))]
+              (.addAppender logger console-appender)))
+          (doseq [{:keys [file file-layout]}
+                  (conj files {:file file :file-layout file-layout})
+                  :when file]
+            (if logsize-rotate
+              (let [encoder           (doto (encoder file-layout)
+                                        (.setContext context)
+                                        (.start))
+                    log-appender      (doto (RollingFileAppender.)
+                                        (.setFile file)
+                                        (.setContext context)
+                                        (.setEncoder encoder))
+                    rolling-policy    (doto (FixedWindowRollingPolicy.)
+                                        (.setMinIndex 1)
+                                        (.setMaxIndex (or rotate-count 10))
+                                        (.setFileNamePattern
+                                          (str file ".%i"))
+                                        (.setParent log-appender)
+                                        (.setContext context)
+                                        (.start))
+                    triggering-policy (doto (SizeBasedTriggeringPolicy.)
+                                        (.setMaxFileSize (str logsize-rotate))
+                                        (.setContext context)
+                                        (.start))
+                    log-appender      (doto log-appender
+                                        (.setRollingPolicy rolling-policy)
+                                        (.setTriggeringPolicy triggering-policy)
+                                        (.start))]
+                (.addAppender logger log-appender))
+              (let [encoder           (doto (encoder file-layout)
+                                        (.setContext context)
+                                        (.start))
+                    log-appender      (doto (RollingFileAppender.)
+                                        (.setFile file)
+                                        (.setContext context)
+                                        (.setEncoder encoder))
+                    rolling-policy    (doto (TimeBasedRollingPolicy.)
+                                        (.setMaxHistory (or rotate-count 10))
+                                        (.setFileNamePattern
+                                          (str file ".%d{yyyy-MM-dd}"))
+                                        (.setParent log-appender)
+                                        (.setContext context)
+                                        (.start))
+                    log-appender      (doto log-appender
+                                        (.setRollingPolicy rolling-policy)
+                                        (.start))]
+                (.addAppender logger log-appender))))
+
+          (set-level Level/INFO)
+          (set-level "riemann.client" Level/DEBUG)
+          (set-level "riemann.server" Level/DEBUG)
+          (set-level "riemann.streams" Level/DEBUG)
+          (set-level "riemann.graphite" Level/DEBUG))))
+
 (defn init
   "Initialize logging. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
@@ -135,83 +221,13 @@
              :rotate-count 5})"
   ([] (init {}))
   ([opts]
-    (let [{:keys [console?
-                  console-layout
-                  file
-                  file-layout
-                  files
-                  rotate-count
-                  logsize-rotate]
-           :or   {console?       true
-                  console-layout :riemann
-                  file-layout    :riemann}} opts
-         logger   (get-logger)
-         context  (get-context)]
+    (let [logger   (get-logger)
+          context  (get-context)]
 
       (.detachAndStopAllAppenders logger)
-
-      (when console?
-        (let [encoder             (doto (encoder console-layout)
-                                    (.setContext context)
-                                    (.start))
-              console-appender    (doto (ConsoleAppender.)
-                                    (.setContext context)
-                                    (.setEncoder encoder)
-                                    (.start))]
-          (.addAppender logger console-appender)))
-
-      (doseq [{:keys [file file-layout]}
-              (conj files {:file file :file-layout file-layout})
-               :when file]
-        (if logsize-rotate
-          (let [encoder           (doto (encoder file-layout)
-                                    (.setContext context)
-                                    (.start))
-                log-appender      (doto (RollingFileAppender.)
-                                    (.setFile file)
-                                    (.setContext context)
-                                    (.setEncoder encoder))
-                rolling-policy    (doto (FixedWindowRollingPolicy.)
-                                    (.setMinIndex 1)
-                                    (.setMaxIndex (or rotate-count 10))
-                                    (.setFileNamePattern
-                                     (str file ".%i"))
-                                    (.setParent log-appender)
-                                    (.setContext context)
-                                    (.start))
-                triggering-policy (doto (SizeBasedTriggeringPolicy.)
-                                    (.setMaxFileSize (str logsize-rotate))
-                                    (.setContext context)
-                                    (.start))
-                log-appender      (doto log-appender
-                                    (.setRollingPolicy rolling-policy)
-                                    (.setTriggeringPolicy triggering-policy)
-                                    (.start))]
-            (.addAppender logger log-appender))
-          (let [encoder           (doto (encoder file-layout)
-                                    (.setContext context)
-                                    (.start))
-                log-appender      (doto (RollingFileAppender.)
-                                    (.setFile file)
-                                    (.setContext context)
-                                    (.setEncoder encoder))
-                rolling-policy    (doto (TimeBasedRollingPolicy.)
-                                    (.setMaxHistory (or rotate-count 10))
-                                    (.setFileNamePattern
-                                     (str file ".%d{yyyy-MM-dd}"))
-                                    (.setParent log-appender)
-                                    (.setContext context)
-                                    (.start))
-                log-appender      (doto log-appender
-                                    (.setRollingPolicy rolling-policy)
-                                    (.start))]
-            (.addAppender logger log-appender)))))
-
-    (set-level                    Level/INFO)
-    (set-level "riemann.client"   Level/DEBUG)
-    (set-level "riemann.server"   Level/DEBUG)
-    (set-level "riemann.streams"  Level/DEBUG)
-    (set-level "riemann.graphite" Level/DEBUG)))
+      (if-let [config-file (System/getProperty "logback.configurationFile")]
+        (configure-from-file context config-file)
+        (configure-from-opts logger context opts)))))
 
 (defn nice-syntax-error
   "Rewrites clojure.lang.LispReader$ReaderException to have error messages that
