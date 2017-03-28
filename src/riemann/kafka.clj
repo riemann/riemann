@@ -24,7 +24,7 @@
 
   Example with SSL enabled:
 
-  (def kafka-output (kafka {:boostrap.servers \"kafka.example.com:9092\"
+  (def kafka-output (kafka {:bootstrap.servers \"kafka.example.com:9092\"
                             :security.protocol \"SSL\"
                             :ssl.truststore.location \"/path/to/my/truststore.jks\"
                             :ssl.truststore.password \"mypassword\"}))"
