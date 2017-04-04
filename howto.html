@@ -379,6 +379,23 @@ set :bind, "1.2.3.4"
   </div>
 </div>
 
+<div class="row">
+  <h3>Configure Logback</h3>
+
+  <div class="sixcol">
+    <p>Under the hood, Riemann is using Logback.</p>
+    <p>To configure Logback, you can provide a configuration file
+    via the system property <code>logback.configurationFile</code></p>
+
+{% highlight sh %}
+java -Dlogback.configurationFile=file:///path/to/logback.xml -jar riemann-standalone.jar
+{% endhighlight %}
+
+  <p>For more information, please read the <a 
+  href="https://logback.qos.ch/manual/configuration.html">Logback documentation</a>.</p>
+  </div>
+</div>
+
 <h3>Securing traffic using TLS</h3>
 
 <div class="row">
