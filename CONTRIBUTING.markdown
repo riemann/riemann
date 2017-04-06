@@ -127,3 +127,22 @@ When you're satisfied with your changes, commit, push, and send me a pull reques
 Now file a pull request.  [Github pull request documentation](https://help.github.com/articles/using-pull-requests)
 
 Thank you!
+
+## Release checklist
+
+1. Merge and update all PRs, issues, etc.
+2. Update Riemann version in `project.clj`.
+3. Update `CHANGES.markdown` with release notes.
+4. Update `thanks.html` with thanks for the release.
+5. Update the API docs with `lein codox`.
+6. Update the download links in `index.html`.
+7. Create a [new GitHub
+   release](https://github.com/riemann/riemann/releases/new).
+8. Build the `lein pkg` packages and upload to the release.
+9. Create new tag with release.
+10. Added release changes to release notes section.
+11. Publish release and push up docs changes.
+12. Publish to Clojars with `lein deploy clojars`.
+13. Send email to mailing list.
+14. Increment version in `project.clj` to add `-SNAPSHOT`.
+
