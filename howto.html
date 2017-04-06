@@ -2803,10 +2803,7 @@ versions of Riemann, you may *also* emit a metric_f alongside the normal type;
 newer versions of Riemann will prefer the higher-resolution types.</p>
 
 <p>Events are uniquely identified by host and service. Both allow null.
-Event.time is the time in unix epoch seconds and is optional. The server will
-generate a time for each event when received if you do not provide one. I don't
-need time resolution finer than 1 second presently, but if you do, my plan is
-to add a nanosecond field as well.</p>
+Event.time is the time in unix epoch seconds and is optional. The server will generate a time for each event when received if you do not provide one. Event.time_micros is the time in unix epoch microseconds and is optional too. When receiving a protobuf message, Riemann will use time_micros in priority.</p>
 
 <p>You can also query events from the index using a basic query language. Just
 submit a Message with your query in message.query.string. Search queries will
