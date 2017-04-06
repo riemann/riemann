@@ -14,10 +14,8 @@ Elasticsearch plugin and a variety of other enhancements and fixes.
   [\#714](https://github.com/riemann/riemann/pull/714)
 - Support for Basic Auth credentials for Elasticsearch.
   [\#754](https://github.com/riemann/riemann/pull/754)
-- Keep coalesce state between reloads. (An atom is used to keep track of
-  stream states, the underlying `ConcurrentHashMap` that is closed over
-by each `coalesce` call may be named to be fetched across reloads.
-[Commit](https://github.com/riemann/riemann/commit/c5c2b992906d2591e41d3b32cca900da632e4e93)
+- Added support of time in microsecond resolution in the Riemann
+  protocol (See `time_micros` in the [Riemann client](https://github.com/riemann/riemann-java-client/blob/master/riemann-java-client/src/main/proto/riemann/proto.proto). If you maintain a Riemann client should update them to support microseconds.
 - Added an `:options` parameter to the Pagerduty plugin.
   [\#773](https://github.com/riemann/riemann/pull/773)
 - Added Riemann tag to instrumented transports and services.
@@ -32,6 +30,10 @@ by each `coalesce` call may be named to be fetched across reloads.
   [\#741](https://github.com/riemann/riemann/pull/741)
 - Prometheus label / body only support some characters.
   [\#747](https://github.com/riemann/riemann/pull/747)
+- Cast Slack event tags into a vector
+  [\#749](https://github.com/riemann/riemann/pull/749)
+- Restore Netty queue size metric
+  [\#757](https://github.com/riemann/riemann/pull/757)
 
 # Version 0.2.12
 
