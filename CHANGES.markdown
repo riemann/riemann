@@ -1,3 +1,38 @@
+# Version 0.2.13
+
+This release contains new Kafka input and output plugins. An Netuitive
+plugin and a new output plugin for Telgraph notifications. The InfluxDB
+plugin has been refactored, basic auth support added to the
+Elasticsearch plugin and a variety of other enhancements and fixes.
+
+## Features and enhancements
+
+- Added Kafka [input](https://github.com/riemann/riemann/pull/781) and [output](https://github.com/riemann/riemann/pull/760) plugins.
+- Added Netuitive plugin
+  [\#753](https://github.com/riemann/riemann/pull/753)
+- Telegram notification support.
+  [\#714](https://github.com/riemann/riemann/pull/714)
+- Support for Basic Auth credentials for Elasticsearch.
+  [\#754](https://github.com/riemann/riemann/pull/754)
+- Keep coalesce state between reloads. (An atom is used to keep track of
+  stream states, the underlying `ConcurrentHashMap` that is closed over
+by each `coalesce` call may be named to be fetched across reloads.
+[Commit](https://github.com/riemann/riemann/commit/c5c2b992906d2591e41d3b32cca900da632e4e93)
+- Added an `:options` parameter to the Pagerduty plugin.
+  [\#773](https://github.com/riemann/riemann/pull/773)
+- Added Riemann tag to instrumented transports and services.
+  [\#756](https://github.com/riemann/riemann/pull/756)
+- Updated to latest codox version.
+- Pretty'ed test output.
+  [\#790](https://github.com/riemann/riemann/pull/790)
+
+## Bug Fixes
+
+- Refactor of the InfluxDB plugin
+  [\#741](https://github.com/riemann/riemann/pull/741)
+- Prometheus label / body only support some characters.
+  [\#747](https://github.com/riemann/riemann/pull/747)
+
 # Version 0.2.12
 
 This version includes Prometheus, Druid and Elasticsearch plugins. It
