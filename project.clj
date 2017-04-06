@@ -12,42 +12,47 @@
     [org.clojure/math.numeric-tower "0.0.4"]
     [org.clojure/tools.logging "0.3.1"]
     [org.clojure/tools.nrepl "0.2.12"]
-    [org.clojure/core.cache "0.6.4"]
+    [org.clojure/core.cache "0.6.5"]
     [org.clojure/data.priority-map "0.0.7"]
-    [org.clojure/java.classpath "0.2.2"]
+    [org.clojure/java.classpath "0.2.3"]
 
-    [org.slf4j/log4j-over-slf4j "1.7.12"]
+    [org.slf4j/log4j-over-slf4j "1.7.14"]
     [ch.qos.logback/logback-classic "1.1.3"]
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "4.5"]
     [org.influxdb/influxdb-java "2.4"]
-    [com.cemerick/pomegranate "0.3.0"
+    [com.cemerick/pomegranate "0.3.1"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.0"]
     [http-kit "2.1.19"]
     [clj-http "3.5.0"]
-    [cheshire "5.5.0"]
+    [cheshire "5.7.0"]
     [clj-librato "0.0.5"]
-    [clj-time "0.10.0"]
+    [clj-time "0.13.0"]
     [clj-wallhack "1.0.1"]
     [com.boundary/high-scale-lib "1.0.6"]
-    [com.draines/postal "1.11.3"]
-    [com.amazonaws/aws-java-sdk "1.10.5.1" :exclusions [joda-time]]
+    [com.draines/postal "2.0.2"]
+    [com.amazonaws/aws-java-sdk "1.11.116" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.1.4.Final"]
     [clj-antlr "0.2.2"]
+<<<<<<< HEAD
     [riemann-clojure-client "0.4.5"]
     [less-awful-ssl "1.0.0"]
+=======
+    [riemann-clojure-client "0.4.4"]
+    [less-awful-ssl "1.0.1"]
+>>>>>>> Updated a number of project dependencies
     [slingshot "0.12.2"]
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
-    [amazonica "0.3.28" :exclusions [joda-time]]
+    [amazonica "0.3.95" :exclusions [joda-time]]
     [spootnik/kinsky "0.1.16"]
     [pjstadig/humane-test-output "0.8.1"]]
   :plugins [[lein-codox "0.10.2"]
             [lein-difftest "2.0.0"]
-            [lein-rpm "0.0.5"
+            [lein-rpm "0.0.6"
              :exclusions [org.apache.maven/maven-plugin-api
                           org.codehaus.plexus/plexus-container-default
                           org.codehaus.plexus/plexus-utils
