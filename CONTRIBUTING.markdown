@@ -172,13 +172,14 @@ Thank you!
 4. Update `thanks.html` with thanks for the release.
 5. Update the API docs with `lein codox`.
 6. Update the download links in `index.html`.
-7. Create a [new GitHub
+7. Update links in the `quickstart.html`.
+8. Create a [new GitHub
    release](https://github.com/riemann/riemann/releases/new).
-8. Build the `lein pkg` packages and upload to the release.
-9. Create new tag with release.
-10. Added release changes to release notes section.
-11. Publish release and push up docs changes.
-12. Publish to Clojars with `lein deploy clojars`.
-13. Send email to mailing list.
-14. Increment version in `project.clj` to add `-SNAPSHOT`.
+9. Build the `lein pkg` packages and upload to the release.
+10. Create new tag with release.
+11. Added release changes to release notes section.
+12. Publish release and push up docs changes.
+13. Publish to Clojars with `lein deploy clojars`.
+14. Send email to mailing list.
+15. Increment version in `project.clj` to add `-SNAPSHOT`.
 
