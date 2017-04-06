@@ -23,6 +23,10 @@ Elasticsearch plugin and a variety of other enhancements and fixes.
 - Updated to latest codox version.
 - Pretty'ed test output.
   [\#790](https://github.com/riemann/riemann/pull/790)
+- Removed capacitor dependency
+  [\#774](https://github.com/riemann/riemann/pull/774)
+- Bumped nrepl to 0.2.12
+  [\#769](https://github.com/riemann/riemann/pull/769)
 
 ## Bug Fixes
 
