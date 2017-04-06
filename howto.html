@@ -2740,6 +2740,40 @@ view.</p>
   </div>
 </div>
 
+<h3>Forward to InfluxDB</h3>
+
+<div class="row">
+  <div class="sixcol">
+
+  <p>Create a <a href="api/riemann.influxdb.html#var-influxdb">InfluxDB</a> client for Riemann. Using <code>:version :new-stream</code> allows to use the <a href="api/riemann.influxdb.html#var-influxdb-new-stream">new</a> InfluxDB stream. Otherwise, the <a href="api/riemann.influxdb.html#var-influxdb-deprecated">old</a> stream is used.</p>
+
+  <p>You can then send events to InfluxDB. You can use <code>smap</code> for example to format events for the new stream. </p>
+
+  <p>For the old stream, you can override per event the <code>:tag-fields</code> and <code>:precision</code> options. For the new stream, you can override per event <code>:consistency</code>, <code>:db</code>, <code>:retention</code> and <code>:precision</code>.</p>
+
+  <p>If a field is a Clojure <code>Ratio</code>, it will be converted to <code>Double</code></p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(def influx (influxdb {:host "localhost"
+                       :db "riemann"
+                       :version :new-stream}))
+{% endhighlight %}
+
+{% highlight clj %}
+(streams
+  (smap
+    (fn [event]
+      (assoc event :measurement     (:service event)
+                   :influxdb-tags   {:state (:state event)}
+                   ;; :value = 0 by default
+                   :influxdb-fields {:value (or (:metric event) 0)}))
+    influx))
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Contributing to Riemann</h2>
 
 <h3>Write a client</h3>
