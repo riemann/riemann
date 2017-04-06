@@ -164,7 +164,7 @@ documentation](https://help.github.com/articles/using-pull-requests)
 
 Thank you!
 
-## Release checklist
+# Release checklist
 
 1. Merge and update all PRs, issues, etc.
 2. Update Riemann version in `project.clj`.
