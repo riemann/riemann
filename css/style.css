@@ -230,6 +230,8 @@ td,th {
 }
 
 code {
+  word-wrap: break-word; /* force long words to break */
+  overflow-wrap: break-word;
   font: monospace;
   color: #001843;
   background-color: #eee;
