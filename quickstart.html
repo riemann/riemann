@@ -40,21 +40,18 @@ layout: default
       locally. If you're jumping right into running Riemann on multiple nodes,
       check out <a
         href="/howto.html#putting-riemann-into-production">Putting
-        Riemann into production</a> for tips.</p>
+        Riemann into production</a> for tips.
 
-{% highlight shell_session %}
-$ wget https://github.com/riemann/riemann/releases/download/0.2.12/riemann-0.2.12.tar.bz2
-$ tar xvfj riemann-0.2.12.tar.bz2 
-$ cd riemann-0.2.12
-{% endhighlight%}
+<code><pre>wget <a href="https://github.com/riemann/riemann/releases/download/0.2.13/riemann-0.2.13.tar.bz2">https://github.com/riemann/riemann/releases/download/0.2.13/riemann-0.2.13.tar.bz2</a>
+tar xvfj riemann-0.2.13.tar.bz2
+cd riemann-0.2.13</pre></code>
 
-<p>Check the md5sum to verify the tarball:</p>
-
-<code><pre>wget <a href="https://github.com/riemann/riemann/releases/download/0.2.12/riemann-0.2.12.tar.bz2.md5">https://github.com/riemann/riemann/releases/download/0.2.12/riemann-0.2.12.tar.bz2.md5</a>
-md5sum -c riemann-0.2.12.tar.bz2.md5
+      <p>Check the md5sum to verify the tarball:</p>
+<code><pre>wget <a href="https://github.com/riemann/riemann/releases/download/0.2.13/riemann-0.2.13.tar.bz2.md5">https://github.com/riemann/riemann/releases/download/0.2.13/riemann-0.2.13.tar.bz2.md5</a>
+md5sum -c riemann-0.2.13.tar.bz2.md5
 </pre></code>
 
-<p>You can also install Riemann via the Debian or RPM packages, through
+      <p>You can also install Riemann via the Debian or RPM packages, through
       <a href="https://forge.puppetlabs.com/garethr/riemann">Puppet</a>, <a
       href="https://github.com/garethr/riemann-vagrant">Vagrant</a>, or <a
     href="https://github.com/hudl/riemann-cookbook">Chef</a>.</p>
