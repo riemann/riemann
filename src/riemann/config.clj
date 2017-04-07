@@ -41,7 +41,9 @@
                      [sns         :refer [sns-publisher]]
                      [stackdriver :refer [stackdriver]]
                      [prometheus  :refer [prometheus]]
-                     [elasticsearch :refer [elasticsearch]]
+                     [elasticsearch :refer [elasticsearch
+                                            default-bulk-formatter
+                                            elasticsearch-bulk]]
                      [streams     :refer :all]
                      [telegram    :refer [telegram]]
                      [test        :as test :refer [tap io tests]]
