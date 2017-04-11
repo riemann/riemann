@@ -2774,6 +2774,25 @@ view.</p>
   </div>
 </div>
 
+<h3>Forward to Kafka</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Create a <a href="api/riemann.kafka.html#var-kafka">Kafka</a> client. For a complete list of producer configuration options see <a href="https://kafka.apache.org/documentation/#producerconfigs">the Kafka documentation</a>. The Kafka stream uses <a href="https://github.com/pyr/kinsky">kinsky</a> under the hood, so you can import it and use these serializers.</p>
+    <p>You can now call <code>kafka-output</code> in your streams with a topic name and an optional message key.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(def kafka-output (kafka {:bootstrap-servers "brok01.foo:9092"}))
+
+(streams
+  (kafka-output "my-topic"))
+
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Contributing to Riemann</h2>
 
 <h3>Write a client</h3>
