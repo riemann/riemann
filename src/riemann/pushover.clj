@@ -7,15 +7,12 @@
 
 (defn- post
   "POST to Pushover."
-  [token user event]
+  [params]
   (client/post event-url
                {:form-params
-                {:token token
-                 :user user
-                 :title (:title event)
-                 :message (:message event)}}))
+                params}))
 
-(defn- format-event
+(defn- default-event-formatter
   "Formats an event for Pushover"
   [event]
   {:title (str (:host event) " " (:service event))
@@ -25,10 +22,32 @@
                  (:metric event) ")")})
 
 (defn pushover
-  "Returns a function which accepts an event and sends it to Pushover.
-  Usage:
+  "Returns a function which accepts an event and sends it to Pushover. 
+  An options map can be provided as an optional third argument. 
+  
+  Options:
 
-  (pushover \"APPLICATION_TOKEN\" \"USER_KEY\")"
-  [token user]
-  (fn [event]
-    (post token user (format-event event))))
+    :formatter Optional event formatter function
+
+  For details on Pushover options see https://pushover.net/api
+
+  Examples:
+
+  (pushover \"APPLICATION_TOKEN\" \"USER_KEY\")
+
+  (pushover \"APPLICATION_TOKEN\" \"USER_KEY\" {:formatter my-custom-event-formatter})"
+
+  ([token user]
+   (pushover token user {}))
+  ([token user opts]
+   (fn [event]
+     (let [opts (merge {:formatter default-event-formatter}
+                       opts)
+           pushover-event ((:formatter opts) event)
+           pushover-params (dissoc (assoc opts
+                                          :token token
+                                          :user user
+                                          :title (:title pushover-event)
+                                          :message (:message pushover-event))
+                                   :formatter)]
+       (post pushover-params)))))
