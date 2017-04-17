@@ -153,7 +153,7 @@
     (dorun (pmap #(service/reload! % merged) merged-services))
 
     ; Start merged services
-    (dorun (pmap service/start! merged-services))
+    (dorun (map service/start! merged-services))
 
     (info "Hyperspace core online")
     merged))
@@ -163,7 +163,7 @@
   [core]
   (let [services (core-services core)]
     (dorun (pmap #(service/reload! % core) services))
-    (dorun (pmap service/start!            services)))
+    (dorun (map service/start!            services)))
   (info "Hyperspace core online"))
 
 (defn stop!
