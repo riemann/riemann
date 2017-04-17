@@ -42,6 +42,7 @@
   [token {:keys [server room_id] :as conf} event]
   (client/post (str (chat-url server room_id) "?auth_token=" token)
                {:form-params           (format-event (assoc conf :message_format "text") event)
+                :content-type          :json
                 :socket-timeout        5000
                 :conn-timeout          5000
                 :accept                :json
@@ -70,5 +71,5 @@
   (fn [e] (post token
                 {:server  (or server "api.hipchat.com")
                  :room_id room
-                 :notify  notify}
+                 :notify  (boolean notify)}
                e)))
