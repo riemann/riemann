@@ -2784,7 +2784,7 @@ view.</p>
 
   <div class="sixcol last">
 {% highlight clj %}
-(def kafka-output (kafka {:bootstrap-servers "brok01.foo:9092"}))
+(def kafka-output (kafka {:bootstrap.servers "brok01.foo:9092"}))
 
 (streams
   (kafka-output "my-topic"))
