@@ -206,7 +206,7 @@
     (swap! next-core assoc :streams
            (reduce conj (:streams @next-core) things))))
 
-(defn index
+(defn set-index
   "Set the index used by this core. Returns the index."
   [& opts]
   (locking core
@@ -223,6 +223,13 @@
                    index')]
       (swap! next-core assoc :index index')
       index')))
+
+(defmacro index
+  "Set the index used by this core. Returns the index."
+  [& opts]
+  (if test/*testing*
+    `(test/index-stream)
+    `(apply set-index ~opts)))
 
 (defn update-index
   "Updates the given index with all events received. Also publishes to the
