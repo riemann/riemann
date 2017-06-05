@@ -37,13 +37,8 @@
     [interval-metrics "1.0.0"]
     [io.netty/netty-all "4.1.4.Final"]
     [clj-antlr "0.2.2"]
-<<<<<<< HEAD
     [riemann-clojure-client "0.4.5"]
-    [less-awful-ssl "1.0.0"]
-=======
-    [riemann-clojure-client "0.4.4"]
     [less-awful-ssl "1.0.1"]
->>>>>>> Updated a number of project dependencies
     [slingshot "0.12.2"]
     [clj-campfire "2.2.0"]
     [clj-nsca "0.0.3"]
