@@ -48,6 +48,10 @@
     (test-stream (smapcat #(vector % %)) [0 1 2 3]
                  [0 0 1 1 2 2 3 3])))
 
+(deftest sflatten-test
+  (test-stream (sflatten) [[0 1 2 3] [4 5 6 7]]
+               [0 1 2 3 4 5 6 7]))
+
 (deftest sdo-test
   (let [vals1   (atom [])
         vals2   (atom [])
