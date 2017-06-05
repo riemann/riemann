@@ -4,7 +4,7 @@ Riemann aggregates events from your servers and applications with a powerful str
 
 Find out more at [http://riemann.io](http://riemann.io)
 
-===
+## Build Status
 
 [![Build Status](https://travis-ci.org/riemann/riemann.png)](https://travis-ci.org/riemann/riemann)
 
