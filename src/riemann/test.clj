@@ -7,6 +7,7 @@
   received."
   (:require [riemann.time.controlled :as time.controlled]
             [riemann.time :as time]
+            [riemann.index :as index]
             [riemann.streams :as streams]
             [clojure.test :as test]))
 
@@ -30,6 +31,10 @@
   time."
   nil)
 
+(def ^:dynamic *index*
+  "Test index"
+  false)
+
 (defn tap-stream
   "Called by `tap` to construct a stream which records events in *results*
   before forwarding to child."
@@ -42,6 +47,45 @@
 
     ; Forward downstream
     (child event)))
+
+(defn index-stream
+  "Called by `riemann.config/index` to construct a stream which records events in *index*.
+  Do not index events with no time."
+  []
+  (fn [event]
+    (when (:time event)
+      (index/insert *index* event))))
+
+(defn lookup-index
+  "Return an indexed event from the test index"
+  [host service]
+  (index/lookup *index* host service))
+
+(defn clear-index
+  "Clear the test index."
+  []
+  (index/clear *index*))
+
+(defn query-index
+  "Return a vec of events, sorted by `:host` and `:service`, from the test index matching the query."
+  [query]
+  (->> (index/search *index* (riemann.query/ast query))
+      (sort-by #(vec (map % [:host :service])))
+      (vec)))
+
+(defn expire-index
+  "Return a vec of expired events, sorted by `:host` and `:service`, from the test index, removing each."
+  ([] (expire-index {}))
+  ([opts]
+   (let [keep-keys (get opts :keep-keys [:host :service])
+         expired-events (index/expire *index*)]
+     (->> (map (fn [event]
+                 (-> (select-keys event keep-keys)
+                     (merge {:state "expired"
+                             :time (time/unix-time)})))
+               expired-events)
+          (sort-by #(vec (map % [:host :service])))
+          (vec)))))
 
 (defmacro tap
   "A stream which records inbound events in the *results* map. Takes a globally
@@ -118,7 +162,9 @@
   prints :hi, and returns {:foo [:hi]}"
   [& body]
   `(binding [*testing* true
+             *index*   (index/index)
              *taps*    (atom {})]
+     (reset! riemann.config/core {:index *index*})
      ~@body))
 
 (defn inject!
@@ -173,6 +219,7 @@
   [name & body]
   `(test/deftest ~name
      (binding [*results* (fresh-results @*taps*)]
+       (clear-index)
        (time.controlled/with-controlled-time!
          (time.controlled/reset-time!)
 
@@ -186,7 +233,16 @@
   (let [old-ns (ns-name *ns*)
         new-ns (symbol (str old-ns "-test"))]
     `(do (ns ~new-ns
-           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream lookup]]
+           ~'(:require [riemann.test :refer [deftest
+                                             inject!
+                                             io
+                                             tap
+                                             run-stream
+                                             lookup
+                                             lookup-index
+                                             clear-index
+                                             query-index
+                                             expire-index]]
                        [riemann.streams :refer :all]
                        [riemann.folds :as folds]
                        [pjstadig.humane-test-output :as output]
