@@ -1572,34 +1572,46 @@
          ; Zero-time windows.
          (is (thrown? IllegalArgumentException (fixed-time-window 0)))
 
-         ; n-width windows
-         (test-stream (fixed-time-window 2) [] [])
-         (test-stream (fixed-time-window 2) [{:time 1}] [])
-         (test-stream (fixed-time-window 2)
-                      [{:time 1} {:time 2} {:time 3} {:time 4} {:time 5}]
-                      [[{:time 1} {:time 2}]
-                       [{:time 3} {:time 4}]])
+         ;; without :time
+         (test-stream-intervals (fixed-time-window 2)
+                                [{:state "1"} 0
+                                 {:state "2"} 0
+                                 {:state "3"} 1 ; t = 0
+                                 {:state "4"} 1 ; t = 1
+                                 {:state "5"} 1 ; t = 2
+                                 {:state "6"} 2 ; t = 3
+                                 {:state "7"} 100] ; t = 5
+                                [[{:state "1"}
+                                  {:state "2"}
+                                  {:state "3"}
+                                  {:state "4"}]
+                                 [{:state "5"}
+                                  {:state "6"}]
+                                 [{:state "7"}]])
+         ;; with :time
+         (test-stream-intervals (fixed-time-window 2)
+                                [{:state "1" :time 0} 0
+                                 {:state "2" :time 0} 0
+                                 {:state "3" :time 1} 1 ; t = 0
+                                 {:state "4" :time 1} 1 ; t = 1
+                                 {:state "5" :time 0} 1 ; t = 2
+                                 {:state "6" :time 3} 2 ; t = 3
+                                 {:state "7" :time 1} 100] ; t = 5
+                                [[{:state "1" :time 0}
+                                  {:state "2" :time 0}
+                                  {:state "3" :time 1}
+                                  {:state "4" :time 1}]
+                                 [{:state "6" :time 3}]
+                                 []])
 
-         ; With a gap
-         (test-stream (fixed-time-window 2) [{:time 1} {:time 7}]
-                      [[{:time 1}] [] []])
-
-         ; With out-of-order events
-         (test-stream (fixed-time-window 2)
-                      [{:time 5}
-                       {:time 1}
-                       {:time 2}
-                       {:time 6}
-                       {:time 3}
-                       {:time 8}
-                       {:time 4}
-                       {:time 8}
-                       {:time 5}
-                       {:time 9}
-                       {:time 11}]
-                      [[{:time 5} {:time 6}]
-                       [{:time 8} {:time 8}]
-                       [{:time 9}]]))
+         ;; with a gap
+         (test-stream-intervals (fixed-time-window 2)
+                                [{:state "1" :time 0} 0
+                                 {:state "2" :time 1} 7  ; t = 0
+                                 {:state "3" :time 7} 100] ; t = 7
+                                [[{:state "1" :time 0}
+                                  {:state "2" :time 1}]
+                                 [{:state "3" :time 7}]]))
 
 (deftest fixed-offset-time-window-test
          ; Zero-time windows.
