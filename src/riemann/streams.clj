@@ -37,6 +37,7 @@
         clojure.tools.logging)
   (:require [riemann.folds :as folds]
             [riemann.index :as index]
+            [riemann.ttl-cache :refer [ttl-cache-factory]]
             riemann.client
             riemann.logging
             [clojure.set :as set])
@@ -1526,6 +1527,34 @@
                     fork
                     ((swap! table assoc fork-name (new-fork fork-name)) fork-name))]
          (call-rescue event fork)))))
+
+(defmacro expiring-by
+  "Same as (by), child streams created here will be garbage collected after their last seen event expires."
+  [fields & children]
+  `(let [new-fork# (fn [] [~@children])]
+     (expiring-by-fn ~fields new-fork#)))
+
+(defn expiring-by-fn [fields new-fork]
+  (let [fields (flatten [fields])
+        f (if (= 1 (count fields))
+            ; Just use the first function given applied to the event
+            (first fields)
+            ; Return a vec of *each* function given, applied to the event
+            (apply juxt fields))
+        table (atom (ttl-cache-factory {}))]
+    (fn stream [event]
+      (let [fork-name (f event)
+            expires (+ (:time event 0) (:ttl event 0))
+            fork (-> table
+                   (swap!
+                     (fn [table fork-name]
+                       (assoc table fork-name
+                         (if-let [fork (get table fork-name)]
+                           {:stream (:stream fork) :expires (max expires (:expires fork))}
+                           {:stream (new-fork) :expires expires})))
+                     fork-name)
+                   (get fork-name))]
+          (call-rescue event (:stream fork))))))
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous
