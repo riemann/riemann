@@ -7,7 +7,7 @@
    (javax.net.ssl SSLContext X509TrustManager HostnameVerifier)
    (java.security SecureRandom)
    (java.security.cert X509Certificate)
-   (org.influxdb InfluxDBFactory InfluxDB$ConsistencyLevel)
+   (org.influxdb InfluxDB InfluxDBFactory InfluxDB$ConsistencyLevel)
    (org.influxdb.dto BatchPoints Point)))
 
 (defn nil-or-empty-str
@@ -178,12 +178,12 @@
 
 (defn write-batch-point
   "Write to influxdb the `batch-point` using the `connection`"
-  [connection batch-point]
+  [^InfluxDB connection batch-point]
   (.write connection batch-point))
 
 (defn get-batchpoints
-  "Create a `org.influxdb.dto.BatchPoints` for each element in the `event` list.
-  `event` is a list where each element is a list of events.
+  "Create a `org.influxdb.dto.BatchPoints` for each element in the `events` list.
+  `events` is a list where each element is a list of events.
   Each element contains events with the same `:db`, `:retention` and `:consistency` keys.
   These options are used to create the BatchPoints.
   `opts` are the global influxdb stream options."
@@ -194,13 +194,13 @@
        (let [event (first events)
              opts (merge opts ;; we can have per event :db :retention :consistency
                          (select-keys event [:db :retention :consistency]))
-             batch-point (get-batchpoint opts)
+             ^BatchPoints batch-point (get-batchpoint opts)
              _ (doseq [event events] (.point batch-point (event->point event opts)))]
          batch-point)))
    events))
 
 (defn partition-events
-  "`events` is a list of events
+  "`events` is a list of events.
   partition `events` depending of the `db`, `retention` and `consistency` keys
   returns a list, each element being a list of events (the result of the partitioning)."
   [events]
@@ -248,7 +248,7 @@
       [events]
       (let [events (->> (if (sequential? events) events (list events))
                         (keep #(event->point-9 % opts)))
-            batch-point (get-batchpoint opts)
+            ^BatchPoints batch-point (get-batchpoint opts)
             _ (doseq [event events] (.point batch-point event))]
         (write-batch-point connection batch-point)
         batch-point))))
