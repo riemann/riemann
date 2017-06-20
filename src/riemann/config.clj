@@ -26,6 +26,7 @@
                      [logging     :as logging]
                      [logstash    :as logstash :refer [logstash]]
                      [mailgun     :refer [mailgun]]
+                     [msteams     :refer [msteams]]
                      [nagios      :refer [nagios]]
                      [netuitive   :refer [netuitive]]
                      [opentsdb    :refer [opentsdb]]
