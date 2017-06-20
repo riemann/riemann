@@ -30,6 +30,16 @@
    [tag]
    {:name tag :value :true})
 
+(defn combine-elements
+   "Combine two elements"
+   [element1 element2]
+   {:id (:id element1)
+     :name (:name element1)
+     :type (:type element1)
+     :metrics (map (partial apply merge) (partition-by :id (sort-by :id (concat (:metrics element1) (:metrics element2)))))
+     :samples (concat (:samples element1) (:samples element2))
+     :tags (map (partial apply merge) (partition-by :name (sort-by :name (concat (:tags element1) (:tags element2)))))})
+
 (defn generate-event
    "Structure for ingest to Netuitive as JSON"
    [event opts]
