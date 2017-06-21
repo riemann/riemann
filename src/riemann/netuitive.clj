@@ -77,5 +77,6 @@
     (fn [event]
       (let [events (if (sequential? event) event [event])
             post-data (mapv #(generate-event % opts) events)
-            json-data (generate-string post-data)]
+            reduced-data (map (apply partial reduce combine-elements []) (partition-by :id (sort-by :id post-data)))
+            json-data (generate-string reduced-data)]
         (post-datapoint (:api-key opts) (:url opts gateway-url) json-data)))))
