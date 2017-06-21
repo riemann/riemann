@@ -3,7 +3,7 @@
         clojure.test))
 
 (def test-event {:host "riemann.local" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})
-(def other-event {:host "riemann.other" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})
+(def other-event {:host "riemann.local" :service "netuitive other" :state "ok" :description "Successful test" :metric 5 :time (/ (System/currentTimeMillis) 1000) :tags ["other"]})
 
 (deftest ^:netuitive netuitive-unit-tests
    (is (= (:type (generate-event test-event {})) "Riemann"))
@@ -17,10 +17,18 @@
    (is (= (:name (first (:tags (generate-event test-event {}))) "riemann")))
    (is (= (:type (generate-event test-event {:type "SERVER"})) "SERVER"))
    (is (= (netuitive-metric-name test-event) "netuitive.test"))
-   (is (= (count (:metrics (combine-elements (generate-event test-event {}) (generate-event test-event {})))) 1))
+
+   (is (= (:name (combine-elements (generate-event test-event {}) (generate-event other-event {}))) "riemann.local"))
+   (is (= (:id (combine-elements (generate-event test-event {}) (generate-event other-event {}))) "Riemann:riemann.local"))
+   (is (= (:type (combine-elements (generate-event test-event {}) (generate-event other-event {}))) "Riemann"))
+
+   (is (= (:metrics (combine-elements (generate-event test-event {}) (generate-event test-event {}))) [{:id "netuitive.test"}]))
+   (is (= (:tags (combine-elements (generate-event test-event {}) (generate-event test-event {}))) [{:name "netuitive", :value :true} {:name "riemann", :value :true}]))
    (is (= (count (:samples (combine-elements (generate-event test-event {}) (generate-event test-event {})))) 2))
-   (is (= (count (:tags (combine-elements (generate-event test-event {}) (generate-event test-event {})))) 2))
-   (is (= (count (combine-elements (generate-event test-event {}) (generate-event other-event {})))) 2))
+
+   (is (= (:metrics (combine-elements (generate-event test-event {}) (generate-event other-event {}))) [{:id "netuitive.other"} {:id "netuitive.test"}]))
+   (is (= (:tags (combine-elements (generate-event test-event {}) (generate-event other-event {}))) [{:name "netuitive", :value :true} {:name "other", :value :true} {:name "riemann", :value :true}]))
+   (is (= (count (:samples (combine-elements (generate-event test-event {}) (generate-event other-event {})))) 2)))
 
 (deftest ^:integration ^:netuitive netuitive-test
    (let [k (netuitive {:api-key "netuitive-test-key" :url "https://api.app.netuitive.com/ingest/"})]
