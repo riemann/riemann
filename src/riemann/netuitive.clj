@@ -72,9 +72,10 @@
   [opts]
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
     (fn [event]
-      (let [events (if (sequential? event) event [event])
-            non-null (filter #(not (nil? (:metric %))) events)
-            post-data (mapv #(generate-event % opts) non-null)
-            reduced-data (map (apply partial reduce combine-elements []) (partition-by :id (sort-by :id post-data)))
-            json-data (generate-string reduced-data)]
+      (let [json-data (->> (if (sequential? event) event [event])
+                           (filter :metric)
+                           (map #(generate-event % opts))
+                           (partition-by :id)
+                           (map #(reduce combine-elements %))
+                           (generate-string))]
         (post-datapoint (:api-key opts) (:url opts gateway-url) json-data)))))
