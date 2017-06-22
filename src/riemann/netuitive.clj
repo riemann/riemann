@@ -33,12 +33,9 @@
 (defn combine-elements
    "Combine two elements"
    [element1 element2]
-   {:id (:id element1)
-    :name (:name element1)
-    :type (:type element1)
-    :metrics (map (partial apply merge) (partition-by :id (sort-by :id (concat (:metrics element1) (:metrics element2)))))
-    :samples (concat (:samples element1) (:samples element2))
-    :tags (map (partial apply merge) (partition-by :name (sort-by :name (concat (:tags element1) (:tags element2)))))})
+   (assoc element1 :metrics (clojure.set/union (:metrics element1) (:metrics element2))
+                   :samples (concat (:samples element1) (:samples element2))
+                   :tags    (clojure.set/union (:tags element1) (:tags element2))))
 
 (defn generate-event
    "Structure for ingest to Netuitive as JSON"
@@ -48,11 +45,11 @@
        {:id (str type ":" (:host event))
         :name (:host event)
         :type type
-        :metrics [{:id metric-id}]
+        :metrics (set [{:id metric-id}])
         :samples [{:metricId metric-id
                    :timestamp (parsetime (:time event))
                    :val (:metric event)}]
-        :tags (mapv generate-tag (:tags event))}))
+        :tags (set (map generate-tag (:tags event)))}))
 
 (defn netuitive
   "Return a function which accepts either single events or batches of
