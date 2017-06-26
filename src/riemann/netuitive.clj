@@ -30,6 +30,13 @@
    [tag]
    {:name tag :value :true})
 
+(defn combine-elements
+   "Combine two elements"
+   [element1 element2]
+   (assoc element1 :metrics (clojure.set/union (:metrics element1) (:metrics element2))
+                   :samples (concat (:samples element1) (:samples element2))
+                   :tags    (clojure.set/union (:tags element1) (:tags element2))))
+
 (defn generate-event
    "Structure for ingest to Netuitive as JSON"
    [event opts]
@@ -38,11 +45,11 @@
        {:id (str type ":" (:host event))
         :name (:host event)
         :type type
-        :metrics [{:id metric-id}]
+        :metrics (set [{:id metric-id}])
         :samples [{:metricId metric-id
                    :timestamp (parsetime (:time event))
                    :val (:metric event)}]
-        :tags (mapv generate-tag (:tags event))}))
+        :tags (set (map generate-tag (:tags event)))}))
 
 (defn netuitive
   "Return a function which accepts either single events or batches of
@@ -65,7 +72,10 @@
   [opts]
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
     (fn [event]
-      (let [events (if (sequential? event) event [event])
-            post-data (mapv #(generate-event % opts) events)
-            json-data (generate-string post-data)]
+      (let [json-data (->> (if (sequential? event) event [event])
+                           (filter :metric)
+                           (map #(generate-event % opts))
+                           (partition-by :id)
+                           (map #(reduce combine-elements %))
+                           (generate-string))]
         (post-datapoint (:api-key opts) (:url opts gateway-url) json-data)))))
