@@ -336,7 +336,6 @@
   *not* overlap; each event appears at most once in the output stream. Once an
   event is emitted, all events *older or equal* to that emitted event are
   silently dropped.
-
   Events without times accrue in the current window."
   [n start-time-fn & children]
   ; This is not a particularly inspired or clear implementation. :-(
@@ -344,44 +343,43 @@
   (when (zero? n)
     (throw (IllegalArgumentException. "Can't have a zero-width time window.")))
 
-  (let [start-time (ref nil)
-        buffer     (ref [])]
+  (let [state (atom {:start-time nil
+                     :buffer []
+                     :windows nil})]
     (fn stream [event]
-      (let [windows (dosync
-                      (cond
-                        ; No time
-                        (nil? (:time event))
-                        (do
-                          (alter buffer conj event)
-                          nil)
+      (let [s (swap! state
+                     (fn [{:keys [start-time buffer] :as state}]
+                       (cond
+                         ; No time
+                         (nil? (:time event))
+                         (-> (update state :buffer conj event)
+                             (assoc :windows nil))
 
-                        ; No start time
-                        (nil? @start-time)
-                        (do
-                          (ref-set start-time (start-time-fn n event))
-                          (ref-set buffer [event])
-                          nil)
+                         ; No start time
+                         (nil? start-time)
+                         (assoc state :start-time (start-time-fn n event)
+                                      :buffer [event]
+                                      :windows nil)
 
-                        ; Too old
-                        (< (:time event) @start-time)
-                        nil
+                         ; Too old
+                         (< (:time event) start-time)
+                         (assoc state :windows nil)
 
-                        ; Within window
-                        (< (:time event) (+ @start-time n))
-                        (do
-                          (alter buffer conj event)
-                          nil)
+                         ; Within window
+                         (< (:time event) (+ start-time n))
+                         (-> (update state :buffer conj event)
+                             (assoc :windows nil))
 
-                        ; Above window
-                        true
-                        (let [delta (- (:time event) @start-time)
-                              dstart (- delta (mod delta n))
-                              empties (dec (/ dstart n))
-                              windows (conj (repeat empties []) @buffer)]
-                          (alter start-time + dstart)
-                          (ref-set buffer [event])
-                          windows)))]
-        (when windows
+                         ; Above window
+                         true
+                         (let [delta (- (:time event) start-time)
+                               dstart (- delta (mod delta n))
+                               empties (dec (/ dstart n))
+                               windows (conj (repeat empties []) buffer)]
+                           (-> (update state :start-time + dstart)
+                               (assoc :buffer [event]
+                                      :windows windows))))))]
+        (when-let [windows (:windows s)]
           (doseq [w windows]
             (call-rescue w children)))))))
 
