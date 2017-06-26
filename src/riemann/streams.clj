@@ -182,6 +182,13 @@
     (doseq [e (f event)]
       (call-rescue e children))))
 
+(defn sflatten
+  "Streaming flatten. Calls children with each event in events. Events should be a sequence."
+  [& children]
+  (fn stream [events]
+    (doseq [e events]
+      (call-rescue e children))))
+
 (defn sreduce
   "Streaming reduce. Two forms:
 
