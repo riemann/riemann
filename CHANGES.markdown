@@ -1,3 +1,25 @@
+# Version 0.2.14
+
+Contains mostly new features and enhancements. Marcel Corbin replaced `refs` in both `fixed-time-window` and `moving-time-window` with atoms, greatly improving their performance. They also added an `sflatten` stream and refactored the Elasticsearch output. boernd extended the capabilities of the Pushover plugin and added an MS Teams plugin. Brian Conn enhanced and reduced the payload of the Netuitive plugin.
+
+There were also some fixes to documentation, the website and bumps of various project dependencies including `clj-http` to 3.5.0.
+
+## Features and enhancements
+
+- Extend pushover functionality [\#808](https://github.com/riemann/riemann/pull/808) ([boernd](https://github.com/boernd))
+- Refactoring Elasticsearch output [\#804](https://github.com/riemann/riemann/pull/804) ([mcorbin](https://github.com/mcorbin))
+- replace refs in fixed-time-window-fn by an atom [\#797](https://github.com/riemann/riemann/pull/797) ([mcorbin](https://github.com/mcorbin))
+- Replace refs in moving-time-window by an atom [\#811](https://github.com/riemann/riemann/pull/811) ([mcorbin](https://github.com/mcorbin))
+- Updated a number of project dependencies [\#800](https://github.com/riemann/riemann/pull/800) ([jamtur01](https://github.com/jamtur01))
+- bump clj-http to 3.5.0 - http-integrations over a sniproxy \o/ [\#814](https://github.com/riemann/riemann/pull/814) ([andrerocker](https://github.com/andrerocker))
+- Netuitive Payload Size Reduction [\#831](https://github.com/riemann/riemann/pull/831) ([TheConnMan](https://github.com/TheConnMan))
+- Add ms teams output [\#830](https://github.com/riemann/riemann/pull/830) ([boernd](https://github.com/boernd))
+- Add sflatten stream [\#825](https://github.com/riemann/riemann/pull/825) ([mcorbin](https://github.com/mcorbin))
+
+## Bug fixes
+
+- Remove all \*warn-on-reflection\* warning in the influxdb stream [\#829](https://github.com/riemann/riemann/pull/829) ([mcorbin](https://github.com/mcorbin))
+
 # Version 0.2.13
 
 This release contains new Kafka input and output plugins. An Netuitive
