@@ -7,7 +7,7 @@
         [leiningen.tar :only [md5]])
   (:import java.util.Date
            java.text.SimpleDateFormat
-           (org.codehaus.mojo.rpm RPMMojo 
+           (org.codehaus.mojo.rpm RPMMojo
                                   AbstractRPMMojo
                                   Mapping Source
                                   SoftlinkSource
@@ -40,7 +40,7 @@
   (let [df   (SimpleDateFormat. ".yyyyMMdd.HHmmss")]
     (replace (:version project) #"-SNAPSHOT" (.format df (Date.)))))
 
-(defn set-mojo! 
+(defn set-mojo!
   "Set a field on an AbstractRPMMojo object."
   [object name value]
   (let [field (.getDeclaredField AbstractRPMMojo name)]
@@ -79,9 +79,9 @@
                               true  "true"
                               false "false"
                               nil   "false"
-                              (:configuration m))) 
-    (.setDependency         (:dependency m)) 
-    (.setDirectory          (:directory m)) 
+                              (:configuration m)))
+    (.setDependency         (:dependency m))
+    (.setDirectory          (:directory m))
     (.setDirectoryIncluded  (boolean (:directory-included? m)))
     (.setDocumentation      (boolean (:documentation? m)))
     (.setFilemode           (:filemode m))
@@ -92,16 +92,16 @@
 
 (defn mappings
   [project]
-  (map (comp mapping 
+  (map (comp mapping
              (partial merge {:username "riemann"
-                             :groupname "riemann"})) 
+                             :groupname "riemann"}))
 
        [; Jar
         {:directory "/usr/lib/riemann/"
          :filemode "644"
          :username "root"
          :groupname "root"
-         :sources [(source (str (file (:root project) 
+         :sources [(source (str (file (:root project)
                                       "target"
                                       (str "riemann-"
                                            (:version project)
@@ -120,12 +120,12 @@
         {:directory "/var/log/riemann"
          :filemode "755"
          :directory-included? true}
-        
+
         ; Config dir
         {:directory "/etc/riemann"
          :filemode "755"
          :directory-included? true}
-        
+
         ; Config file
         {:directory "/etc/riemann"
          :filemode "644"
@@ -141,7 +141,7 @@
          :configuration true
          :sources [(source (file (:root project) "pkg" "riemann-default")
                            "riemann")]}
-        
+
         ; Init script
         {:directory "/etc/init.d"
          :filemode "755"
