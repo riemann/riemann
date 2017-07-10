@@ -172,7 +172,6 @@
     (set-mojo! "projversion" (get-version project))
     (set-mojo! "name" (:name project))
     (set-mojo! "summary" (:description project))
-    (set-mojo! "copyright" "Kyle Kingsbury & contributors")
     (set-mojo! "workarea" (workarea project))
     (set-mojo! "mappings" (mappings project))
     (set-mojo! "preinstallScriptlet" (scriptlet
