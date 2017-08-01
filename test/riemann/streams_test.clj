@@ -742,6 +742,74 @@
              (s event))
            (is (= (count events) (deref i)))))
 
+(deftest by-builder-test
+  (testing "one child"
+    (let [i (ref 0)
+          s (by-builder [host :host]
+                        (let [host-ref (ref nil)]
+                          (fn [event]
+                            (dosync
+                             (alter i inc)
+                             (when (nil? (deref host-ref))
+                               (ref-set host-ref (event :host)))
+                             (is (= (deref host-ref) (event :host) host))))))
+          events (map (fn [h] {:host h}) [:a :a :b :a :c :b])]
+      (doseq [event events]
+        (s event))
+      (is (= (count events) (deref i)))))
+
+  (testing "two children"
+    (let [i (ref 0)
+          s (by-builder [host :host]
+                        (let [host-ref (ref nil)]
+                          (fn [event]
+                            (dosync
+                             (alter i inc)
+                             (when (nil? (deref host-ref))
+                               (ref-set host-ref (event :host)))
+                             (is (= (deref host-ref) (event :host) host)))))
+                        (let [host-ref (ref nil)]
+                          (fn [event]
+                            (dosync
+                             (alter i inc)
+                             (when (nil? (deref host-ref))
+                               (ref-set host-ref (event :host)))
+                             (is (= (deref host-ref) (event :host) host))))))
+          events (map (fn [h] {:host h}) [:a :a :b :a :c :b])]
+      (doseq [event events]
+        (s event))
+      (is (= (* 2 (count events)) (deref i)))))
+
+  (testing "multiple fields"
+    (let [i (ref 0)
+          s (by-builder [[host service] [:host :service]]
+                (let [host-ref (ref nil)
+                      service-ref (ref nil)]
+                  (fn [event]
+                    (dosync
+                     (alter i inc)
+                     (when (nil? (deref host-ref))
+                       (ref-set host-ref (event :host)))
+                     (when (nil? (deref service-ref))
+                       (ref-set service-ref (event :service)))
+
+                     (is (= (deref host-ref) (event :host) host))
+                     (is (= (deref service-ref) (event :service)) service)))))
+
+          events (map (fn [h] {:host (first h)
+                               :service (last h)})
+                      [[1 :a]
+                       [1 :b]
+                       [1 :a]
+                       [2 :a]
+                       [2 :a]
+                       [1 :a]
+                       [2 :a]
+                       [1 :b]])]
+      (doseq [event events]
+        (s event))
+      (is (= (count events) (deref i))))))
+
 (deftest by-evaluates-children-once-per-branch
          (let [i (atom 0)
                s (by :metric (do (swap! i inc) identity))]
