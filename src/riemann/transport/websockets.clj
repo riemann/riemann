@@ -158,7 +158,7 @@
               (info "Unknown URI " (:uri req) ", closing")
               (http/close ch))))
 
-        (catch Throwable t
+        (catch Exception t
           (do
             (warn t "ws-handler caught; closing websocket connection.")
             (http/close ch)))))))

@@ -152,7 +152,7 @@
             ; Run task
             (try
               (run task)
-              (catch Throwable t
+              (catch Exception t
                 (warn t "running task threw")))
             (when-let [task' (succ task)]
               ; Schedule the next task.
@@ -165,7 +165,7 @@
         (do
           ; No task available; park for a bit and try again.
           (LockSupport/parkNanos (ceil (* 1000000000 park-interval)))))
-      (catch Throwable t
+      (catch Exception t
         (warn t "riemann.time task threw")))))
 
 (defn stop!
