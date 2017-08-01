@@ -1519,7 +1519,7 @@
    (by-builder [host :host] (forward (get relay-by-host host)))
    "
   [[sym fields] & forms]
-  `(let [new-fork# (fn [~sym] [(do ~@forms)])]
+  `(let [new-fork# (fn [~sym] [~@forms])]
      (by-fn ~fields new-fork#)))
 
 (defn by-fn [fields new-fork]
