@@ -104,12 +104,12 @@
                       (advance! 1)
                       (is (= "error" (:state @e))))))
 
-         (testing "exception handling takes care of Throwables"
+         (testing "exception handling takes care of Exception"
                   (logging/suppress
                    "riemann.streams"
                    (let [exceptions (atom [])]
                      (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
-                       (run-stream (sdo #(throw (Throwable. %)))
+                       (run-stream (sdo #(throw (Exception. %)))
                                    ["boo!"]))
                      (is (= 1 (count @exceptions)))))))
 
@@ -1070,7 +1070,7 @@
            (let [exceptions (atom [])]
              (binding [riemann.streams/*exception-stream* #(swap! exceptions conj %)]
                (run-stream (changed :state (fn [x]
-                                             (throw (Throwable. "boo!"))))
+                                             (throw (Exception. "boo!"))))
                            [(riemann.common/event {:state :critical})]))
              (is (= 1 (count @exceptions))))))
 

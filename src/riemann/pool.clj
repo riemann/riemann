@@ -21,7 +21,7 @@
   Pool
   (grow [this]
         (loop []
-          (if-let [thingy (try (open) (catch Throwable t nil))]
+          (if-let [thingy (try (open) (catch Exception t nil))]
             (.put ^LinkedBlockingQueue queue thingy)
             (do
               (Thread/sleep (* 1000 regenerate-interval))
@@ -49,7 +49,7 @@
   (invalidate [this thingy]
               (when thingy
                 (try (close thingy)
-                  (catch Throwable t
+                  (catch Exception t
                     (warn t "Closing" thingy "threw")))
                 (future (grow this)))))
 
@@ -110,6 +110,6 @@
        (let [res# (do ~@body)]
          (release ~pool thingy#)
          res#)
-       (catch Throwable t#
+       (catch Exception t#
          (invalidate ~pool thingy#)
          (throw t#)))))

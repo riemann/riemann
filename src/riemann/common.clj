@@ -146,7 +146,7 @@
 (defn exception->event
   "Creates an event from an Exception."
   ([exception] (exception->event exception nil))
-  ([^Throwable e original]
+  ([^Exception e original]
    (map->Event {:time (unix-time)
                 :service "riemann exception"
                 :state "error"
