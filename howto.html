@@ -2793,6 +2793,49 @@ view.</p>
   </div>
 </div>
 
+<h3>Forward to Elasticsearch</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Create a <a href="http://riemann.io/api/riemann.elasticsearch.html#var-elasticsearch"> Elasticsearch</a> client. The elasticsearch stream accepts an optional second parameter specifying an event formatter (see the API documentation for the default value).</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(def elastic
+  (elasticsearch {:es-endpoint "http://localhost:9200"
+                  :es-index "riemann"
+                  :index-suffix "-yyyy.MM.dd"
+                  :type "event"}))
+(streams
+ elastic)
+
+{% endhighlight %}
+  </div>
+
+  <div class="sixcol">
+    <p>You can also use the Elasticsearch <a href="http://riemann.io/api/riemann.elasticsearch.html#var-elasticsearch-bulk">bulk API</a>. You can override per event the <code>default-bulk-formatter</code> options.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(def elastic-bulk
+  (elasticsearch-bulk
+    {:es-endpoint "http://localhost:9200"
+     :formatter (riemann.elasticsearch/default-bulk-formatter
+                  {:es-index "riemann"
+                   :type "event"
+                   :index-suffix "-yyyy.MM.dd"
+                   :es-action "index"})}))
+
+(streams
+  (batch 100 1/10
+    elastic-bulk))
+
+{% endhighlight %}
+  </div>
+</div>
+
 <h2>Contributing to Riemann</h2>
 
 <h3>Write a client</h3>
