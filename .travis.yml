@@ -4,6 +4,7 @@ group: edge
 language: clojure
 lein: lein
 jdk:
+  - openjdk8
   - oraclejdk8
   - oraclejdk9
 
