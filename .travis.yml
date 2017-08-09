@@ -1,10 +1,20 @@
-sudo: false
+sudo: required
+dist: trusty
+group: edge
 language: clojure
 lein: lein2
 jdk:
-  - openjdk7
-  - oraclejdk7
   - oraclejdk8
+  - oraclejdk9
+
+matrix:
+  allow_failures:
+    - jdk: oraclejdk9
+
+addons:
+  apt:
+    packages:
+      - oracle-java9-installer
 
 cache:
   directories:
