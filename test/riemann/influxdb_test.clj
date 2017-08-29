@@ -769,7 +769,33 @@
       (is (= (.getDatabase batch-point) "riemann_test"))
       (is (= (.getRetentionPolicy batch-point) "hello"))
       (is (= (.getConsistency batch-point) InfluxDB$ConsistencyLevel/ONE))
-      (is (= (into {} (.getTags batch-point)) {"foo" "bar" "bar" "baz"})))))
+      (is (= (into {} (.getTags batch-point)) {"foo" "bar" "bar" "baz"}))))
+  (testing "BigInt metric converted to double"
+    (let [point (influxdb/event->point {:time 1428366765
+                                        :influxdb-tags {:foo "bar"
+                                                        :bar "baz"}
+                                        :precision :microseconds
+                                        :measurement "measurement"
+                                        :influxdb-fields {:alice 1N}}
+                                       {:precision :seconds})]
+      (is (= "measurement" (.get measurement point)))
+      (is (= 1428366765000000 (.get time-field point)))
+      (is (= TimeUnit/MICROSECONDS (.get precision point)))
+      (is (= {"foo" "bar" "bar" "baz"} (into {} (.get tags point))))
+      (is (= {"alice" 1.0} (into {} (.get fields point))))))
+(testing "Ratio metric converted to double"
+    (let [point (influxdb/event->point {:time 1428366765
+                                        :influxdb-tags {:foo "bar"
+                                                        :bar "baz"}
+                                        :precision :microseconds
+                                        :measurement "measurement"
+                                        :influxdb-fields {:alice 21893979/1000000}}
+                                       {:precision :seconds})]
+      (is (= "measurement" (.get measurement point)))
+      (is (= 1428366765000000 (.get time-field point)))
+      (is (= TimeUnit/MICROSECONDS (.get precision point)))
+      (is (= {"foo" "bar" "bar" "baz"} (into {} (.get tags point))))
+      (is (= {"alice" (double 21893979/1000000)} (into {} (.get fields point)))))))
 
 (deftest get-batchpoints-test
   (testing "partition by db"
@@ -903,8 +929,9 @@
     (is (= (second p5) {:retention "foo"
                         :bar "baz"}))))
 
-(deftest ratio?->double-test
-  (is (= (influxdb/ratio?->double 21893979/1000000) (double 21893979/1000000)))
-  (is (= (influxdb/ratio?->double 3) 3))
-  (is (= (influxdb/ratio?->double 3.1) 3.1))
-  (is (= (influxdb/ratio?->double "foo") "foo")))
+(deftest converts-double-test
+  (is (= (influxdb/converts-double 21893979/1000000) (double 21893979/1000000)))
+  (is (= (influxdb/converts-double 3) 3))
+  (is (= (influxdb/converts-double 3.1) 3.1))
+  (is (= (influxdb/converts-double "foo") "foo"))
+  (is (= (influxdb/converts-double 3N) 3.0)))

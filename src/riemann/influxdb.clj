@@ -118,10 +118,10 @@
     (= precision :seconds) (long time-event)
     true (long time-event)))
 
-(defn ratio?->double
-  "if n if a ratio, converts it to double. Returns n otherwise"
+(defn converts-double
+  "if n if a ratio or a BigInt, converts it to double. Returns n otherwise"
   [n]
-  (if (ratio? n)
+  (if (or (ratio? n) (instance? clojure.lang.BigInt n))
     (double n)
     n))
 
@@ -139,7 +139,7 @@
           tags   (event-tags tag-fields event)
           fields (event-fields tag-fields event)]
       (doseq [[k v] tags] (.tag builder k v))
-      (doseq [[k v] fields] (.field builder k (ratio?->double v)))
+      (doseq [[k v] fields] (.field builder k (converts-double v)))
       (.build builder))))
 
 (defn event->point
@@ -158,7 +158,7 @@
           tags   (:influxdb-tags event)
           fields (:influxdb-fields event)]
       (doseq [[k v] tags] (when-not (nil-or-empty-str v) (.tag builder (name k) (str v))))
-      (doseq [[k v] fields] (when-not (nil-or-empty-str v) (.field builder (name k) (ratio?->double v))))
+      (doseq [[k v] fields] (when-not (nil-or-empty-str v) (.field builder (name k) (converts-double v))))
       (.build builder))))
 
 (def default-opts
