@@ -70,6 +70,10 @@
          (catch Exception e#
            (if-let [ex-stream# *exception-stream*]
              (ex-stream# (exception->event e# ~event))
+             (warn e# (str child# " threw"))))
+         (catch AssertionError e#
+           (if-let [ex-stream# *exception-stream*]
+             (ex-stream# (exception->event e# ~event))
              (warn e# (str child# " threw"))))))
      ; TODO: Why return true?
      true))
