@@ -78,13 +78,20 @@
   "Provide native implementation of Netty for improved performance on
   Linux only. Provide pure-Java implementation of Netty on all other
   platforms. See http://netty.io/wiki/native-transports.html"
-  (if (and (.contains (. System getProperty "os.name") "Linux")
-           (.contains (. System getProperty "os.arch") "amd64")
-           (.equals (System/getProperty "netty.epoll.enabled" "true") "true"))
-    {:event-loop-group-fn #(EpollEventLoopGroup.)
-     :channel EpollServerSocketChannel}
-    {:event-loop-group-fn #(NioEventLoopGroup.)
-     :channel NioServerSocketChannel}))
+  (cond 
+    (and (.contains (. System getProperty "os.name") "Linux")
+         (.contains (. System getProperty "os.arch") "amd64")
+         (.equals (System/getProperty "netty.epoll.enabled" "true") "true"))
+       {:event-loop-group-fn #(EpollEventLoopGroup.)
+         :channel EpollServerSocketChannel}
+    (or (and (.contains (. System getProperty "os.name") "mac") (.contains (. System getProperty "os.arch") "x86_64"))
+        (and (.contains (. System getProperty "os.name") "freebsd") (.contains (. System getProperty "os.arch") "amd64"))
+      (and (.equals (System/getProperty "netty.kqueue.enabled" "true") "true")))
+        {:event-loop-group-fn #(KQueueEventLoopGroup.)
+          :channel KQueueServerSocketChannel}
+    :else 
+       {:event-loop-group-fn #(NioEventLoopGroup.)
+          :channel NioServerSocketChannel}))
 
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and
