@@ -19,6 +19,7 @@
                                    LengthFieldPrepender]
            [io.netty.handler.ssl SslHandler]
            [io.netty.channel.epoll EpollEventLoopGroup EpollServerSocketChannel]
+           [io.netty.channel.kqueue KQueueEventLoopGroup KQueueServerSocketChannel]
            [io.netty.channel.nio NioEventLoopGroup]
            [io.netty.channel.socket.nio NioServerSocketChannel])
   (:require [less.awful.ssl :as ssl]
@@ -145,10 +146,8 @@
                     (.group boss-group worker-group)
                     (.channel (:channel netty-implementation))
                     (.option ChannelOption/SO_REUSEADDR true)
-                    (.option ChannelOption/TCP_NODELAY true)
                     (.option ChannelOption/SO_BACKLOG so-backlog)
                     (.childOption ChannelOption/SO_REUSEADDR true)
-                    (.childOption ChannelOption/TCP_NODELAY true)
                     (.childOption ChannelOption/SO_KEEPALIVE true)
                     (.childHandler initializer))
 
