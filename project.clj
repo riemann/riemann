@@ -35,7 +35,7 @@
     [com.draines/postal "2.0.2"]
     [com.amazonaws/aws-java-sdk "1.11.116" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
-    [io.netty/netty-all "4.1.11.Final"]
+    [io.netty/netty-all "4.1.15.Final"]
     [clj-antlr "0.2.2"]
     [riemann-clojure-client "0.4.5"]
     [less-awful-ssl "1.0.1"]
