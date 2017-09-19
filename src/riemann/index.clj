@@ -13,7 +13,8 @@
   (:refer-clojure :exclude [update])
   (:require [riemann.query :as query]
             [riemann.common :refer [deprecated]]
-            [riemann.instrumentation :refer [Instrumented]])
+            [riemann.instrumentation :refer [Instrumented]]
+            [clojure.tools.logging :refer [error]])
   (:use [riemann.time :only [unix-time]]
          riemann.service)
   (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
@@ -71,13 +72,19 @@
 
       (expire [this]
         (filter
-          (fn [event]
-            (let [age (- (unix-time) (:time event))
-                  ttl (or (:ttl event) default-ttl)]
-              (when (< ttl age)
-                (delete-exactly this event)
-                true)))
-          (.values hm)))
+         (fn [event]
+           (try
+             (let [age (- (unix-time) (:time event))
+                   ttl (or (:ttl event) default-ttl)]
+               (when (< ttl age)
+                 (delete-exactly this event)
+                 true))
+             (catch Exception e
+               (do (error e "Caught exception while trying to expire this event"
+                          event)
+                   (delete-exactly this event)
+                   false))))
+         (.values hm)))
 
       (search [this query-ast]
         "O(n) unless the query is for exactly a host and service"
