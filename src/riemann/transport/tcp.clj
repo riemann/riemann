@@ -74,27 +74,29 @@
 
     (isSharable [] true)))
 
+(defn kqueue-netty-implementation
+   []
+   {:event-loop-group-fn #(KQueueEventLoopGroup.)
+     :channel KQueueServerSocketChannel})
+
+(defn epoll-netty-implementation
+   []
+   {:event-loop-group-fn #(EpollEventLoopGroup.)
+     :channel EpollServerSocketChannel})
+
+(defn nio-netty-implementation
+   []
+   {:event-loop-group-fn #(NioEventLoopGroup.)
+     :channel NioServerSocketChannel})
+
 (def netty-implementation
-  "Provide native implementation of Netty for improved performance on
-  Linux only. Provide pure-Java implementation of Netty on all other
-  platforms. See http://netty.io/wiki/native-transports.html"
-  (cond 
-    (and (.contains (. System getProperty "os.name") "Linux")
-         (.contains (. System getProperty "os.arch") "amd64")
-         (.equals (System/getProperty "netty.epoll.enabled" "true") "true"))
-       {:event-loop-group-fn #(EpollEventLoopGroup.)
-         :channel EpollServerSocketChannel}
-    (and
-      (or (and (.contains (. System getProperty "os.name") "mac")
-               (.contains (. System getProperty "os.arch") "x86_64"))
-          (and (.contains (. System getProperty "os.name") "freebsd")
-               (.contains (. System getProperty "os.arch") "amd64")))
-      (.equals (System/getProperty "netty.kqueue.enabled" "true") "true"))
-       {:event-loop-group-fn #(KQueueEventLoopGroup.)
-         :channel KQueueServerSocketChannel}
-    :else 
-       {:event-loop-group-fn #(NioEventLoopGroup.)
-          :channel NioServerSocketChannel}))
+  (let [mac-or-freebsd? (re-find #"(mac|freebsd)" (System/getProperty "os.name"))
+       linux? (re-find  #"linux" (System/getProperty "os.name"))
+       sfbit? (re-find #"(x86_64|amd64)" (System/getProperty "os.arch"))
+       native?  (= (System/getProperty "netty.native.implementation") "true")]
+    (cond (and native? sfbit? linux?) (epoll-netty-implementation)
+             (and native? sfbit? mac-or-freebsd?) (kqueue-netty-implementation)
+             ::else (nio-netty-implementation))))
 
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and
