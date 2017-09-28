@@ -1720,7 +1720,7 @@
         [true-kids else-kids] (where-partition-clauses children)]
     `(let [true-kids# ~true-kids
            else-kids# ~else-kids]
-       (fn stream [event#]
+       (fn stream# [event#]
          (let [value# (let [~'event event#] ~p)]
            (if value#
              (call-rescue event# true-kids#)
