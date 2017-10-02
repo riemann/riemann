@@ -1621,6 +1621,16 @@ can decide whether an event is worthy of an alert by tagging it:</p>
     (tagged "notify-me" (email "ops@foo.com"))))
 {% endhighlight %}
 
+<p>You can add a new tag, or a set of tags, to events using the <code>tag</code> stream:</p>
+
+{% highlight clj %}
+(streams
+  (tag "foo"
+    #(info %))
+  (tag ["foo" "bar"]
+    #(info %)))
+{% endhighlight %}
+
 <p>If you're worried about spikes or flapping you can make use of the <a
   href="http://riemann.io/api/riemann.streams.html#var-stable">stable</a>
 variable. The <code>stable</code> variable detects stable streams of events
