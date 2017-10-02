@@ -5,77 +5,78 @@
 
 (def ^:private api-url "https://api.telegram.org/bot%s/%s")
 
-(defn- html-parse-mode []
+(defn html-parse-mode
   "Formats html message."
-  (fn [e]
-    (str
-      "<strong>Host:</strong> " (or (:host e) "-") "\n"
-      "<strong>Service:</strong> " (or (:service e) "-") "\n"
-      "<strong>State:</strong> " (or (:state e) "-") "\n"
-      "<strong>Metric:</strong> " (or (:metric e) "-") "\n"
-      "<strong>Description:</strong> " (or (:description e) "-"))))
+  [e]
+  (str
+   "<strong>Host:</strong> " (or (:host e) "-") "\n"
+   "<strong>Service:</strong> " (or (:service e) "-") "\n"
+   "<strong>State:</strong> " (or (:state e) "-") "\n"
+   "<strong>Metric:</strong> " (or (:metric e) "-") "\n"
+   "<strong>Description:</strong> " (or (:description e) "-")))
 
-(defn- markdown-parse-mode []
+(defn markdown-parse-mode
   "Formats markdown message."
-  (fn [e]
-    (str
-      "*Host:* " (or (:host e) "-") "\n"
-      "*Service:* " (or (:service e) "-") "\n"
-      "*State:* " (or (:state e) "-") "\n"
-      "*Metric:* " (or (:metric e) "-") "\n"
-      "*Description:* " (or (:description e) "-"))))
+  [e]
+  (str
+   "*Host:* " (or (:host e) "-") "\n"
+   "*Service:* " (or (:service e) "-") "\n"
+   "*State:* " (or (:state e) "-") "\n"
+   "*Metric:* " (or (:metric e) "-") "\n"
+   "*Description:* " (or (:description e) "-")))
 
-(defn- format-message [parse-mode event]
-  "Formats a message, accepts a single
-  event or a sequence of events."
-  (join "\n\n"
-        (map
-          (if (re-matches #"(?i)html" parse-mode)
-            (html-parse-mode)
-            (markdown-parse-mode))
-            (flatten [event]))))
+(defn- format-message
+  "Formats a message."
+  [parse-mode message-formatter event]
+  (cond
+    message-formatter (message-formatter event)
+    (= "HTML" parse-mode) (html-parse-mode event)
+    :default (markdown-parse-mode event)))
 
 (defn- post
   "POST to the Telegram API."
-  [token chat_id event parse_mode]
-  (client/post (format api-url token "sendMessage")
-               {:form-params {:chat_id chat_id
-                              :parse_mode (or parse_mode "markdown")
-                              :text (format-message parse_mode event)}
-                :throw-entire-message? true}))
+  [event {:keys [token http-options telegram-options message-formatter]
+          :or {http-options {}}}]
+  (let [parse-mode (:parse_mode telegram-options "Markdown")
+        text (format-message parse-mode message-formatter event)
+        form-params (assoc telegram-options
+                           :parse_mode parse-mode
+                           :text text)]
+    (client/post (format api-url token "sendMessage")
+                 (merge {:form-params form-params
+                         :throw-entire-message? true}
+                        http-options))))
 
 (defn telegram
   "Send events to Telegram chat. Uses your bot token and returns a function,
   which send message through API to specified chat.
 
-  Format event (or events) to string with markdown syntax.
+  Format event (or events) to string with markdown syntax by default.
 
   Telegram bots API documentation: https://core.telegram.org/bots/api
+
+  Options:
+
+  `:token`              The telegram token
+  `:http-options`       clj-http extra options (optional)
+  `:telegram-options`   These options are merged with the `:form-params` key of
+  the request. The `:chat_id` key is mandatory.
+  By default, the `:parse_mode` key is \"Markdown\".
+  `:message-formatter`  A function accepting an event and returning a string. (optional).
+  If not specified, `html-parse-mode` or `markdown-parse-mode` will be used,
+  depending on the `:parse_mode` value.
 
   Usage:
 
   (def token \"define_your_token\")
-  (def chat_id \"0123456\")
+  (def chat-id \"0123456\")
 
   (streams
-    (rollup 5 3600 (telegram {:token token :chat_id chat_id})))
-
-  Example:
-
-  (def telegram-async
-    (batch 10 1
-      (async-queue!
-        :telegram-async                         ; A name for the forwarder
-          {:queue-size     1e4                  ; 10,000 events max
-           :core-pool-size 5                    ; Minimum 5 threads
-           :max-pools-size 100}                 ; Maximum 100 threads
-          (telegram {:token \"275347130:AAEdWBudgeQCV87O0ag9luwwFGcN2Efeqk4\"
-                     :chat_id \"261032559\" }))))
-  "
+    (telegram {:token token
+               :telegram-options {:chat_id chat-id
+                                  :parse_mode \"HTML\"}}))"
   [opts]
   (fn [event]
-    (let [events (if (sequential? event)
-                   event
-                   [event])]
+    (let [events (if (sequential? event) event [event])]
       (doseq [event events]
-        (post (:token opts) (:chat_id opts) event (or (:parse_mode opts) "markdown"))))))
+        (post event opts)))))
