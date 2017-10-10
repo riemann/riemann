@@ -5,6 +5,7 @@
             riemann.time
             [riemann.test :as test]
             riemann.pubsub
+            [clojure.test.junit :refer [with-junit-output]]
             [cemerick.pomegranate :as pom]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer :all])
@@ -82,6 +83,28 @@
       (get (re-find #"^(\d+).*" name) 1)
       (catch Exception e name))))
 
+
+(defn run-tests-with-format
+  "Run all tests matching `test-name-pattern`.
+  If the `test.output.format` property is set to `junit`, the test output will be
+  JUnit compatible."
+  [test-name-pattern]
+  (if (= (System/getProperty "test.output.format")
+         "junit")
+    (with-junit-output
+      (clojure.test/run-all-tests test-name-pattern))
+    (clojure.test/run-all-tests test-name-pattern)))
+
+(defn run-tests
+  "Run all tests matching `test-name-pattern`.
+  The test output will be saved in the `test.output.file` value if this property is set."
+  [test-name-pattern]
+  (if-let [file-path (System/getProperty "test.output.file")]
+    (with-open [w (java.io.FileWriter. file-path)]
+      (binding [clojure.test/*test-out* w]
+        (run-tests-with-format test-name-pattern)))
+    (run-tests-with-format test-name-pattern)))
+
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   ([]
@@ -108,7 +131,7 @@
                 (riemann.config/include @config-file)
                 (binding [test/*streams* (:streams @config/next-core)]
                   (let [test-name-pattern (if test-name (re-pattern test-name) #".*-test")
-                        results (clojure.test/run-all-tests test-name-pattern)]
+                        results (run-tests test-name-pattern)]
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
                       (System/exit 0)
