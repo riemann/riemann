@@ -1,8 +1,8 @@
 sudo: required
-dist: trusty
+dist: precise
 group: edge
 language: clojure
-lein: lein
+lein: lein2
 jdk:
   - openjdk8
   - oraclejdk8
