@@ -235,6 +235,7 @@ code {
   font: monospace;
   color: #001843;
   background-color: #eee;
+  white-space: pre-wrap;
 }
 code a {
   font-size: inherit;
