@@ -250,6 +250,7 @@ figure.highlight, code pre {
   padding: 6px;
   font-size: 12px;
   line-height: 16px;
+  overflow: auto;
 }
 
 .cards {
