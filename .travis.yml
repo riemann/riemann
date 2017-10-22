@@ -1,9 +1,10 @@
 sudo: required
 
 language: clojure
-lein: lein2
+lein: lein
 
 jdk:
+  - openjdk8
   - oraclejdk8
   - oraclejdk9
 
