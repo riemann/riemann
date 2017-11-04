@@ -5,7 +5,6 @@
   index, reinject) which operate on that core."
   (:import (java.io File))
   (:require [riemann [boundary    :refer [boundary]]
-                     [campfire    :refer [campfire]]
                      [client      :refer [udp-client tcp-client multi-client]]
                      [cloudwatch  :refer [cloudwatch]]
                      [common      :as common :refer [event]]
