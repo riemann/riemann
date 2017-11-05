@@ -994,6 +994,24 @@ riemann-health --host 1.2.3.4
   </div>
 </div>
 
+
+<h3>Handle exceptions</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Streams can produce exceptions. A special event containing the exception details will be sent to the first child of <code>exception-stream</code> if an exception occurs on other child streams.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight clojure %}
+(exception-stream (email "polito@vonbraun.com")
+                  (async-queue!
+                   :graphite
+                   {:core-pool-size 128}
+                   graph))
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Monitor Riak</h3>
 
 <div class="row">
