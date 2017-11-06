@@ -105,7 +105,9 @@
 
       Instrumented
       (events [this]
-        (let [base {:state "ok" :time (unix-time)}]
+        (let [base {:state "ok"
+                    :time (unix-time)
+                    :tags ["riemann"]}]
           (map (partial merge base)
                [{:service "riemann index size"
                  :metric (.size hm)}])))
