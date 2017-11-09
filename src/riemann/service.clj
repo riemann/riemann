@@ -3,7 +3,7 @@
   (:require wall.hack
             riemann.instrumentation)
   (:use clojure.tools.logging
-        [riemann.time :only [unix-time]])
+        [riemann.time :only [unix-time every! cancel]])
   (:import (riemann.instrumentation Instrumented)
            (java.util.concurrent TimeUnit
                                  ThreadFactory
@@ -43,6 +43,36 @@
   nil
   (equiv? [s1 s2]
     (nil? s2)))
+
+(defrecord ScheduledTaskService [name equiv-key interval delay f core task]
+  ServiceEquiv
+  (equiv? [this other]
+          (and
+            (instance? ScheduledTaskService other)
+            (= name (:name other))
+            (= interval (:interval other))
+            (= delay (:delay other))
+            (= equiv-key (:equiv-key other))))
+  Service
+  (conflict? [this other]
+             (and
+               (instance? ScheduledTaskService other)
+               (= name (:name other))))
+
+  (reload! [this new-core]
+    (reset! core new-core))
+
+  (start! [this]
+            (locking this
+            (when @task
+              (cancel @task))
+            (let [t (every! interval delay #(f @core))]
+              (reset! task t))))
+
+  (stop! [this]
+    (locking this
+            (when @task
+              (cancel @task)))))
 
 (defrecord ThreadService [name equiv-key f core running thread]
   ServiceEquiv
@@ -93,6 +123,15 @@
    (thread-service name nil f))
   ([name equiv-key f]
    (ThreadService. name equiv-key f (atom nil) (atom false) (atom nil))))
+
+(defn scheduled-task-service
+  "Returns a ScheduledTaskService which will schedule a task which call (f core)
+  repeatedly every `interval` after `delay` seconds.
+  Equivalent to other ScheduledTaskService with the same `name`, `equiv-key`,
+  `delay` and `interval`.
+  Conflicts with other ScheduledTaskService of the same name."
+  ([name equiv-key interval delay f]
+   (ScheduledTaskService. name equiv-key interval delay f (atom nil) (atom nil))))
 
 (defmacro all-equal?
   "Takes two objects to compare and a list of forms to compare them by.

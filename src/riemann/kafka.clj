@@ -1,7 +1,8 @@
 (ns riemann.kafka
   "Receives events from and forwards events to Kafka."
   (:require [kinsky.client :as client]
-            [cheshire.core :as json])
+            [cheshire.core :as json]
+            [riemann.test :as test])
   (:use [riemann.common        :only [event]]
         [riemann.core          :only [stream!]]
         [riemann.service       :only [Service ServiceEquiv]]
@@ -103,8 +104,9 @@
       (conflict? [this other]
         (= opts (:opts other)))
       (start! [this]
-        (info "Starting kafka consumer")
-        (start-kafka-thread running? core opts))
+        (when-not test/*testing*
+          (do (info "Starting kafka consumer")
+              (start-kafka-thread running? core opts))))
       (reload! [this new-core]
         (info "Reload called, setting new core value")
         (reset! core new-core))

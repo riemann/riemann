@@ -197,3 +197,27 @@
         (finally
           (.close sock)
           (stop! core))))))
+
+(deftest tcp-server-testing-test
+  (let [server (tcp-server {:port 15555})]
+    (binding [riemann.test/*testing* true]
+      (riemann.service/start! server)
+      (is (= nil @(:killer server))))))
+
+(deftest udp-server-testing-test
+  (let [server (udp-server {:port 15555})]
+    (binding [riemann.test/*testing* true]
+      (riemann.service/start! server)
+      (is (= nil @(:killer server))))))
+
+(deftest sse-server-testing-test
+  (let [server (sse-server)]
+    (binding [riemann.test/*testing* true]
+      (riemann.service/start! server)
+      (is (= nil @(:server server))))))
+
+(deftest websocket-server-testing-test
+  (let [server (ws-server)]
+    (binding [riemann.test/*testing* true]
+      (riemann.service/start! server)
+      (is (= nil @(:server server))))))
