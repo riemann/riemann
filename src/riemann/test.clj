@@ -8,6 +8,7 @@
   (:require [riemann.time.controlled :as time.controlled]
             [riemann.time :as time]
             [riemann.streams :as streams]
+            [riemann.index :as index]
             [clojure.test :as test]))
 
 ; ugggggggh state is the worst
@@ -24,11 +25,14 @@
   "An atom to a map of tap names to information about the taps; e.g. file and
   line number, for preventing collisions." nil)
 
-(def ^:dynamic *streams*
-  "The current sequence of streams. This is global so test writers can simply
-  call (inject! events) without looking up the streams from their core every
-  time."
+
+(def ^:dynamic *test-core*
+  "The core used in test mode"
   nil)
+
+(def ^:dynamic *test-config*
+  "A map containing the test configuration"
+  {})
 
 (defn tap-stream
   "Called by `tap` to construct a stream which records events in *results*
@@ -121,6 +125,37 @@
              *taps*    (atom {})]
      ~@body))
 
+(defmacro with-test-config
+  "Bind *test-config* to the configuration provided.
+  The config should be a map and may contains those keys:
+
+  `:periodically-expire`    Set up a task which expires events from it's core index.
+       `:interval`          The task interval in seconds. Default to 10.
+       `:keeys-keys`        A list of event keys which should be preserved from the
+  indexed event in the expired event. Defaults to [:host :service]."
+  [config & body]
+  `(binding [*test-config* ~config]
+     ~@body))
+
+(defn- periodically-expire-test
+  "Set up a task which expires events from it's core index, and reinject them in streams."
+  ([opts streams]
+   (riemann.time/every!
+    (:interval opts 10)
+    (fn []
+      (let [i (:index *test-core*)
+            keep-keys (get opts :keep-keys [:host :service])]
+        (when i
+          (doseq [state (index/expire i)]
+            (try
+              (let [e (-> (select-keys state keep-keys)
+                          (merge {:state "expired"
+                                  :time (riemann.time/unix-time)}))]
+                (doseq [stream streams]
+                  (stream e)))
+              (catch Exception e
+                (clojure.tools.logging/warn e "Caught exception while processing test expired events"))))))))))
+
 (defn inject!
   "Takes a sequence of streams, initiates controlled time and resets the
   scheduler, applies a sequence of events to those streams, and returns a map
@@ -128,18 +163,18 @@
   riemann.time.controlled is global. Streams may be omitted, in which case
   inject! applies events to the *streams* dynamic var."
   ([events]
-   (inject! *streams* events))
+   (inject! (:streams *test-core*) events))
   ([streams events]
    (binding [*results* (fresh-results @*taps*)]
      ; Set up time
      (time.controlled/with-controlled-time!
        (time.controlled/reset-time!)
-
+       (when-let [periodically-expire-opts (:periodically-expire *test-config*)]
+         (periodically-expire-test periodically-expire-opts streams))
        ;; Apply events
        (doseq [e events]
          (when-let [t (:time e)]
            (time.controlled/advance! t))
-
          (doseq [stream streams]
            (stream e)))
 
@@ -173,6 +208,8 @@
   [name & body]
   `(test/deftest ~name
      (binding [*results* (fresh-results @*taps*)]
+       (if (:index *test-core*)
+         (index/clear (:index *test-core*)))
        (time.controlled/with-controlled-time!
          (time.controlled/reset-time!)
 
@@ -186,7 +223,7 @@
   (let [old-ns (ns-name *ns*)
         new-ns (symbol (str old-ns "-test"))]
     `(do (ns ~new-ns
-           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream lookup]]
+           ~'(:require [riemann.test :refer [deftest inject! io tap run-stream lookup with-test-config]]
                        [riemann.streams :refer :all]
                        [riemann.folds :as folds]
                        [pjstadig.humane-test-output :as output]
@@ -201,7 +238,7 @@
   `(let [out# (atom [])
          stream# (~@stream (streams/append out#))]
      (time.controlled/reset-time!)
-     (doseq [e# ~inputs] 
+     (doseq [e# ~inputs]
        (when-let [t# (:time e#)]
          (time.controlled/advance! t#))
        (stream# e#))

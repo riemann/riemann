@@ -129,7 +129,8 @@
               (test/with-test-env
                 (set-config-file! config)
                 (riemann.config/include @config-file)
-                (binding [test/*streams* (:streams @config/next-core)]
+                (reset! riemann.config/core @riemann.config/next-core)
+                (binding [test/*test-core* @config/core]
                   (let [test-name-pattern (if test-name (re-pattern test-name) #".*-test")
                         results (run-tests test-name-pattern)]
                     (if (and (zero? (:error results))
