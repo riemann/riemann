@@ -121,7 +121,7 @@
     (reset! calls [])
     (testing "deprecated influx stream with default opts"
       (let [k (influxdb/influxdb
-               {:host "aphyr.com"
+               {:host "127.0.0.1"
                 :version :deprecated
                 :db "foodb"
                 :port 9999
@@ -285,7 +285,7 @@
     (reset! calls [])
     (testing "new influxdb stream with default opts"
       (let [k (influxdb/influxdb
-               {:host "aphyr.com"
+               {:host "127.0.0.1"
                 :version :new-stream
                 :db "foodb"
                 :port 9999
