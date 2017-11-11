@@ -1,41 +1,41 @@
 (ns riemann.client-test
-  (:use riemann.common
-        riemann.core
-        riemann.transport.tcp
-        riemann.client
-        [riemann.index :only [index]]
-        [riemann.logging :only [suppress]]
-        clojure.test))
+  (:require [riemann.client :refer :all]
+            [riemann.common :refer :all]
+            [riemann.core :refer :all]
+            [riemann.index :refer [index]]
+            [riemann.logging :refer [suppress]]
+            [riemann.transport.tcp :refer :all]
+            [clojure.test :refer :all]))
 
 (riemann.logging/init)
 
 (deftest reconnect
-         (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
-                   (let [server (tcp-server)
-                         core   (transition! (core) {:services [server]})
-                         client (tcp-client)]
-                     (.. client transport reconnectDelay (set 0))
-                     (try
-                       ; Initial connection works
-                       (is @(send-event client {:service "test"}))
+  (suppress ["riemann.transport.tcp" "riemann.core" "riemann.pubsub"]
+    (let [server (tcp-server)
+          core   (transition! (core) {:services [server]})
+          client (tcp-client)]
+      (.. client transport reconnectDelay (set 0))
+      (try
+        ; Initial connection works
+        (is @(send-event client {:service "test"}))
 
-                       ; Kill server; should fail.
-                       (stop! core)
-                       (is (thrown? java.io.IOException
-                                    @(send-event client {:service "test"})))
+        ; Kill server; should fail.
+        (stop! core)
+        (is (thrown? java.io.IOException
+                     @(send-event client {:service "test"})))
 
-                       ; Restart server; should work
-                       (start! core)
-                       (Thread/sleep 200)
+        ; Restart server; should work
+        (start! core)
+        (Thread/sleep 200)
 
-                       (try
-                         @(send-event client {:service "test"})
-                         (finally
-                           (stop! core)))
+        (try
+          @(send-event client {:service "test"})
+          (finally
+            (stop! core)))
 
-                       (finally
-                         (close! client)
-                         (stop! core))))))
+        (finally
+          (close! client)
+          (stop! core))))))
 
 ; Check that server error messages are correctly thrown.
 (deftest server-errors

@@ -1,15 +1,14 @@
 (ns riemann.blueflood-test
-  (:use riemann.blueflood
-        riemann.streams
-        riemann.time.controlled
-        riemann.time
-        [riemann.test :refer [run-stream]]
-        [riemann.config :refer [apply!]]
-        clojure.test)
-  (:require 
+  (:require [riemann.blueflood :refer :all]
+            [riemann.config :refer [apply!]]
             [riemann.logging :as logging]
+            [riemann.streams :refer :all]
+            [riemann.test :refer [run-stream]]
+            [riemann.time.controlled :refer :all]
+            [riemann.time :refer :all]
             [cheshire.core :as json]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [clojure.test :refer :all]))
 
 (logging/init)
 
@@ -25,7 +24,7 @@
 (defn test-helper [opts]
   (let [service (str (java.util.UUID/randomUUID))
         host "a"
-        query-url (format query-url-template host service) 
+        query-url (format query-url-template host service)
         timestamp 3
         value 3
         input
