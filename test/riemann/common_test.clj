@@ -1,93 +1,92 @@
 (ns riemann.common-test
-  (:use riemann.common)
-  (:use clojure.test))
+  (:require [riemann.common :refer :all]
+            [clojure.test :refer :all]))
 
 (deftest iso8601->unix-test
-         (let [times (map iso8601->unix
-                          ["2013-04-15T18:06:58-07:00"
-                          "2013-04-15T18:06:58.123+11:00"
-                           "2013-04-15T18:06:58Z"
-                           "2013-04-15"])]
-           (is (= times [1366074418
-                         1366009618
-                         1366049218
-                         1365984000]))))
+  (let [times (map iso8601->unix
+                   ["2013-04-15T18:06:58-07:00"
+                    "2013-04-15T18:06:58.123+11:00"
+                    "2013-04-15T18:06:58Z"
+                    "2013-04-15"])]
+    (is (= times [1366074418
+                  1366009618
+                  1366049218
+                  1365984000]))))
 
 (deftest subset-test
-         (are [a b] (subset? a b)
-              []    []
-              []    [1 2 3]
-              [1]   [1]
-              [1]   [2 1 3]
-              [1 2] [1 2 3]
-              [1 2] [2 3 1])
+  (are [a b] (subset? a b)
+    []    []
+    []    [1 2 3]
+    [1]   [1]
+    [1]   [2 1 3]
+    [1 2] [1 2 3]
+    [1 2] [2 3 1])
 
-         (are [a b] (not (subset? a b))
-              [1]   []
-              [1 2] [1]
-              [1]   [2]
-              [1]   [2 3]
-              [1 2] [1 3]
-              [1 2] [3 1]))
+  (are [a b] (not (subset? a b))
+    [1]   []
+    [1 2] [1]
+    [1]   [2]
+    [1]   [2 3]
+    [1 2] [1 3]
+    [1 2] [3 1]))
 
 (deftest overlap-test
-         (are [a b] (overlap? a b)
-              [1 2] [1]
-              [1]   [1]
-              [1 2] [2 3]
-              [3 2] [1 3]
-              [1 3] [3 1])
+  (are [a b] (overlap? a b)
+    [1 2] [1]
+    [1]   [1]
+    [1 2] [2 3]
+    [3 2] [1 3]
+    [1 3] [3 1])
 
-         (are [a b] (not (overlap? a b))
-              []     []
-              [1]    []
-              [1]    [2]
-              [3]    [1 2]
-              [1 2]  [3 4]))
+  (are [a b] (not (overlap? a b))
+    []     []
+    [1]    []
+    [1]    [2]
+    [3]    [1 2]
+    [1 2]  [3 4]))
 
 (deftest disjoint-test
-         (are [a b] (disjoint? a b)
-              []     []
-              [1]    []
-              [1]    [2]
-              [3]    [1 2]
-              [1 2]  [3 4])
+  (are [a b] (disjoint? a b)
+    []     []
+    [1]    []
+    [1]    [2]
+    [3]    [1 2]
+    [1 2]  [3 4])
 
-         (are [a b] (not (disjoint? a b))
-              [1 2] [1]
-              [1]   [1]
-              [1 2] [2 3]
-              [3 2] [1 3]
-              [1 3] [3 1]))
+  (are [a b] (not (disjoint? a b))
+    [1 2] [1]
+    [1]   [1]
+    [1 2] [2 3]
+    [3 2] [1 3]
+    [1 3] [3 1]))
 
 (deftest subject-test
-         (let [s #'subject]
-           (are [events subject] (= (s events) subject)
-                [] ""
+  (let [s #'subject]
+    (are [events subject] (= (s events) subject)
+      [] ""
 
-                [{}] ""
+      [{}] ""
 
-                [{:host "foo"}] "foo"
+      [{:host "foo"}] "foo"
 
-                [{:host "foo"} {:host "bar"}] "foo and bar"
+      [{:host "foo"} {:host "bar"}] "foo and bar"
 
-                [{:host "foo"} {:host "bar"} {:host "baz"}]
-                "foo, bar, baz"
+      [{:host "foo"} {:host "bar"} {:host "baz"}]
+      "foo, bar, baz"
 
-                [{:host "foo"} {:host "baz"} {:host "bar"} {:host "baz"}]
-                "foo, baz, bar"
+      [{:host "foo"} {:host "baz"} {:host "bar"} {:host "baz"}]
+      "foo, baz, bar"
 
-                [{:host 1} {:host 2} {:host 3} {:host 4} {:host 5}]
-                "5 hosts"
+      [{:host 1} {:host 2} {:host 3} {:host 4} {:host 5}]
+      "5 hosts"
 
-                [{:host "foo" :state "ok"}] "foo ok"
+      [{:host "foo" :state "ok"}] "foo ok"
 
-                [{:host "foo" :state "ok"} {:host "bar" :state "ok"}]
-                "foo and bar ok"
+      [{:host "foo" :state "ok"} {:host "bar" :state "ok"}]
+      "foo and bar ok"
 
-                [{:host "foo" :state "error"} {:host "bar" :state "ok"}]
-                "foo and bar error and ok"
-                )))
+      [{:host "foo" :state "error"} {:host "bar" :state "ok"}]
+      "foo and bar error and ok")))
 
 (deftest count-string-bytes-test
   (is (= (count-string-bytes "") 0))
@@ -124,7 +123,7 @@
 
   (let [e (ex-info "fake test error" {})]
     (is (= e
-         (:exception (exception->event e)))))
+           (:exception (exception->event e)))))
 
   (is (= "original-event"
          (:service (:event (exception->event (ex-info "fake test error" {}) {:service "original-event"}))))))
