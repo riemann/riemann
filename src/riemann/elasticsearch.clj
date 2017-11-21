@@ -73,7 +73,9 @@
             es-endpoint (format "%s/%s%s/%s"
                                 (:es-endpoint opts)
                                 (:es-index opts)
-                                (time-format/unparse (time-format/formatter (:index-suffix opts)) (datetime-from-event event))
+                                (if (empty? (:index-suffix opts))
+                                  ""
+                                  (time-format/unparse (time-format/formatter (:index-suffix opts)) (datetime-from-event event)))
                                 (:type opts))
             http-options {}]
         (post
