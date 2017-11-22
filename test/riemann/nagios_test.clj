@@ -1,6 +1,6 @@
 (ns riemann.nagios-test
   (:use riemann.nagios
-        clj-nsca.core
+        cljr-nsca.core
         clojure.test)
   (:require [riemann.logging :as logging]))
 
@@ -22,6 +22,6 @@
 (deftest test-stream
   (testing "Events get transformed and are sent"
   (let [message (atom nil)]
-    (with-redefs [clj-nsca.core/send-message (fn [_ msg] (reset! message msg))]
+    (with-redefs [cljr-nsca.core/send-message (fn [_ msg] (reset! message msg))]
       ((nagios {}) test-event))
     (is (= expected @message)))))
