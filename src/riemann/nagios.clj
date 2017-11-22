@@ -1,6 +1,6 @@
 (ns riemann.nagios
   "Forwards events to Nagios via NSCA"
-  (:require [clj-nsca.core :as nsca]))
+  (:require [cljr-nsca.core :as nsca]))
 
 (def NONE nsca/NO_ENCRYPTION)
 (def XOR nsca/XOR_ENCRYPTION)
