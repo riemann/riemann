@@ -4,10 +4,15 @@ if [ -f /etc/sysconfig/riemann ]; then
     . /etc/sysconfig/riemann
 fi
 
+JAVA_VERSION=$(java -version 2>&1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*"/\1\2/p;')
 JAR="/usr/lib/riemann/riemann.jar:$EXTRA_CLASSPATH"
 CONFIG="/etc/riemann/riemann.config"
 COMMAND="start"
-AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
+if [[ "$JAVA_VERSION" -le 18 ]]; then
+  AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
+else
+  AGGRESSIVE_OPTS="-server -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
+fi
 
 usage()
 {
@@ -55,4 +60,4 @@ for arg in "$@"; do
   esac
 done
 
- exec java $EXTRA_JAVA_OPTS $OPTS -cp "$JAR" riemann.bin "$COMMAND" "$CONFIG"
+exec java $EXTRA_JAVA_OPTS $OPTS -cp "$JAR" riemann.bin "$COMMAND" "$CONFIG"
