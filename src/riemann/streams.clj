@@ -1295,9 +1295,18 @@
 (def tagged "Alias for tagged-all" tagged-all)
 
 (defn expired
-  "Passes on events with :state \"expired\"."
+  "Passes on expired events."
   [& children]
-  (apply match :state "expired" children))
+  (fn stream [event]
+    (when (expired? event)
+      (call-rescue event children))))
+
+(defn not-expired
+  "Passes on not expired events."
+  [& children]
+  (fn stream [event]
+    (when (not (expired? event))
+      (call-rescue event children))))
 
 (defn with
   "Constructs a copy of each incoming event with new values for the given keys,
