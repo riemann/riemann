@@ -1763,3 +1763,45 @@
                                  {:time 9 :host :baz :metric 5}
                                  {:time 1 :host :foo :metric -4}
                                  {:time 100 :host :foo :metric 89}]))
+
+(deftest not-expired-test
+  (testing "state expired"
+    (test-stream (not-expired)
+                 [{:state "expired"}
+                  {:state "ok"}
+                  {:state "warning"}
+                  {:state "expired"}]
+                 [{:state "ok"}
+                  {:state "warning"}]))
+  (testing "expired time"
+    (let [out (atom [])
+          child #(swap! out conj %)
+          s (not-expired child)]
+      (s {:time 0 :ttl 10})
+      (advance! 10)
+      (s {:time 1 :ttl 5})
+      (s {:time 6 :ttl 2})
+      (s {:time 10 :ttl 2})
+      (is (= @out [{:time 0 :ttl 10}
+                   {:time 10 :ttl 2}])))))
+
+(deftest expired-test
+  (testing "state expired"
+    (test-stream (expired)
+                 [{:state "expired"}
+                  {:state "ok"}
+                  {:state "warning"}
+                  {:state "expired"}]
+                 [{:state "expired"}
+                  {:state "expired"}]))
+  (testing "expired time"
+    (let [out (atom [])
+          child #(swap! out conj %)
+          s (expired child)]
+      (s {:time 0 :ttl 10})
+      (advance! 10)
+      (s {:time 1 :ttl 5})
+      (s {:time 6 :ttl 2})
+      (s {:time 10 :ttl 2})
+      (is (= @out [{:time 1 :ttl 5}
+                   {:time 6 :ttl 2}])))))
