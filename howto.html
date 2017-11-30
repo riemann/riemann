@@ -2802,7 +2802,26 @@ view.</p>
   </div>
 </div>
 
-<h3>Forward to Kafka</h3>
+<h3>Kafka Integration</h3>
+
+<h4>Consume from Kafka</h4>
+
+<div class="row">
+  <div class="sixcol">
+    <p>You can consume events from Kafka topics by configuring a <a href="api/riemann.config.html#var-kafka-consumer">Kafka consumer</a>.</p>    
+    <p>For a full list of <code>:consumer.config</code> options see the Kafka consumer docs. Note that the <code>:enable.auto.commit</code> option is ignored and defaults to true.</p>
+  </div>
+
+  <div class="sixcol last">
+{% highlight clj %}
+(kafka-consumer {:consumer.config {:bootstrap.servers "brok01.foo:9092" 
+                                   :group.id "riemann"} 
+                 :topics ["metrics"]})
+{% endhighlight %}
+  </div>
+</div>
+
+<h4>Forward to Kafka</h4>
 
 <div class="row">
   <div class="sixcol">
