@@ -104,7 +104,7 @@
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
 
-(defn run
+(defn run!
   "Start Riemann with the given setup function. The setup function is responsible
   for executing code that you would normally put into your riemann.config file,
   e.g. setting up streams."
@@ -127,7 +127,7 @@
    (case command
      "start" (try
                (set-config-file! config)
-               (run #(riemann.config/include @config-file))
+               (run! #(riemann.config/include @config-file))
                (catch Exception e
                  (error e "Couldn't start")))
 
