@@ -1,10 +1,10 @@
 (ns riemann.librato-test
-  (:use riemann.librato
-        [riemann.time :only [unix-time]]
-        clj-librato.metrics
-        clojure.math.numeric-tower
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.librato :refer :all]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [clj-librato.metrics :refer :all]
+            [clojure.math.numeric-tower :refer :all]
+            [clojure.test :refer :all]))
 
 (def user   (System/getenv "LIBRATO_METRICS_USER"))
 (def api-key (System/getenv "LIBRATO_METRICS_API_KEY"))

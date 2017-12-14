@@ -1,13 +1,12 @@
 (ns riemann.logentries-test
-  (:import
-   (java.net Socket
-             ServerSocket)
-   (java.io BufferedReader
-            InputStreamReader))
-  (:use [riemann.logentries :only [logentries event-to-le-format]]
-        riemann.time
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logentries :refer [logentries event-to-le-format]]
+            [riemann.logging :as logging]
+            [riemann.time :refer :all]
+            [clojure.test :refer :all])
+  (:import (java.net Socket
+                     ServerSocket)
+           (java.io BufferedReader
+                    InputStreamReader)))
 
 (logging/init)
 

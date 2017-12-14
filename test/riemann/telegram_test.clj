@@ -1,8 +1,8 @@
 (ns riemann.telegram-test
-  (:require [clojure.test :refer :all]
+  (:require [riemann.logging :as logging]
             [riemann.telegram :refer :all]
-            [riemann.logging :as logging]
-            [riemann.test-utils :refer [with-mock]]))
+            [riemann.test-utils :refer [with-mock]]
+            [clojure.test :refer :all]))
 
 (def api-token (System/getenv "TELEGRAM_API_TOKEN"))
 (def chat-id (System/getenv "TELEGRAM_CHAT_ID"))

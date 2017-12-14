@@ -1,16 +1,14 @@
 (ns riemann.core-test
-  (:require riemann.transport.tcp
-            riemann.streams
-            [riemann.logging :as logging])
-  (:use riemann.client
-        riemann.common
-        [riemann.index :only [index]]
-        riemann.time.controlled
-        riemann.core
-        clojure.test
-        [clojure.algo.generic.functor :only [fmap]]
-        [riemann.service :only [Service ServiceEquiv]]
-        [riemann.time :only [unix-time]]))
+  (:require [riemann.client :refer :all]
+            [riemann.common :refer [event]]
+            [riemann.core :refer :all]
+            [riemann.index :refer [index]]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [riemann.time.controlled :refer :all]
+            [riemann.service :refer [Service ServiceEquiv]]
+            [clojure.algo.generic.functor :refer [fmap]]
+            [clojure.test :refer :all]))
 
 (logging/init)
 (use-fixtures :each reset-time!)

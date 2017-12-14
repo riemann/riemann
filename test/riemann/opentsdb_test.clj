@@ -1,8 +1,8 @@
 (ns riemann.opentsdb-test
-  (:use riemann.opentsdb
-        [riemann.time :only [unix-time]]
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [riemann.opentsdb :refer :all]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

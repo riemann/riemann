@@ -1,15 +1,15 @@
 (ns riemann.graphite-test
-  (:use riemann.graphite
-        [riemann.time :only [unix-time]]
-        [riemann.common :only [event]]
-        clojure.tools.logging
-        clojure.test)
-  (:require [riemann.logging :as logging]
+  (:require [riemann.common :refer [event]]
             [riemann.client :as client]
-            [riemann.index :as index]
             [riemann.core :refer [transition! core stop! wrap-index]]
+            [riemann.graphite :refer :all]
+            [riemann.index :as index]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
             [riemann.transport.tcp :refer [tcp-server]]
-            [riemann.transport.graphite :refer [graphite-server]]))
+            [riemann.transport.graphite :refer [graphite-server]]
+            [clojure.test :refer :all]
+            [clojure.tools.logging :refer :all]))
 
 (logging/init)
 

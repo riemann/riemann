@@ -1,10 +1,10 @@
 (ns riemann.shinken-test
-  (:use [riemann.time :only [unix-time]]
-        riemann.shinken
-        clojure.test)
-  (:require [clj-http.client :as http]
+  (:require [riemann.logging :as logging]
             [riemann.test-utils :refer [with-mock]]
-            [riemann.logging :as logging]))
+            [riemann.time :refer [unix-time]]
+            [riemann.shinken :refer :all]
+            [clj-http.client :as http]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

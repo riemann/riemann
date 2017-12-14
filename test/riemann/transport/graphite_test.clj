@@ -1,11 +1,11 @@
 (ns riemann.transport.graphite-test
-  (:use clojure.test
-        [riemann.common :only [event]]
-        riemann.transport.graphite
-        [slingshot.slingshot :only [try+]])
-  (:require [riemann.logging :as logging]
+  (:require [riemann.common :refer [event]]
             [riemann.core :as core]
-            [riemann.graphite :as client]))
+            [riemann.graphite :as client]
+            [riemann.logging :as logging]
+            [riemann.transport.graphite :refer :all]
+            [clojure.test :refer :all]
+            [slingshot.slingshot :refer [try+]]))
 
 (deftest decode-graphite-line-success-test
   (is (= (event {:service "name", :metric 123.0, :time 456})

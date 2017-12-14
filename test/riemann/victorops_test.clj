@@ -1,8 +1,8 @@
 (ns riemann.victorops-test
-  (:require [clj-http.client :as client]
-            [clojure.test :refer :all]
-            [riemann.victorops :as vo]
-            [riemann.test-utils :refer [with-mock]]))
+  (:require [riemann.victorops :as vo]
+            [riemann.test-utils :refer [with-mock]]
+            [clj-http.client :as client]
+            [clojure.test :refer :all]))
 
 (deftest victorops-test
   (with-mock [calls client/post]

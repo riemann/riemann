@@ -1,7 +1,7 @@
 (ns riemann.pool-test
-  (:use riemann.pool
-        [slingshot.slingshot :only [try+]]
-        clojure.test))
+  (:require [riemann.pool :refer :all]
+            [clojure.test :refer :all]
+            [slingshot.slingshot :refer [try+]]))
 
 (deftest claim-release-test
          (let [x (atom 0)

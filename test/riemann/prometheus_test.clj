@@ -1,9 +1,9 @@
 (ns riemann.prometheus-test
-  (:require [clj-http.client :as client]
-            [clojure.test :refer :all]
+  (:require [riemann.logging :as logging]
             [riemann.prometheus :as prometheus]
-            [riemann.logging :as logging]
-            [riemann.test-utils :refer [with-mock]]))
+            [riemann.test-utils :refer [with-mock]]
+            [clj-http.client :as client]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

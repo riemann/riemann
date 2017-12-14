@@ -1,6 +1,6 @@
 (ns riemann.twilio-test
-  (:require [riemann.twilio :as twilio]
-            [riemann.common :refer [body]]
+  (:require [riemann.common :refer [body]]
+            [riemann.twilio :as twilio]
             [clj-http.client :as client]
             [clojure.test :refer [deftest testing is are]]))
 

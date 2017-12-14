@@ -1,10 +1,10 @@
 (ns riemann.pagerduty-test
   (:require [riemann.pagerduty :as pg]
-            [clj-http.client :as client]
             [riemann.test-utils :refer [with-mock]]
-            [cheshire.core :as json]
             [riemann.time :refer :all]
             [riemann.time.controlled :refer :all]
+            [cheshire.core :as json]
+            [clj-http.client :as client]
             [clojure.test :refer :all]))
 
 (use-fixtures :once control-time!)

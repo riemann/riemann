@@ -1,10 +1,10 @@
 (ns riemann.keenio-test
-  (:require [clj-http.client :as client]
+  (:require [riemann.keenio :as k]
+            [riemann.time :refer [unix-time]]
+            [riemann.test-utils :refer [with-mock]]
             [cheshire.core :as json]
             [clojure.test :refer :all]
-            [riemann.keenio :as k]
-            [riemann.time :refer [unix-time]]
-            [riemann.test-utils :refer [with-mock]]))
+            [clj-http.client :as client]))
 
 (deftest keenio-test
   (with-mock [calls client/post]

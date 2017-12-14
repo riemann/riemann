@@ -1,8 +1,8 @@
 (ns riemann.kairosdb-test
-  (:use riemann.kairosdb
-        [riemann.time :only [unix-time]]
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.kairosdb :refer :all]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]))
 
 (logging/init)
 
