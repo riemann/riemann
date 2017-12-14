@@ -1,6 +1,6 @@
 (ns riemann.netuitive-test
-  (:use riemann.netuitive
-        clojure.test))
+  (:require [riemann.netuitive :refer :all]
+            [clojure.test :refer :all]))
 
 (def test-event {:host "riemann.local" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})
 (def other-event {:host "riemann.local" :service "netuitive other" :state "ok" :description "Successful test" :metric 5 :time (/ (System/currentTimeMillis) 1000) :tags ["other"]})

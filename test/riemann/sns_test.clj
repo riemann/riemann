@@ -1,9 +1,9 @@
 (ns riemann.sns-test
-  (:import [com.amazonaws.services.sns.model PublishResult])
-  (:use [riemann.time :only [unix-time]]
-        [riemann.common :only [time-at count-string-bytes]]
-        riemann.sns
-        clojure.test))
+  (:require [riemann.common :refer [time-at count-string-bytes]]
+            [riemann.sns :refer :all]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all])
+  (:import [com.amazonaws.services.sns.model PublishResult]))
 
 (def env-access-key-id     (System/getenv "AWS_ACCESS_KEY_ID"))
 (def env-secret-access-key (System/getenv "AWS_SECRET_ACCESS_KEY"))

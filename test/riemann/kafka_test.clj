@@ -1,11 +1,11 @@
 (ns riemann.kafka-test
-  (:use riemann.kafka
-        [riemann.time :only [unix-time]]
-        [riemann.common :only [event]]
-        clojure.test)
-  (:require [kinsky.client :as client]
+  (:require [riemann.common :refer [event]]
+            [riemann.core :as core]
+            [riemann.kafka :refer :all]
             [riemann.logging :as logging]
-            [riemann.core :as core]))
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]
+            [kinsky.client :as client]))
 
 (logging/init)
 

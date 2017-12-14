@@ -1,14 +1,12 @@
 (ns riemann.influxdb-test
-  (:require
-   [clojure.test :refer :all]
-   [riemann.influxdb :as influxdb]
-   [riemann.logging :as logging]
-   [riemann.test-utils :refer [with-mock]]
-   [riemann.time :refer [unix-time]])
-  (:import
-   (java.util.concurrent TimeUnit)
-   (org.influxdb InfluxDBFactory InfluxDB$ConsistencyLevel)
-   (org.influxdb.dto BatchPoints Point)))
+  (:require [riemann.influxdb :as influxdb]
+            [riemann.logging :as logging]
+            [riemann.test-utils :refer [with-mock]]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all])
+  (:import (java.util.concurrent TimeUnit)
+           (org.influxdb InfluxDBFactory InfluxDB$ConsistencyLevel)
+           (org.influxdb.dto BatchPoints Point)))
 
 (logging/init)
 

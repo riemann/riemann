@@ -1,13 +1,9 @@
 (ns riemann.deps-test
-  (:require [riemann.index  :as index]
-            [riemann.core   :refer [wrap-index]]
-            [riemann.common :refer [event]]
+  (:require [riemann.common :refer [event]]
+            [riemann.core   :refer :all ]
             [riemann.deps   :refer :all]
-            [clojure.test   :refer :all])
-  (:use riemann.deps
-        riemann.core
-        [riemann.common :only [event]]
-        clojure.test))
+            [riemann.index  :as index]
+            [clojure.test   :refer :all]))
 
 (defn context [events]
   (let [i (wrap-index (index/nbhm-index))]

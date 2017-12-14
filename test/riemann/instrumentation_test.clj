@@ -1,9 +1,9 @@
 (ns riemann.instrumentation-test
-  (:require [riemann.logging :as logging])
-  (:use clojure.test
-        riemann.instrumentation
-        riemann.time.controlled
-        [riemann.time :only [unix-time]]))
+  (:require [riemann.instrumentation :refer :all]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [riemann.time.controlled :refer :all]
+            [clojure.test :refer :all]))
 
 (logging/init)
 (use-fixtures :each reset-time!)
@@ -15,7 +15,7 @@
                                [0 3/5 1.0])]
            (dotimes [i 100]
              (measure-latency r (Thread/sleep 1)))
-           
+
            (advance! 5)
            (let [es (events r)]
              ; Should have merged from the original event

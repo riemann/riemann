@@ -1,7 +1,7 @@
 (ns riemann.hipchat-test
-  (:use riemann.hipchat
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.hipchat :refer :all]
+            [riemann.logging :as logging]
+            [clojure.test :refer :all]))
 
 (def server (System/getenv "HIPCHAT_SERVER"))
 (def api-key (System/getenv "HIPCHAT_API_KEY"))

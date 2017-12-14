@@ -1,19 +1,19 @@
 (ns riemann.transport-test
-  (:use riemann.common
-        riemann.core
-        riemann.transport.tcp
-        riemann.transport.udp
-        riemann.transport.websockets
-        clojure.test)
-  (:require [clj-http.client :as http]
-            [clojure.java.io :as io]
+  (:require [riemann.client :as client]
+            [riemann.codec :as codec]
+            [riemann.common :refer :all]
+            [riemann.core :refer :all]
+            [riemann.index :as index]
             [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
             [riemann.transport.sse :refer [sse-server]]
+            [riemann.transport.tcp :refer :all]
+            [riemann.transport.udp :refer :all]
+            [riemann.transport.websockets :refer :all]
             [cheshire.core :as json]
-            [riemann.client :as client]
-            [riemann.codec :as codec]
-            [riemann.index :as index])
+            [clj-http.client :as http]
+            [clojure.java.io :as io]
+            [clojure.test :refer :all])
   (:import (java.net Socket
                      SocketException
                      InetAddress)

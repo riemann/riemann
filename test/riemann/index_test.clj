@@ -1,13 +1,13 @@
 (ns riemann.index-test
   (:refer-clojure :exclude [update])
-  (:use riemann.index
-        riemann.core
-        riemann.query
-        [riemann.instrumentation :only [events]]
-        [riemann.common :only [event]]
-        [riemann.time :only [unix-time]]
-        clojure.test)
-  (:require [riemann.service :as service]))
+  (:require [riemann.common :refer [event]]
+            [riemann.core :refer :all]
+            [riemann.index :refer :all]
+            [riemann.instrumentation :refer [events]]
+            [riemann.query :refer :all]
+            [riemann.service :as service]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]))
 
 (deftest missing-time-throws
   (riemann.logging/suppress

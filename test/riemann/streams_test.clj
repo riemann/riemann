@@ -1,14 +1,14 @@
 (ns riemann.streams-test
-  (:use riemann.streams
-        [riemann.common :exclude [match]]
-        riemann.time.controlled
-        riemann.time
-        [riemann.test :refer [run-stream run-stream-intervals test-stream
-                              with-test-stream test-stream-intervals]]
-        clojure.test)
-  (:require [riemann.index :as index]
+  (:require [riemann.common :refer :all :exclude [match]]
             [riemann.folds :as folds]
-            [riemann.logging :as logging])
+            [riemann.index :as index]
+            [riemann.logging :as logging]
+            [riemann.streams :refer :all]
+            [riemann.test :refer [run-stream run-stream-intervals test-stream
+                                  with-test-stream test-stream-intervals]]
+            [riemann.time :refer :all]
+            [riemann.time.controlled :refer :all]
+            [clojure.test :refer :all])
   (:import (java.util.concurrent Executor
                                  CountDownLatch)))
 

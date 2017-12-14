@@ -1,6 +1,6 @@
 (ns riemann.mailgun-test
-  (:require [riemann.mailgun :as mailgun]
-            [riemann.common :refer [body]]
+  (:require [riemann.common :refer [body]]
+            [riemann.mailgun :as mailgun]
             [clj-http.client :as client]
             [clojure.test :refer [deftest testing is are]]))
 

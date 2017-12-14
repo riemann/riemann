@@ -1,7 +1,7 @@
 (ns riemann.opsgenie-test
-  (:use riemann.opsgenie
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [riemann.opsgenie :refer :all]
+            [clojure.test :refer :all]))
 
 (def service-key (System/getenv "OPSGENIE_SERVICE_KEY"))
 (def recipients (System/getenv "OPSGENIE_RECIPIENTS"))

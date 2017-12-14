@@ -1,8 +1,8 @@
 (ns riemann.test-test
   "Who tests the testers?"
-  (:require [riemann.test :refer [tap io with-test-env inject!]]
-            [clojure.test :refer :all]
-            [riemann.streams :refer :all]))
+  (:require [riemann.streams :refer :all]
+            [riemann.test :refer [tap io with-test-env inject!]]
+            [clojure.test :refer :all]))
 
 (defmacro bound
   "Invokes body in a bound fn. Tests may run without a binding context, which

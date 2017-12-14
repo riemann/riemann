@@ -1,13 +1,13 @@
 (ns riemann.transport.opentsdb-test
-  (:use clojure.test
-        [riemann.common :only [event]]
-        riemann.transport.opentsdb
-        [slingshot.slingshot :only [try+]])
-  (:require [riemann.logging :as logging]
+  (:require [riemann.common :refer [event]]
             [riemann.core :as core]
             [riemann.opentsdb :as client]
+            [riemann.logging :as logging]
             [riemann.pubsub :as pubsub]
-            [clojure.pprint :refer [pprint]]))
+            [riemann.transport.opentsdb :refer :all]
+            [clojure.pprint :refer [pprint]]
+            [clojure.test :refer :all]
+            [slingshot.slingshot :refer [try+]]))
 
 (deftest decode-opentsdb-line-success-test
   (is (= (event {:service "name" :description "name" :metric 456.0 :time 123})

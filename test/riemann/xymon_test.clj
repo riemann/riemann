@@ -1,9 +1,8 @@
 (ns riemann.xymon-test
-  (:use riemann.xymon
-        [riemann.time :only [unix-time]]
-        clojure.test)
   (:require [riemann.logging :as logging]
-            [clojure.string]))
+            [riemann.time :refer [unix-time]]
+            [riemann.xymon :refer :all]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

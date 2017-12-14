@@ -1,7 +1,7 @@
 (ns riemann.query-test
-  (:use riemann.query
-        [riemann.time :only [linear-time]]
-        clojure.test))
+  (:require [riemann.query :refer :all]
+            [riemann.time :refer [linear-time]]
+            [clojure.test :refer :all]))
 
 (deftest ast-test
   (are [s expr] (= (ast s) expr)

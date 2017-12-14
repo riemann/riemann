@@ -1,10 +1,10 @@
 (ns riemann.elasticsearch-test
-  (:use riemann.elasticsearch
-        clojure.test)
-  (:require [clj-http.client :as http]
-            [cheshire.core :as json]
+  (:require [riemann.elasticsearch :refer :all]
+            [riemann.logging :as logging]
             [riemann.test-utils :refer [with-mock]]
-            [riemann.logging :as logging]))
+            [cheshire.core :as json]
+            [clj-http.client :as http]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

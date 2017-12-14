@@ -1,8 +1,8 @@
 (ns riemann.datadog-test
-  (:use riemann.datadog
-        [riemann.time :only [unix-time]]
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.datadog :refer :all]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]))
 
 (def datadog-key (or (System/getenv "DATADOG_API_KEY")
                      (do (println "export DATADOG_API_KEY=\"...\" to run these tests.")
