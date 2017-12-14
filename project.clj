@@ -42,7 +42,7 @@
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.3"]
     [amazonica "0.3.95" :exclusions [joda-time]]
-    [spootnik/kinsky "0.1.16"]
+    [spootnik/kinsky "0.1.20"]
     [pjstadig/humane-test-output "0.8.1"]]
   :plugins [[lein-codox "0.10.2"]
             [lein-difftest "2.0.0"]
