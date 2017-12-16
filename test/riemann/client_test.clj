@@ -49,7 +49,7 @@
       (try
         (is (thrown-with-msg?
               io.riemann.riemann.client.ServerError
-              #"^mismatched input 'no' expecting \{<EOF>, 'or', 'and'\}$"
+              #"^mismatched input 'no' expecting \{<EOF>, 'and', 'or'\}$"
               @(query client "oh no not again")))
         (finally
           (close! client)
