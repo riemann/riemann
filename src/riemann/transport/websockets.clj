@@ -47,7 +47,9 @@
                                  (when (pred event)
                                    ;; http-kit's send does not provide a way
                                    ;; to measure output latency
-                                   (http/send! ch (event-to-json event))))
+                                   (measure-latency
+                                    (:out stats)
+                                    (http/send! ch (event-to-json event)))))
                                true)]
       (info "New websocket subscription to" topic ":" query)
 
@@ -214,10 +216,6 @@
                            :metric (:rate in)}]
 
                          ; Latencies
-                         (map (fn [[q latency]]
-                                {:service (str svc " out latency " q)
-                                 :metric latency})
-                              (:latencies out))
                          (map (fn [[q latency]]
                                 {:service (str svc " in latency " q)
                                  :metric latency})
