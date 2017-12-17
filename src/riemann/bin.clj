@@ -9,6 +9,7 @@
             [cemerick.pomegranate :as pom]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer :all])
+  (:import (clojure.lang DynamicClassLoader))
   (:gen-class :name riemann.bin))
 
 (def config-file
@@ -105,6 +106,13 @@
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
 
+(defn ensure-dynamic-classloader
+  []
+  (let [thread (Thread/currentThread)
+        cl (.getContextClassLoader thread)]
+    (when-not (instance? DynamicClassLoader cl)
+      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
+
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   ([]
@@ -113,6 +121,7 @@
    (-main "start" config))
   ([command config & [test-name]]
    (logging/init)
+   (ensure-dynamic-classloader)
    (case command
      "start" (try
                (info "PID" (pid))
