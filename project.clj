@@ -21,7 +21,7 @@
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "4.11"]
     [org.influxdb/influxdb-java "2.8"]
-    [com.cemerick/pomegranate "1.0.0"
+    [com.cemerick/pomegranate "0.3.1"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.0"]
