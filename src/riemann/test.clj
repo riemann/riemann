@@ -104,11 +104,12 @@
        persistent!))
 
 (defmacro with-test-env
-  "Prepares a fresh set of taps, binds *testing* to true, and runs body in an
-  implicit do. Wrap your entire test suite (including defining the streams
-  themselves) in this macro. Note that you'll have to use (eval) or
-  (load-file), etc, in order for this to work because the binding takes effect
-  at *run time*, not *compile time*--so make your compile time run time and wow
+  "Prepares a fresh set of taps, binds *testing* to true, initiates controlled
+  time and resets the schedulerand runs body in an implicit do. Wrap your entire
+  test suite (including defining the streams themselves) in this macro. Note that
+  you'll have to use (eval) or (load-file), etc, in order for this to work
+  because the binding takes effect at *run time*, not *compile time*--so make
+  your compile time run time and wow
   this gets confusing.
 
   (with-test-env
@@ -119,7 +120,9 @@
   [& body]
   `(binding [*testing* true
              *taps*    (atom {})]
-     ~@body))
+     (time.controlled/with-controlled-time!
+       (time.controlled/reset-time!)
+       ~@body)))
 
 (defn inject!
   "Takes a sequence of streams, initiates controlled time and resets the
