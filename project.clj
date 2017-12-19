@@ -15,7 +15,6 @@
     [org.clojure/core.cache "0.6.5"]
     [org.clojure/data.priority-map "0.0.7"]
     [org.clojure/java.classpath "0.2.3"]
-    [javax.xml.bind/jaxb-api "2.3.0"]
 
     [org.slf4j/log4j-over-slf4j "1.7.25"]
     [ch.qos.logback/logback-classic "1.2.3"]
@@ -39,7 +38,7 @@
     [clj-antlr "0.2.4"]
     [io.netty/netty-all "4.1.19.Final"]
     [riemann-clojure-client "0.4.5"]
-    [less-awful-ssl "1.0.1"]
+    [less-awful-ssl "1.0.2"]
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.3"]
     [amazonica "0.3.95" :exclusions [joda-time]]
