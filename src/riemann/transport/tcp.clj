@@ -23,6 +23,7 @@
            [io.netty.channel.nio NioEventLoopGroup]
            [io.netty.channel.socket.nio NioServerSocketChannel])
   (:require [less.awful.ssl :as ssl]
+            [riemann.test :as test]
             [interval-metrics.core :as metrics])
   (:use [clojure.tools.logging :only [info warn]]
         [interval-metrics.measure :only [measure-latency]]
@@ -144,43 +145,41 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking ioutil-lock
-            (locking this
-              (when-not @killer
-                (let [event-loop-group-fn (:event-loop-group-fn
-                                            netty-implementation)
-                      boss-group (event-loop-group-fn)
-                      worker-group (event-loop-group-fn)
-                      bootstrap (ServerBootstrap.)]
-
-                  ; Configure bootstrap
-                  (doto bootstrap
-                    (.group boss-group worker-group)
-                    (.channel (:channel netty-implementation))
-                    (.option ChannelOption/SO_REUSEADDR true)
-                    (.option ChannelOption/SO_BACKLOG so-backlog)
-                    (.childOption ChannelOption/SO_REUSEADDR true)
-                    (.childOption ChannelOption/SO_KEEPALIVE true)
-                    (.childHandler initializer))
-
-                  ; Start bootstrap
-                  (->> (InetSocketAddress. host port)
-                       (.bind bootstrap)
-                       (.sync)
-                       (.channel)
-                       (.add channel-group))
-                  (info "TCP server" host port "online")
-
-                  ; fn to close server
-                  (reset! killer
-                          (fn killer []
-                            (.. channel-group close awaitUninterruptibly)
-                            ; Shut down workers and boss concurrently.
-                            (let [w (shutdown-event-executor-group worker-group)
-                                  b (shutdown-event-executor-group boss-group)]
-                              @w
-                              @b)
-                            (info "TCP server" host port "shut down"))))))))
+          (when-not test/*testing*
+            (locking ioutil-lock
+              (locking this
+                (when-not @killer
+                  (let [event-loop-group-fn (:event-loop-group-fn
+                                             netty-implementation)
+                        boss-group (event-loop-group-fn)
+                        worker-group (event-loop-group-fn)
+                        bootstrap (ServerBootstrap.)]
+                    ; Configure bootstrap
+                    (doto bootstrap
+                      (.group boss-group worker-group)
+                      (.channel (:channel netty-implementation))
+                      (.option ChannelOption/SO_REUSEADDR true)
+                      (.option ChannelOption/SO_BACKLOG so-backlog)
+                      (.childOption ChannelOption/SO_REUSEADDR true)
+                      (.childOption ChannelOption/SO_KEEPALIVE true)
+                      (.childHandler initializer))
+                    ; Start bootstrap
+                    (->> (InetSocketAddress. host port)
+                         (.bind bootstrap)
+                         (.sync)
+                         (.channel)
+                         (.add channel-group))
+                    (info "TCP server" host port "online")
+                    ; fn to close server
+                    (reset! killer
+                            (fn killer []
+                              (.. channel-group close awaitUninterruptibly)
+                                        ; Shut down workers and boss concurrently.
+                              (let [w (shutdown-event-executor-group worker-group)
+                                    b (shutdown-event-executor-group boss-group)]
+                                @w
+                                @b)
+                              (info "TCP server" host port "shut down")))))))))
 
   (stop! [this]
          (locking this

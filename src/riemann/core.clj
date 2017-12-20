@@ -8,6 +8,7 @@
             [riemann.service :as service :refer [Service ServiceEquiv]]
             [riemann.index :as index :refer [Index]]
             [riemann.pubsub :as ps]
+            [riemann.test :as test]
             [riemann.instrumentation :as instrumentation]
             clojure.set))
 
@@ -32,12 +33,13 @@
   interval seconds, and sends their events to the core itself."
   [opts]
   (let [interval (long (* 1000 (get opts :interval 10)))
-        enabled? (get opts :enabled? true)]
+        enabled? (if-not test/*testing*
+                   (get opts :enabled? true)
+                   false)]
     (service/thread-service
       ::instrumentation [interval enabled?]
       (fn measure [core]
         (Thread/sleep interval)
-
         (try
           ; Take events from core and instrumented services
           (let [base (event {:host (localhost)
@@ -276,26 +278,20 @@
   streamed states have only the host and service copied, current time, and
   state expired. Expired events from the index are also published to the
   \"index\" pubsub channel.
-
   Options:
-
   :keep-keys A list of event keys which should be preserved from the indexed
              event in the expired event. Defaults to [:host :service], which
              means that when an event expires, its :host and :service are
              copied to a new event, but no other keys are preserved.
-
              The state of an expired event is always \"expired\", and its time
              is always the time that the event expired."
   ([] (reaper 10))
   ([interval] (reaper interval {}))
   ([interval opts]
-   (let [interval  (* 1000 (or interval 10))
+   (let [interval  (or interval 10)
          keep-keys (get opts :keep-keys [:host :service])]
-     (service/thread-service
-       ::reaper [interval keep-keys]
+     (service/scheduled-task-service ::reaper keep-keys interval interval
        (fn worker [core]
-         (Thread/sleep interval)
-
          (when-let [i (:index core)]
            (doseq [state (index/expire i)]
              (try

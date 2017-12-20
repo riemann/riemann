@@ -4,6 +4,7 @@
   (:require [riemann.query         :as query]
             [riemann.index         :as index]
             [riemann.pubsub        :as p]
+            [riemann.test          :as test]
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics]
             [org.httpkit.server    :as http])
@@ -182,12 +183,13 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            (when-not @server
-              (reset! server (http/run-server (ws-handler core stats)
-                                              {:ip host
-                                               :port port}))
-              (info "Websockets server" host port "online"))))
+          (when-not test/*testing*
+            (locking this
+              (when-not @server
+                (reset! server (http/run-server (ws-handler core stats)
+                                                {:ip host
+                                                 :port port}))
+                (info "Websockets server" host port "online")))))
 
   (stop! [this]
          (locking this

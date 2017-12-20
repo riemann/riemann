@@ -1,7 +1,8 @@
 (ns riemann.test-test
   "Who tests the testers?"
   (:require [riemann.streams :refer :all]
-            [riemann.test :refer [tap io with-test-env inject!]]
+            [riemann.test :refer [tap io with-test-env inject! fresh-results *results* *taps*]]
+            [riemann.time.controlled :refer :all]
             [clojure.test :refer :all]))
 
 (defmacro bound
@@ -29,15 +30,18 @@
            (ns riemann.test-test)
            (let [downstream (promise)
                  s (rate 5 (tap :cask (partial deliver downstream)))]
-             (is (= (inject! [s]
-                             [{:time 0 :metric 0}
-                              {:time 1 :metric 1}
-                              {:time 2 :metric 2}
-                              {:time 3 :metric 3}
-                              {:time 4 :metric 4}
-                              {:time 5 :metric 5}])
-                    {:cask [{:time 5 :metric 2}]}))
-             (is (= @downstream {:time 5 :metric 2}))))))))
+             (with-controlled-time!
+               (reset-time!)
+               (binding [*results* (fresh-results @*taps*)]
+                         (is (= (inject! [s]
+                                         [{:time 0 :metric 0}
+                                          {:time 1 :metric 1}
+                                          {:time 2 :metric 2}
+                                          {:time 3 :metric 3}
+                                          {:time 4 :metric 4}
+                                          {:time 5 :metric 5}])
+                                {:cask [{:time 5 :metric 2}]}))
+                         (is (= @downstream {:time 5 :metric 2}))))))))))
 
 (deftest io-suppression
   (with-test-env

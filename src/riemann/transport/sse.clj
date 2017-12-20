@@ -5,6 +5,7 @@
             [interval-metrics.core    :as metrics]
             [org.httpkit.server       :as http]
             [riemann.common           :as common]
+            [riemann.test              :as test]
             [riemann.pubsub           :refer [subscribe! unsubscribe!]]
             [riemann.instrumentation  :refer [Instrumented]]
             [riemann.service          :refer [Service ServiceEquiv]]
@@ -92,13 +93,14 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking ioutil-lock
-            (locking this
-              (when-not @server
-                (reset! server (http/run-server
-                                 (sse-handler core stats headers)
-                                 {:ip host :port port}))
-                (info "SSE server" host port "online")))))
+          (when-not test/*testing*
+            (locking ioutil-lock
+              (locking this
+                (when-not @server
+                  (reset! server (http/run-server
+                                  (sse-handler core stats headers)
+                                  {:ip host :port port}))
+                  (info "SSE server" host port "online"))))))
 
   (stop! [this]
          (locking this
