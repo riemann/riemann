@@ -7,6 +7,8 @@
            (ch.qos.logback.core
              ConsoleAppender
              FileAppender)
+           (ch.qos.logback.core.util
+             FileSize)
            (ch.qos.logback.core.encoder
              LayoutWrappingEncoder)
            (ch.qos.logback.core.rolling
@@ -146,7 +148,7 @@
                                         (.setContext context)
                                         (.start))
                     triggering-policy (doto (SizeBasedTriggeringPolicy.)
-                                        (.setMaxFileSize (str logsize-rotate))
+                                        (.setMaxFileSize (FileSize. logsize-rotate))
                                         (.setContext context)
                                         (.start))
                     log-appender      (doto log-appender
