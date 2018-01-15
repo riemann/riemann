@@ -1,3 +1,66 @@
+# Version 0.3.0
+
+Riemann now supports running under Java 9. We have removed support for Java 7. Thanks to Mathieu Corbin for his hard work here. Riemann is also upgraded to use Clojure 1.9.0 and a number of project dependencies were also bumped. We also removed the Campfire integration.
+
+Mathieu Corbin also added a not-expired stream, added the "riemann" tag to the index instrumentation, allowed for test output in junit format, Pagerduty v2 API support, a variety of fixes and enhancement below and documentation updates including documentation the default OpenTSBD and Graphite ports.
+
+Derek Chiang fixed a bug with `index-suffix`'es.
+
+boernd improved documentation in several places.
+
+Howard Beard-Marlowe added a new elixir client.
+
+Thach Mai fixed a CSS bug with the display of code lines in the documentation.
+
+## Features and enhancements
+
+- Adds OpenTSBD and Graphite default ports [\#895](https://github.com/riemann/riemann/pull/895) ([mcorbin](https://github.com/mcorbin))
+- initiates controlled time in with-test-env [\#893](https://github.com/riemann/riemann/pull/893) ([mcorbin](https://github.com/mcorbin))
+- Add a modifiable classloader for pomegranate. [\#892](https://github.com/riemann/riemann/pull/892) ([mcorbin](https://github.com/mcorbin))
+- bump kinsky dependency [\#891](https://github.com/riemann/riemann/pull/891) ([mcorbin](https://github.com/mcorbin))
+- Update project dependencies [\#889](https://github.com/riemann/riemann/pull/889) ([mcorbin](https://github.com/mcorbin))
+- Refactor test imports [\#887](https://github.com/riemann/riemann/pull/887) ([mcorbin](https://github.com/mcorbin))
+- Upgrade kinsky to 0.1.20 [\#885](https://github.com/riemann/riemann/pull/885) ([boernd](https://github.com/boernd))
+- Improve kafka docs [\#883](https://github.com/riemann/riemann/pull/883) ([boernd](https://github.com/boernd))
+- Add a not-expired stream [\#882](https://github.com/riemann/riemann/pull/882) ([mcorbin](https://github.com/mcorbin))
+- Updates to support Java9 [\#879](https://github.com/riemann/riemann/pull/879) ([jamtur01](https://github.com/jamtur01))
+- Use clj-nsca fork [\#878](https://github.com/riemann/riemann/pull/878) ([mcorbin](https://github.com/mcorbin))
+- Add samplerr to plugins doc [\#877](https://github.com/riemann/riemann/pull/877) ([boernd](https://github.com/boernd))
+- Add riemann-cond-dt plugin documentation [\#876](https://github.com/riemann/riemann/pull/876) ([mcorbin](https://github.com/mcorbin))
+- Refactor test imports and fix indentation [\#873](https://github.com/riemann/riemann/pull/873) ([mcorbin](https://github.com/mcorbin))
+- Modify the :host configuration in influx tests [\#872](https://github.com/riemann/riemann/pull/872) ([mcorbin](https://github.com/mcorbin))
+- Mock a core in test mode, refactoring reaper [\#871](https://github.com/riemann/riemann/pull/871) ([mcorbin](https://github.com/mcorbin))
+- Add the "riemann" tag in index instrumentation [\#869](https://github.com/riemann/riemann/pull/869) ([mcorbin](https://github.com/mcorbin))
+- Document exception-stream [\#868](https://github.com/riemann/riemann/pull/868) ([mcorbin](https://github.com/mcorbin))
+- Add new elixir client [\#863](https://github.com/riemann/riemann/pull/863) ([hazardfn](https://github.com/hazardfn))
+- Allows to generate test results in junit format [\#862](https://github.com/riemann/riemann/pull/862) ([mcorbin](https://github.com/mcorbin))
+- Refactoring the telegram output [\#861](https://github.com/riemann/riemann/pull/861) ([mcorbin](https://github.com/mcorbin))
+- Document the tag stream [\#860](https://github.com/riemann/riemann/pull/860) ([mcorbin](https://github.com/mcorbin))
+- Catch AssertionError in stream.clj and time.clj [\#855](https://github.com/riemann/riemann/pull/855) ([mcorbin](https://github.com/mcorbin))
+- Add a try/catch where events are expired [\#854](https://github.com/riemann/riemann/pull/854) ([mcorbin](https://github.com/mcorbin))
+- Adds Netty Kqueue support [\#852](https://github.com/riemann/riemann/pull/852) ([jamtur01](https://github.com/jamtur01))
+- Converts clojure.lang.BigInt to double in influx stream [\#849](https://github.com/riemann/riemann/pull/849) ([mcorbin](https://github.com/mcorbin))
+- Document the Elasticsearch streams [\#845](https://github.com/riemann/riemann/pull/845) ([mcorbin](https://github.com/mcorbin))
+- Fix by-builder stream [\#843](https://github.com/riemann/riemann/pull/843) ([mcorbin](https://github.com/mcorbin))
+- Replace Throwable by Exception [\#842](https://github.com/riemann/riemann/pull/842) ([mcorbin](https://github.com/mcorbin))
+- Upgrade influxdb-java dependency [\#840](https://github.com/riemann/riemann/pull/840) ([mcorbin](https://github.com/mcorbin))
+- Add Pagerduty v2 API support [\#837](https://github.com/riemann/riemann/pull/837) ([mcorbin](https://github.com/mcorbin))
+
+## Removals and deprecations
+
+- Updated docs for JDK 8 and 9 and removing JDK 7 [\#847](https://github.com/riemann/riemann/pull/847) ([jamtur01](https://github.com/jamtur01))
+- Remove support for JDK7 and add JDK9 [\#846](https://github.com/riemann/riemann/pull/846) ([jamtur01](https://github.com/jamtur01))
+- Remove campfire integration [\#867](https://github.com/riemann/riemann/pull/867) ([mcorbin](https://github.com/mcorbin))
+
+## Bug Fixes
+
+- Fix logsize-rotate [\#900](https://github.com/riemann/riemann/pull/900) ([asonix](https://github.com/asonix))
+- fix ws out rate metric and remove ws latency metric [\#888](https://github.com/riemann/riemann/pull/888) ([mcorbin](https://github.com/mcorbin))
+- Fix \#796: add scrollbar when code line is too long [\#864](https://github.com/riemann/riemann/pull/864) ([thachmai](https://github.com/thachmai))
+- Fix the where macro for clojure 1.9 [\#858](https://github.com/riemann/riemann/pull/858) ([mcorbin](https://github.com/mcorbin))
+- Update the IRC log url [\#836](https://github.com/riemann/riemann/pull/836) ([mcorbin](https://github.com/mcorbin))
+- Allow for not using `index-suffix` [\#875](https://github.com/riemann/riemann/pull/875) ([derekchiang](https://github.com/derekchiang))
+
 # Version 0.2.14
 
 Contains mostly new features and enhancements. Mathieu Corbin replaced `refs` in both `fixed-time-window` and `moving-time-window` with atoms, greatly improving their performance. They also added an `sflatten` stream and refactored the Elasticsearch output. boernd extended the capabilities of the Pushover plugin and added an MS Teams plugin. Brian Conn enhanced and reduced the payload of the Netuitive plugin.

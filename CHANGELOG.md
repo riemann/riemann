@@ -6,9 +6,13 @@
 
 **Closed issues:**
 
+- Create new release [\#901](https://github.com/riemann/riemann/issues/901)
+- InfluxDB: field type conflict on "riemann executor agg accepted rate" [\#898](https://github.com/riemann/riemann/issues/898)
+- Issue when updating com.cemerick/pomegranate [\#890](https://github.com/riemann/riemann/issues/890)
 - riemann server ws in/out rate always 0 [\#880](https://github.com/riemann/riemann/issues/880)
 - Lein deps fails with lein 2.8.1 [\#870](https://github.com/riemann/riemann/issues/870)
 - Error using clojure 1.9 / campfire integration [\#866](https://github.com/riemann/riemann/issues/866)
+- Java Classloading [\#859](https://github.com/riemann/riemann/issues/859)
 - riemann index   name a bit repetition puzzle [\#857](https://github.com/riemann/riemann/issues/857)
 - Reimann fails Installation on Cent OS using RPM [\#856](https://github.com/riemann/riemann/issues/856)
 - Extract riemann.streams to a separate library [\#853](https://github.com/riemann/riemann/issues/853)
@@ -17,6 +21,7 @@
 - \[regression\] InfluxDB lib should be fed consistent data type [\#848](https://github.com/riemann/riemann/issues/848)
 - Package gogs-0.11.19-1500937836.643c85e9.centos7.x86\_64.rpm is not signed [\#841](https://github.com/riemann/riemann/issues/841)
 - inject-intervals! test helper [\#839](https://github.com/riemann/riemann/issues/839)
+- Add index support in test mode [\#838](https://github.com/riemann/riemann/issues/838)
 - Question: how to replace multi pattern [\#835](https://github.com/riemann/riemann/issues/835)
 - java.lang.NullPointerException: null in Riemann [\#834](https://github.com/riemann/riemann/issues/834)
 - riemann.streams/call-rescue is catching java.lang.Error [\#833](https://github.com/riemann/riemann/issues/833)
@@ -29,18 +34,25 @@
 
 **Merged pull requests:**
 
+- Fix logsize-rotate [\#900](https://github.com/riemann/riemann/pull/900) ([asonix](https://github.com/asonix))
+- Adds OpenTSBD and Graphite default ports [\#895](https://github.com/riemann/riemann/pull/895) ([mcorbin](https://github.com/mcorbin))
+- initiates controlled time in with-test-env [\#893](https://github.com/riemann/riemann/pull/893) ([mcorbin](https://github.com/mcorbin))
+- Add a modifiable classloader for pomegranate. [\#892](https://github.com/riemann/riemann/pull/892) ([mcorbin](https://github.com/mcorbin))
+- bump kinsky dependency [\#891](https://github.com/riemann/riemann/pull/891) ([mcorbin](https://github.com/mcorbin))
 - Update project dependencies [\#889](https://github.com/riemann/riemann/pull/889) ([mcorbin](https://github.com/mcorbin))
 - fix ws out rate metric and remove ws latency metric [\#888](https://github.com/riemann/riemann/pull/888) ([mcorbin](https://github.com/mcorbin))
 - Refactor test imports [\#887](https://github.com/riemann/riemann/pull/887) ([mcorbin](https://github.com/mcorbin))
 - Upgrade kinsky to 0.1.20 [\#885](https://github.com/riemann/riemann/pull/885) ([boernd](https://github.com/boernd))
 - Improve kafka docs [\#883](https://github.com/riemann/riemann/pull/883) ([boernd](https://github.com/boernd))
 - Add a not-expired stream [\#882](https://github.com/riemann/riemann/pull/882) ([mcorbin](https://github.com/mcorbin))
+- Updates to support Java9 [\#879](https://github.com/riemann/riemann/pull/879) ([jamtur01](https://github.com/jamtur01))
 - Use clj-nsca fork [\#878](https://github.com/riemann/riemann/pull/878) ([mcorbin](https://github.com/mcorbin))
 - Add samplerr to plugins doc [\#877](https://github.com/riemann/riemann/pull/877) ([boernd](https://github.com/boernd))
 - Add riemann-cond-dt plugin documentation [\#876](https://github.com/riemann/riemann/pull/876) ([mcorbin](https://github.com/mcorbin))
 - Allow for not using `index-suffix` [\#875](https://github.com/riemann/riemann/pull/875) ([derekchiang](https://github.com/derekchiang))
 - Refactor test imports and fix indentation [\#873](https://github.com/riemann/riemann/pull/873) ([mcorbin](https://github.com/mcorbin))
 - Modify the :host configuration in influx tests [\#872](https://github.com/riemann/riemann/pull/872) ([mcorbin](https://github.com/mcorbin))
+- Mock a core in test mode, refactoring reaper [\#871](https://github.com/riemann/riemann/pull/871) ([mcorbin](https://github.com/mcorbin))
 - Add the "riemann" tag in index instrumentation [\#869](https://github.com/riemann/riemann/pull/869) ([mcorbin](https://github.com/mcorbin))
 - Document exception-stream [\#868](https://github.com/riemann/riemann/pull/868) ([mcorbin](https://github.com/mcorbin))
 - Remove campfire integration [\#867](https://github.com/riemann/riemann/pull/867) ([mcorbin](https://github.com/mcorbin))
