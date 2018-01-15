@@ -1,8 +1,7 @@
 # Change Log
 
-## [Unreleased](https://github.com/riemann/riemann/tree/HEAD)
-
-[Full Changelog](https://github.com/riemann/riemann/compare/0.2.14...HEAD)
+## [0.3.0](https://github.com/riemann/riemann/tree/0.3.0) (2018-01-15)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.2.14...0.3.0)
 
 **Closed issues:**
 
