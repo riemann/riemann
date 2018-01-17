@@ -2706,7 +2706,10 @@ Riemann::Client.new(host: "my.riemann.server")["true"].map(&:service).sort.uniq.
 
     <p>Create a <a href="http://riemann.io/api/riemann.pagerduty.html#var-pagerduty">client</a> with your Pagerduty service key, then use <code>:trigger</code> and <code>:resolve</code> to open and close issues for a given host and service.</p>
 
-    <p>You can also pass http options using the <code>:options</code> key.</p>
+    <p>You can also pass http options using the <code>:options</code> key, and a custom formatter for the Pagerduty event with the <code>:formatter</code> key.</p>
+
+    <p>You can use the <a href="https://v2.developer.pagerduty.com/docs/send-an-event-events-api-v2">Pagerduty v2 API</a> by setting the <code>:version</code> key to <code>:v2</code>. In v2, each event can contain a <code>:dedup-key</code> key to handle alert de-duplication.
+</p>
   </div>
 
   <div class="sixcol last">
