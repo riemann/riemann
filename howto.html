@@ -870,10 +870,17 @@ Ran 1 tests containing 1 assertions.
     compile-time during production mode, so there's zero performance penalty;
     won't count against your Hotspot inlining budget, etc.</p>
 
-    <p> Note also that the test framework doesn't actually run a core,
-    so functions that require one, (like
-    <code>riemann.config/reinject</code>), can't work from within the test
-    framework.</p>
+    <p>From Riemann 0.3.0, the test framework runs a core. Functions
+      requiring a core like <code>riemann.config/reinject</code>, indexing
+      events, index querying and expiry will work. The index is cleaned
+      at the beginning of each <code>deftest</code></p>.
+
+    <p>Before Riemann 0.3.0, the test framework didn't actually
+      run a core, so functions that require one, (like
+      <code>riemann.config/reinject</code>), didn't work from within the test
+      framework.</p>
+    </p>
+
   </div>
   <div class="sixcol last">
 {% highlight clj %}
