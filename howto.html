@@ -1620,6 +1620,10 @@ state, any <a href="http://riemann.io/api/riemann.streams.html#var-changed-state
   (expired (email "ops@foo.com"))
 
   ; Process only events which are *not* expired
+  (not-expired
+    ...)
+
+  ; You can also call the expired? function in a where clause
   (where (not (expired? event))
     ...))
 {% endhighlight %}
