@@ -8,6 +8,16 @@ jdk:
   - oraclejdk8
   - oraclejdk9
 
+before_install:
+  - mkdir -p $HOME/bin
+  - curl -fsSL https://testspace-client.s3.amazonaws.com/testspace-linux.tgz | tar -zxvf- -C $HOME/bin
+  - testspace config url $TS_ORG.testspace.com
+
+script: lein test2junit
+
+after_script:
+  -  testspace [${TRAVIS_JDK_VERSION}]test2junit/xml/*.xml{test/riemann};
+
 addons:
   apt:
     packages:

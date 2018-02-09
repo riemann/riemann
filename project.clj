@@ -46,6 +46,7 @@
     [pjstadig/humane-test-output "0.8.3"]]
   :plugins [[lein-codox "0.10.2"]
             [lein-difftest "2.0.0"]
+            [test2junit "1.3.3"]
             [lein-rpm "0.0.6"
              :exclusions [org.apache.maven/maven-plugin-api
                           org.codehaus.plexus/plexus-container-default
