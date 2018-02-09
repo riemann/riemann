@@ -73,7 +73,7 @@
       (try
         (info "Subscribing to " topics "...")
         (client/subscribe! consumer topics)
-        (while running?
+        (while @running?
           (let [msgs (client/poll! consumer (:poll.timeout.ms opts))
                 msgs-by-topic (get msgs :by-topic)]
             (doseq [records msgs-by-topic
