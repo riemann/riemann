@@ -90,6 +90,26 @@
                                                 frac))))
       event)))
 
+(defn graphite-path-tags
+  "Returns a function which constructs a path for an event.
+  Takes the service with spaces converted to dots, followed by the tags
+  referenced in `tags` if they exists in the event.
+
+  Example:
+
+  (def graph (graphite {:path (graphite-path-tags [:host :rack])}))
+
+  {:host \"foo\" :service \"api req\" :rack \"n1\"}
+  will have this path: api.req;host=foo;rack=n1"
+  [tags]
+  (fn [event]
+    (let [service (replace (:service event) #" " ".")
+          tags (filter #(get event %) tags)
+          tag-string (join ";" (map #(str (name %) "=" (get event %)) tags))]
+      (if (= tag-string "")
+        service
+        (str service ";" tag-string)))))
+
 (defn graphite-metric
   "convert riemann metric value to graphite"
   [event]
