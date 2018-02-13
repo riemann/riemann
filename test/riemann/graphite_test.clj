@@ -58,21 +58,41 @@
           (stop! core))))))
 
 (deftest percentiles
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar"})
-                "foo.bar"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 1"})
-                "foo.bar.1"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 99"})
-                "foo.bar.99"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 0.99"})
-                "foo.bar.99"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 0.999"})
-                "foo.bar.999")))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar"})
+         "foo.bar"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 1"})
+         "foo.bar.1"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 99"})
+         "foo.bar.99"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 0.99"})
+         "foo.bar.99"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 0.999"})
+         "foo.bar.999")))
+
+(deftest graphite-path-tags-test
+  (let [path (graphite-path-tags [])]
+    (is (= (path
+            {:service "foo bar"})
+           "foo.bar")))
+  (let [path (graphite-path-tags [:host :rack :environment])]
+    (is (= (path
+            {:service "foo bar"
+             :host "riemann.io"
+             :rack "n1"
+             :environment "production"})
+           "foo.bar;host=riemann.io;rack=n1;environment=production"))
+    (is (= (path
+            {:service "foo bar"
+             :host "riemann.io"})
+           "foo.bar;host=riemann.io"))
+    (is (= (path
+            {:service "foo bar"})
+           "foo.bar"))))
 
 (deftest graphite-metric-test
   (is (= (graphite-metric
