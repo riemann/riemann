@@ -15,11 +15,13 @@
 
 (defprotocol GraphiteClient
   (open [client]
-        "Creates a Graphite client")
+    "Creates a Graphite client")
   (send-line [client line]
-        "Sends a formatted line to Graphite")
+    "Sends a formatted line to Graphite")
+  (send-lines [client lines]
+    "Sends a list of formatted lines to Graphite")
   (close [client]
-         "Cleans up (closes sockets etc.)"))
+    "Cleans up (closes sockets etc.)"))
 
 (defrecord GraphiteTCPClient [^String host ^int port]
   GraphiteClient
@@ -31,6 +33,11 @@
   (send-line [this line]
     (let [out (:out this)]
       (.write ^OutputStreamWriter out ^String line)
+      (.flush ^OutputStreamWriter out)))
+  (send-lines [this lines]
+    (let [out (:out this)]
+      (doseq [line lines]
+        (.write ^OutputStreamWriter out ^String line))
       (.flush ^OutputStreamWriter out)))
   (close [this]
     (.close ^OutputStreamWriter (:out this))
@@ -49,6 +56,13 @@
           addr (InetAddress/getByName (:host this))
           datagram (DatagramPacket. bytes length ^InetAddress addr port)]
       (.send ^DatagramSocket (:socket this) datagram)))
+  (send-lines [this lines]
+    (doseq [line lines]
+      (let [bytes (.getBytes ^String line)
+            length (count line)
+            addr (InetAddress/getByName (:host this))
+            datagram (DatagramPacket. bytes length ^InetAddress addr port)]
+        (.send ^DatagramSocket (:socket this) datagram))))
   (close [this]
     (.close ^DatagramSocket (:socket this))))
 
@@ -134,12 +148,15 @@
                    (assoc :size (:pool-size opts))
                    (assoc :regenerate-interval (:reconnect-interval opts))))
         path (:path opts)]
-
-    (fn [event]
-      (when (:metric event)
-        (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (str (join " " [(path event)
-                                                (graphite-metric event)
-                                                (int (:time event))])
-                                     "\n")]
-                     (send-line client string)))))))
+    (fn [events]
+      (let [events (->> (if (sequential? events) events (list events))
+                        (filter :metric))]
+        (when-not (empty? events)
+          (with-pool [client pool (:claim-timeout opts)]
+            (let [lines (map (fn [event]
+                               (str (join " " [(path event)
+                                               (graphite-metric event)
+                                               (int (:time event))])
+                                    "\n"))
+                             events)]
+              (send-lines client lines))))))))

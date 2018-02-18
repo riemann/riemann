@@ -66,6 +66,88 @@
         (finally
           (core/stop! core))))))
 
+(deftest round-trip-test-batch
+  (riemann.logging/suppress ["riemann.transport"
+                             "riemann.pubsub"
+                             "riemann.graphite"
+                             "riemann.core"]
+    (let [server (graphite-server)
+          sink   (atom [])
+          core   (core/transition! (core/core)
+                                   {:services [server]
+                                    :streams  [(fn [event]
+                                                 (swap! sink conj event))]})]
+      (try
+        ; Open a client and send an event
+        (let [client (client/graphite {:pool-size 1 :block-start true})]
+          (client [{:host "computar"
+                    :service "hi there" :metric 2.5 :time 123 :ttl 10}
+                   {:host "computar"
+                    :service "hi there" :metric 10.1 :time 123 :ttl 10}])
+
+          ; Verify event arrives
+          (Thread/sleep 1000)
+          (is (= @sink
+                 [(event {:host        nil
+                          :service     "computar.hi.there"
+                          :state       nil
+                          :description nil
+                          :metric      2.5
+                          :tags        nil
+                          :time        123
+                          :ttl         nil})
+                  (event {:host        nil
+                          :service     "computar.hi.there"
+                          :state       nil
+                          :description nil
+                          :metric      10.1
+                          :tags        nil
+                          :time        123
+                          :ttl         nil})])))
+        (finally
+          (core/stop! core))))))
+
+(deftest round-trip-test-udp-batch
+  (riemann.logging/suppress ["riemann.transport"
+                             "riemann.pubsub"
+                             "riemann.graphite"
+                             "riemann.core"]
+    (let [server (graphite-server {:pool-size 1 :block-start true :protocol :udp})
+          sink   (atom [])
+          core   (core/transition! (core/core)
+                                   {:services [server]
+                                    :streams  [(fn [event]
+                                                 (swap! sink conj event))]})]
+      (try
+        ; Open a client and send an event
+        (let [client (client/graphite {:protocol :udp})]
+          (client [{:host "computar"
+                    :service "hi there" :metric 2.5 :time 123 :ttl 10}
+                   {:host "computar"
+                    :service "hi there" :metric 10.1 :time 123 :ttl 10}])
+
+          ; Verify event arrives
+          (Thread/sleep 1000)
+          (is (= @sink
+                 [(event {:host        nil
+                          :service     "computar.hi.there"
+                          :state       nil
+                          :description nil
+                          :metric      2.5
+                          :tags        nil
+                          :time        123
+                          :ttl         nil})
+                  (event {:host        nil
+                          :service     "computar.hi.there"
+                          :state       nil
+                          :description nil
+                          :metric      10.1
+                          :tags        nil
+                          :time        123
+                          :ttl         nil})])))
+        (finally
+          (core/stop! core))))))
+
 (deftest round-trip-test-udp
   (riemann.logging/suppress ["riemann.transport"
                              "riemann.pubsub"
