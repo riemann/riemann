@@ -38,7 +38,7 @@
 (defrecord LogStashUDPClient [^String host ^int port]
   LogStashClient
   (open [this]
-    (assoc this 
+    (assoc this
            :socket (DatagramSocket.)
            :host host
            :port port))
@@ -50,8 +50,6 @@
       (.send ^DatagramSocket (:socket this) datagram)))
   (close [this]
     (.close ^DatagramSocket (:socket this))))
-
-
 
 (defn logstash
   "Returns a function which accepts an event and sends it to logstash.
