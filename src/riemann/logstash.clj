@@ -10,7 +10,8 @@
   (:use [clojure.string :only [split join replace]]
         clojure.tools.logging
         riemann.pool
-        riemann.common))
+        riemann.common
+        less.awful.ssl))
 
 (defprotocol LogStashClient
   (open [client]
@@ -20,20 +21,58 @@
   (close [client]
          "Cleans up (closes sockets etc.)"))
 
-(defrecord LogStashTCPClient [^String host ^int port]
+(defn get-socket
+  [host  port  opts]
+  (cond
+     (= ^Boolean (:tls opts) true)
+         (socket  (ssl-context (:key opts) (:cert opts) (:ca-cert opts))
+                              host
+                              port)
+     :else
+          (Socket. host port)))
+
+(defrecord LogStashTCPClient [^String host ^int port opts]
   LogStashClient
+
   (open [this]
-    (let [sock (Socket. host port)]
-      (assoc this 
-             :socket sock
-             :out (OutputStreamWriter. (.getOutputStream sock)))))
+
+    (let [sock (get-socket host port opts)]
+
+        (cond
+           (= ^Boolean (:tls opts) true)
+              (do
+                (.getSession sock)
+                (assoc this
+                       :socket sock
+                       :out (.getOutputStream sock))
+              )
+          :else
+              (assoc this
+                     :socket sock
+                     :out (OutputStreamWriter. (.getOutputStream sock))))))
+
   (send-line [this line]
     (let [out (:out this)]
-      (.write ^OutputStreamWriter out ^String line)
-      (.flush ^OutputStreamWriter out)))
+          (cond
+            (= ^Boolean (:tls opts) true)
+               (do
+                (.write  out  (.getBytes (str line ) ))
+                (.flush out))
+            :else
+              (do
+                (.write ^OutputStreamWriter out ^String line)
+                (.flush ^OutputStreamWriter out)))))
+
   (close [this]
-    (.close ^OutputStreamWriter (:out this))
-    (.close ^Socket (:socket this))))
+    (cond
+      (= ^Boolean (:tls opts) true)
+         (do
+            (.close (:out this))
+            (.close ^Socket (:socket this)))
+        :else
+        (do
+           (.close ^OutputStreamWriter (:out this))
+           (.close ^Socket (:socket this))))))
 
 (defrecord LogStashUDPClient [^String host ^int port]
   LogStashClient
@@ -71,20 +110,31 @@
   :block-start          Wait for the pool's initial connections to open
                         before returning.
 
-  :protocol             Protocol to use. Either :tcp (default) or :udp."
+  :protocol             Protocol to use. Either :tcp (default) or :udp.
+
+  TLS options:
+  :tls?             Whether to enable TLS
+  :key              A PKCS8-encoded private key file
+  :cert             The corresponding public certificate
+  :ca-cert          The certificate of the CA which signed this key"
+
   [opts]
+
   (let [opts (merge {:host "127.0.0.1"
                      :port 9999
                      :protocol :tcp
+                     :tls false
                      :claim-timeout 0.1
                      :pool-size 4} opts)
+
         pool (fixed-pool
                (fn []
-                 (info "Connecting to " (select-keys opts [:host :port]))
-                 (let [host (:host opts)
+                 (info "Connecting to " (select-keys opts [:host :port :security.protocol :tls]))
+                 (let [
+                       host (:host opts)
                        port (:port opts)
                        client (open (condp = (:protocol opts)
-                                      :tcp (LogStashTCPClient. host port)
+                                      :tcp (LogStashTCPClient. host port opts)
                                       :udp (LogStashUDPClient. host port)))]
                    (info "Connected")
                    client))
