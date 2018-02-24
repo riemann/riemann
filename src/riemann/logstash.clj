@@ -96,26 +96,21 @@
   :key              A PKCS8-encoded private key file
   :cert             The corresponding public certificate
   :ca-cert          The certificate of the CA which signed this key"
-
   [opts]
-
   (let [opts (merge {:host "127.0.0.1"
                      :port 9999
                      :protocol :tcp
                      :claim-timeout 0.1
                      :pool-size 4} opts)
-
         pool (fixed-pool
                (fn []
                  (info "Connecting to " (select-keys opts [:host :port :protocol]))
-                 (let [
-                       host (:host opts)
+                 (let [host (:host opts)
                        port (:port opts)
                        client (open (condp = (:protocol opts)
                                       :tcp (LogStashTCPClient. host port)
                                       :udp (LogStashUDPClient. host port)
-                                      :tls (LogStashTLSClient. host port opts)
-                                      ))]
+                                      :tls (LogStashTLSClient. host port opts)))]
                    (info "Connected")
                    client))
                (fn [client]
