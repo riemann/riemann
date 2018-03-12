@@ -18,9 +18,9 @@
 
 (defn start-server!
   "Starts a new repl server. Stops the old server first, if any. Options:
-  
-  :host (default \"127.0.0.1\")
-  :port (default 5557)"
+
+  - :host (default \"127.0.0.1\")
+  - :port (default 5557)"
   [opts]
   (stop-server!)
   (let [opts (merge {:port 5557 :host "127.0.0.1"} opts)]

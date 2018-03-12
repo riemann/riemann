@@ -100,6 +100,7 @@
   (def graph (graphite {:path (graphite-path-tags [:host :rack])}))
 
   {:host \"foo\" :service \"api req\" :rack \"n1\"}
+
   will have this path: api.req;host=foo;rack=n1"
   [tags]
   (fn [event]
@@ -125,22 +126,17 @@
 
   Options:
 
-  :path       A function which, given an event, returns the string describing
-              the path of that event in graphite. graphite-path-percentiles by
-              default.
-
-  :pool-size  The number of connections to keep open. Default 4.
-
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
-
-  :claim-timeout        How many seconds to wait for a graphite connection from
-                        the pool. Default 0.1.
-
-  :block-start          Wait for the pool's initial connections to open
-                        before returning.
-
-  :protocol             Protocol to use. Either :tcp (default) or :udp."
+  - :path       A function which, given an event, returns the string describing
+                the path of that event in graphite. graphite-path-percentiles by
+                default.
+  - :pool-size  The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
+  - :claim-timeout        How many seconds to wait for a graphite connection from
+                          the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning.
+  - :protocol             Protocol to use. Either :tcp (default) or :udp."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 2003

@@ -41,15 +41,16 @@
 
   Options:
 
-  :es-endpoint     Elasticsearch, default is \"http://127.0.0.1:9200\".
-  :es-index        Index name, default is \"riemann\".
-  :index-suffix    Index-suffix, default is \"-yyyy.MM.dd\".
-  :type            Type to send to index, default is \"event\".
-  :username        Username to authenticate with.
-  :password        Password to authenticate with.
+  - :es-endpoint     Elasticsearch, default is \"http://127.0.0.1:9200\".
+  - :es-index        Index name, default is \"riemann\".
+  - :index-suffix    Index-suffix, default is \"-yyyy.MM.dd\".
+  - :type            Type to send to index, default is \"event\".
+  - :username        Username to authenticate with.
+  - :password        Password to authenticate with.
 
   Example:
 
+  ```clojure
   (elasticsearch
     ; ES options
     {:es-endpoint \"https:example-elastic.com\"
@@ -58,7 +59,8 @@
     (fn [event]
       (let
         [newtags (concat (:tags event) [\"extra-tag\"])]
-        (merge event {:tags newtags}))))"
+        (merge event {:tags newtags}))))
+  ```"
   [opts & maybe-formatter]
   (let [opts (merge {:es-endpoint "http://127.0.0.1:9200"
                      :es-index "riemann"
@@ -104,10 +106,11 @@
   "Returns a function which accepts an event and formats it for the Elasticsearch bulk API.
 
   Options :
-  :es-index        Elasticsearch index name (without suffix).
-  :type            Type to send to index.
-  :es-action       Elasticsearch action, for example \"index\".
-  :index-suffix    Index suffix, for example \"-yyyy.MM.dd\".
+
+  - :es-index        Elasticsearch index name (without suffix).
+  - :type            Type to send to index.
+  - :es-action       Elasticsearch action, for example \"index\".
+  - :index-suffix    Index suffix, for example \"-yyyy.MM.dd\".
 
   Each event received by the function can also have these keys (which override default options), and an optional `es-id` key."
   [{:keys [es-index type es-action index-suffix]}]
@@ -138,16 +141,20 @@
 (defn elasticsearch-bulk
   "Returns a function which accepts an event (or a list of events) and sends it to
   Elasticsearch using the Bulk API. Custom event formatter can be provided using the `:formatter` key.
+
   A formatter is a function which accepts an event.
+
   Event time is mandatory.
 
   Events should have this format :
 
+  ```clojure
   {:es-action \"index\"
    :es-metadata {:_index \"test\"
                  :_type \"type1\"
                  :_id \"1\"}
    :es-source {:field1 \"value1\"}}
+  ```
 
   `:es-action` is the action (create, update, index, delete), `:es-metadata` the document metadata, and `es-source` the document source.
 
@@ -157,11 +164,11 @@
 
   Options:
 
-  :es-endpoint     Elasticsearch, default is \"http://127.0.0.1:9200\".
-  :username        Username to authenticate with.
-  :password        Password to authenticate with.
-  :formatter       Fn taking an event and returning it with the ES Bulk API format
-  :http-options    Http options (like proxy). See https://github.com/dakrone/clj-http for option list"
+  - :es-endpoint     Elasticsearch, default is \"http://127.0.0.1:9200\".
+  - :username        Username to authenticate with.
+  - :password        Password to authenticate with.
+  - :formatter       Fn taking an event and returning it with the ES Bulk API format
+  - :http-options    Http options (like proxy). See https://github.com/dakrone/clj-http for option list"
   [opts]
   (let [opts (merge {:es-endpoint "http://127.0.0.1:9200"} opts)]
     (fn [events]

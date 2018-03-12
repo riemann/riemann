@@ -79,23 +79,23 @@
 
   Options:
 
-  :pool-size  The number of connections to keep open. Default 4.
+  - :pool-size  The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
 
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
+  - :claim-timeout        How many seconds to wait for a logstash connection from
+                          the pool. Default 0.1.
 
-  :claim-timeout        How many seconds to wait for a logstash connection from
-                        the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning.
 
-  :block-start          Wait for the pool's initial connections to open
-                        before returning.
-
-  :protocol             Protocol to use. Either :tcp (default), :tls or :udp.
+  - :protocol             Protocol to use. Either :tcp (default), :tls or :udp.
 
   TLS options:
-  :key              A PKCS8-encoded private key file
-  :cert             The corresponding public certificate
-  :ca-cert          The certificate of the CA which signed this key"
+
+  - :key              A PKCS8-encoded private key file
+  - :cert             The corresponding public certificate
+  - :ca-cert          The certificate of the CA which signed this key"
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 9999

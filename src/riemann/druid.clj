@@ -33,14 +33,18 @@
    events in a vector and sends them to the Druid Tranquility Server.
 
    Usage:
+
    (druid {:host \"druid.example.com\"})
 
    Options:
-   `:host`     Hostname of Druid Tranquility server. (default: `\"localhost\"`)
-   `:port`     Port at which Druid Tranquility is listening (default: `8200`)
-   `:dataset`  Dataset name to be given (default: `\"riemann\"`)
+
+   - `:host`     Hostname of Druid Tranquility server. (default: `\"localhost\"`)
+   - `:port`     Port at which Druid Tranquility is listening (default: `8200`)
+   - `:dataset`  Dataset name to be given (default: `\"riemann\"`)
 
    Example:
+
+  ```clojure
    (def druid-async
    (batch 100 1/10
      (async-queue!
@@ -49,7 +53,7 @@
         :core-pool-size 5    ; Minimum 5 threads
         :max-pools-size 100} ; Maximum 100 threads
         (druid {:host \"localhost\"}))))
-  "
+  ```"
   [opts]
   (let [opts (merge {:host     "localhost"
                      :port     8200

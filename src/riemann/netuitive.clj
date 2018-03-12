@@ -54,13 +54,20 @@
 (defn netuitive
   "Return a function which accepts either single events or batches of
    events in a vector and sends them to Netuitive.
+
   Usage:
+
   (netuitive {:api-key \"0123456789abcdef01234567890abcde\"})
+
   Option:
-  :api-key    Required - Netuitive's API Key for authentication.
-  :url        Optional - URL to post to Netuitive ingest - defaults to Production
-  :type       Optional - Arbitrary String to use as Element Type - defaults to \"Riemann\"
+
+  - :api-key    Required - Netuitive's API Key for authentication.
+  - :url        Optional - URL to post to Netuitive ingest - defaults to Production
+  - :type       Optional - Arbitrary String to use as Element Type - defaults to \"Riemann\"
+
   Example:
+
+  ```clojure
   (def netuitive-forwarder
     (batch 100 1/10
       (async-queue!
@@ -68,7 +75,8 @@
         {:queue-size     1e4  ; 10,000 events max
          :core-pool-size 5    ; Minimum 5 threads
          :max-pools-size 100} ; Maximum 100 threads
-        (netuitive {:api-key \"0123456789abcdef01234567890abcde\" :url \"https://api.app.netuitive.com/ingest/\" :type \"Riemann\"}))))"
+        (netuitive {:api-key \"0123456789abcdef01234567890abcde\" :url \"https://api.app.netuitive.com/ingest/\" :type \"Riemann\"}))))
+  ```"
   [opts]
   (let [opts (merge {:api-key "netuitive-api-key"} opts)]
     (fn [event]

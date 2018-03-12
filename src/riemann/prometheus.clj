@@ -83,15 +83,16 @@
   "Returns a function which accepts an event and sends it to prometheus.
 
    Usage:
+
    (prometheus {:host \"prometheus.example.com\"})
 
    Options:
-   `:host`           Prometheus Pushgateway Server IP (default: \"localhost\")
-   `:port`           Prometheus Pushgateway Server Port (default: 9091)
-   `:job`            Group Name to be assigned (default: \"riemann\")
-   `:separator`      Separator to be used for Riemann tags (default: \",\")
-   `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels
-  "
+
+   - `:host`           Prometheus Pushgateway Server IP (default: \"localhost\")
+   - `:port`           Prometheus Pushgateway Server Port (default: 9091)
+   - `:job`            Group Name to be assigned (default: \"riemann\")
+   - `:separator`      Separator to be used for Riemann tags (default: \",\")
+   - `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels"
   [opts]
   (let [opts (merge {:host            "localhost"
                      :port            9091

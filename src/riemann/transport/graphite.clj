@@ -120,11 +120,11 @@
 (defn graphite-server
   "Start a graphite-server. Options:
 
-  :host       \"127.0.0.1\"
-  :port       2003
-  :protocol   :tcp or :udp (default :tcp)
-  :parser-fn  an optional function to further transform events after decoding.
-  :tags       converts Graphite tags into event attributes (default false)"
+  - :host       \"127.0.0.1\"
+  - :port       2003
+  - :protocol   :tcp or :udp (default :tcp)
+  - :parser-fn  an optional function to further transform events after decoding.
+  - :tags       converts Graphite tags into event attributes (default false)"
   ([] (graphite-server {}))
   ([opts]
      (let [core (get opts :core (atom nil))

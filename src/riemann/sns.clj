@@ -119,16 +119,18 @@
   sequence of ARNs and returns a stream. That stream is a function which takes a
   single event, or a sequence of events, and publishes a message about them.
 
+  ```clojure
   (def sns (sns-publisher))
 
   (changed :state
     (sns \"arn:aws:sns:region:id:xerxes\" \"arn:aws:sns:region:id:shodan\"))
+  ```
 
   The first argument is a map of AWS credentials:
 
-    :access-key ; required
-    :secret-key ; required
-    :region     ; optional
+    - :access-key ; required
+    - :secret-key ; required
+    - :region     ; optional
 
   The :region value is passed to com.amazonaws.regions.RegionUtils/getRegion.
   For a list of region names that you can use, see:
@@ -140,26 +142,30 @@
   The second argument is a map of default message options, like :body or
   :subject.
 
+  ```clojure
   (def sns (sns-publisher {:access-key \"my-access-key\"
                            :secret-key \"my-secret-key\"}
                           {:subject \"something is ok\"}))
+  ```
 
   The third is an optional map specifying async options:
 
-    :async   ; optional true / false (default)
-    :success ; optional callback invoked on success
-             ; e.g. (fn [req res] ...)
-    :error   ; optional callback invoked on error
-             ; e.g. (fn [exception] ...)
-             ; you must specify both :success and :error
-             ; or else, none at all
+    - :async   ; optional true / false (default)
+    - :success ; optional callback invoked on success
+               ; e.g. (fn [req res] ...)
+    - :error   ; optional callback invoked on error
+               ; e.g. (fn [exception] ...)
+               ; you must specify both :success and :error
+               ; or else, none at all
 
   If you provide a single map, they will be split out for you.
 
+  ```clojure
   (def sns (sns-publisher {:access-key \"your-access-key\"
                            :secret-key \"your-secret-key\"
                            :subject \"something went wrong\"
                            :async true}))
+  ```
 
   By default, riemann uses (riemann.common/subject events) and
   (riemann.common/body events) to format messages.
@@ -167,8 +173,10 @@
   :subject or :body in msg-opts. These formatting functions take a sequence of
   events and return a string.
 
+  ```clojure
   (def sns (sns-publisher {} {:body (fn [events]
-                                      (apply prn-str events))}))"
+                                      (apply prn-str events))}))
+  ```"
   ([] (sns-publisher {}))
   ([opts]
      (let [{aws-opts   :aws-opts

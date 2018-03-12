@@ -95,39 +95,36 @@
   and sends them to KairosDB. Silently drops events when KairosDB is down.
   Attempts to reconnect automatically every five seconds. Use:
 
+  ```clojure
   (kairosdb {:host \"kairosdb.local\" :port 4242 :protocol :tcp})
+  ```
 
   or
 
+  ```clojure
   (kairosdb {:host \"kairosdb.local\" :port 8080 :protocol :http})
+  ```
 
   Options:
 
-  :protocol       :tcp to use the Telnet API, or :http for the HTTP REST API.
-                  Default :tcp.
-
-  :metric-name    A function which, given an event, returns the string describing
-                  the path of that event in kairosdb. kairosdb-metric-name by
-                  default.
-
-  :tags    A function which, given an event, returns the hash-map for the tags.
-           kairosdb-tags by default.
-
-  :pool-size  The number of connections to keep open. Default 4.
-
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
-
-  :claim-timeout        How many seconds to wait for a kairosdb connection from
-                        the pool. Default 0.1.
-
-  :block-start          Wait for the pool's initial connections to open
-                        before returning.
-
-  :ttl                  A function which, given an event, returns the TTL in
-                        seconds.
-                        Note: TTL is only supported in the HTTP API, and is
-                              ignored when sent via Telnet."
+  - :protocol       :tcp to use the Telnet API, or :http for the HTTP REST API.
+                    Default :tcp.
+  - :metric-name    A function which, given an event, returns the string describing
+                    the path of that event in kairosdb. kairosdb-metric-name by
+                    default.
+  - :tags    A function which, given an event, returns the hash-map for the tags.
+             kairosdb-tags by default.
+  - :pool-size  The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
+  - :claim-timeout        How many seconds to wait for a kairosdb connection from
+                          the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning.
+  - :ttl                  A function which, given an event, returns the TTL in
+                          seconds.
+                          Note: TTL is only supported in the HTTP API, and is
+                                ignored when sent via Telnet."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 4242

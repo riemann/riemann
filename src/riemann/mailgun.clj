@@ -43,44 +43,56 @@
   "Returns a mailer, which is a function invoked with an address or a sequence
   of addresses and returns a stream. That stream is a function which takes a
   single event, or a sequence of events, and sends email about them.
-  
+
+  ```clojure
   (def mailer (mailgun))
   (def email (mailer \"xerxes@trioptimum.org\" \"shodan@trioptimum.org\"))
- 
+  ```
+
   This mailer sends email out via mailgun using the mailgun http api. When used
   it outputs the http response recieved from mailgun.
 
+  ```clojure
   (changed :state
     #(info \"mailgun response\" (email %)))
+  ```
 
   The first argument is a map of the mailgun options :sandbox and :service-key.
   The second argument is a map of default message options, like :from,
   :subject, or :body.
-  
+
+  ```clojure
   (def email (mailgun {:sandbox \"mail.relay\" :service-key \"key\"}
-                     {:from \"riemann@trioptimum.com\"}))
+                      {:from \"riemann@trioptimum.com\"}))
+  ```
 
   If you provide a single map, the mailer will split the mailgun options out
   for you.
 
+  ```clojure
   (def email (mailgun {:sandbox \"mail.relay\"
-                      :service-key \"foo\"
-                      :from \"riemann@trioptimum.com\"}))
-  
+                       :service-key \"foo\"
+                       :from \"riemann@trioptimum.com\"}))
+  ```
+
   By default, riemann uses (subject events) and (body events) to format emails.
   You can set your own subject or body formatter functions by including
   :subject or :body in msg-opts. These formatting functions take a sequence of
   events and return a string.
 
-  (def email (mailgun {} {:body (fn [events] 
+  ```clojure
+  (def email (mailgun {} {:body (fn [events]
                                  (apply prn-str events))}))
-  
+  ```
+
   This api uses text body by default. If you want to use HTML body, you can set
   a body formatter function returns a map of fields :type and :content.
 
-  (def email (mailgun {} {:body (fn [events] 
+  ```
+  (def email (mailgun {} {:body (fn [events]
                                  {:type :html
-                                  :content \"<h1>HTML Body</h1>\"})}))"
+                                  :content \"<h1>HTML Body</h1>\"})}))
+  ```"
   ([] (mailgun {}))
   ([opts]
         (let [mg-keys #{:sandbox :service-key}

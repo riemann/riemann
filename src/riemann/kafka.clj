@@ -10,25 +10,29 @@
 
 (defn kafka
   "Returns a function that is invoked with a topic name and an optional message key and returns a stream. That stream is a function which takes an event or a sequence of events and sends them to Kafka.
-  
+
+  ```clojure
   (def kafka-output (kafka))
 
   (changed :state
     (kafka-output \"mytopic\"))
+  ```
 
   Options:
 
-  For a complete list of producer configuration options see https://kafka.apache.org/documentation/#producerconfigs  
+  For a complete list of producer configuration options see https://kafka.apache.org/documentation/#producerconfigs
 
-  :bootstrap.servers  Bootstrap configuration, default is \"localhost:9092\".
-  :value.serializer   Value serializer, default is json-serializer.
+  - :bootstrap.servers  Bootstrap configuration, default is \"localhost:9092\".
+  - :value.serializer   Value serializer, default is json-serializer.
 
   Example with SSL enabled:
 
+  ```clojure
   (def kafka-output (kafka {:bootstrap.servers \"kafka.example.com:9092\"
                             :security.protocol \"SSL\"
                             :ssl.truststore.location \"/path/to/my/truststore.jks\"
-                            :ssl.truststore.password \"mypassword\"}))"
+                            :ssl.truststore.password \"mypassword\"}))
+  ```"
 
   ([] (kafka {}))
   ([opts]
@@ -82,7 +86,7 @@
                 (stream! @core event)))))
         (catch Exception e
           (error e "Interrupted consumption"))
-        (finally 
+        (finally
           (client/close! consumer))))))
 
 (defn kafka-consumer

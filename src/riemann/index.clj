@@ -7,9 +7,9 @@
 
   Indexes must extend three protocols:
 
-  Index: indexing and querying events
-  Seqable: returning a list of events
-  Service: lifecycle management"
+  - Index: indexing and querying events
+  - Seqable: returning a list of events
+  - Service: lifecycle management"
   (:refer-clojure :exclude [update])
   (:require [riemann.query :as query]
             [riemann.common :refer [deprecated]]

@@ -247,18 +247,20 @@
   "Create a new TCP server. Doesn't start until (service/start!).
 
   Options:
-  :host             The host to listen on (default 127.0.0.1).
-  :port             The port to listen on. (default 5554 with TLS, or 5555 std)
-  :core             An atom used to track the active core for this server.
-  :so-backlog       The maximum queue length for incoming tcp connections (default 50).
-  :channel-group    A global channel group used to track all connections.
-  :initializer      A ChannelInitializer for creating new pipelines.
+
+  - :host             The host to listen on (default 127.0.0.1).
+  - :port             The port to listen on. (default 5554 with TLS, or 5555 std)
+  - :core             An atom used to track the active core for this server.
+  - :so-backlog       The maximum queue length for incoming tcp connections (default 50).
+  - :channel-group    A global channel group used to track all connections.
+  - :initializer      A ChannelInitializer for creating new pipelines.
 
   TLS options:
-  :tls?             Whether to enable TLS
-  :key              A PKCS8-encoded private key file
-  :cert             The corresponding public certificate
-  :ca-cert          The certificate of the CA which signed this key"
+
+  - :tls?             Whether to enable TLS
+  - :key              A PKCS8-encoded private key file
+  - :cert             The corresponding public certificate
+  - :ca-cert          The certificate of the CA which signed this key"
   ([]
    (tcp-server {}))
   ([opts]

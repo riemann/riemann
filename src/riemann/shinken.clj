@@ -28,12 +28,11 @@
 
   Options:
 
-  :hostname     Host name of the Shinken receiver/arbiter. Default is
-                \"127.0.0.1\".
-  :port         Port that mod-ws-arbiter is listening to. Default is 7760
-  :username     Username. Default is \"admin\".
-  :password     Password of the corresponding user. Default is \"admin\"."
-
+  - :hostname     Host name of the Shinken receiver/arbiter. Default is
+                  \"127.0.0.1\".
+  - :port         Port that mod-ws-arbiter is listening to. Default is 7760
+  - :username     Username. Default is \"admin\".
+  - :password     Password of the corresponding user. Default is \"admin\"."
   [opts]
   (let
     [opts (merge {:hostname "127.0.0.1"

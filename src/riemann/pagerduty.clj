@@ -97,13 +97,13 @@
 
   General options:
 
-  `:service-key`         Pagerduty service key (also called integration key
+  - `:service-key`         Pagerduty service key (also called integration key
   or routing key)
-  `:formatter`           Formatter for the pagerduty event. You can override
+  - `:formatter`           Formatter for the pagerduty event. You can override
   the default formatter. The formatter must be a function that accepts an event
   and emits a hash. (optional)
-  `:options`             Extra HTTP options. (optional)
-  `:version`             set to `:v2` to use Pagerduty v2 API. (optional)
+  - `:options`             Extra HTTP options. (optional)
+  - `:version`             set to `:v2` to use Pagerduty v2 API. (optional)
 
   v1 API:
 
@@ -121,6 +121,7 @@
 
   Example, using the v1 API with a custom formatter:
 
+  ```clojure
   (defn pd-format-event
     [event]
     {:incident_key 'Incident key', :description 'Incident Description',
@@ -129,7 +130,8 @@
   (let [pd (pagerduty { :service-key \"my-service-key\" :formatter pd-format-event})]
     (changed-state
       (where (state \"ok\") (:resolve pd))
-      (where (state \"critical\") (:trigger pd))))"
+      (where (state \"critical\") (:trigger pd))))
+  ```"
   [config]
   {:trigger     (fn [e] (send-event :trigger config e))
    :acknowledge (fn [e] (send-event :acknowledge config e))

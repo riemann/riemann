@@ -199,9 +199,11 @@
   "Transforms an AST into a fn [event] which returns true if the query matches
   that event. Example:
 
+  ```clojure
   (def q (fun (ast \"metric > 2\")))
   (q {:metric 1}) => false
-  (q {:metric 3}) => true"
+  (q {:metric 3}) => true
+  ```"
   [ast]
   (if-let [fun (cache/lookup @fun-cache ast)]
     ; Cache hit
