@@ -83,10 +83,12 @@
 
   Examples:
 
+  ```clojure
   (def bdry (boundary eml tkn))
   (when :foo (bdry)) => builds the destination metric id with :service
   (when :foo (bdry {:async true})) => same as previous, but async
-  (when :foo (bdry {:metric-id \"METRIC_ID\"})) => sends to METRIC_ID"
+  (when :foo (bdry {:metric-id \"METRIC_ID\"})) => sends to METRIC_ID
+  ```"
   [email token]
   (fn b
     ([] (b {}))

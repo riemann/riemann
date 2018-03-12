@@ -40,12 +40,14 @@
   \"<event host>/<event service>\". The state message will be the host, service, state
   and metric.
 
+  ```clojure
   (let [vo (victorops \"my-api-key\" \"my-routing-key\")]
     (changed-state
       (where (state \"info\") (:info vo))
       (where (state \"warning\") (:warning vo))
       (where (state \"critical\") (:critical vo))
-      (where (state \"ok\") (:recovery vo))))"
+      (where (state \"ok\") (:recovery vo))))
+  ```"
   [api-key routing-key]
   {:info            (fn [e] (post api-key routing-key (format-event :INFO e)))
    :warning         (fn [e] (post api-key routing-key (format-event :WARNING e)))

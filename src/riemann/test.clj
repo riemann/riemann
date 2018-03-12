@@ -84,9 +84,11 @@
   at compile time, returns a function that discards any incoming events. When
   *testing* is false, compiles to (sdo child1 child2 ...).
 
+  ```clojure
   (io
     (fn [e]
-      (http/put \"http://my.service/callback\", {:body (event->json e)})))"
+      (http/put \"http://my.service/callback\", {:body (event->json e)})))
+  ```"
   [& children]
   (if *testing*
     `streams/bit-bucket
@@ -112,9 +114,11 @@
   your compile time run time and wow
   this gets confusing.
 
+  ```clojure
   (with-test-env
     (eval '(let [s (tap :foo prn)]
              (run-test! [s] [:hi]))))
+  ```
 
   prints :hi, and returns {:foo [:hi]}"
   [& body]
@@ -165,9 +169,11 @@
   "Like clojure.test deftest, but establishes a fresh time context and a fresh
   set of tap results for the duration of the body.
 
+  ```clojure
   (deftest my-tap
     (let [rs (test/inject! [{:time 2 :service \"bar\"}])]
-      (is (= 1 (count (:some-tap rs))))))"
+      (is (= 1 (count (:some-tap rs))))))
+  ```"
   [name & body]
   `(test/deftest ~name
      (binding [*results* (fresh-results @*taps*)]

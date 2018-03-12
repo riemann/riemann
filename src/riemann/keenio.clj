@@ -25,9 +25,11 @@
   returns a function that accepts an event and sends it to Keen IO. The full
   event will be sent.
 
+  ```clojure
   (streams
     (let [kio (keenio \"COLLECTION_NAME\" \"PROJECT_ID\" \"WRITE_KEY\")]
-      (where (state \"error\") kio)))"
+      (where (state \"error\") kio)))
+  ```"
   [collection project-id write-key]
   (fn [event]
     (post collection project-id write-key event)))

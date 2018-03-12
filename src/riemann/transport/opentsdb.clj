@@ -120,10 +120,10 @@
 (defn opentsdb-server
   "Start a opentsdb-server. Options:
 
-  :host       \"127.0.0.1\"
-  :port       4242
-  :parser-fn  an optional function which transforms events prior to streaming
-              into the core."
+  - :host       \"127.0.0.1\"
+  - :port       4242
+  - :parser-fn  an optional function which transforms events prior to streaming
+                into the core."
   ([] (opentsdb-server {}))
   ([opts]
      (let [core  (get opts :core (atom nil))

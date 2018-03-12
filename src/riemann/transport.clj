@@ -75,10 +75,12 @@
   on their names are bound once and re-used in every invocation of
   getPipeline(), other handlers will be evaluated each time.
 
+  ```clojure
   (channel-pipeline-factory
              frame-decoder    (make-an-int32-frame-decoder)
     ^:shared protobuf-decoder (ProtobufDecoder. (Proto$Msg/getDefaultInstance))
-    ^:shared msg-decoder      msg-decoder)"
+    ^:shared msg-decoder      msg-decoder)
+  ```"
   [& names-and-exprs]
   (assert (even? (count names-and-exprs)))
   (let [handlers (partition 2 names-and-exprs)

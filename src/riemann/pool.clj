@@ -60,10 +60,10 @@
   nil, the pool will sleep for regenerate-interval seconds before retrying
   (open).
 
-  :regenerate-interval    How long to wait between retrying (open).
-  :size                   Number of thingys in the pool.
-  :block-start            Should (fixed-pool) wait until the pool is full
-                          before returning?
+  - :regenerate-interval    How long to wait between retrying (open).
+  - :size                   Number of thingys in the pool.
+  - :block-start            Should (fixed-pool) wait until the pool is full
+                            before returning?
 
   Note that fixed-pool is correct only if every successful (claim) is followed
   by exactly one of either (invalidate) or (release). If calls are unbalanced;
@@ -97,10 +97,12 @@
   given pool, with specified claim timeout. Releases thingy at the end of the
   body, or if an exception is thrown, invalidates them and rethrows. Example:
 
+  ```clojure
   ; With client, taken from connection-pool, waiting 5 seconds to claim, send
   ; client a message.
   (with-pool [client connection-pool 5]
-    (send client a-message))"
+    (send client a-message))
+  ```"
   [[thingy pool timeout] & body]
   ; Destructuring bind could change nil to a, say, vector, and cause
   ; unbalanced claim/release.

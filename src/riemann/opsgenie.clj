@@ -65,10 +65,12 @@
   functions which trigger and resolve events. clojure/hash from event host, service and tags
   will be used as the alias.
 
+  ```clojure
   (let [og (opsgenie \"my-service-key\" \"recipient@example.com\")]
     (changed-state
       (where (state \"ok\") (:resolve og))
-      (where (state \"critical\") (:trigger og))))"
+      (where (state \"critical\") (:trigger og))))
+  ```"
   [service-key recipients]
   {:trigger     #(create-alert service-key % recipients)
    :resolve     #(close-alert service-key %)})

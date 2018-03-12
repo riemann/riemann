@@ -73,12 +73,14 @@
   Takes your account name, webhook token, bot username and channel name.
   Returns a function that will post a message into slack.com channel:
 
+  ```clojure
   (def credentials {:account \"some_org\", :token \"53CR3T\"})
   (def slacker (slack credentials {:username \"Riemann bot\"
                                    :channel \"#monitoring\"
                                    :icon \":smile:\"}))
 
   (by [:service] slacker)
+  ```
 
   Hint: token is the last part of the webhook URL that Slack gives you.
   https://hooks.slack.com/services/QWERSAFG0/AFOIUYTQ48/120984SAFJSFR
@@ -87,30 +89,33 @@
   You can also supply a custom formatter for formatting events into Slack
   messages. Formatter result may contain:
 
-    * `username` - overrides the username provided upon construction
-    * `channel` - overrides the channel provided upon construction
-    * `icon` - overrides the icon provided upon construction
-    * `text` - main text formatted using Slack markup
-    * `attachments` - array of attachments according to https://api.slack.com/docs/attachments
+    - `username` - overrides the username provided upon construction
+    - `channel` - overrides the channel provided upon construction
+    - `icon` - overrides the icon provided upon construction
+    - `text` - main text formatted using Slack markup
+    - `attachments` - array of attachments according to https://api.slack.com/docs/attachments
 
+  ```clojure
   (def slacker (slack credentials {:username \"Riemann bot\", :channel \"#monitoring\"
                                    :formatter (fn [e] {:text (:state e)
                                                        :icon \":happy:\"})))
+  ```
 
   You can use `slack` inside of a grouping function which produces a seq of
   events, like `rollup`:
 
+  ```clojure
   (def slacker (slack credentials {:username \"Riemann bot\", :channel \"#monitoring\"
                                    :formatter (fn [es] {:text (apply str (map :state es))})))
 
   (rollup 5 60 slacker)
+  ```
 
   The last parameter of the arity-3 version of the function is a map
   of parameters passed directly to clj-http. For example, you can set
   socket and connection timeouts like so:
 
-  (slack {...} {...} {:socket-timeout 1000 :conn-timeout 1000})
-  "
+  (slack {...} {...} {:socket-timeout 1000 :conn-timeout 1000})"
   ([account_name token username channel] (slack {:account account_name, :token token}
                                                 {:username username, :channel channel}))
   ([account-info message-info]

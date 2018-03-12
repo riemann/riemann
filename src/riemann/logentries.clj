@@ -31,7 +31,7 @@
   LogentriesClient
   (open [this]
     (let [sock (Socket. host port)]
-      (assoc this 
+      (assoc this
              :socket sock
              :out (OutputStreamWriter. (.getOutputStream sock)))))
   (send-line [this line]
@@ -48,20 +48,19 @@
   Silently drops events when Logentries is down. Attempts to reconnect
   automatically every five seconds. Use:
 
+  ```clojure
   (logentries {:token \"2bfbea1e-10c3-4419-bdad-7e6435882e1f\"})
+  ```
 
   Options:
 
-  :pool-size            The number of connections to keep open. Default 4.
-
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
-
-  :claim-timeout        How many seconds to wait for a Logentries connection from
-                        the pool. Default 0.1.
-
-  :block-start          Wait for the pool's initial connections to open
-                        before returning."
+  - :pool-size            The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
+  - :claim-timeout        How many seconds to wait for a Logentries connection from
+                          the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning."
   [opts]
   (let [host               (get opts :host "data.logentries.com")
         port               (get opts :port 80)

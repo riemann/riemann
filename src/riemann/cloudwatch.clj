@@ -18,28 +18,27 @@
   "Returns a function which accepts an event and sends it to cloudwatch.
   Usage:
 
+  ```clojure
   (cloudwatch {:access-key \"AKJALPVWYQ6BFMVLSZDA\"
                :secret-key \"ZFEemkafy0paNMx5JcinMUiOC4dcMKhxXCL85DhM\"})
-  
+
   (cloudwatch {}) will make use of IAM Instance Profile.
+  ```
 
   Options:
 
-  :access-key  AWS access key of your AWS Account.
-
-  :secret-key  AWS secret key for the above access key.
-
-  :endpoint    AWS Endpoint for posting metrics(changes with AWS region).
-
-  :namespace   AWS CloudWatch namespace."
+  - :access-key  AWS access key of your AWS Account.
+  - :secret-key  AWS secret key for the above access key.
+  - :endpoint    AWS Endpoint for posting metrics(changes with AWS region).
+  - :namespace   AWS CloudWatch namespace."
   [opts]
   (let [opts (if (or (contains? opts :access-key) (contains? opts :secret-key))
-               (merge 
+               (merge
                     {:access-key "aws-access-key"
                      :secret-key "aws-secret-key"
                      :endpoint   "monitoring.us-east-1.amazonaws.com"
                      :namespace  "Riemann"} opts)
-               (merge 
+               (merge
                     {:endpoint   "monitoring.us-east-1.amazonaws.com"
                      :namespace  "Riemann"} opts))]
     (fn [event]

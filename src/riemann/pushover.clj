@@ -22,21 +22,22 @@
                  (:metric event) ")")})
 
 (defn pushover
-  "Returns a function which accepts an event and sends it to Pushover. 
-  An options map can be provided as an optional third argument. 
-  
+  "Returns a function which accepts an event and sends it to Pushover.
+  An options map can be provided as an optional third argument.
+
   Options:
 
-    :formatter Optional event formatter function
+  - :formatter Optional event formatter function
 
   For details on Pushover options see https://pushover.net/api
 
   Examples:
 
+  ```clojure
   (pushover \"APPLICATION_TOKEN\" \"USER_KEY\")
 
-  (pushover \"APPLICATION_TOKEN\" \"USER_KEY\" {:formatter my-custom-event-formatter})"
-
+  (pushover \"APPLICATION_TOKEN\" \"USER_KEY\" {:formatter my-custom-event-formatter})
+  ```"
   ([token user]
    (pushover token user {}))
   ([token user opts]

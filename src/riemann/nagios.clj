@@ -31,12 +31,10 @@
 
   (nagios {:host \"localhost\" :port 5667 :password \"secret\" :encryption TRIPLE_DES})
 
-  :host       Host where the Nagios service runs. Defaults to \"127.0.0.1\".
-  :port       The port to connect to. Defaults to 5667.
-  :password   The password as set in /etc/nsca.cfg. Defaults to \"password\".
-  :encryption The encryption method as set in /etc/nsca.cfg. Defaults to TRIPLE_DES.
-              Please note that currently only NONE, XOR and TRIPLE_DES are supported.
-  "
+  - :host       Host where the Nagios service runs. Defaults to \"127.0.0.1\".
+  - :port       The port to connect to. Defaults to 5667.
+  - :password   The password as set in /etc/nsca.cfg. Defaults to \"password\".
+  - :encryption The encryption method as set in /etc/nsca.cfg. Defaults to TRIPLE_DES. Please note that currently only NONE, XOR and TRIPLE_DES are supported."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 5667

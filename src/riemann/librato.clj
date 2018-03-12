@@ -46,11 +46,11 @@
   "Creates a librato metrics adapter. Takes your username and API key, and
   returns a map of streams:
 
-  :gauge
-  :counter
-  :annotation
-  :start-annotation
-  :end-annotation
+  - :gauge
+  - :counter
+  - :annotation
+  - :start-annotation
+  - :end-annotation
 
   Gauge and counter submit events as measurements. Annotation creates an
   annotation from the given event; it will have only a start time unless
@@ -61,6 +61,7 @@
 
   Example:
 
+  ```
   (def librato (librato-metrics \"aphyr@aphyr.com\" \"abcd01234...\"))
 
   (tagged \"latency\"
@@ -71,7 +72,8 @@
       (where (state \"ok\")
         (:start-annotation librato)
         (else
-          (:end-annotation librato)))))"
+          (:end-annotation librato)))))
+  ```"
   ([user api-key]
      (librato-metrics user api-key {:threads 4}))
   ([user api-key connection-mgr-options]

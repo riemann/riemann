@@ -228,8 +228,9 @@
   "Starts a new websocket server for a core. Starts immediately.
 
   Options:
-  :host   The address to listen on (default 127.0.0.1)
-  :port   The port to listen on (default 5556)"
+
+  - :host   The address to listen on (default 127.0.0.1)
+  - :port   The port to listen on (default 5556)"
   ([] (ws-server {}))
   ([opts]
    (WebsocketServer.

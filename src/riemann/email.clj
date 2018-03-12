@@ -21,38 +21,49 @@
   "Returns a mailer, which is a function invoked with an address or a sequence
   of addresses and returns a stream. That stream is a function which takes a
   single event, or a sequence of events, and sends email about them.
-  
+
+  ```clojure
   (def email (mailer))
- 
+  ```
+
   This mailer uses the local sendmail.
 
+  ```clojure
   (changed :state
     (email \"xerxes@trioptimum.org\" \"shodan@trioptimum.org\"))
+  ```
 
   The first argument are SMTP options like :host, :port, :user, :pass, :tls,
   and :ssl. The second argument is a map of default message options, like :from
   or :subject.
-  
+
+  ```clojure
   (def email (mailer {:host \"mail.relay\"}
                      {:from \"riemann@trioptimum.com\"}))
 
+  ```
+
   If you provide a single map, mailer will split the SMTP options out for you.
 
+  ```clojure
   (def email (mailer {:host \"mail.relay\"
                       :user \"foo\"
                       :pass \"bar\"
                       :from \"riemann@trioptimum.com\"}))
-  
+  ```
+
   smtp-opts and msg-opts are passed to postal. For more documentation, see
   https://github.com/drewr/postal
-  
+
   By default, riemann uses (subject events) and (body events) to format emails.
   You can set your own subject or body formatter functions by including
   :subject or :body in msg-opts. These formatting functions take a sequence of
   events and return a string.
 
-  (def email (mailer {} {:body (fn [events] 
-                                 (apply prn-str events))}))"
+  ```clojure
+  (def email (mailer {} {:body (fn [events]
+                                 (apply prn-str events))}))
+  ```"
   ([] (mailer {}))
   ([opts]
         (let [smtp-keys #{:host :port :user :pass :ssl :tls :sender}

@@ -278,7 +278,9 @@
   streamed states have only the host and service copied, current time, and
   state expired. Expired events from the index are also published to the
   \"index\" pubsub channel.
+
   Options:
+
   :keep-keys A list of event keys which should be preserved from the indexed
              event in the expired event. Defaults to [:host :service], which
              means that when an event expires, its :host and :service are

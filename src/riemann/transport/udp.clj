@@ -153,12 +153,13 @@
   dropped with protobuf parse errors in the log.
 
   Options:
-  :host             The address to listen on (default 127.0.0.1).
-  :port             The port to listen on (default 5555).
-  :max-size         The maximum datagram size (default 16384 bytes).
-  :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
-  :channel-group    A ChannelGroup used to track all connections
-  :initializer      A ChannelInitializer"
+
+  - :host             The address to listen on (default 127.0.0.1).
+  - :port             The port to listen on (default 5555).
+  - :max-size         The maximum datagram size (default 16384 bytes).
+  - :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
+  - :channel-group    A ChannelGroup used to track all connections
+  - :initializer      A ChannelInitializer"
   ([] (udp-server {}))
   ([opts]
    (let [core  (get opts :core (atom nil))
