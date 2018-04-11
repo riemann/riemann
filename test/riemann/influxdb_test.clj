@@ -51,7 +51,7 @@
           (is (= {"value" -2.0
                   "state" "ok"
                   "description" "all clear"} (into {} (.get fields point))))
-          (is (= "influxdb-test") (.get measurement point))
+          (is (= "influxdb test" (.get measurement point)))
           (is (= {"host" "riemann.local"} (into {} (.get tags point))))
           (is (=  (long t) (.get time-field point))))
         (k [{:host "riemann.local"
@@ -93,7 +93,7 @@
           (is (= {"value" -2.0
                   "state" "ok"
                   "description" "all clear"} (into {} (.get fields point1))))
-          (is (= "influxdb-test") (.get measurement point1))
+          (is (= "influxdb test" (.get measurement point1)))
           (is (= {"host" "riemann.local"} (into {} (.get tags point1))))
           (is (=  (long t) (.get time-field point1)))
           ;; second point
@@ -101,7 +101,7 @@
                   "state" "ok"
                   "description" "not clear"
                   "foobar" "foobaz"} (into {} (.get fields point2))))
-          (is (= "influxdb-test2") (.get measurement point2))
+          (is (= "influxdb test2" (.get measurement point2)))
           (is (= TimeUnit/SECONDS (.get precision point2)))
           (is (= {"host" "riemann.local2"} (into {} (.get tags point2))))
           (is (=  (+ 1 (long t)) (.get time-field point2)))
@@ -110,7 +110,7 @@
                   "state" "ok"
                   "rofl" "mao"
                   "description" "not clear"} (into {} (.get fields point3))))
-          (is (= "influxdb-test2") (.get measurement point3))
+          (is (= "influxdb test2" (.get measurement point3)))
           (is (= {"host" "riemann.local2"
                   "hello" "goodbye"
                   "foobar" "foobaz"} (into {} (.get tags point3))))
@@ -154,7 +154,7 @@
           (is (= {"value" -2.0
                   "state" "ok"
                   "description" "all clear"} (into {} (.get fields point))))
-          (is (= "influxdb-test") (.get measurement point))
+          (is (= "influxdb test" (.get measurement point)))
           (is (= {"host" "riemann.local"
                   "foobar" "hello"
                   "foo" "bar"
@@ -182,7 +182,7 @@
           (is (= (into {} (.getTags batch-point)) {}))
           (is (= 1 (count points)))
           (is (= {"alice" "bob"} (into {} (.get fields point))))
-          (is (= "measurement") (.get measurement point))
+          (is (= "measurement" (.get measurement point)))
           (is (= {"foo" "bar"
                   "bar" "baz"} (into {} (.get tags point))))
           (is (= 1428366765 (.get time-field point))))
@@ -235,7 +235,7 @@
           (is (= 1 (count points)))
           (is (= TimeUnit/SECONDS (.get precision point)))
           (is (= {"alice" "bob"} (into {} (.get fields point))))
-          (is (= "measurement") (.get measurement point))
+          (is (= "measurement" (.get measurement point)))
           (is (= {"foo" "bar"
                   "bar" "baz"} (into {} (.get tags point))))
           (is (= 1428366765 (.get time-field point))))
@@ -251,7 +251,7 @@
           (is (= (into {} (.getTags batch-point)) {}))
           (is (= 1 (count points)))
           (is (= {"alice" "bob"} (into {} (.get fields point))))
-          (is (= "measurement2") (.get measurement point))
+          (is (= "measurement2" (.get measurement point)))
           (is (= {"foo" "bar"
                   "bar" "baz"} (into {} (.get tags point))))
           (is (= 1428366766000000 (.get time-field point))))
@@ -268,14 +268,14 @@
           ;; point 1
           (is (= TimeUnit/SECONDS (.get precision point1)))
           (is (= {"alice" "bob" "hello" "goodbye"} (into {} (.get fields point1))))
-          (is (= "measurement") (.get measurement point1))
+          (is (= "measurement" (.get measurement point1)))
           (is (= {"foo" "foo"
                   "bar" "bar"} (into {} (.get tags point1))))
           (is (= 1428366767 (.get time-field point1)))
           ;; point 2
           (is (= TimeUnit/MICROSECONDS (.get precision point2)))
           (is (= {"alice" 1.0 "hello" 2.0 "haha" "huhu"} (into {} (.get fields point2))))
-          (is (= "measurement2") (.get measurement point2))
+          (is (= "measurement2" (.get measurement point2)))
           (is (= {"foo" "foo"
                   "one" "two"
                   "bar" "bar"} (into {} (.get tags point2))))
@@ -310,7 +310,7 @@
                                                    "test1" "test1"}))
           (is (= 1 (count points)))
           (is (= {"alice" "bob"} (into {} (.get fields point))))
-          (is (= "example") (.get measurement point))
+          (is (= "example" (.get measurement point)))
           (is (= {"foo" "bar"
                   "test1" "test1"
                   "hello" "goodbye"
@@ -337,7 +337,7 @@
           (is (= (into {} (.getTags batch-point)) {"hello" "goodbye"
                                                    "test1" "test1"}))
           (is (= {"alice" "bob"} (into {} (.get fields point))))
-          (is (= "example") (.get measurement point))
+          (is (= "example" (.get measurement point)))
           (is (= {"foo" "bar"
                   "test1" "test1"
                   "hello" "goodbye"
