@@ -38,7 +38,7 @@
     [clj-antlr "0.2.4"]
     [io.netty/netty-all "4.1.19.Final"]
     [riemann-clojure-client "0.4.5"]
-    [less-awful-ssl "1.0.2"]
+    [less-awful-ssl "1.0.3"]
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.3"]
     [amazonica "0.3.95" :exclusions [joda-time]]
