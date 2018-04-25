@@ -4,7 +4,8 @@ WORKDIR /riemann
 ADD . .
 
 RUN lein uberjar && \
-    mv target/riemann-*-standalone.jar target/riemann.jar
+    mv target/riemann-*-standalone.jar target/riemann.jar && \
+    sed -i 's/127.0.0.1/0.0.0.0/g' pkg/tar/riemann.config
 
 FROM openjdk:10.0-jre
 MAINTAINER james+riemann@lovedthanlost.net
