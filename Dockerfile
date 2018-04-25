@@ -7,7 +7,7 @@ RUN lein uberjar && \
     mv target/riemann-*-standalone.jar target/riemann.jar
 
 FROM openjdk:10.0-jre
-MAINTAINER Christoph Mewes <git@xrstf.de>
+MAINTAINER james+riemann@lovedthanlost.net
 
 EXPOSE 5555/tcp 5555/udp 5556
 CMD ["/bin/riemann", "/etc/riemann.config"]
