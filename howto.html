@@ -297,6 +297,89 @@ set :bind, "1.2.3.4"
   </div>
 </div>
 
+<h3>Using Docker</h3>
+
+<div class="row">
+  <div class="sixcol">
+    <p>Instead of installing Riemann directly on your system, you can also use
+      <a href="https://www.docker.com/">Docker</a> to run it. There is a
+      prepackaged Docker image available as <code>riemannio/riemann</code>.</p>
+  </div>
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>With its default configuration, Riemann will index all incoming events
+      and print expired events. Make sure to bind the
+      <a href="#what-ports-does-riemann-use">neccessary ports</a> to your
+      host system, or else you won't be able to send events to Riemann.</p>
+    <p>If you expect lots of traffic and don't need segregating of containers,
+      you can also skip the Docker network and use the host network by using the
+      <code>--net host</code> flag. Note that the default Riemann configuration
+      in Docker will listen on <strong>all</strong> network interfaces, so make
+      sure to either mount a different configuration (see below) or configure
+      your firewall appropriately.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight sh %}
+docker run --rm -p 5555:5555 riemannio/riemann
+{% endhighlight %}
+
+{% highlight sh %}
+docker run --rm --net host riemannio/riemann
+{% endhighlight %}
+  </div>
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>Riemann will by default use a configuration file located at
+      <code>/etc/riemann.config</code>, which you will most likely override by
+      mounting your own configuration into the container.</p>
+    <p>For this you can either mount your config file at the default location
+      or override the default container command
+      (<code>/bin/riemann /etc/riemann.config</code>) if for some reason you
+      want to change more command line options.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight sh %}
+docker run \
+  --rm \
+  -p 5555:5555 \
+  -v $(realpath riemann.config):/etc/riemann.config \
+  riemannio/riemann
+{% endhighlight %}
+
+{% highlight sh %}
+docker run \
+  --rm \
+  -p 5555:5555 \
+  -v $(realpath myapp.clj):/myapp.clj \
+  riemannio/riemann \
+  /bin/riemann /myapp.clj
+{% endhighlight %}
+  </div>
+</div>
+<div class="row">
+  <div class="sixcol">
+    <p>To keep things manageable, you can use
+      <a href="https://docs.docker.com/compose/">Docker Compose</a> to define
+      how the Riemann container should be run.</p>
+  </div>
+  <div class="sixcol last">
+{% highlight yaml %}
+version: "3"
+services:
+  riemann:
+    image: riemannio/riemann:latest
+    ports:
+      - "127.0.0.1:5555:5555"
+      - "127.0.0.1:5555:5555/udp"
+      - "127.0.0.1:5556:5556"
+    volumes:
+      - ./riemann.config:/etc/riemann.config
+{% endhighlight %}
+  </div>
+</div>
+
 <h3>Which JVM should I use?</h3>
 
 <div class="row">
@@ -2825,14 +2908,14 @@ view.</p>
 
 <div class="row">
   <div class="sixcol">
-    <p>You can consume events from Kafka topics by configuring a <a href="api/riemann.config.html#var-kafka-consumer">Kafka consumer</a>.</p>    
+    <p>You can consume events from Kafka topics by configuring a <a href="api/riemann.config.html#var-kafka-consumer">Kafka consumer</a>.</p>
     <p>For a full list of <code>:consumer.config</code> options see the Kafka consumer docs. Note that the <code>:enable.auto.commit</code> option is ignored and defaults to true.</p>
   </div>
 
   <div class="sixcol last">
 {% highlight clj %}
-(kafka-consumer {:consumer.config {:bootstrap.servers "brok01.foo:9092" 
-                                   :group.id "riemann"} 
+(kafka-consumer {:consumer.config {:bootstrap.servers "brok01.foo:9092"
+                                   :group.id "riemann"}
                  :topics ["metrics"]})
 {% endhighlight %}
   </div>
