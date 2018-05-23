@@ -36,7 +36,7 @@
     [com.amazonaws/aws-java-sdk "1.11.116" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [clj-antlr "0.2.4"]
-    [io.netty/netty-all "4.1.19.Final"]
+    [io.netty/netty-all "4.1.25.Final"]
     [riemann-clojure-client "0.4.5"]
     [less-awful-ssl "1.0.3"]
     [slingshot "0.12.2"]
