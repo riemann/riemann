@@ -1,3 +1,32 @@
+# Version 0.3.1
+
+This is a minor release containing a small set of enhancements and bug fixes. Mathieu Corbin added support for the Opsgenie v2 API, multiple events and tags support to the Graphite stream and input and output. Christoph Mewes provided a Docker image for Riemann. You can find it on [the Docker Hub](https://hub.docker.com/r/riemannio/riemann/). Pierre-Yves Ritschard added lexical sorting to configuration files before including them. epabced enabled TCP-TLS support in the logstash plugins.
+
+## Features and enhancements
+
+- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
+- Support for Opsgenie v2 API [\#925](https://github.com/riemann/riemann/pull/925) ([mcorbin](https://github.com/mcorbin))
+- Docker documentation [\#924](https://github.com/riemann/riemann/pull/924) ([xrstf](https://github.com/xrstf))
+- Docker improvements [\#923](https://github.com/riemann/riemann/pull/923) ([xrstf](https://github.com/xrstf))
+- Provide a Docker image [\#922](https://github.com/riemann/riemann/pull/922) ([xrstf](https://github.com/xrstf))
+- Pull in less-awful-ssl 1.0.3 [\#921](https://github.com/riemann/riemann/pull/921) ([MichaelDoyle](https://github.com/MichaelDoyle))
+- Add default TLS port in documentation [\#916](https://github.com/riemann/riemann/pull/916) ([mcorbin](https://github.com/mcorbin))
+- Improve the formatting of the API documentation [\#915](https://github.com/riemann/riemann/pull/915) ([mcorbin](https://github.com/mcorbin))
+- config: lexicographically sort files before including them [\#912](https://github.com/riemann/riemann/pull/912) ([pyr](https://github.com/pyr))
+- Enable TCP-TLS in logstash plugins [\#911](https://github.com/riemann/riemann/pull/911) ([epabced](https://github.com/epabced))
+- Add multiple events support to the Graphite stream [\#910](https://github.com/riemann/riemann/pull/910) ([mcorbin](https://github.com/mcorbin))
+- Add support for tags in Graphite input and output [\#909](https://github.com/riemann/riemann/pull/909) ([mcorbin](https://github.com/mcorbin))
+- Add riemann-discovery on the plugin list [\#906](https://github.com/riemann/riemann/pull/906) ([mcorbin](https://github.com/mcorbin))
+- Add documentation for the core in the test framework [\#904](https://github.com/riemann/riemann/pull/904) ([mcorbin](https://github.com/mcorbin))
+- Add documentation for the not-expired stream [\#903](https://github.com/riemann/riemann/pull/903) ([mcorbin](https://github.com/mcorbin))
+- Add pagerduty v2 documentation [\#902](https://github.com/riemann/riemann/pull/902) ([mcorbin](https://github.com/mcorbin))
+
+## Bug Fixes
+
+- Fix incorrect assertions in tests [\#919](https://github.com/riemann/riemann/pull/919) ([Mongey](https://github.com/Mongey))
+- Fix doc typo [\#905](https://github.com/riemann/riemann/pull/905) ([mcorbin](https://github.com/mcorbin))
+- Add missing atom deref to properly close kafka client [\#908](https://github.com/riemann/riemann/pull/908) ([peffenberger](https://github.com/peffenberger))
+
 # Version 0.3.0
 
 Riemann now supports running under Java 9. We have removed support for Java 7. Thanks to Mathieu Corbin for his hard work here. Riemann is also upgraded to use Clojure 1.9.0 and a number of project dependencies were also bumped. We also removed the Campfire integration.

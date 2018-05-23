@@ -1,5 +1,39 @@
 # Change Log
 
+## [0.3.1](https://github.com/riemann/riemann/tree/0.3.1) (2018-05-23)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.0...0.3.1)
+
+**Closed issues:**
+
+- TLS Certificate Chains [\#920](https://github.com/riemann/riemann/issues/920)
+- Opsgenie API v2 [\#918](https://github.com/riemann/riemann/issues/918)
+- NPE with Riemann 0.3.0 and inject! [\#917](https://github.com/riemann/riemann/issues/917)
+- Could not find a suitable classloader to modify from clojure.lang.LazySeq [\#914](https://github.com/riemann/riemann/issues/914)
+- Execute custom script on a state trigger / stream [\#899](https://github.com/riemann/riemann/issues/899)
+- Provide example for testing with junit xml output [\#897](https://github.com/riemann/riemann/issues/897)
+
+**Merged pull requests:**
+
+- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
+- Support for Opsgenie v2 API [\#925](https://github.com/riemann/riemann/pull/925) ([mcorbin](https://github.com/mcorbin))
+- Docker documentation [\#924](https://github.com/riemann/riemann/pull/924) ([xrstf](https://github.com/xrstf))
+- Docker improvements [\#923](https://github.com/riemann/riemann/pull/923) ([xrstf](https://github.com/xrstf))
+- Provide a Docker image [\#922](https://github.com/riemann/riemann/pull/922) ([xrstf](https://github.com/xrstf))
+- Pull in less-awful-ssl 1.0.3 [\#921](https://github.com/riemann/riemann/pull/921) ([MichaelDoyle](https://github.com/MichaelDoyle))
+- Fix incorrect assertions in tests [\#919](https://github.com/riemann/riemann/pull/919) ([Mongey](https://github.com/Mongey))
+- Add default TLS port in documentation [\#916](https://github.com/riemann/riemann/pull/916) ([mcorbin](https://github.com/mcorbin))
+- Improve the formatting of the API documentation [\#915](https://github.com/riemann/riemann/pull/915) ([mcorbin](https://github.com/mcorbin))
+- config: lexicographically sort files before including them [\#912](https://github.com/riemann/riemann/pull/912) ([pyr](https://github.com/pyr))
+- Enable TCP-TLS in logstash plugins [\#911](https://github.com/riemann/riemann/pull/911) ([epabced](https://github.com/epabced))
+- Add multiple events support to the Graphite stream [\#910](https://github.com/riemann/riemann/pull/910) ([mcorbin](https://github.com/mcorbin))
+- Add support for tags in Graphite input and output [\#909](https://github.com/riemann/riemann/pull/909) ([mcorbin](https://github.com/mcorbin))
+- Add missing atom deref to properly close kafka client [\#908](https://github.com/riemann/riemann/pull/908) ([peffenberger](https://github.com/peffenberger))
+- Add riemann-discovery on the plugin list [\#906](https://github.com/riemann/riemann/pull/906) ([mcorbin](https://github.com/mcorbin))
+- Fix doc typo [\#905](https://github.com/riemann/riemann/pull/905) ([mcorbin](https://github.com/mcorbin))
+- Add documentation for the core in the test framework [\#904](https://github.com/riemann/riemann/pull/904) ([mcorbin](https://github.com/mcorbin))
+- Add documentation for the not-expired stream [\#903](https://github.com/riemann/riemann/pull/903) ([mcorbin](https://github.com/mcorbin))
+- Add pagerduty v2 documentation [\#902](https://github.com/riemann/riemann/pull/902) ([mcorbin](https://github.com/mcorbin))
+
 ## [0.3.0](https://github.com/riemann/riemann/tree/0.3.0) (2018-01-15)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.14...0.3.0)
 
