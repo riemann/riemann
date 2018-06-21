@@ -45,7 +45,7 @@
                  (:metric event) ")")
    :source (:host event)
    :severity (:state event)
-   :timestamp (->> (or (:time event) (long (riemann.time/unix-time)))
+   :timestamp (->> (long (or (:time event) (long (riemann.time/unix-time))))
                    (coerce/from-long)
                    (f/unparse timestamp-formatter))
    :custom_details event})

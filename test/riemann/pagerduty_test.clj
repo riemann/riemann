@@ -38,7 +38,14 @@
               :timestamp "1970-01-01T00:00:00.000Z"
               :custom_details event
               :severity "critical"}
-             (pg/format-event-v2 event))))))
+             (pg/format-event-v2 event))))
+    (testing "with time in double"
+      (is (= {:summary "riemann.io - req_per_sec is critical (100)"
+              :source "riemann.io"
+              :timestamp "1970-01-01T00:00:00.100Z"
+              :custom_details (assoc event :time 100.111)
+              :severity "critical"}
+             (pg/format-event-v2 (assoc event :time 100.111)))))))
 
 (deftest request-body-v1-test
   (let [service-key "fookey"
