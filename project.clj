@@ -40,7 +40,7 @@
     [riemann-clojure-client "0.4.5"]
     [less-awful-ssl "1.0.3"]
     [slingshot "0.12.2"]
-    [cljr-nsca "0.0.3"]
+    [cljr-nsca "0.0.4"]
     [amazonica "0.3.95" :exclusions [joda-time]]
     [spootnik/kinsky "0.1.20"]
     [pjstadig/humane-test-output "0.8.3"]]
