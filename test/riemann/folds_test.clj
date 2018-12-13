@@ -134,6 +134,8 @@
          (is (= (quotient-sloppy [{:metric 2} {:metric -3}])
                 {:metric -2/3}))
          (is (= (quotient-sloppy [{:metric 0 :a true} {:metric 0}])
+                {:metric 0 :a true}))
+         (is (= (quotient-sloppy [{:metric 1 :a true} {:metric 0}])
                 {:metric 0 :a true})))
 
 (deftest mean-test
