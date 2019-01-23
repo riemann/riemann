@@ -24,7 +24,7 @@
     [com.cemerick/pomegranate "1.0.0"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
-    [org.codehaus.plexus/plexus-utils "3.0"]
+    [org.codehaus.plexus/plexus-utils "3.1.1"]
     [http-kit "2.2.0"]
     [clj-http "3.7.0"]
     [cheshire "5.8.0"]
