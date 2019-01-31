@@ -1460,6 +1460,21 @@
                              (if metric (* metric factor))))]
     (apply smap scale-event children)))
 
+(defn untag
+  "Removes a tag, or set of tags, from events which flow through.
+
+  (untag \"foo\" index)
+  (untag [\"foo\" \"bar\"] index)"
+  [tags & children]
+  (let [tags (set (flatten [tags]))
+        blacklist #(not (tags %))]
+    (apply smap
+           (fn stream [event]
+             (update event
+                     :tags
+                     #(filter blacklist %)))
+           children)))
+
 (defn tag
   "Adds a new tag, or set of tags, to events which flow through.
 
