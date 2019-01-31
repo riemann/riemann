@@ -207,6 +207,29 @@
                [{}
                 {:host nil}]))
 
+(deftest untag-test
+         (testing "single tag"
+                  (test-stream (untag "foo")
+                               [{}
+                                {:service :a :tags []}
+                                {:service :a :tags ["foo"]}
+                                {:service :b :tags ["foo" "bar" "baz"]}]
+                               [{:tags []}
+                                {:service :a :tags []}
+                                {:service :a :tags []}
+                                {:service :b :tags ["bar" "baz"]}]))
+
+         (testing "multiple tags"
+                  (test-stream (untag ["foo" "bar"])
+                               [{}
+                                {:service :a :tags []}
+                                {:service :a :tags ["foo"]}
+                                {:service :b :tags ["foo" "bar" "baz"]}]
+                               [{:tags []}
+                                {:service :a :tags []}
+                                {:service :a :tags []}
+                                {:service :b :tags ["baz"]}])))
+
 (deftest tag-test
          ; Single tag
          (test-stream (tag "foo")
