@@ -177,7 +177,7 @@
     (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["jre >= 1.7.0"
+    (set-mojo! "requires" (create-dependency ["java-1.8.0-openjdk-headless >= 1.8.0"
                                               "daemonize >= 1.7.3"]))
     (.execute)))
 
