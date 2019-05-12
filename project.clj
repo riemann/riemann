@@ -44,7 +44,7 @@
     [amazonica "0.3.95" :exclusions [joda-time]]
     [spootnik/kinsky "0.1.20"]
     [pjstadig/humane-test-output "0.8.3"]]
-  :plugins [[lein-codox "0.10.2"]
+  :plugins [[lein-codox "0.10.6"]
             [lein-difftest "2.0.0"]
             [lein-rpm "0.0.6"
              :exclusions [org.apache.maven/maven-plugin-api
