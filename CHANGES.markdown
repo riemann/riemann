@@ -1,6 +1,6 @@
 # Version 0.3.2
 
-This is a minor release with a small set of enhancements and bug fixes. Derek Chiang provides support to usec Riemann as a dependency. Shalom Yerushalmy added support for posting of batched events to Prometheus. deoqc added the `untag` stream. Richard Gray added support for sending events to Zabbix. Erik Assum, cresh, Jeff Stokes, and Mathieu Corbin all added enhancements or bug fixes.
+This is a minor release with a small set of enhancements and bug fixes. Derek Chiang provides support to use Riemann as a dependency. Shalom Yerushalmy added support for posting of batched events to Prometheus. deoqc added the `untag` stream. Richard Gray added support for sending events to Zabbix. Erik Assum, cresh, Jeff Stokes, and Mathieu Corbin all added enhancements or bug fixes.
 
 ## Features and enhancements
 
