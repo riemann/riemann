@@ -1,10 +1,10 @@
 (ns riemann.folds-test
   (:refer-clojure :exclude [count])
-  (:use [riemann.common :only [event]]
-        riemann.folds
-        riemann.time
-        riemann.time.controlled
-        clojure.test))
+  (:require [riemann.common :refer [event]]
+            [riemann.folds :refer :all]
+            [riemann.time :refer :all]
+            [riemann.time.controlled :refer :all]
+            [clojure.test :refer :all]))
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)
@@ -134,6 +134,8 @@
          (is (= (quotient-sloppy [{:metric 2} {:metric -3}])
                 {:metric -2/3}))
          (is (= (quotient-sloppy [{:metric 0 :a true} {:metric 0}])
+                {:metric 0 :a true}))
+         (is (= (quotient-sloppy [{:metric 1 :a true} {:metric 0}])
                 {:metric 0 :a true})))
 
 (deftest mean-test

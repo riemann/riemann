@@ -1,8 +1,7 @@
 (ns riemann.logging-test
-  (:use riemann.logging
-        clojure.test)
   (:require [riemann.logging :as logging]
-            [clojure.java.io :as io])
+            [clojure.java.io :as io]
+            [clojure.test :refer :all])
   (:import (ch.qos.logback.classic Logger Level)
            (ch.qos.logback.core Appender ConsoleAppender)
            (java.util Iterator)))

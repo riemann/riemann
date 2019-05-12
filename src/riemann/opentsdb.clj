@@ -59,23 +59,18 @@
 
   Options:
 
-  :metric-name    A function which, given an event, returns the string describing
-                  the path of that event in opentsdb. opentsdb-metric-name by
-                  default.
-
-  :tags    A function which, given an event, returns the hash-map for the tags.
-           opentsdb-tags by default.
-
-  :pool-size  The number of connections to keep open. Default 4.
-
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
-
-  :claim-timeout        How many seconds to wait for a opentsdb connection from
-                        the pool. Default 0.1.
-
-  :block-start          Wait for the pool's initial connections to open
-                        before returning."
+  - :metric-name    A function which, given an event, returns the string describing
+                    the path of that event in opentsdb. opentsdb-metric-name by
+                    default.
+  - :tags    A function which, given an event, returns the hash-map for the tags.
+             opentsdb-tags by default.
+  - :pool-size  The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
+  - :claim-timeout        How many seconds to wait for a opentsdb connection from
+                          the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 4242

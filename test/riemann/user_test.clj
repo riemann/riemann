@@ -1,16 +1,5 @@
 (ns riemann.user-test
-  "Userland macros for testing snippets of Riemann config."
-  (:use
-   riemann.streams
-   riemann.email
-   riemann.sns
-   [riemann.time :only [unix-time linear-time once! every!]])
-  (:require
-   riemann.streams
-   riemann.config
-   riemann.core
-   riemann.index
-   riemann.query))
+  "Userland macros for testing snippets of Riemann config.")
 
 (defmacro configure-core [& conf]
   "Load the given Riemann conf into the current core and reset the index.

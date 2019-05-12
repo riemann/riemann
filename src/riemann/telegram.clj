@@ -57,24 +57,26 @@
 
   Options:
 
-  `:token`              The telegram token
-  `:http-options`       clj-http extra options (optional)
-  `:telegram-options`   These options are merged with the `:form-params` key of
+  - `:token`              The telegram token
+  - `:http-options`       clj-http extra options (optional)
+  - `:telegram-options`   These options are merged with the `:form-params` key of
   the request. The `:chat_id` key is mandatory.
   By default, the `:parse_mode` key is \"Markdown\".
-  `:message-formatter`  A function accepting an event and returning a string. (optional).
+  - `:message-formatter`  A function accepting an event and returning a string. (optional).
   If not specified, `html-parse-mode` or `markdown-parse-mode` will be used,
   depending on the `:parse_mode` value.
 
   Usage:
 
+  ```clojure
   (def token \"define_your_token\")
   (def chat-id \"0123456\")
 
   (streams
     (telegram {:token token
                :telegram-options {:chat_id chat-id
-                                  :parse_mode \"HTML\"}}))"
+                                  :parse_mode \"HTML\"}}))
+  ```"
   [opts]
   (fn [event]
     (let [events (if (sequential? event) event [event])]

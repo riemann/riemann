@@ -180,6 +180,7 @@ Thank you!
 11. Added release changes to release notes section.
 12. Publish release and push up docs changes.
 13. Publish to Clojars with `lein deploy clojars`.
-14. Send email to mailing list.
-15. Increment version in `project.clj` to add `-SNAPSHOT`.
+14. Create new Docker image and push to Hub.
+15. Send email to mailing list.
+16. Increment version in `project.clj` to add `-SNAPSHOT`.
 

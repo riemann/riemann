@@ -82,9 +82,11 @@
   "Catches exceptions, converts them to events, and sends those events to a
   special exception stream.
 
+  ```clojure
   (exception-stream (email \"polito@vonbraun.com\")
     (async-queue! :graphite {:core-pool-size 128}
       graph))
+  ```
 
   Streams often take multiple children and send an event to each using
   call-rescue. Call-rescue will rescue any exception thrown by a child stream,
@@ -102,8 +104,10 @@
   *also* during the evaluation of the child streams themselves, e.g. at the
   invocation time of exceptions itself. If we write
 
+  ```clojure
   (exception-stream (email ...)
     (rate 5 index))
+  ```
 
   then (rate), when invoked, might need access to this variable immediately.
   Therefore, this macro binds *exception-stream* twice: one when evaluating
@@ -123,7 +127,9 @@
 (defn dual
   "A stream which splits events into two mirror-images streams, based on
   (pred e).
+
   If (pred e) is true, calls (true-stream e) and (false-stream (expire e)).
+
   If (pred e) is false, does the opposite. Expired events are forwarded to both
   streams.
 
@@ -158,8 +164,10 @@
   "Streaming map. Calls children with (f event), whenever (f event) is non-nil.
   Prefer this to (adjust f) and (combine f). Example:
 
+  ```clojure
   (smap :metric prn) ; prints the metric of each event.
-  (smap #(assoc % :state \"ok\") index) ; Indexes each event with state \"ok\""
+  (smap #(assoc % :state \"ok\") index) ; Indexes each event with state \"ok\"
+  ```"
   [f & children]
   (fn stream [event]
     (let [value (f event)]
@@ -173,6 +181,7 @@
   aggregate all services, and smapcat to find the mode and assoc the proper
   states; emitting a series of individual events to the index.
 
+  ```clojure
   (coalesce
     (smapcat (fn [events]
                (let [freqs (frequencies (map :metric events))
@@ -180,7 +189,8 @@
                  (map #(assoc % :state (if (= mode (:metric %))
                                          \"ok\" \"warning\"))
                       events)))
-      index))"
+      index))
+  ```"
   [f & children]
   (fn stream [event]
     (doseq [e (f event)]
@@ -196,8 +206,10 @@
 (defn sreduce
   "Streaming reduce. Two forms:
 
+  ```clojure
   (sreduce f child1 child2 ...)
   (sreduce f val child1 child2 ...)
+  ```
 
   Maintains an internal value, which defaults to the first event received or,
   if provided, val. When the stream receives an event, calls (f val event) to
@@ -205,10 +217,14 @@
   effects. Examples:
 
   Passes on events, but with the *maximum* of all received metrics:
+
+  ```clojure
   (sreduce (fn [acc event] (assoc event :metric
                                   (max (:metric event) (:metric acc)))) ...)
+  ```
 
   Or, using riemann.folds, a simple moving average:
+
   (sreduce (fn [acc event] (folds/mean [acc event])) ...)"
   [f & opts]
   (if (fn? (first opts))
@@ -258,13 +274,15 @@
   riemann.service/executor-service for reloadable asynchronous execution of
   streams. See also: async-queue!, which may be simpler.
 
+  ```clojure
   (let [io-pool (service!
                   (executor-service
                     #(ThreadPoolExecutor. 1 10 ...)))
         graph (execute-on io-pool (graphite {:host ...}))]
     ...
     (tagged \"graph\"
-      graph))"
+      graph))
+  ```"
   [^Executor executor & children]
   (fn stream [event]
     (.execute executor
@@ -340,6 +358,7 @@
   *not* overlap; each event appears at most once in the output stream. Once an
   event is emitted, all events *older or equal* to that emitted event are
   silently dropped.
+
   Events without times accrue in the current window."
   [n start-time-fn & children]
   ; This is not a particularly inspired or clear implementation. :-(
@@ -529,10 +548,10 @@
 
   Concurrency guarantees:
 
-  (create) may be called multiple times for a given time slice.
-  (add)    when called, will receive exactly one distinct bucket in each time
-           slice.
-  (finish) will be called *exactly once* for each time slice."
+  - (create) may be called multiple times for a given time slice.
+  - (add)    when called, will receive exactly one distinct bucket in each time
+             slice.
+  - (finish) will be called *exactly once* for each time slice."
   [interval create add finish]
   (let [state (atom nil)
         ; Set up an initial bin and start time.
@@ -810,8 +829,10 @@
   the difference between the current event and the previous one, divided by the
   difference in their times. Skips events without metrics.
 
+  ```clojure
   (ddt 5 graph index)
-  (ddt graph index)"
+  (ddt graph index)
+  ```"
   [& args]
   (if (number? (first args))
     (apply ddt-real args)
@@ -880,11 +901,13 @@
   "Counts things. The first argument may be an initial counter value, which
   defaults to zero.
 
+  ```clojure
   ; Starts at zero
   (counter index)
 
   ; Starts at 500
   (counter 500 index)
+  ```
 
   Events without metrics are passed through unchanged. Events with metrics
   increment the counter, and are passed on with their metric set to the current
@@ -1044,13 +1067,17 @@
 
   Index the top 10 events, by metric:
 
+  ```clojure
   (top 10 :metric index)
+  ```
 
   Index everything, but tag the top k events with \"top\":
 
+  ```clojure
   (top 10 :metric
     (tag \"top\" index)
     index)
+  ```
 
   This implementation of top is lazy, in the sense that it won't proactively
   expire events which are bumped from the top-k set--you have to wait for
@@ -1095,11 +1122,11 @@
   *vectors* of events to children, not a single event at a time. For instance,
   (rollup 3 1 f) receives five events and forwards three times per second:
 
-  1 -> (f [1])
-  2 -> (f [2])
-  3 -> (f [3])
-  4 ->
-  5 ->
+  - 1 -> (f [1])
+  - 2 -> (f [2])
+  - 3 -> (f [3])
+  - 4 ->
+  - 5 ->
 
   ... and events 4 and 5 are rolled over into the next period:
 
@@ -1192,8 +1219,10 @@
   Every 10 seconds, print a sequence of events including all the events which
   share the same :foo and :bar attributes:
 
+  ```clojure
   (by [:foo :bar]
-    (coalesce 10 prn))"
+    (coalesce 10 prn))
+  ```"
   [& [dt & children]]
   (let [children (if (number? dt) children (cons dt children))
         dt (if (number? dt) dt 1)
@@ -1235,12 +1264,14 @@
   "Passes events on to children only when (f event) matches value, using
   riemann.common/match. For instance:
 
+  ```clojure
   (match :service nil prn)
   (match :state #{\"warning\" \"critical\"} prn)
   (match :description #\"error\" prn)
   (match :metric 5 prn)
   (match expired? true prn)
   (match (fn [e] (/ (:metric e) 1000)) 5 prn)
+  ```
 
   For cases where you only care about whether (f event) is truthy, use (where
   some-fn) instead of (match some-fn true)."
@@ -1262,8 +1293,10 @@
 
   Can be used as a predicate in a where form.
 
+  ```clojure
   (tagged-all \"foo\" prn)
-  (tagged-all [\"foo\" \"bar\"] prn)"
+  (tagged-all [\"foo\" \"bar\"] prn)
+  ```"
   [tags & children]
   (let [tag-coll (flatten [tags])]
     (fn stream [event]
@@ -1283,8 +1316,10 @@
 
   Can be used as a predicate in a where form.
 
+  ```clojure
   (tagged-any \"foo\" prn)
-  (tagged-all [\"foo\" \"bar\"] prn)"
+  (tagged-all [\"foo\" \"bar\"] prn)
+  ```"
   [tags & children]
   (let [tag-coll (flatten [tags])]
     (fn stream [event]
@@ -1295,9 +1330,18 @@
 (def tagged "Alias for tagged-all" tagged-all)
 
 (defn expired
-  "Passes on events with :state \"expired\"."
+  "Passes on expired events."
   [& children]
-  (apply match :state "expired" children))
+  (fn stream [event]
+    (when (expired? event)
+      (call-rescue event children))))
+
+(defn not-expired
+  "Passes on not expired events."
+  [& children]
+  (fn stream [event]
+    (when (not (expired? event))
+      (call-rescue event children))))
 
 (defn with
   "Constructs a copy of each incoming event with new values for the given keys,
@@ -1310,11 +1354,13 @@
   event, use `adjust`. If you want to update events using arbitrary functions,
   use `smap`.
 
+  ```clojure
   ; Print each event, but with service \"foo\"
   (with :service \"foo\" prn)
 
   ; Print each event, but with no host and state \"broken\".
-  (with {:host nil :state \"broken\"} prn)"
+  (with {:host nil :state \"broken\"} prn)
+  ```"
   [& args]
   (if (map? (first args))
     (let [[m & children] args
@@ -1349,8 +1395,10 @@
   when you want to fill in default values for events that might come in without
   them.
 
+  ```clojure
   (default :ttl 300 index)
-  (default {:service \"jrecursive\" :state \"chicken\"} index)"
+  (default {:service \"jrecursive\" :state \"chicken\"} index)
+  ```"
   [& args]
   (if (map? (first args))
     ; Merge in a map of new values.
@@ -1404,12 +1452,28 @@
    metric with the given scale factor.
 
   ; Convert bytes to kilobytes
+
   (scale 1/1024 index)"
   [factor & children]
   (let [scale-event (fn [{:keys [metric] :as event}]
                       (assoc event :metric
                              (if metric (* metric factor))))]
     (apply smap scale-event children)))
+
+(defn untag
+  "Removes a tag, or set of tags, from events which flow through.
+
+  (untag \"foo\" index)
+  (untag [\"foo\" \"bar\"] index)"
+  [tags & children]
+  (let [tags (set (flatten [tags]))
+        blacklist #(not (tags %))]
+    (apply smap
+           (fn stream [event]
+             (update event
+                     :tags
+                     #(filter blacklist %)))
+           children)))
 
 (defn tag
   "Adds a new tag, or set of tags, to events which flow through.
@@ -1434,10 +1498,12 @@
 
   With pipe, we write
 
+  ```clojure
   (pipe ↧ (a ↧)
           (b ↧)
           (c ↧)
           d)
+  ```
 
   The first argument ↧ is a *marker* for points where events should flow down
   into the next stage. A delightful list of marker symbols you might enjoy is
@@ -1448,19 +1514,23 @@
   the expression*. For instance, we might want to categorize events based on
   their metric, and send all those events into the same throttled email stream.
 
+  ```clojure
   (let [throttled-emailer (throttle 100 1 (email \"ops@rickenbacker.mil\"))]
     (splitp < metric
       0.9 (with :state :critical throttled-emailer)
       0.5 (with :state :warning  throttled-emailer)
           (with :state :ok       throttled-emailer)))
+  ```
 
   But with pipe, we can write:
 
+  ```clojure
   (pipe - (splitp < metric
                   0.9 (with :state :critical -)
                   0.5 (with :state :warning  -)
                       (with :state :ok       -))
           (throttle 100 1 (email \"ops@rickenbacker.mil\")))
+  ```
 
   So pipe lets us do three things:
 
@@ -1545,8 +1615,9 @@
   "Passes on events only when (f event) differs from that of the previous
   event. Options:
 
-  :init   The initial value to assume for (pred event).
+  - :init   The initial value to assume for (pred event).
 
+  ```clojure
   ; Print all state changes
   (changed :state prn)
 
@@ -1560,7 +1631,8 @@
 
   ; Note that f can be an arbitrary function:
 
-  (changed (fn [e] (> (:metric e) 2)) ...)"
+  (changed (fn [e] (> (:metric e) 2)) ...)
+  ```"
   [pred & children]
   (let [options  (if (map? (first children)) (first children) {})
         children (if (map? (first children))
@@ -1670,12 +1742,14 @@
   When (f event) is truthy, passes event to children--and otherwise, passes
   event to (else ...) children. For example:
 
+  ```clojure
   (where* (fn [e] (< 2 (:metric e))) prn)
 
   (where* expired?
     (partial prn \"Expired\")
     (else
-      (partial prn \"Not expired!\")))"
+      (partial prn \"Not expired!\")))
+  ```"
   [f & children]
   (let [[true-kids else-kids] (where-partition-clauses children)]
     `(let [true-kids# ~true-kids
@@ -1692,6 +1766,7 @@
   "Passes on events where expr is true. Expr is rewritten using where-rewrite.
   'event is bound to the event under consideration. Examples:
 
+  ```clojure
   ; Match any event where metric is either 1, 2, 3, or 4.
   (where (metric 1 2 3 4) ...)
 
@@ -1707,14 +1782,17 @@
   (where (service #{\"service-foo\" \"service-bar\"}) ...)
   ; which is equivalent to
   (where (service \"service-foo\" \"service-bar\") ...)
+  ```
 
   If a child begins with (else ...), the else's body is executed when expr is
   false. For instance:
 
+  ```clojure
   (where (service \"www\")
     (notify-www-team)
     (else
       (notify-misc-team)))
+  ```
 
   The streams generated by (where) return the value of expr: truthy if expr
   matched the given event, and falsey otherwise. This means (where (metric 5))
@@ -1744,10 +1822,12 @@
    Conditions are functions as for where*.  An odd number of forms will make
   the last form the default stream. For example:
 
+  ```clojure
    (split*
      (fn [e] (< 0.9  (:metric e))) (with :state \"critical\" index)
      (fn [e] (< 0.75 (:metric e))) (with :state \"warning\" index)
-     (with :state \"ok\" index))"
+     (with :state \"ok\" index))
+  ```"
   [& clauses]
   (let [clauses (partition-all 2 clauses)]
     (fn stream [event]
@@ -1758,10 +1838,12 @@
   "Behave as for split*, expecting predicates to be (where) expressions instead
   of functions. Example:
 
+  ```clojure
   (split
     (< 0.9  metric) (with :state \"critical\" index)
     (< 0.75 metric) (with :state \"warning\" index)
-    (with :state \"ok\" index))"
+    (with :state \"ok\" index))
+  ```"
   [& clauses]
   (let [clauses (mapcat (fn [clause]
                           (if (nil? (second clause))
@@ -1789,10 +1871,12 @@
 
   Example:
 
+  ```clojure
   (splitp < metric
     0.9  (with :state \"critical\" index)
     0.75 (with :state \"warning\" index)
-         (with :state \"ok\" index))"
+         (with :state \"ok\" index))
+  ```"
   [pred expr & clauses]
   (let [; Split up clauses into [stream test-expr] pairs
         clauses (map (fn [[a b :as clause]]
@@ -1859,6 +1943,7 @@
   In these plots, stable events are shown as =, and unstable events are shown
   as -. = events are passed to children, and - events are ignored.
 
+  ```
        A spike           Flapping           Stable changes
   |                 |                    |
   |       -         |    -- -   ======   |      =====
@@ -1866,13 +1951,16 @@
   |======= ======   |====  -  --         |======
   +------------->   +---------------->   +------------------>
         time              time                  time
+  ```
 
   May buffer events for up to dt seconds when the value of (f event) changes,
   in order to determine if the new value is stable or not.
 
+  ```clojure
   ; Passes on events where the state remains the same for at least five
   ; seconds.
-  (stable 5 :state prn)"
+  (stable 5 :state prn)
+  ```"
   [dt f & children]
   (let [state (atom {:prev   ::unknown
                      :task   nil
@@ -1995,11 +2083,13 @@
   Use project when you want to compare a small number of distinct states over
   time. For instance, to find the ratio of enqueues to dequeues:
 
+  ```clojure
   (project [(service \"enqueues\")
             (service \"dequeues\")]
     (smap folds/quotient
       (with :service \"enqueues per dequeue\"
         ...)))
+  ```
 
   Here we've combined separate events--enqueues and dequeues--into a single
   event, using the folds/quotient function, which divides the first event's

@@ -59,11 +59,13 @@
   If you're using hosted HipChat, you can leave out :server (or set it to
   'api.hipchat.com').
 
+  ```clojure
   (let [hc (hipchat {:server \"...\"
                      :token \"...\"
                      :room 12345
                      :notify 0})]
-    (changed-state hc))"
+    (changed-state hc))
+  ```"
   [{:keys [server token room notify]}]
   (if (not (= 40 (count token)))
     (throw (IllegalArgumentException. "This adapter now requires a v2 API key")))

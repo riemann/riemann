@@ -1,10 +1,10 @@
 (ns riemann.msteams-test
-  (:use riemann.msteams
-        clojure.test)
-  (:require [clj-http.client :as http]
+  (:require [riemann.test-utils :refer [with-mock]]
+            [riemann.logging :as logging]
+            [riemann.msteams :refer :all]
             [cheshire.core :as json]
-            [riemann.test-utils :refer [with-mock]]
-            [riemann.logging :as logging]))
+            [clj-http.client :as http]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

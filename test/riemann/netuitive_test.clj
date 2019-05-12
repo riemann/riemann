@@ -1,6 +1,6 @@
 (ns riemann.netuitive-test
-  (:use riemann.netuitive
-        clojure.test))
+  (:require [riemann.netuitive :refer :all]
+            [clojure.test :refer :all]))
 
 (def test-event {:host "riemann.local" :service "netuitive test" :state "ok" :description "Successful test" :metric 2 :time (/ (System/currentTimeMillis) 1000) :tags ["riemann" "netuitive"]})
 (def other-event {:host "riemann.local" :service "netuitive other" :state "ok" :description "Successful test" :metric 5 :time (/ (System/currentTimeMillis) 1000) :tags ["other"]})
@@ -10,11 +10,11 @@
    (is (= (:id (generate-event test-event {})) "Riemann:riemann.local"))
    (is (= (:name (generate-event test-event {})) "riemann.local"))
    (is (= (:metrics (generate-event test-event {})) #{{:id "netuitive.test"}}))
-   (is (= (:metricId (first (:samples (generate-event test-event {}))) "netuitive.test")))
-   (is (= (:val (first (:samples (generate-event test-event {}))) 2)))
+   (is (= (:metricId (first (:samples (generate-event test-event {})))) "netuitive.test"))
+   (is (= (:val (first (:samples (generate-event test-event {})))) 2))
    (is (= (:name (first (:tags (generate-event test-event {})))) "netuitive"))
-   (is (= (:name (generate-tag "tagname") "tagname")))
-   (is (= (:name (second (:tags (generate-event test-event {}))) "riemann")))
+   (is (= (:name (generate-tag "tagname")) "tagname"))
+   (is (= (:name (second (:tags (generate-event test-event {})))) "riemann"))
    (is (= (:type (generate-event test-event {:type "SERVER"})) "SERVER"))
    (is (= (netuitive-metric-name test-event) "netuitive.test"))
 

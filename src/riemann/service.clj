@@ -3,7 +3,7 @@
   (:require wall.hack
             riemann.instrumentation)
   (:use clojure.tools.logging
-        [riemann.time :only [unix-time]])
+        [riemann.time :only [unix-time every! cancel]])
   (:import (riemann.instrumentation Instrumented)
            (java.util.concurrent TimeUnit
                                  ThreadFactory
@@ -43,6 +43,36 @@
   nil
   (equiv? [s1 s2]
     (nil? s2)))
+
+(defrecord ScheduledTaskService [name equiv-key interval delay f core task]
+  ServiceEquiv
+  (equiv? [this other]
+          (and
+            (instance? ScheduledTaskService other)
+            (= name (:name other))
+            (= interval (:interval other))
+            (= delay (:delay other))
+            (= equiv-key (:equiv-key other))))
+  Service
+  (conflict? [this other]
+             (and
+               (instance? ScheduledTaskService other)
+               (= name (:name other))))
+
+  (reload! [this new-core]
+    (reset! core new-core))
+
+  (start! [this]
+            (locking this
+            (when @task
+              (cancel @task))
+            (let [t (every! interval delay #(f @core))]
+              (reset! task t))))
+
+  (stop! [this]
+    (locking this
+            (when @task
+              (cancel @task)))))
 
 (defrecord ThreadService [name equiv-key f core running thread]
   ServiceEquiv
@@ -94,21 +124,34 @@
   ([name equiv-key f]
    (ThreadService. name equiv-key f (atom nil) (atom false) (atom nil))))
 
+(defn scheduled-task-service
+  "Returns a ScheduledTaskService which will schedule a task which call (f core)
+  repeatedly every `interval` after `delay` seconds.
+  Equivalent to other ScheduledTaskService with the same `name`, `equiv-key`,
+  `delay` and `interval`.
+  Conflicts with other ScheduledTaskService of the same name."
+  ([name equiv-key interval delay f]
+   (ScheduledTaskService. name equiv-key interval delay f (atom nil) (atom nil))))
+
 (defmacro all-equal?
   "Takes two objects to compare and a list of forms to compare them by.
 
+  ```clojure
   (all-equiv? foo bar
     (class)
     (foo 2)
     (.getSize))
+  ```
 
   becomes
 
+  ```clojure
   (let [a foo
         b bar]
     (and (= (class a) (class b))
          (= (foo 2 a) (foo 2 b))
-         (= (.getSize a) (.getSize b))))"
+         (= (.getSize a) (.getSize b))))
+  ```"
   [a b & forms]
   (let [asym (gensym "a__")
         bsym (gensym "b__")]
@@ -269,8 +312,10 @@
   Otherwise, services are equivalent when their class, name, and equiv-key are
   equal.
 
+  ```clojure
   (executor-service* :graphite {foo: 4}
-    #(ThreadPoolExecutor. 2 ...))"
+    #(ThreadPoolExecutor. 2 ...))
+  ```"
   ([name f] (executor-service name nil f))
   ([name equiv-key f]
    (ExecutorServiceService. name equiv-key f nil (atom nil))))
@@ -281,9 +326,9 @@
   any variables or function calls, they will be compared as code, not as
   their evaluated values.
 
-  OK:  (literal-executor-service :io (ThreadPoolExecutor. 2 ...))
-  OK:  (literal-executor-service :io (ThreadPoolExecutor. (inc 1) ...))
-  BAD: (literal-executor-service :io (ThreadPoolExecutor. x ...))"
+  - OK:  (literal-executor-service :io (ThreadPoolExecutor. 2 ...))
+  - OK:  (literal-executor-service :io (ThreadPoolExecutor. (inc 1) ...))
+  - BAD: (literal-executor-service :io (ThreadPoolExecutor. x ...))"
   [name executor-service-expr]
   `(executor-service
      ~name
@@ -294,11 +339,11 @@
   "An ExecutorServiceService based on a ThreadPoolExecutor with core and
   maximum threadpool sizes, and a LinkedBlockingQueue of a given size. Options:
 
-  :core-pool-size             Default 1
-  :max-pool-size              Default 128
-  :keep-alive-time            Default 10
-  :keep-alive-unit            Default MILLISECONDS
-  :queue-size                 Default 1000"
+  - :core-pool-size             Default 1
+  - :max-pool-size              Default 128
+  - :keep-alive-time            Default 10
+  - :keep-alive-unit            Default MILLISECONDS
+  - :queue-size                 Default 1000"
   ([name] (threadpool-service name {}))
   ([name {:keys [core-pool-size
                  max-pool-size

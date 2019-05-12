@@ -1,9 +1,9 @@
 (ns riemann.druid-test
-  (:require [clj-http.client :as client]
-            [clojure.test :refer :all]
-            [riemann.druid :as druid]
+  (:require [riemann.druid :as druid]
             [riemann.logging :as logging]
-            [riemann.test-utils :refer [with-mock]]))
+            [riemann.test-utils :refer [with-mock]]
+            [clj-http.client :as client]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

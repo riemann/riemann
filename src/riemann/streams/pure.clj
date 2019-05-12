@@ -78,9 +78,9 @@
   c0. All child streams unify at a final stream f.
 
 
-        /--- c0 ---\
+        /--- c0 ---\\
       by            f
-        \--- c1 ---/
+        \\--- c1 ---/
 
 
   Case 1: e falls in w0. Create child c1 and inform it that the current window

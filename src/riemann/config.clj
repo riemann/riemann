@@ -50,7 +50,8 @@
                      [time        :refer [unix-time linear-time once! every!]]
                      [twilio      :refer [twilio]]
                      [victorops   :refer [victorops]]
-                     [xymon       :refer [xymon]]]
+                     [xymon       :refer [xymon]]
+                     [zabbix      :refer [zabbix]]]
             [riemann.transport [tcp        :as tcp]
                                [udp        :as udp]
                                [websockets :as websockets]
@@ -95,10 +96,12 @@
   where possible, re-use existing services without interruption--e.g., when
   reloading. For example, say you want to use a threadpool executor:
 
+  ```clojure
   (let [executor (service! (ThreadPoolExecutor. 1 2 ...))]
     (where (service \"graphite\")
       (on executor
         graph)))
+  ```
 
   If you reload this config, the *old* executor is busily processing messages
   from the old set of streams. When the new config evaluates (service! ...)
@@ -179,24 +182,26 @@
 (defn kafka-consumer
   "Add a new kafka consumer with opts to the default core.
 
+  ```
   (kafka-consumer {:consumer.config {:bootstrap.servers \"localhost:9092\"
                                      :group.id \"riemann\"}
                    :topics [\"riemann\"]})
- 
+  ```
+
   Options:
-   
+
   For a full list of :consumer.config options see the kafka consumer docs.
   NOTE: The :enable.auto.commit option is ignored and defaults to true.
 
-  :consumer.config      Consumer configuration 
-    :bootstrap.servers  Bootstrap configuration, default is \"localhost:9092\"
-    :group.id           Consumer group id, default is \"riemann\"
-  :topics               Topics to consume from, default is [\"riemann\"]
-  :key.deserializer     Key deserializer function, defaults to the 
-                        keyword-deserializer.
-  :value.deserializer   Value deserializer function, defaults to 
-                        json-deserializer.
-  :poll.timeout.ms      Polling timeout, default is 100."
+  - :consumer.config      Consumer configuration
+      - :bootstrap.servers  Bootstrap configuration, default is \"localhost:9092\"
+      - :group.id           Consumer group id, default is \"riemann\"
+  - :topics               Topics to consume from, default is [\"riemann\"]
+  - :key.deserializer     Key deserializer function, defaults to the
+                          keyword-deserializer.
+  - :value.deserializer   Value deserializer function, defaults to
+                          json-deserializer.
+  - :poll.timeout.ms      Polling timeout, default is 100."
 
   [& opts]
   (service! (kafka/kafka-consumer (kwargs-or-map opts))))
@@ -280,6 +285,7 @@
 
   Example:
 
+  ```clojure
   (let [downstream (batch 100 1/10
                           (async-queue! :agg {:queue-size     1e3
                                               :core-pool-size 4
@@ -291,7 +297,8 @@
       ...
       ; Forward all events downstream to the aggregator.
       (where (service #\"^riemann.*\")
-        downstream)))"
+        downstream)))
+  ```"
   [name threadpool-service-opts & children]
   (let [s (service! (service/threadpool-service name threadpool-service-opts))]
     (apply execute-on s children)))
@@ -437,6 +444,7 @@
              file-seq
              (filter config-file?)
              (map str)
+             (sort)
              (map include)
              dorun)
         (load-file path)))))

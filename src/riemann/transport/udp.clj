@@ -17,7 +17,8 @@
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
            [io.netty.channel.nio NioEventLoopGroup])
-  (:require [interval-metrics.core :as metrics])
+  (:require [interval-metrics.core :as metrics]
+            [riemann.test :as test])
   (:use [clojure.tools.logging :only [warn info]]
         [clojure.string        :only [split]]
         [riemann.instrumentation :only [Instrumented]]
@@ -86,41 +87,41 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking ioutil-lock
-            (locking this
-              (when-not @killer
-                (let [worker-group (NioEventLoopGroup.)
-                      bootstrap (Bootstrap.)]
+          (when-not test/*testing*
+            (locking ioutil-lock
+              (locking this
+                (when-not @killer
+                  (let [worker-group (NioEventLoopGroup.)
+                        bootstrap (Bootstrap.)]
+                    ; Configure bootstrap
+                    (doto bootstrap
+                      (.group worker-group)
+                      (.channel NioDatagramChannel)
+                      (.option ChannelOption/SO_BROADCAST false)
+                      (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
+                               (DefaultMessageSizeEstimator. max-size))
+                      (.option ChannelOption/RCVBUF_ALLOCATOR
+                               (FixedRecvByteBufAllocator. max-size))
+                      (.handler handler))
 
-                  ; Configure bootstrap
-                  (doto bootstrap
-                    (.group worker-group)
-                    (.channel NioDatagramChannel)
-                    (.option ChannelOption/SO_BROADCAST false)
-                    (.option ChannelOption/MESSAGE_SIZE_ESTIMATOR
-                             (DefaultMessageSizeEstimator. max-size))
-                    (.option ChannelOption/RCVBUF_ALLOCATOR
-                             (FixedRecvByteBufAllocator. max-size))
-                    (.handler handler))
+                    ; Setup Channel options
+                    (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
-                  ; Setup Channel options
-                  (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
+                    ; Start bootstrap
+                    (->> (InetSocketAddress. host port)
+                         (.bind bootstrap)
+                         (.sync)
+                         (.channel)
+                         (.add channel-group))
 
-                  ; Start bootstrap
-                  (->> (InetSocketAddress. host port)
-                       (.bind bootstrap)
-                       (.sync)
-                       (.channel)
-                       (.add channel-group))
+                    (info "UDP server" host port max-size so-rcvbuf "online")
 
-                  (info "UDP server" host port max-size so-rcvbuf "online")
-
-                  ; fn to close server
-                  (reset! killer
-                          (fn killer []
-                            (-> channel-group .close .awaitUninterruptibly)
-                            @(shutdown-event-executor-group worker-group)
-                            (info "UDP server" host port max-size so-rcvbuf "shut down"))))))))
+                    ; fn to close server
+                    (reset! killer
+                            (fn killer []
+                              (-> channel-group .close .awaitUninterruptibly)
+                              @(shutdown-event-executor-group worker-group)
+                              (info "UDP server" host port max-size so-rcvbuf "shut down")))))))))
 
   (stop! [this]
          (locking this
@@ -152,12 +153,13 @@
   dropped with protobuf parse errors in the log.
 
   Options:
-  :host             The address to listen on (default 127.0.0.1).
-  :port             The port to listen on (default 5555).
-  :max-size         The maximum datagram size (default 16384 bytes).
-  :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
-  :channel-group    A ChannelGroup used to track all connections
-  :initializer      A ChannelInitializer"
+
+  - :host             The address to listen on (default 127.0.0.1).
+  - :port             The port to listen on (default 5555).
+  - :max-size         The maximum datagram size (default 16384 bytes).
+  - :so-rcvbuf        The socket option for receive buffer in bytes (SO_RCVBUF)
+  - :channel-group    A ChannelGroup used to track all connections
+  - :initializer      A ChannelInitializer"
   ([] (udp-server {}))
   ([opts]
    (let [core  (get opts :core (atom nil))

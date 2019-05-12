@@ -1,15 +1,15 @@
 (ns riemann.graphite-test
-  (:use riemann.graphite
-        [riemann.time :only [unix-time]]
-        [riemann.common :only [event]]
-        clojure.tools.logging
-        clojure.test)
-  (:require [riemann.logging :as logging]
+  (:require [riemann.common :refer [event]]
             [riemann.client :as client]
-            [riemann.index :as index]
             [riemann.core :refer [transition! core stop! wrap-index]]
+            [riemann.graphite :refer :all]
+            [riemann.index :as index]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
             [riemann.transport.tcp :refer [tcp-server]]
-            [riemann.transport.graphite :refer [graphite-server]]))
+            [riemann.transport.graphite :refer [graphite-server]]
+            [clojure.test :refer :all]
+            [clojure.tools.logging :refer :all]))
 
 (logging/init)
 
@@ -39,6 +39,34 @@
          (client/close! client)
          (stop! core))))))
 
+(deftest graphite-server-batch-test
+  (logging/suppress
+   ["riemann.transport" "riemann.core" "riemann.pubsub" "riemann.graphite"]
+   (let [s1       (graphite-server)
+         s2       (tcp-server)
+         index    (wrap-index (index/index))
+         core     (transition!
+                   (core)
+                   {:index    index
+                    :services [s1 s2]
+                    :streams  [index]})
+         sendout! (graphite {:path graphite-path-basic})
+         client   (client/tcp-client)]
+     (try
+       (sendout! [{:service "service1" :metric 1.0 :time 0}
+                  {:service "service2" :metric 1.0 :time 0}
+                  {:service "service3" :time 0}])
+       (Thread/sleep 100)
+       (let [[r1 r2 :as res] @(client/query client "true")]
+         (is (= (count res) 2))
+         (is (and (#{"service1" "service2"} (:service r1))
+                  (= 1.0 (:metric r1))))
+         (is (and (#{"service1" "service2"} (:service r2))
+                  (= 1.0 (:metric r2)))))
+       (finally
+         (client/close! client)
+         (stop! core))))))
+
 (deftest parse-error-test
   (logging/suppress
     ["riemann.transport" "riemann.core" "riemann.pubsub" "riemann.graphite"]
@@ -58,21 +86,41 @@
           (stop! core))))))
 
 (deftest percentiles
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar"})
-                "foo.bar"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 1"})
-                "foo.bar.1"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 99"})
-                "foo.bar.99"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 0.99"})
-                "foo.bar.99"))
-         (is (= (graphite-path-percentiles
-                  {:service "foo bar 0.999"})
-                "foo.bar.999")))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar"})
+         "foo.bar"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 1"})
+         "foo.bar.1"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 99"})
+         "foo.bar.99"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 0.99"})
+         "foo.bar.99"))
+  (is (= (graphite-path-percentiles
+          {:service "foo bar 0.999"})
+         "foo.bar.999")))
+
+(deftest graphite-path-tags-test
+  (let [path (graphite-path-tags [])]
+    (is (= (path
+            {:service "foo bar"})
+           "foo.bar")))
+  (let [path (graphite-path-tags [:host :rack :environment])]
+    (is (= (path
+            {:service "foo bar"
+             :host "riemann.io"
+             :rack "n1"
+             :environment "production"})
+           "foo.bar;host=riemann.io;rack=n1;environment=production"))
+    (is (= (path
+            {:service "foo bar"
+             :host "riemann.io"})
+           "foo.bar;host=riemann.io"))
+    (is (= (path
+            {:service "foo bar"})
+           "foo.bar"))))
 
 (deftest graphite-metric-test
   (is (= (graphite-metric
@@ -92,24 +140,35 @@
          (double 3.14159))))
 
 (deftest ^:graphite ^:integration graphite-test
-         (let [g (graphite {:block-start true})]
-           (g {:host "riemann.local"
-               :service "graphite test"
-               :state "ok"
-               :description "all clear, uh, situation normal"
-               :metric -2
-               :time (unix-time)}))
+  (let [g (graphite {:block-start true})]
+    (g {:host "riemann.local"
+        :service "graphite test"
+        :state "ok"
+        :description "all clear, uh, situation normal"
+        :metric -2
+        :time (unix-time)}))
 
-         (let [g (graphite {:block-start true})]
-           (g {:service "graphite test"
-               :state "ok"
-               :description "all clear, uh, situation normal"
-               :metric 3.14159
-               :time (unix-time)}))
+  (let [g (graphite {:block-start true})]
+    (g {:service "graphite test"
+        :state "ok"
+        :description "all clear, uh, situation normal"
+        :metric 3.14159
+        :time (unix-time)}))
 
-         (let [g (graphite {:block-start true})]
-           (g {:host "no-service.riemann.local"
-               :state "ok"
-               :description "all clear, uh, situation normal"
-               :metric 4
-               :time (unix-time)})))
+  (let [g (graphite {:block-start true})]
+    (g {:host "no-service.riemann.local"
+        :state "ok"
+        :description "all clear, uh, situation normal"
+        :metric 4
+        :time (unix-time)}))
+  (let [g (graphite {:block-start true})]
+    (g [{:host "no-service.riemann.local"
+         :state "ok"
+         :description "all clear, uh, situation normal"
+         :metric 4
+         :time (unix-time)}
+        {:host "no-service.riemann.local"
+         :state "ok"
+         :description "all clear, uh, situation normal"
+         :metric 10
+         :time (unix-time)}])))

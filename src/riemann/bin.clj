@@ -9,6 +9,7 @@
             [cemerick.pomegranate :as pom]
             [clojure.java.io :as io]
             [clojure.tools.logging :refer :all])
+  (:import (clojure.lang DynamicClassLoader))
   (:gen-class :name riemann.bin))
 
 (def config-file
@@ -104,6 +105,13 @@
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
 
+(defn ensure-dynamic-classloader
+  []
+  (let [thread (Thread/currentThread)
+        cl (.getContextClassLoader thread)]
+    (when-not (instance? DynamicClassLoader cl)
+      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
+
 (defn run!
   "Start Riemann with the given setup function. The setup function is responsible
   for executing code that you would normally put into your riemann.config file,
@@ -124,6 +132,7 @@
    (-main "start" config))
   ([command config & [test-name]]
    (logging/init)
+   (ensure-dynamic-classloader)
    (case command
      "start" (try
                (set-config-file! config)
@@ -135,7 +144,8 @@
               (test/with-test-env
                 (set-config-file! config)
                 (riemann.config/include @config-file)
-                (binding [test/*streams* (:streams @config/next-core)]
+                (reset! riemann.config/core @riemann.config/next-core)
+                (binding [test/*core* @config/core]
                   (let [test-name-pattern (if test-name (re-pattern test-name) #".*-test")
                         results (run-tests test-name-pattern)]
                     (if (and (zero? (:error results))

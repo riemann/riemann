@@ -7,6 +7,8 @@
            (ch.qos.logback.core
              ConsoleAppender
              FileAppender)
+           (ch.qos.logback.core.util
+             FileSize)
            (ch.qos.logback.core.encoder
              LayoutWrappingEncoder)
            (ch.qos.logback.core.rolling
@@ -146,7 +148,7 @@
                                         (.setContext context)
                                         (.start))
                     triggering-policy (doto (SizeBasedTriggeringPolicy.)
-                                        (.setMaxFileSize (str logsize-rotate))
+                                        (.setMaxFileSize (FileSize. logsize-rotate))
                                         (.setContext context)
                                         (.start))
                     log-appender      (doto log-appender
@@ -183,22 +185,23 @@
   "Initialize logging. You will probably call this from the config file. You can
   call init more than once; its changes are destructive. Options:
 
-  :console?         Determine if logging should happen on the console.
-  :console-layout   Specifying console layout.
-  :file             The file to log to. If omitted, log to console only.
-  :file-layout      Specifying file layout.
-  :files            A list of files to log to. If provided, a seq or vector is
-                    expected containing maps with a :file and an :file-layout
-  :logsize-rotate   If size (in bytes) is specified use size based rotation
-                    otherwise use default time based rotation.
-  :rotate-count     Specifying the number of rotated files to keep. If omitted,
-                    keep last 10 rotated files.
+  - :console?         Determine if logging should happen on the console.
+  - :console-layout   Specifying console layout.
+  - :file             The file to log to. If omitted, log to console only.
+  - :file-layout      Specifying file layout.
+  - :files            A list of files to log to. If provided, a seq or vector is
+                      expected containing maps with a :file and an :file-layout
+  - :logsize-rotate   If size (in bytes) is specified use size based rotation
+                      otherwise use default time based rotation.
+  - :rotate-count     Specifying the number of rotated files to keep. If omitted,
+                      keep last 10 rotated files.
 
   Layout can be :riemann or :json. If layout is omitted, the default layout
   :riemann will be used.
 
   For example:
 
+  ```clojure
       ; Basic console logging
       (init)
 
@@ -218,7 +221,8 @@
              :files [{:file \"/var/log/riemann.log\"},
                      {:file \"/var/log/riemann.json.log\" :file-layout :json}]
              :logsize-rotate 100
-             :rotate-count 5})"
+             :rotate-count 5})
+  ```"
   ([] (init {}))
   ([opts]
     (let [logger   (get-logger)

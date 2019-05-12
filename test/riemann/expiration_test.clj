@@ -1,8 +1,8 @@
 (ns riemann.expiration-test
-  (:require [clojure.test :refer :all]
-            [riemann.expiration :refer :all]
+  (:require [riemann.expiration :refer :all]
+            [riemann.time :refer [unix-time]]
             [riemann.time.controlled :refer :all]
-            [riemann.time :refer [unix-time]]))
+            [clojure.test :refer :all]))
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)

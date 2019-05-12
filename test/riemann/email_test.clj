@@ -1,8 +1,8 @@
 (ns riemann.email-test
-  (:use [riemann.time :only [unix-time]]
-        riemann.email
-        [riemann.logging :only [suppress]]
-        clojure.test))
+  (:require [riemann.email :refer :all]
+            [riemann.logging :refer [suppress]]
+            [riemann.time :refer [unix-time]]
+            [clojure.test :refer :all]))
 
 (riemann.logging/init)
 
@@ -10,10 +10,10 @@
          (let [a (promise)]
            (with-redefs [postal.core/send-message #(deliver a [%1 %2])]
              (email-event {} {:body (fn [events]
-                                      (apply str "body " 
+                                      (apply str "body "
                                              (map :service events)))
-                              :subject (fn [events] 
-                                         (apply str "subject " 
+                              :subject (fn [events]
+                                         (apply str "subject "
                                                 (map :service events)))}
                           {:service "foo"}))
            (is (= @a [{} {:subject "subject foo"

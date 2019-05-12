@@ -1,10 +1,9 @@
 (ns riemann.time.controlled-test
-  (:use riemann.time.controlled
-        riemann.time
-        [riemann.common :exclude [unix-time linear-time]]
-        clojure.math.numeric-tower
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [riemann.time :refer :all]
+            [riemann.time.controlled :refer :all]
+            [clojure.math.numeric-tower :refer :all]
+            [clojure.test :refer :all]))
 
 (use-fixtures :once control-time!)
 (use-fixtures :each reset-time!)

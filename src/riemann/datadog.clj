@@ -37,11 +37,17 @@
   "Return a function which accepts either single events or batches of
    events in a vector and sends them to datadog. Batching reduces latency
    by at least one order of magnitude and is highly recommended.
+
   Usage:
+
   (datadog {:api-key \"bn14a6ac2e3b5h795085217d49cde7eb\"})
+
   Option:
-  :api-key    Datadog's API Key for authentication.
+
+  - :api-key    Datadog's API Key for authentication.
+
   Example:
+
   (def datadog-forwarder
     (batch 100 1/10
       (async-queue!

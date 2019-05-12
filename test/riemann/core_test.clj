@@ -1,16 +1,15 @@
 (ns riemann.core-test
-  (:require riemann.transport.tcp
-            riemann.streams
-            [riemann.logging :as logging])
-  (:use riemann.client
-        riemann.common
-        [riemann.index :only [index]]
-        riemann.time.controlled
-        riemann.core
-        clojure.test
-        [clojure.algo.generic.functor :only [fmap]]
-        [riemann.service :only [Service ServiceEquiv]]
-        [riemann.time :only [unix-time]]))
+  (:require [riemann.client :refer :all]
+            [riemann.common :refer [event]]
+            [riemann.config :as config]
+            [riemann.core :refer :all]
+            [riemann.index :refer [index]]
+            [riemann.logging :as logging]
+            [riemann.time :refer [unix-time]]
+            [riemann.time.controlled :refer :all]
+            [riemann.service :refer [Service ServiceEquiv]]
+            [clojure.algo.generic.functor :refer [fmap]]
+            [clojure.test :refer :all]))
 
 (logging/init)
 (use-fixtures :each reset-time!)
@@ -251,61 +250,53 @@
                  (stop! core))))))
 
 (deftest expires
-         (let [index (wrap-index (index))
-               res (atom nil)
-               expired-stream (riemann.streams/expired
-                                (fn [e] (reset! res e)))
-               reaper (reaper 0.001)
-               core (logging/suppress
-                      ["riemann.core"
-                       "riemann.transport.tcp"
-                       "riemann.pubsub"]
-                      (transition! (core) {:services [reaper]
-                                           :streams [expired-stream]
-                                           :index index}))]
+  (let [index (wrap-index (index))
+        res (atom nil)
+        expired-stream (riemann.streams/expired
+                        (fn [e] (reset! res e)))
+        reaper (reaper 0.1)
+        core (logging/suppress
+              ["riemann.core"
+               "riemann.transport.tcp"
+               "riemann.pubsub"]
+              (transition! (core) {:services [reaper]
+                                   :streams [expired-stream]
+                                   :index index}))]
 
-           ; Insert events
-           (index {:service 1 :ttl 0.01 :time (unix-time)})
-           (index {:service 2 :ttl 1 :time (unix-time)})
+    ;; Insert events
+    (index {:service 1 :ttl 0.05 :time (unix-time)})
+    (index {:service 2 :ttl 1 :time (unix-time)})
 
-           (advance! 0.011)
+    (advance! 0.11)
 
-           ; Wait for reaper to eat them
-           (Thread/sleep 100)
+    ;; Check that index does not contain these states
+    (is (= [2] (map (fn [e] (:service e)) index)))
 
-           ; Kill reaper
-           (logging/suppress ["riemann.core" "riemann.pubsub"]
-                             (stop! core))
-
-           ; Check that index does not contain these states
-           (is (= [2] (map (fn [e] (:service e)) index)))
-
-           ; Check that expired-stream received them.
-           (is (= @res
-                  {:service 1
-                   :time 0.011
-                   :state "expired"}))))
+    ;; Check that expired-stream received them.
+    (is (= @res
+           {:service 1
+            :time 0.1
+            :state "expired"}))))
 
 (deftest reaper-keep-keys
-         (let [index (wrap-index (index))
-               res (atom nil)
-               expired-stream (riemann.streams/expired
-                                (partial reset! res))
-               reaper (reaper 0.001 {:keep-keys [:tags]})
-               core (logging/suppress
-                      ["riemann.core"
-                       "riemann.transport.tcp"
-                       "riemann.pubsub"]
-                      (transition! (core) {:services [reaper]
-                                           :streams [expired-stream]
-                                           :index index}))]
+  (let [index (wrap-index (index))
+        res (atom nil)
+        expired-stream (riemann.streams/expired
+                        (partial reset! res))
+        reaper (reaper 0.1 {:keep-keys [:tags]})
+        core (logging/suppress
+              ["riemann.core"
+               "riemann.transport.tcp"
+               "riemann.pubsub"]
+              (transition! (core) {:services [reaper]
+                                   :streams [expired-stream]
+                                   :index index}))]
 
-           (index {:service 1 :ttl 0.01 :time 0 :tags ["hi"]})
-           (advance! 2)
-           (Thread/sleep 100)
-           (is (= @res {:tags ["hi"]
-                        :time 2
-                        :state "expired"}))))
+    (index {:service 1 :ttl 0.05 :time 0 :tags ["hi"]})
+    (advance! 0.11)
+    (is (= @res {:tags ["hi"]
+                 :time 0.1
+                 :state "expired"}))))
 
 (deftest ensures-event-times
   (let [out (promise)

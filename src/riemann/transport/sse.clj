@@ -5,6 +5,7 @@
             [interval-metrics.core    :as metrics]
             [org.httpkit.server       :as http]
             [riemann.common           :as common]
+            [riemann.test              :as test]
             [riemann.pubsub           :refer [subscribe! unsubscribe!]]
             [riemann.instrumentation  :refer [Instrumented]]
             [riemann.service          :refer [Service ServiceEquiv]]
@@ -92,13 +93,14 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking ioutil-lock
-            (locking this
-              (when-not @server
-                (reset! server (http/run-server
-                                 (sse-handler core stats headers)
-                                 {:ip host :port port}))
-                (info "SSE server" host port "online")))))
+          (when-not test/*testing*
+            (locking ioutil-lock
+              (locking this
+                (when-not @server
+                  (reset! server (http/run-server
+                                  (sse-handler core stats headers)
+                                  {:ip host :port port}))
+                  (info "SSE server" host port "online"))))))
 
   (stop! [this]
          (locking this
@@ -140,13 +142,14 @@
   "Creates a new SSE server for a core.
 
   Options:
-  :host    The address to listen on (default 127.0.0.1)
-  :port    The port to listen on (default 5558)
-  :headers Additional headers to send with the reply. By default
-           Content-Type is set to text/event-stream and Cache-Control to
-           no-cache. If you do not expose your client web application behind
-           the same host, you will probably need to add an
-           Access-Control-Allow-Origin header here"
+
+  - :host    The address to listen on (default 127.0.0.1)
+  - :port    The port to listen on (default 5558)
+  - :headers Additional headers to send with the reply. By default
+             Content-Type is set to text/event-stream and Cache-Control to
+             no-cache. If you do not expose your client web application behind
+             the same host, you will probably need to add an
+             Access-Control-Allow-Origin header here"
   ([] (sse-server {}))
   ([{:keys [host port headers]
      :or   {host    "127.0.0.1"

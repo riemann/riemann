@@ -7,6 +7,8 @@
   received."
   (:require [riemann.time.controlled :as time.controlled]
             [riemann.time :as time]
+            [riemann.index :as index]
+            [riemann.service :as service]
             [riemann.streams :as streams]
             [clojure.test :as test]))
 
@@ -24,10 +26,8 @@
   "An atom to a map of tap names to information about the taps; e.g. file and
   line number, for preventing collisions." nil)
 
-(def ^:dynamic *streams*
-  "The current sequence of streams. This is global so test writers can simply
-  call (inject! events) without looking up the streams from their core every
-  time."
+(def ^:dynamic *core*
+  "The core used in test mode"
   nil)
 
 (defn tap-stream
@@ -84,9 +84,11 @@
   at compile time, returns a function that discards any incoming events. When
   *testing* is false, compiles to (sdo child1 child2 ...).
 
+  ```clojure
   (io
     (fn [e]
-      (http/put \"http://my.service/callback\", {:body (event->json e)})))"
+      (http/put \"http://my.service/callback\", {:body (event->json e)})))
+  ```"
   [& children]
   (if *testing*
     `streams/bit-bucket
@@ -104,22 +106,27 @@
        persistent!))
 
 (defmacro with-test-env
-  "Prepares a fresh set of taps, binds *testing* to true, and runs body in an
-  implicit do. Wrap your entire test suite (including defining the streams
-  themselves) in this macro. Note that you'll have to use (eval) or
-  (load-file), etc, in order for this to work because the binding takes effect
-  at *run time*, not *compile time*--so make your compile time run time and wow
+  "Prepares a fresh set of taps, binds *testing* to true, initiates controlled
+  time and resets the schedulerand runs body in an implicit do. Wrap your entire
+  test suite (including defining the streams themselves) in this macro. Note that
+  you'll have to use (eval) or (load-file), etc, in order for this to work
+  because the binding takes effect at *run time*, not *compile time*--so make
+  your compile time run time and wow
   this gets confusing.
 
+  ```clojure
   (with-test-env
     (eval '(let [s (tap :foo prn)]
              (run-test! [s] [:hi]))))
+  ```
 
   prints :hi, and returns {:foo [:hi]}"
   [& body]
   `(binding [*testing* true
              *taps*    (atom {})]
-     ~@body))
+     (time.controlled/with-controlled-time!
+       (time.controlled/reset-time!)
+       ~@body)))
 
 (defn inject!
   "Takes a sequence of streams, initiates controlled time and resets the
@@ -128,27 +135,22 @@
   riemann.time.controlled is global. Streams may be omitted, in which case
   inject! applies events to the *streams* dynamic var."
   ([events]
-   (inject! *streams* events))
+   (inject! (:streams *core*) events))
   ([streams events]
-   (binding [*results* (fresh-results @*taps*)]
-     ; Set up time
-     (time.controlled/with-controlled-time!
-       (time.controlled/reset-time!)
+   ;; Apply events
+   (doseq [e events]
+     (when-let [t (:time e)]
+       (time.controlled/advance! t))
 
-       ;; Apply events
-       (doseq [e events]
-         (when-let [t (:time e)]
-           (time.controlled/advance! t))
+     (doseq [stream streams]
+       (stream e)))
+     ;; Return captured events
 
-         (doseq [stream streams]
-           (stream e)))
-
-       ;; Return captured events
-       (->> *results*
-            (reduce (fn [results [tap-name results-atom]]
-                      (assoc! results tap-name @results-atom))
-                    (transient {}))
-            persistent!)))))
+   (->> *results*
+        (reduce (fn [results [tap-name results-atom]]
+                  (assoc! results tap-name @results-atom))
+                (transient {}))
+        persistent!)))
 
 (defn lookup
   "Lookup an event by host/service in a vector of tapped events returned by
@@ -167,16 +169,22 @@
   "Like clojure.test deftest, but establishes a fresh time context and a fresh
   set of tap results for the duration of the body.
 
+  ```clojure
   (deftest my-tap
     (let [rs (test/inject! [{:time 2 :service \"bar\"}])]
-      (is (= 1 (count (:some-tap rs))))))"
+      (is (= 1 (count (:some-tap rs))))))
+  ```"
   [name & body]
   `(test/deftest ~name
      (binding [*results* (fresh-results @*taps*)]
-       (time.controlled/with-controlled-time!
-         (time.controlled/reset-time!)
-
-         ~@body))))
+    (when (:index *core*)
+      (index/clear (:index *core*)))
+    (time.controlled/with-controlled-time!
+      (time.controlled/reset-time!)
+      (dorun (pmap #(riemann.service/reload! % *core*) (:services *core*)))
+      (dorun (pmap service/start! (:services *core*)))
+      ~@body
+      (dorun (pmap service/stop! (:services *core*)))))))
 
 (defmacro tests
   "Declares a new namespace named [ns]-test, requires some clojure.test and
@@ -201,7 +209,7 @@
   `(let [out# (atom [])
          stream# (~@stream (streams/append out#))]
      (time.controlled/reset-time!)
-     (doseq [e# ~inputs] 
+     (doseq [e# ~inputs]
        (when-let [t# (:time e#)]
          (time.controlled/advance! t#))
        (stream# e#))

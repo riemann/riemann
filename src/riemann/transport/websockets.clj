@@ -4,6 +4,7 @@
   (:require [riemann.query         :as query]
             [riemann.index         :as index]
             [riemann.pubsub        :as p]
+            [riemann.test          :as test]
             [cheshire.core         :as json]
             [interval-metrics.core :as metrics]
             [org.httpkit.server    :as http])
@@ -47,7 +48,9 @@
                                  (when (pred event)
                                    ;; http-kit's send does not provide a way
                                    ;; to measure output latency
-                                   (http/send! ch (event-to-json event))))
+                                   (measure-latency
+                                    (:out stats)
+                                    (http/send! ch (event-to-json event)))))
                                true)]
       (info "New websocket subscription to" topic ":" query)
 
@@ -180,12 +183,13 @@
            (reset! core new-core))
 
   (start! [this]
-          (locking this
-            (when-not @server
-              (reset! server (http/run-server (ws-handler core stats)
-                                              {:ip host
-                                               :port port}))
-              (info "Websockets server" host port "online"))))
+          (when-not test/*testing*
+            (locking this
+              (when-not @server
+                (reset! server (http/run-server (ws-handler core stats)
+                                                {:ip host
+                                                 :port port}))
+                (info "Websockets server" host port "online")))))
 
   (stop! [this]
          (locking this
@@ -215,10 +219,6 @@
 
                          ; Latencies
                          (map (fn [[q latency]]
-                                {:service (str svc " out latency " q)
-                                 :metric latency})
-                              (:latencies out))
-                         (map (fn [[q latency]]
                                 {:service (str svc " in latency " q)
                                  :metric latency})
                               (:latencies in)))
@@ -228,8 +228,9 @@
   "Starts a new websocket server for a core. Starts immediately.
 
   Options:
-  :host   The address to listen on (default 127.0.0.1)
-  :port   The port to listen on (default 5556)"
+
+  - :host   The address to listen on (default 127.0.0.1)
+  - :port   The port to listen on (default 5556)"
   ([] (ws-server {}))
   ([opts]
    (WebsocketServer.

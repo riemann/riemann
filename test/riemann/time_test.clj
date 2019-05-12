@@ -1,10 +1,10 @@
 (ns riemann.time-test
-  (:use riemann.time
-        [riemann.common :exclude [unix-time linear-time]]
-        clojure.math.numeric-tower
-        clojure.test
-        clojure.tools.logging)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.common :refer [approx-equal]]
+            [riemann.logging :as logging]
+            [riemann.time :refer :all]
+            [clojure.math.numeric-tower :refer :all]
+            [clojure.test :refer :all]
+            [clojure.tools.logging :refer :all]))
 
 (riemann.logging/init)
 

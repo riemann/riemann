@@ -1,8 +1,8 @@
 (ns riemann.pubsub-test
-  (:require [riemann.index   :as index]
-            [riemann.logging :as logging]
+  (:require [riemann.common  :refer [event]]
             [riemann.core    :refer [transition! core wrap-index]]
-            [riemann.common  :refer [event]]
+            [riemann.index   :as index]
+            [riemann.logging :as logging]
             [riemann.pubsub  :refer :all]
             [clojure.test    :refer :all]))
 

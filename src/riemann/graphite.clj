@@ -15,11 +15,13 @@
 
 (defprotocol GraphiteClient
   (open [client]
-        "Creates a Graphite client")
+    "Creates a Graphite client")
   (send-line [client line]
-        "Sends a formatted line to Graphite")
+    "Sends a formatted line to Graphite")
+  (send-lines [client lines]
+    "Sends a list of formatted lines to Graphite")
   (close [client]
-         "Cleans up (closes sockets etc.)"))
+    "Cleans up (closes sockets etc.)"))
 
 (defrecord GraphiteTCPClient [^String host ^int port]
   GraphiteClient
@@ -31,6 +33,11 @@
   (send-line [this line]
     (let [out (:out this)]
       (.write ^OutputStreamWriter out ^String line)
+      (.flush ^OutputStreamWriter out)))
+  (send-lines [this lines]
+    (let [out (:out this)]
+      (doseq [line lines]
+        (.write ^OutputStreamWriter out ^String line))
       (.flush ^OutputStreamWriter out)))
   (close [this]
     (.close ^OutputStreamWriter (:out this))
@@ -49,6 +56,13 @@
           addr (InetAddress/getByName (:host this))
           datagram (DatagramPacket. bytes length ^InetAddress addr port)]
       (.send ^DatagramSocket (:socket this) datagram)))
+  (send-lines [this lines]
+    (doseq [line lines]
+      (let [bytes (.getBytes ^String line)
+            length (count line)
+            addr (InetAddress/getByName (:host this))
+            datagram (DatagramPacket. bytes length ^InetAddress addr port)]
+        (.send ^DatagramSocket (:socket this) datagram))))
   (close [this]
     (.close ^DatagramSocket (:socket this))))
 
@@ -76,6 +90,27 @@
                                                 frac))))
       event)))
 
+(defn graphite-path-tags
+  "Returns a function which constructs a path for an event.
+  Takes the service with spaces converted to dots, followed by the tags
+  referenced in `tags` if they exists in the event.
+
+  Example:
+
+  (def graph (graphite {:path (graphite-path-tags [:host :rack])}))
+
+  {:host \"foo\" :service \"api req\" :rack \"n1\"}
+
+  will have this path: api.req;host=foo;rack=n1"
+  [tags]
+  (fn [event]
+    (let [service (replace (:service event) #" " ".")
+          tags (filter #(get event %) tags)
+          tag-string (join ";" (map #(str (name %) "=" (get event %)) tags))]
+      (if (= tag-string "")
+        service
+        (str service ";" tag-string)))))
+
 (defn graphite-metric
   "convert riemann metric value to graphite"
   [event]
@@ -91,22 +126,17 @@
 
   Options:
 
-  :path       A function which, given an event, returns the string describing
-              the path of that event in graphite. graphite-path-percentiles by
-              default.
-
-  :pool-size  The number of connections to keep open. Default 4.
-
-  :reconnect-interval   How many seconds to wait between attempts to connect.
-                        Default 5.
-
-  :claim-timeout        How many seconds to wait for a graphite connection from
-                        the pool. Default 0.1.
-
-  :block-start          Wait for the pool's initial connections to open
-                        before returning.
-
-  :protocol             Protocol to use. Either :tcp (default) or :udp."
+  - :path       A function which, given an event, returns the string describing
+                the path of that event in graphite. graphite-path-percentiles by
+                default.
+  - :pool-size  The number of connections to keep open. Default 4.
+  - :reconnect-interval   How many seconds to wait between attempts to connect.
+                          Default 5.
+  - :claim-timeout        How many seconds to wait for a graphite connection from
+                          the pool. Default 0.1.
+  - :block-start          Wait for the pool's initial connections to open
+                          before returning.
+  - :protocol             Protocol to use. Either :tcp (default) or :udp."
   [opts]
   (let [opts (merge {:host "127.0.0.1"
                      :port 2003
@@ -134,12 +164,15 @@
                    (assoc :size (:pool-size opts))
                    (assoc :regenerate-interval (:reconnect-interval opts))))
         path (:path opts)]
-
-    (fn [event]
-      (when (:metric event)
-        (with-pool [client pool (:claim-timeout opts)]
-                   (let [string (str (join " " [(path event)
-                                                (graphite-metric event)
-                                                (int (:time event))])
-                                     "\n")]
-                     (send-line client string)))))))
+    (fn [events]
+      (let [events (->> (if (sequential? events) events (list events))
+                        (filter :metric))]
+        (when-not (empty? events)
+          (with-pool [client pool (:claim-timeout opts)]
+            (let [lines (map (fn [event]
+                               (str (join " " [(path event)
+                                               (graphite-metric event)
+                                               (int (:time event))])
+                                    "\n"))
+                             events)]
+              (send-lines client lines))))))))

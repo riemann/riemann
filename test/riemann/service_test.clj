@@ -1,4 +1,9 @@
 (ns riemann.service-test
+  (:require [riemann.instrumentation :as instrumentation]
+            [riemann.logging :as logging]
+            [riemann.service :refer :all]
+            [riemann.time.controlled :as time.controlled]
+            [clojure.test :refer :all])
   (:import (java.util.concurrent TimeUnit
                                  AbstractExecutorService
                                  Executor
@@ -7,12 +12,7 @@
                                  LinkedBlockingQueue
                                  ArrayBlockingQueue
                                  SynchronousQueue
-                                 ThreadPoolExecutor))
-  (:require [riemann.logging :as logging]
-            [riemann.instrumentation :as instrumentation]
-            [riemann.time.controlled :as time.controlled])
-  (:use riemann.service
-        clojure.test))
+                                 ThreadPoolExecutor)))
 
 (use-fixtures :once time.controlled/control-time!)
 (use-fixtures :each time.controlled/reset-time!)
@@ -195,3 +195,19 @@
                       :time 5}]))
 
              (logging/suppress "riemann.service" (.stop! s)))))
+
+(deftest scheduled-task-service-test
+  (let [state (atom 0)
+        f (fn [_] (swap! state inc))
+        scheduled-service (scheduled-task-service :foo :foo 10 10 f)]
+    (start! scheduled-service)
+    (time.controlled/advance! 9)
+    (is (= @state 0))
+    (time.controlled/advance! 10)
+    (is (= @state 1))
+    (time.controlled/advance! 20)
+    (is (= @state 2))
+    (stop! scheduled-service)
+    (is (:cancelled @(:task scheduled-service)))
+    (time.controlled/advance! 100)
+    (is (= @state 2))))

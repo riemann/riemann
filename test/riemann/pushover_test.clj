@@ -1,10 +1,10 @@
 (ns riemann.pushover-test
-  (:use [riemann.time :only [unix-time]]
-        riemann.pushover
-        clojure.test)
-  (:require [clj-http.client :as http]
-            [riemann.test-utils :refer [with-mock]]
-            [riemann.logging :as logging]))
+  (:require [riemann.test-utils :refer [with-mock]]
+            [riemann.time :refer [unix-time]]
+            [riemann.logging :as logging]
+            [riemann.pushover :refer :all]
+            [clj-http.client :as http]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

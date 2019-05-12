@@ -1,9 +1,9 @@
 (ns riemann.slack-test
-  (:use clojure.test)
   (:require [riemann.logging :as logging]
             [riemann.slack :as slack]
             [cheshire.core :as json]
-            [clj-http.client :as client]))
+            [clj-http.client :as client]
+            [clojure.test :refer :all]))
 
 
 (def api-key (System/getenv "SLACK_API_KEY"))

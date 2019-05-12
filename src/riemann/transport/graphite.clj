@@ -18,6 +18,22 @@
                                join]]
         [clojure.tools.logging :only [warn]]))
 
+(defn tags->attributes
+  "Converts a sequence of Graphite tag (key=val) into a Clojure map."
+  [tags]
+  (reduce (fn [state tag]
+         (let [[name value] (split tag #"=")]
+           (assoc state (keyword name) value)))
+          {}
+          tags))
+
+(defn decode-graphite-service-tag
+  "Takes the service, converts it in a Clojure map with a `:service` key
+  and a key for each Graphite tag."
+  [service]
+  (let [[service-name & tags] (split service #";")]
+    (merge (tags->attributes tags) {:service service-name})))
+
 (defn decode-graphite-line
   "Decode a line coming from graphite.
 
@@ -30,7 +46,7 @@
 
   Decode-graphite-line will yield a simple event with just a service, metric,
   and timestamp."
-  [line]
+  [line tags]
   (let [[service metric timestamp & garbage] (split line #"\s+")]
     ; Validate format
     (cond garbage
@@ -54,17 +70,19 @@
                         (throw+ "invalid metric")))
           timestamp (try (Long. timestamp)
                          (catch NumberFormatException e
-                           (throw+ "invalid timestamp")))]
-
-      ; Construct event
-      (->Event nil
-               service
-               nil
-               nil
-               metric
-               nil
-               timestamp
-               nil))))
+                           (throw+ "invalid timestamp")))
+          ; Construct event
+          event (->Event nil
+                         service
+                         nil
+                         nil
+                         metric
+                         nil
+                         timestamp
+                         nil)]
+      (if tags
+        (merge event (decode-graphite-service-tag service))
+        event))))
 
 (defn graphite-frame-decoder
   "Creates a netty MessageToMessage for graphite lines. Takes a parser-fn: a
@@ -74,8 +92,9 @@
   name, tags) from; to fill in default states or TTLs, and so on.
 
   If parser-fn is nil, defaults to identity."
-  [parser-fn protocol]
-  (let [parser-fn (or parser-fn identity)]
+  [parser-fn protocol tags]
+  (let [parser-fn (or parser-fn identity)
+        decode-fn (fn [line] (decode-graphite-line line tags))]
     (proxy [MessageToMessageDecoder] []
       (decode [context message out]
         (try+
@@ -83,7 +102,7 @@
                 (-> (if (= protocol :udp)
                       (.toString (.content message) CharsetUtil/UTF_8)
                       message)
-                    decode-graphite-line
+                    decode-fn
                     parser-fn))
           (catch Object e
             (warn (str "Graphite server received malformed message ("
@@ -101,16 +120,18 @@
 (defn graphite-server
   "Start a graphite-server. Options:
 
-  :host       \"127.0.0.1\"
-  :port       2003
-  :protocol   :tcp or :udp (default :tcp)
-  :parser-fn  an optional function to further transform events after decoding."
+  - :host       \"127.0.0.1\"
+  - :port       2003
+  - :protocol   :tcp or :udp (default :tcp)
+  - :parser-fn  an optional function to further transform events after decoding.
+  - :tags       converts Graphite tags into event attributes (default false)"
   ([] (graphite-server {}))
   ([opts]
      (let [core (get opts :core (atom nil))
            host (get opts :host "127.0.0.1")
            port (get opts :port 2003)
            protocol (get opts :protocol :tcp)
+           tags (get opts :tags false)
            server (if (= protocol :tcp) tcp-server udp-server)
            channel-group (channel-group (str "graphite server " host ":" port))
            graphite-message-handler (if (= protocol :tcp)
@@ -128,7 +149,7 @@
              ^:shared string-encoder (StringEncoder.
                                        CharsetUtil/UTF_8)
              ^:shared graphite-decoder (graphite-frame-decoder
-                                         (:parser-fn opts) protocol)
+                                         (:parser-fn opts) protocol tags)
              ^{:shared true :executor shared-event-executor} handler
              graphite-message-handler)]
        (server (merge opts

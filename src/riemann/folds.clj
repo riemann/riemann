@@ -149,8 +149,8 @@
   want the ratio of two constant values to be zero."
   [events]
   (if (and (first events)
-           (zero? (:metric (first events))))
-    (first events)
+           (some zero? (map :metric events)))
+    (assoc (first events) :metric 0)
     (quotient events)))
 
 (defn mean

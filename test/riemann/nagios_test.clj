@@ -1,8 +1,8 @@
 (ns riemann.nagios-test
-  (:use riemann.nagios
-        cljr-nsca.core
-        clojure.test)
-  (:require [riemann.logging :as logging]))
+  (:require [riemann.logging :as logging]
+            [riemann.nagios :refer :all]
+            [cljr-nsca.core :refer :all]
+            [clojure.test :refer :all]))
 
 (logging/init)
 

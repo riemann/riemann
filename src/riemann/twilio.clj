@@ -52,53 +52,57 @@
   of phone numbers and returns a stream. That stream is a function which takes a
   single event, or a sequence of events, and sends a message about them.
 
+  ```clojure
   (def messenger (twilio))
   (def text (messenger \"+15005550006\" \"+15005550006\"))
+  ```
 
   This messenger sends sms out via twilio using the twilio http api. When used
   it outputs the http response recieved from twilio.
 
+  ```clojure
   (changed :state
     #(info \"twilio response\" (text %)))
+  ```
 
   The first argument is a map of the twilio options :account and :key.
   The second argument is a map of default message option.
 
+  ```clojure
   (def text (twilio {:account \"id\" :service-key \"key\"}
                     {:from \"+15005550006\"}))
+  ```
 
   Message options can be :
 
-  `:from`                    A twilio phone number
-
-  `:messaging-service-sid`   The 34 character unique id of the Messaging Service you want to associate with this Message
-
-  `:media-url`               The URL of the media you wish to send out with the message.
-
-  `:status-callback`         A URL that Twilio will POST to each time your message status changes to one of the following: queued, failed, sent, delivered, or undelivered
-
-  `:application-sid`         Twilio will POST MessageSid as well as MessageStatus=sent or MessageStatus=failed to the URL in the MessageStatusCallback property of this Application
-
-  `:max-price`               The total maximum price up to the fourth decimal (0.0001) in US dollars acceptable for the message to be delivered
-
-  `:provide-feedback`        Set this value to true if you are sending messages that have a trackable user action and you intend to confirm delivery of the message using the Message Feedback API
+  - `:from`                    A twilio phone number
+  - `:messaging-service-sid`   The 34 character unique id of the Messaging Service you want to associate with this Message
+  - `:media-url`               The URL of the media you wish to send out with the message.
+  - `:status-callback`         A URL that Twilio will POST to each time your message status changes to one of the following: queued, failed, sent, delivered, or undelivered
+  - `:application-sid`         Twilio will POST MessageSid as well as MessageStatus=sent or MessageStatus=failed to the URL in the MessageStatusCallback property of this Application
+  - `:max-price`               The total maximum price up to the fourth decimal (0.0001) in US dollars acceptable for the message to be delivered
+  - `:provide-feedback`        Set this value to true if you are sending messages that have a trackable user action and you intend to confirm delivery of the message using the Message Feedback API
 
   Full API documentation can be found here : https://www.twilio.com/docs/api/rest/sending-messages
 
   If you provide a single map, the messenger will split the twilio options out
   for you.
 
+  ```clojure
   (def text (twilio {:account \"id\"
                      :service-key \"key\"
                      :from \"+15005550006\"}))
+  ```
 
   By default, riemann uses (body events) to format messages.
   You can set your own body formatter functions by including :body in msg-opts.
   These formatting functions take a sequence of
   events and return a string.
 
+  ```clojure
   (def text (twilio {} {:body (fn [events]
-                                 (apply prn-str events))}))"
+                                 (apply prn-str events))}))
+  ```"
   ([] (twilio {}))
   ([opts]
         (let [twilio-keys #{:account :service-key}
