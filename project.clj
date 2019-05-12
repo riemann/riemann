@@ -62,7 +62,8 @@
 ;                              "-Dcom.sun.management.jmxremote"
 ;                              "-XX:+UnlockCommercialFeatures"
 ;                              "-XX:+FlightRecorder"]
-                   :dependencies [[criterium "0.4.4"]]}}
+                   :dependencies [[criterium "0.4.4"]]}
+             :uberjar {:aot :all}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
                                              (:bench x))))
