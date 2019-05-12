@@ -14,6 +14,20 @@
   [field]
   (str/replace (str/replace field #"[^a-zA-Z0-9_]" "_") #"[_]{2,}" "_"))
 
+(defn create-label-batch
+  "Creates a Prometheus label out of a Riemann event."
+  [filtered-event]
+  (->> filtered-event
+       (map #(if-not (nil? (second %)) (str (replace-disallowed (name (first %))) "=" (second %))))
+       (str/join ",")))
+
+(defn generate-labels-batch
+  "Generates the Prometheus labels from Riemann event attributes."
+  [event]
+  (let [labels (->> event
+                    create-label-batch)]
+    (str "{" labels "}")))
+
 (defn generate-metricname
   "Generates the metric name as per prometheus specification."
   [event]
@@ -27,12 +41,17 @@
   (when (and (:metric event) (:service event))
     (str (generate-metricname event) \space (float (:metric event)) \newline)))
 
-(defn generate-datapoint-batch
+(defn generate-datapoint-with-labels
   "Accepts riemann event and converts it into prometheus datapoint."
   [event]
-  (-> event
   (when (and (:metric event) (:service event))
-    (str (generate-metricname event) \space (float (:metric event)) \newline))))
+    (str (generate-metricname event) (generate-labels-batch event) \space (float (:metric event)) \newline)))
+
+(defn generate-datapoint-batch
+  "Accepts riemann event and converts it into prometheus datapoint."
+  [events]
+  (let [processed-events (map generate-datapoint-with-labels events)]
+    (str/join "" processed-events)))
 
 (defn create-label
   "Creates a Prometheus label out of a Riemann event."
@@ -51,49 +70,48 @@
 (defn generate-labels
   "Generates the Prometheus labels from Riemann event attributes."
   [opts event]
-  (let [instance  (->> opts
-                       :host
-                       (str "/instance/"))
-        tags      (if-not (-> event
-                              :tags
-                              empty?) (->> (:tags event)
-                                           (str/join (:separator opts))
-                                           (str "/tags/")))
-        labels    (->> event
-                       (filter-event opts)
-                       create-label)]
+  (let [instance (->> opts
+                      :host
+                      (str "/instance/"))
+        tags (if-not (-> event
+                         :tags
+                         empty?) (->> (:tags event)
+                                      (str/join (:separator opts))
+                                      (str "/tags/")))
+        labels (->> event
+                    (filter-event opts)
+                    create-label)]
     (str instance tags labels)))
 
 (defn generate-url
   "Generates the URL to which datapoint should be posted."
   [opts event]
   (let [scheme "http://"
-        host   (:host opts)
-        port   (:port opts)
-        endp   "/metrics/job/"
-        job    (:job opts)
-        lhost  (str "/host/" (:host event))
-        ltags  (generate-labels opts event)]
+        host (:host opts)
+        port (:port opts)
+        endp "/metrics/job/"
+        job (:job opts)
+        lhost (str "/host/" (:host event))
+        ltags (generate-labels opts event)]
     (str scheme host ":" port endp job lhost ltags)))
 
 (defn generate-url-batch
   "Generates the URL to which datapoint should be posted for batch jobs."
-  [opts event]
+  [opts]
   (let [scheme "http://"
-        host   (:host opts)
-        port   (:port opts)
-        endp   "/metrics/job/"
-        job    (:job opts)
-        lhost  (str "/host/" (:host event))]
-    (str scheme host ":" port endp job lhost)))
+        host (:host opts)
+        port (:port opts)
+        endp "/metrics/job/"
+        job (:job opts)]
+    (str scheme host ":" port endp job)))
 
 (defn post-datapoint
   "Post the riemann metric as prometheus datapoint."
   [url datapoint]
-  (let [http-options {:body datapoint
-                      :content-type :json
-                      :conn-timeout 5000
-                      :socket-timeout 5000
+  (let [http-options {:body                  datapoint
+                      :content-type          :json
+                      :conn-timeout          5000
+                      :socket-timeout        5000
                       :throw-entire-message? true}]
     (http/post url http-options)))
 
@@ -112,11 +130,11 @@
    - `:separator`      Separator to be used for Riemann tags (default: \",\")
    - `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels"
   [opts]
-  (let [opts (merge {:host            "localhost"
-                     :port            9091
-                     :job             "riemann"
-                     :separator       ","
-                     :exclude-fields  special-fields}
+  (let [opts (merge {:host           "localhost"
+                     :port           9091
+                     :job            "riemann"
+                     :separator      ","
+                     :exclude-fields special-fields}
                     opts)]
     (fn [event]
       (let [url (generate-url opts event)
@@ -139,14 +157,14 @@
    - `:separator`      Separator to be used for Riemann tags (default: \",\")
    - `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels"
   [opts]
-  (let [opts (merge {:host            "localhost"
-                     :port            9091
-                     :job             "riemann"
-                     :separator       ","
-                     :exclude-fields  special-fields}
+  (let [opts (merge {:host           "localhost"
+                     :port           9091
+                     :job            "riemann"
+                     :separator      ","
+                     :exclude-fields special-fields}
                     opts)]
-    (fn [event]
-      (let [url (generate-url-batch opts event)
-            datapoint (generate-datapoint-batch event)]
+    (fn [events]
+      (let [url (generate-url-batch opts)
+            datapoint (generate-datapoint-batch events)]
         (if-not (nil? datapoint)
           (post-datapoint url datapoint))))))

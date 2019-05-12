@@ -110,3 +110,27 @@
                :conn-timeout 5000
                :content-type :json
                :throw-entire-message? true}])))))
+
+(deftest ^:prometheus prometheus-batch-test-without-tags
+  (with-mock [calls client/post]
+             (let [d (prometheus/prometheus-batch {:host "localhost"})]
+
+               (testing "an event without tag batch")
+               (d [{:host    "testhost"
+                   :service "testservice"
+                   :metric  42
+                   :time    123456789
+                   :state   "ok"}
+                   {:host    "testhost"
+                    :service "testserviceyet"
+                    :metric  43
+                    :time    123456789
+                    :state   "ok"}])
+               (is (= 1 (count @calls)))
+               (is (= (vec (last @calls))
+                      ["http://localhost:9091/metrics/job/riemann"
+                       {:body "testservice{host=testhost,service=testservice,metric=42,time=123456789,state=ok} 42.0\ntestserviceyet{host=testhost,service=testserviceyet,metric=43,time=123456789,state=ok} 43.0\n"
+                        :socket-timeout 5000
+                        :conn-timeout 5000
+                        :content-type :json
+                        :throw-entire-message? true}])))))
