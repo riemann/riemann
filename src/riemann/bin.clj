@@ -112,7 +112,7 @@
     (when-not (instance? DynamicClassLoader cl)
       (.setContextClassLoader thread (DynamicClassLoader. cl)))))
 
-(defn run!
+(defn run-app!
   "Start Riemann with the given setup function. The setup function is responsible
   for executing code that you would normally put into your riemann.config file,
   e.g. setting up streams."
@@ -136,7 +136,7 @@
    (case command
      "start" (try
                (set-config-file! config)
-               (run! #(riemann.config/include @config-file))
+               (run-app! #(riemann.config/include @config-file))
                (catch Exception e
                  (error e "Couldn't start")))
 
