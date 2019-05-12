@@ -27,6 +27,13 @@
   (when (and (:metric event) (:service event))
     (str (generate-metricname event) \space (float (:metric event)) \newline)))
 
+(defn generate-datapoint-batch
+  "Accepts riemann event and converts it into prometheus datapoint."
+  [event]
+  (-> event
+  (when (and (:metric event) (:service event))
+    (str (generate-metricname event) \space (float (:metric event)) \newline))))
+
 (defn create-label
   "Creates a Prometheus label out of a Riemann event."
   [filtered-event]
@@ -69,6 +76,17 @@
         ltags  (generate-labels opts event)]
     (str scheme host ":" port endp job lhost ltags)))
 
+(defn generate-url-batch
+  "Generates the URL to which datapoint should be posted for batch jobs."
+  [opts event]
+  (let [scheme "http://"
+        host   (:host opts)
+        port   (:port opts)
+        endp   "/metrics/job/"
+        job    (:job opts)
+        lhost  (str "/host/" (:host event))]
+    (str scheme host ":" port endp job lhost)))
+
 (defn post-datapoint
   "Post the riemann metric as prometheus datapoint."
   [url datapoint]
@@ -103,5 +121,32 @@
     (fn [event]
       (let [url (generate-url opts event)
             datapoint (generate-datapoint event)]
+        (if-not (nil? datapoint)
+          (post-datapoint url datapoint))))))
+
+(defn prometheus-batch
+  "Returns a function which accepts an event and sends it to prometheus in batch.
+
+   Usage:
+
+   (batch 1000 5 (prometheus-batch {:host \"prometheus.example.com\"}))
+
+   Options:
+
+   - `:host`           Prometheus Pushgateway Server IP (default: \"localhost\")
+   - `:port`           Prometheus Pushgateway Server Port (default: 9091)
+   - `:job`            Group Name to be assigned (default: \"riemann\")
+   - `:separator`      Separator to be used for Riemann tags (default: \",\")
+   - `:exclude-fields` Set of Riemann fields to exclude from Prometheus labels"
+  [opts]
+  (let [opts (merge {:host            "localhost"
+                     :port            9091
+                     :job             "riemann"
+                     :separator       ","
+                     :exclude-fields  special-fields}
+                    opts)]
+    (fn [event]
+      (let [url (generate-url-batch opts event)
+            datapoint (generate-datapoint-batch event)]
         (if-not (nil? datapoint)
           (post-datapoint url datapoint))))))
