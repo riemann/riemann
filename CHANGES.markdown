@@ -1,3 +1,22 @@
+# Version 0.3.2
+
+This is a minor release with a small set of enhancements and bug fixes. Derek Chiang provides support to usec Riemann as a dependency. Shalom Yerushalmy added support for posting of batched events to Prometheus. deoqc added the `untag` stream. Richard Gray added support for sending events to Zabbix. Erik Assum, cresh, Jeff Stokes, and Mathieu Corbin all added enhancements or bug fixes.
+
+## Features and enhancements
+
+- Added support for running Riemann as a dependency [\#811](https://github.com/riemann/riemann/pull/811) ([derekchiang](https://github.com/derekchiang)
+- Send batched events to Prometheus [\#945](https://github.com/riemann/riemann/pull/945) ([yershalom](https://github.com/yershalom))
+- Added support for sending events to Zabbix [\#938](https://github.com/riemann/riemann/pull/938) ([vortura](https://github.com/vortura))
+- Added the untag stream [\#940](https://github.com/riemann/riemann/pull/940) ([deoqc](https://github.com/deoqc))
+- clj-nsca upgraded to 0.0.4 [\#932](https://github.com/riemann/riemann/pull/932) ([mcorbin](https://github.com/mcorbin))
+
+## Bug Fixes
+
+- Handle div by 0 in quotient-sloppy [\#935](https://github.com/riemann/riemann/pull/935) ([jstokes](https://github.com/jstokes))
+- Escape backslash in ns-string to allow for compilation [\#944](https://github.com/riemann/riemann/pull/944) ([slipset](https://github.com/slipset))
+- Cast time in long in pagerduty stream [\#929](https://github.com/riemann/riemann/pull/929) ([mcorbin](https://github.com/mcorbin))
+- Bump plexus-utils version to avoid missing class when loading external dependencies [\#939](https://github.com/riemann/riemann/pull/939) ([cresh](https://github.com/cresh))
+
 # Version 0.3.1
 
 This is a minor release containing a small set of enhancements and bug fixes. Mathieu Corbin added support for the Opsgenie v2 API, multiple events and tags support to the Graphite stream and input and output. Christoph Mewes provided a Docker image for Riemann. You can find it on [the Docker Hub](https://hub.docker.com/r/riemannio/riemann/). Pierre-Yves Ritschard added lexical sorting to configuration files before including them. epabced enabled TCP-TLS support in the logstash plugins.

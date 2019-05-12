@@ -1,3 +1,6 @@
+.classpath
+.settings
+.project
 .DS_Store
 .ruby-version
 _site
