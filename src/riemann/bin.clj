@@ -55,11 +55,11 @@
   []
   (if (not (.contains (. System getProperty "os.name") "Windows"))
     (sun.misc.Signal/handle
-      (sun.misc.Signal. "HUP")
-      (proxy [sun.misc.SignalHandler] []
-        (handle [sig]
-                (info "Caught SIGHUP, reloading")
-                (reload!))))))
+     (sun.misc.Signal. "HUP")
+     (proxy [sun.misc.SignalHandler] []
+       (handle [sig]
+         (info "Caught SIGHUP, reloading")
+         (reload!))))))
 
 (defn pom-version
   "Return version from Maven POM file."
@@ -79,11 +79,10 @@
   "Process identifier, such as it is on the JVM. :-/"
   []
   (let [name (-> (java.lang.management.ManagementFactory/getRuntimeMXBean)
-               (.getName))]
+                 (.getName))]
     (try
       (get (re-find #"^(\d+).*" name) 1)
       (catch Exception e name))))
-
 
 (defn run-tests-with-format
   "Run all tests matching `test-name-pattern`.
@@ -113,6 +112,18 @@
     (when-not (instance? DynamicClassLoader cl)
       (.setContextClassLoader thread (DynamicClassLoader. cl)))))
 
+(defn run!
+  "Start Riemann with the given setup function. The setup function is responsible
+  for executing code that you would normally put into your riemann.config file,
+  e.g. setting up streams."
+  [setup]
+  (info "PID" (pid))
+  (handle-signals)
+  (riemann.time/start!)
+  (setup)
+  (riemann.config/apply!)
+  nil)
+
 (defn -main
   "Start Riemann. Loads a configuration file from the first of its args."
   ([]
@@ -124,13 +135,8 @@
    (ensure-dynamic-classloader)
    (case command
      "start" (try
-               (info "PID" (pid))
                (set-config-file! config)
-               (handle-signals)
-               (riemann.time/start!)
-               (riemann.config/include @config-file)
-               (riemann.config/apply!)
-               nil
+               (run! #(riemann.config/include @config-file))
                (catch Exception e
                  (error e "Couldn't start")))
 
