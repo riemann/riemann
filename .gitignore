@@ -2,3 +2,15 @@ _site/
 pkg/
 target/
 .ruby-version
+.classpath
+.idea/
+.lein-failures
+.lein-repl-history
+.project
+.settings/
+config.edn
+pom.xml
+pom.xml.asc
+riemann.config
+riemann.iml
+site/
