@@ -143,12 +143,12 @@
                            "riemann")]}
 
         ; Init script
-        {:directory "/etc/init.d"
-         :filemode "755"
+        {:directory "/usr/lib/systemd/system"
+         :filemode "644"
          :username "root"
          :groupname "root"
-         :sources [(source (file (:root project) "pkg" "rpm" "init.sh")
-                           "riemann")]}]))
+         :sources [(source (file (:root project) "pkg" "riemann.service")
+                           "riemann.service")]}]))
 
 (defn blank-rpm
   "Create a new RPM file"
@@ -177,8 +177,7 @@
     (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["jre >= 1.7.0"
-                                              "daemonize >= 1.7.3"]))
+    (set-mojo! "requires" (create-dependency ["java-1.8.0-openjdk-headless >= 1.8.0"]))
     (.execute)))
 
 (defn extract-rpm

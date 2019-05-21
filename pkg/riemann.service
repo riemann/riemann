@@ -1,0 +1,18 @@
+[Unit]
+Description=
+After=
+Wants=
+
+[Service]
+EnvironmentFile=/etc/sysconfig/riemann
+ExecStart=/usr/bin/riemann $RIEMANN_OPTS $RIEMANN_CONFIG
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=42s
+User=riemann
+Group=riemann
+
+[Install]
+WantedBy=multi-user.target
