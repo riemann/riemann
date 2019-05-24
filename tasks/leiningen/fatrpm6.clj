@@ -1,4 +1,4 @@
-(ns leiningen.fatrpm
+(ns leiningen.fatrpm6
   (:refer-clojure :exclude [replace])
   (:use [clojure.java.shell :only [sh]]
         [clojure.java.io :only [file delete-file writer copy]]
@@ -143,12 +143,12 @@
                            "riemann")]}
 
         ; Init script
-        {:directory "/usr/lib/systemd/system"
-         :filemode "644"
+        {:directory "/etc/init.d"
+         :filemode "755"
          :username "root"
          :groupname "root"
-         :sources [(source (file (:root project) "pkg" "riemann.service")
-                           "riemann.service")]}]))
+         :sources [(source (file (:root project) "pkg" "rpm" "init.sh")
+                           "riemann")]}]))
 
 (defn blank-rpm
   "Create a new RPM file"
@@ -171,13 +171,15 @@
   (doto (blank-rpm)
     (set-mojo! "projversion" (get-version project))
     (set-mojo! "name" (:name project))
+    (set-mojo! "license" "Eclipse Public License v1")
     (set-mojo! "summary" (:description project))
     (set-mojo! "workarea" (workarea project))
     (set-mojo! "mappings" (mappings project))
     (set-mojo! "preinstallScriptlet" (scriptlet
                                        (file (:root project)
                                              "pkg" "deb" "preinst.sh")))
-    (set-mojo! "requires" (create-dependency ["java-1.8.0-openjdk-headless >= 1.8.0"]))
+    (set-mojo! "requires" (create-dependency ["jre >= 1.7.0"
+                                              "daemonize >= 1.7.3"]))
     (.execute)))
 
 (defn extract-rpm
@@ -190,7 +192,8 @@
                   "noarch")
         rpms (remove #(.isDirectory %) (.listFiles dir))]
     (doseq [rpm rpms]
-      (let [dest (file (:root project) "target" (.getName rpm))]
+   (let [rname (replace (.getName rpm) #"noarch" "noarch-EL6")
+         dest (file (:root project) "target" rname)]
         ; Move
         (.renameTo rpm dest)
 
@@ -198,8 +201,8 @@
         (write (str dest ".md5")
                (str (md5 dest) "  " (.getName rpm)))))))
 
-(defn fatrpm
-  ([project] (fatrpm project true))
+(defn fatrpm6
+  ([project] (fatrpm6 project true))
   ([project uberjar?]
    (reset project)
    (when uberjar? (uberjar project))
