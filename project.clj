@@ -26,8 +26,8 @@
     [com.cemerick/pomegranate "1.0.0"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
-    [org.codehaus.plexus/plexus-utils "3.1.1"]
-    [http-kit "2.2.0"]
+    [org.codehaus.plexus/plexus-utils "3.2.0"]
+    [http-kit "2.3.0"]
     [clj-http "3.7.0"]
     [cheshire "5.8.0"]
     [clj-librato "0.0.5"]
@@ -57,8 +57,8 @@
             ; for lein-rpm
             [org.apache.maven/maven-plugin-api "2.0"]
             [org.codehaus.plexus/plexus-container-default
-             "1.0-alpha-9-stable-1"]
-            [org.codehaus.plexus/plexus-utils "1.5.15"]
+             "2.0.0"]
+            [org.codehaus.plexus/plexus-utils "3.2.0"]
             [classworlds "1.1"]]
   :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
 ;                              "-Dcom.sun.management.jmxremote"
