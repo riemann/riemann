@@ -2,6 +2,10 @@
 
 This is a bug fix release to address an issue with dynamic class loading during configuration reloads.
 
+## Features and enhancements
+
+- Romain Tartière for modernizing the RPM build and adding support for EL7.
+
 ## Bug fixes
 
 - Handle configuration reloads under Java 10. [\#928](https://github.com/riemann/riemann/issues/928).
