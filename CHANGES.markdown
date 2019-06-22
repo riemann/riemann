@@ -1,3 +1,11 @@
+# Version 0.3.3
+
+This is a bug fix release to address an issue with dynamic class loading during configuration reloads.
+
+## Bug fixes
+
+- Handle configuration reloads under Java 10. [\#928](https://github.com/riemann/riemann/issues/928).
+
 # Version 0.3.2
 
 This is a minor release with a small set of enhancements and bug fixes. Derek Chiang provides support to use Riemann as a dependency. Shalom Yerushalmy added support for posting of batched events to Prometheus. deoqc added the `untag` stream. Richard Gray added support for sending events to Zabbix. Erik Assum, cresh, Jeff Stokes, and Mathieu Corbin all added enhancements or bug fixes.
