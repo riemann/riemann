@@ -110,6 +110,7 @@
   (let [thread (Thread/currentThread)
         cl (.getContextClassLoader thread)]
     (when-not (instance? DynamicClassLoader cl)
+      (.bindRoot clojure.lang.Compiler/LOADER cl)
       (.setContextClassLoader thread (DynamicClassLoader. cl)))))
 
 (defn run-app!
