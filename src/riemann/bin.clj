@@ -50,6 +50,14 @@
         (error e "Couldn't reload:")
         e))))
 
+(defn ensure-dynamic-classloader
+  []
+  (let [thread (Thread/currentThread)
+        cl (or (.getContextClassLoader thread)
+               (.getClassLoader clojure.lang.Compiler))]
+    (when-not (instance? DynamicClassLoader cl)
+      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
+
 (defn handle-signals
   "Sets up POSIX signal handlers."
   []
@@ -59,6 +67,7 @@
      (proxy [sun.misc.SignalHandler] []
        (handle [sig]
          (info "Caught SIGHUP, reloading")
+         (ensure-dynamic-classloader)
          (reload!))))))
 
 (defn pom-version
@@ -104,14 +113,6 @@
       (binding [clojure.test/*test-out* w]
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
-
-(defn ensure-dynamic-classloader
-  []
-  (let [thread (Thread/currentThread)
-        cl (.getContextClassLoader thread)]
-    (when-not (instance? DynamicClassLoader cl)
-      (.bindRoot clojure.lang.Compiler/LOADER cl)
-      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
 
 (defn run-app!
   "Start Riemann with the given setup function. The setup function is responsible
