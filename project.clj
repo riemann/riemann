@@ -5,8 +5,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 ;  :warn-on-reflection true
-;  :jvm-opts ["-server" "-d64" "-Xms1024m" "-Xmx1024m" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-verbose:gc" "-XX:+PrintGCDetails"]
-  :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+CMSClassUnloadingEnabled" "-XX:+IgnoreUnrecognizedVMOptions" "--add-modules=java.xml.bind"]
+  :jvm-opts ["-server" "-Xms1024m" "-Xmx1024m" "-XX:+CMSParallelRemarkEnabled" "-XX:+AggressiveOpts" "-XX:+CMSClassUnloadingEnabled" "-XX:+IgnoreUnrecognizedVMOptions"]
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
@@ -15,10 +14,10 @@
     [org.clojure/tools.logging "0.4.0"]
     [org.clojure/tools.nrepl "0.2.13"]
     [org.clojure/core.cache "0.6.5"]
-    [org.clojure/data.priority-map "0.0.7"]
-    [org.clojure/java.classpath "0.2.3"]
-
+    [org.clojure/data.priority-map "0.0.10"]
+    [org.clojure/java.classpath "0.3.0"]
     [org.slf4j/log4j-over-slf4j "1.7.25"]
+    [javax.xml.bind/jaxb-api "2.4.0-b180830.0359"]
     [ch.qos.logback/logback-classic "1.2.3"]
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "4.11"]
@@ -27,8 +26,8 @@
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.2.0"]
-    [http-kit "2.3.0"]
-    [clj-http "3.7.0"]
+    [http-kit "2.4.0-alpha3"]
+    [clj-http "3.10.0"]
     [cheshire "5.8.0"]
     [clj-librato "0.0.5"]
     [clj-time "0.14.2"]
@@ -38,9 +37,9 @@
     [com.amazonaws/aws-java-sdk "1.11.116" :exclusions [joda-time]]
     [interval-metrics "1.0.0"]
     [clj-antlr "0.2.4"]
-    [io.netty/netty-all "4.1.25.Final"]
-    [riemann-clojure-client "0.5.0"]
-    [less-awful-ssl "1.0.3"]
+    [io.netty/netty-all "4.1.41.Final"]
+    [riemann-clojure-client "0.5.1"]
+    [less-awful-ssl "1.0.4"]
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.4"]
     [amazonica "0.3.95" :exclusions [joda-time]]
@@ -48,6 +47,7 @@
     [pjstadig/humane-test-output "0.8.3"]]
   :plugins [[lein-codox "0.10.6"]
             [lein-difftest "2.0.0"]
+            [lein-ancient "0.6.15"]
             [lein-rpm "0.0.6"
              :exclusions [org.apache.maven/maven-plugin-api
                           org.codehaus.plexus/plexus-container-default

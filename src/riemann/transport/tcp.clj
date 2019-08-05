@@ -97,7 +97,7 @@
        native?  (= (System/getProperty "netty.native.implementation") "true")]
     (cond (and native? sfbit? linux?) (epoll-netty-implementation)
              (and native? sfbit? mac-or-freebsd?) (kqueue-netty-implementation)
-             ::else (nio-netty-implementation))))
+             :else (nio-netty-implementation))))
 
 (defn tcp-handler
   "Given a core, a channel, and a message, applies the message to core and

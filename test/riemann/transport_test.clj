@@ -170,12 +170,7 @@
       ; Fails with mismatching server key/cert
       (is (thrown? IOException
                    (test-tcp-client client
-                                    (assoc server :key (:key client)))))
-      ; Fails with non-CA server CA cert
-      (is (thrown? IOException
-                   (test-tcp-client client
-                                    (assoc server :ca-cert
-                                           (:cert client))))))))
+                                    (assoc server :key (:key client))))))))
 
 (deftest ignores-garbage
   (logging/suppress ["riemann.core"
