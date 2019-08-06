@@ -16,6 +16,15 @@
   "The configuration file loaded by the bin tool"
   (promise))
 
+(defn add-config-dir-to-classpath
+  [config-file]
+  (let [dir (-> config-file
+                io/file
+                .getCanonicalPath
+                io/file
+                .getParent)]
+    (pom/add-classpath dir)))
+
 (defn set-config-file!
   "Sets the config file used by Riemann. Adds the config file's enclosing
   directory to the classpath as well."
@@ -24,12 +33,7 @@
   (assert (deliver config-file file)
           (str "Config file already set to " (pr-str @config-file)
                "--can't change it to " (pr-str file)))
-  (let [dir (-> file
-                io/file
-                .getCanonicalPath
-                io/file
-                .getParent)]
-    (pom/add-classpath dir)))
+  (add-config-dir-to-classpath file))
 
 (def reload-lock (Object.))
 
@@ -70,6 +74,7 @@
        (handle [sig]
          (info "Caught SIGHUP, reloading")
          (ensure-dynamic-classloader)
+         (add-config-dir-to-classpath @config-file)
          (reload!))))))
 
 (defn pom-version
