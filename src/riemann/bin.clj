@@ -53,10 +53,12 @@
 (defn ensure-dynamic-classloader
   []
   (let [thread (Thread/currentThread)
-        cl (or (.getContextClassLoader thread)
-               (.getClassLoader clojure.lang.Compiler))]
-    (when-not (instance? DynamicClassLoader cl)
-      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
+        context-class-loader (.getContextClassLoader thread)
+        compiler-class-loader (.getClassLoader clojure.lang.Compiler)]
+    (when-not (instance? DynamicClassLoader context-class-loader)
+      (.setContextClassLoader
+        thread (DynamicClassLoader. (or context-class-loader
+                                        compiler-class-loader))))))
 
 (defn handle-signals
   "Sets up POSIX signal handlers."
