@@ -2193,3 +2193,56 @@
                             (dissoc ::clock-skew-timestamp)
                             (assoc :metric delta))]
                 (call-rescue event children)))))))
+
+(defn predict-linear
+  "Stream that performs OLS regression. Uses a moving-event-window
+  of n events and emits an event with a prediction for :metric of s
+  seconds in the future. If the optional model rebuild interval r
+  (in seconds) is specified the model will be rebuild periodically and
+  not on every arriving event.
+
+  E.g. predict the metric of service \"fs-usage\" 30 minutes in the
+  future grouped by host:
+
+  ```clojure
+  (where (service \"fs-usage\")
+    (by :host
+      (predict-linear 100 1800
+        #(info %))))
+  ```
+  "
+  [n s r & children]
+  (assert (> n 1))
+  (let [children (if (number? r) children (cons r children))
+        rebuild-interval (if (number? r) (* 1000 r) 0)
+        last-rebuild (atom 0)
+        coefs (atom {:intercept 0 :slope 0})]
+    (moving-event-window
+      n
+      (smap
+        (fn [events]
+          ; Makes no sense to build model for one event
+          (when (> (count events) 1)
+            (let [model (fn [events]
+                          (let [x (map :time events)
+                                x-avg (/ (reduce + x) (count x))
+                                y (map :metric events)
+                                y-avg (/ (reduce + y) (count y))
+                                x-sub (map #(- % x-avg) x)
+                                y-sub (map #(- % y-avg) y)
+                                m (/
+                                   (reduce + (map * x-sub y-sub))
+                                   (reduce + (map * x-sub x-sub)))
+                                b (- y-avg (* m x-avg))]
+                            (reset! coefs {:slope m :intercept b})
+                            (reset! last-rebuild (System/currentTimeMillis))
+                            @coefs))
+                  params (if (or
+                               (= 0 rebuild-interval)
+                               (= 0 @last-rebuild)
+                               (> (- (System/currentTimeMillis) @last-rebuild) rebuild-interval))
+                           (model events)
+                           @coefs)]
+              (let [prediction (+ (:intercept params) (* (+ (:time (last events)) s) (:slope params)))
+                    event (assoc (last events) :metric prediction)]
+                (call-rescue event children)))))))))

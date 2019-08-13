@@ -1828,3 +1828,42 @@
       (s {:time 10 :ttl 2})
       (is (= @out [{:time 1 :ttl 5}
                    {:time 6 :ttl 2}])))))
+
+(deftest predict-linear-test
+  (test-stream (predict-linear 10 600)
+               [{:metric 1 :time 1}]
+               [])
+  (test-stream (predict-linear 5 60)
+               [{:metric 1 :time 1}
+                {:metric 2 :time 2}
+                {:metric 3 :time 3}
+                {:metric 4 :time 4}
+                {:metric 5 :time 5}]
+               [{:metric 62 :time 2}
+                {:metric 63 :time 3}
+                {:metric 64 :time 4}
+                {:metric 65 :time 5}])
+  (test-stream (predict-linear 2 86400)
+               [{:metric 100 :time 0}
+                {:metric 50 :time 43200}]
+               [{:metric -50 :time 43200}])
+  (test-stream (predict-linear 2 60)
+               [{:metric 100 :time 0}
+                {:metric 100 :time 1}]
+               [{:metric 100 :time 1}])
+  (test-stream (predict-linear 5 60 60)
+               [{:metric 1 :time 1}
+                {:metric 2 :time 2}
+                {:metric 3 :time 3}
+                {:metric 4 :time 4}
+                {:metric 5 :time 5}]
+               [{:metric 62 :time 2}
+                {:metric 63 :time 3}
+                {:metric 64 :time 4}
+                {:metric 65 :time 5}])
+  (test-stream (predict-linear 2 60 60)
+               [{:metric 100 :time 0}
+                {:metric 100 :time 1}
+                {:metric 500 :time 2}]
+               [{:metric 100 :time 1}
+                {:metric 100 :time 2}]))
