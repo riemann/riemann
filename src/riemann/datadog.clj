@@ -48,6 +48,7 @@
 
   Example:
 
+  ```clojure
   (def datadog-forwarder
     (batch 100 1/10
       (async-queue!
@@ -55,7 +56,8 @@
         {:queue-size     1e4  ; 10,000 events max
          :core-pool-size 5    ; Minimum 5 threads
          :max-pools-size 100} ; Maxium 100 threads
-        (datadog {:api-key \"bn14a6ac2e3b5h795085217d49cde7eb\"}))))"
+        (datadog {:api-key \"bn14a6ac2e3b5h795085217d49cde7eb\"}))))
+  ```"
   [opts]
   (let [opts (merge {:api-key "datadog-api-key"} opts)]
     (fn [event]
