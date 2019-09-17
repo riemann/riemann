@@ -20,8 +20,7 @@
   [config-file]
   (let [dir (-> config-file
                 io/file
-                .getCanonicalPath
-                io/file
+                .getCanonicalFile
                 .getParent)]
     (pom/add-classpath dir)))
 
