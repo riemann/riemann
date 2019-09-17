@@ -16,6 +16,14 @@
   "The configuration file loaded by the bin tool"
   (promise))
 
+(defn add-config-dir-to-classpath
+  [config-file]
+  (let [dir (-> config-file
+                io/file
+                .getCanonicalFile
+                .getParent)]
+    (pom/add-classpath dir)))
+
 (defn set-config-file!
   "Sets the config file used by Riemann. Adds the config file's enclosing
   directory to the classpath as well."
@@ -24,12 +32,7 @@
   (assert (deliver config-file file)
           (str "Config file already set to " (pr-str @config-file)
                "--can't change it to " (pr-str file)))
-  (let [dir (-> file
-                io/file
-                .getCanonicalPath
-                io/file
-                .getParent)]
-    (pom/add-classpath dir)))
+  (add-config-dir-to-classpath file))
 
 (def reload-lock (Object.))
 
@@ -50,6 +53,16 @@
         (error e "Couldn't reload:")
         e))))
 
+(defn ensure-dynamic-classloader
+  []
+  (let [thread (Thread/currentThread)
+        context-class-loader (.getContextClassLoader thread)
+        compiler-class-loader (.getClassLoader clojure.lang.Compiler)]
+    (when-not (instance? DynamicClassLoader context-class-loader)
+      (.setContextClassLoader
+        thread (DynamicClassLoader. (or context-class-loader
+                                        compiler-class-loader))))))
+
 (defn handle-signals
   "Sets up POSIX signal handlers."
   []
@@ -59,6 +72,8 @@
      (proxy [sun.misc.SignalHandler] []
        (handle [sig]
          (info "Caught SIGHUP, reloading")
+         (ensure-dynamic-classloader)
+         (add-config-dir-to-classpath @config-file)
          (reload!))))))
 
 (defn pom-version
@@ -104,14 +119,6 @@
       (binding [clojure.test/*test-out* w]
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
-
-(defn ensure-dynamic-classloader
-  []
-  (let [thread (Thread/currentThread)
-        cl (.getContextClassLoader thread)]
-    (when-not (instance? DynamicClassLoader cl)
-      (.bindRoot clojure.lang.Compiler/LOADER cl)
-      (.setContextClassLoader thread (DynamicClassLoader. cl)))))
 
 (defn run-app!
   "Start Riemann with the given setup function. The setup function is responsible
