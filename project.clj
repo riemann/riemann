@@ -59,7 +59,9 @@
             [org.codehaus.plexus/plexus-container-default
              "2.0.0"]
             [org.codehaus.plexus/plexus-utils "3.2.0"]
-            [classworlds "1.1"]]
+            [classworlds "1.1"]
+            [test2junit "1.3.3"]]
+  :test2junit-output-dir "target/test2junit"
   :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
 ;                              "-Dcom.sun.management.jmxremote"
 ;                              "-XX:+UnlockCommercialFeatures"

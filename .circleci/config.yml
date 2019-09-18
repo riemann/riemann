@@ -27,7 +27,9 @@ shared: &shared
           - ~/.m2
           - ~/.lein
         key: riemann-{{ checksum "project.clj" }}
-    - run: lein test
+    - run: lein test2junit
+    - store_test_results:
+        path: target/test2junit
 
 jobs:
   jdk11:
