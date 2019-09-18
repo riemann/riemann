@@ -6,5 +6,6 @@ Find out more at [http://riemann.io](http://riemann.io)
 
 ## Build Status
 
-[![Build Status](https://travis-ci.org/riemann/riemann.png)](https://travis-ci.org/riemann/riemann)
+[![CircleCI](https://circleci.com/gh/riemann/riemann.svg?style=svg)](https://circleci.com/gh/riemann/riemann)
+
 
