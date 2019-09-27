@@ -1,3 +1,20 @@
+# Version 0.3.4
+
+This is a bug fix release to address further isues with dynamic class loading.
+
+## Features and enhancements
+
+- boernd for the predict-linear stream. [\#953](https://github.com/riemann/riemann/pull/953)
+- Will Weber for syntax highlighting improvements to the Datadog docs. [\#955](https://github.com/riemann/riemann/pull/955)
+
+## Bug fixes
+
+- John Mackenzie for refactoring the dynamic class loading. [\#951](https://github.com/riemann/riemann/pull/951)
+
+## Other changes
+
+Given TravisCI's continued instability we've moved CI/CD to CircleCI.
+
 # Version 0.3.3
 
 This is a bug fix release to address an issue with dynamic class loading during configuration reloads.
