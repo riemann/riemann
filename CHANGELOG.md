@@ -1,5 +1,61 @@
 # Change Log
 
+## [0.3.4](https://github.com/riemann/riemann/tree/0.3.4) (2019-09-27)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.3...0.3.4)
+
+**Closed issues:**
+
+- Deb package for v0.3.3 does not exist in release section [\#949](https://github.com/riemann/riemann/issues/949)
+
+**Merged pull requests:**
+
+- Add syntax highlighting to datadog example in docs [\#955](https://github.com/riemann/riemann/pull/955) ([rwaweber](https://github.com/rwaweber))
+- Add predict-linear stream [\#953](https://github.com/riemann/riemann/pull/953) ([boernd](https://github.com/boernd))
+- Added circleci config [\#952](https://github.com/riemann/riemann/pull/952) ([jamtur01](https://github.com/jamtur01))
+- riemann.bin: Refactor ensure-dynamic-classloader and call on reload [\#951](https://github.com/riemann/riemann/pull/951) ([198d](https://github.com/198d))
+
+## [0.3.3](https://github.com/riemann/riemann/tree/0.3.3) (2019-06-22)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.2...0.3.3)
+
+**Closed issues:**
+
+- Might need to rebuild RPM package for v0.3.2  [\#946](https://github.com/riemann/riemann/issues/946)
+- InfluxDB new-stream missing fields [\#943](https://github.com/riemann/riemann/issues/943)
+- Getting data from influxDB to Riemann Streams to use the metrics ?  [\#942](https://github.com/riemann/riemann/issues/942)
+- many netty warning in log file [\#937](https://github.com/riemann/riemann/issues/937)
+- folds/quotient-sloppy divides by zero [\#934](https://github.com/riemann/riemann/issues/934)
+- Reloading configuration with OpenJDK 10 throws a java.lang.NoClassDefFoundError [\#928](https://github.com/riemann/riemann/issues/928)
+- Which part-time constructor to use? [\#884](https://github.com/riemann/riemann/issues/884)
+- How to have dynamic set of email users configured to send notifications based on Alert Rules? [\#826](https://github.com/riemann/riemann/issues/826)
+
+**Merged pull requests:**
+
+- Modernize rpm packaging [\#947](https://github.com/riemann/riemann/pull/947) ([smortex](https://github.com/smortex))
+
+## [0.3.2](https://github.com/riemann/riemann/tree/0.3.2) (2019-05-12)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.1...0.3.2)
+
+**Closed issues:**
+
+- How to filter riemann-health to send only numeric metric for cpu event instead of all the process data. [\#936](https://github.com/riemann/riemann/issues/936)
+- Riemann to Nagios Integration [\#933](https://github.com/riemann/riemann/issues/933)
+- Is Riemann able to detect a service is up ?? [\#931](https://github.com/riemann/riemann/issues/931)
+- adding a new tool [\#930](https://github.com/riemann/riemann/issues/930)
+- Question: How to determine fields exist and give default value? [\#927](https://github.com/riemann/riemann/issues/927)
+- Meet java.util.concurrent.RejectedExecutionException  after running some days [\#913](https://github.com/riemann/riemann/issues/913)
+
+**Merged pull requests:**
+
+- Add send batch to prometheus [\#945](https://github.com/riemann/riemann/pull/945) ([yershalom](https://github.com/yershalom))
+- Escape backslash in ns-string to allow for compilation [\#944](https://github.com/riemann/riemann/pull/944) ([slipset](https://github.com/slipset))
+- add stream untag \(inverse of tag\) [\#940](https://github.com/riemann/riemann/pull/940) ([deoqc](https://github.com/deoqc))
+- Adding external dependencies fails due to missing class EntityReplacementMap. [\#939](https://github.com/riemann/riemann/pull/939) ([cresh](https://github.com/cresh))
+- Add Zabbix support [\#938](https://github.com/riemann/riemann/pull/938) ([vortura](https://github.com/vortura))
+- Handle div by 0 in quotient-sloppy [\#935](https://github.com/riemann/riemann/pull/935) ([jstokes](https://github.com/jstokes))
+- clj-nsca: use version "0.0.4" [\#932](https://github.com/riemann/riemann/pull/932) ([mcorbin](https://github.com/mcorbin))
+- Cast the time in long in the pagerduty stream. [\#929](https://github.com/riemann/riemann/pull/929) ([mcorbin](https://github.com/mcorbin))
+- Allow for using Riemann as a dependency [\#881](https://github.com/riemann/riemann/pull/881) ([derekchiang](https://github.com/derekchiang))
+
 ## [0.3.1](https://github.com/riemann/riemann/tree/0.3.1) (2018-05-23)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.0...0.3.1)
 
@@ -219,7 +275,7 @@
 
 - Suppress exception logging if the exception is handled by `exception-stream` [\#726](https://github.com/riemann/riemann/issues/726)
 - Improve error messages for librato with missing metrics [\#374](https://github.com/riemann/riemann/issues/374)
-- Add support for KairosDB HTTP integration and metric TTLs [\#627](https://github.com/riemann/riemann/pull/627) ([thorstadt](https://github.com/thorstadt))
+- Add support for KairosDB HTTP integration and metric TTLs [\#627](https://github.com/riemann/riemann/pull/627) ([ryancrum](https://github.com/ryancrum))
 
 **Fixed bugs:**
 
@@ -386,9 +442,9 @@
 - Xymon: fixes, scalability, multiple xymon host, error handling [\#615](https://github.com/riemann/riemann/pull/615) ([Anvil](https://github.com/Anvil))
 - VictorOps integration [\#614](https://github.com/riemann/riemann/pull/614) ([mallman](https://github.com/mallman))
 - Fix misplaced docstring in riemann.slack [\#612](https://github.com/riemann/riemann/pull/612) ([greglook](https://github.com/greglook))
-- Fix InfluxDB 0.9 tags [\#611](https://github.com/riemann/riemann/pull/611) ([bwilber](https://github.com/bwilber))
+- Fix InfluxDB 0.9 tags [\#611](https://github.com/riemann/riemann/pull/611) ([ghost](https://github.com/ghost))
 - add insecure flag for influxdb in case cert is self-signed for https [\#609](https://github.com/riemann/riemann/pull/609) ([jeanpralo](https://github.com/jeanpralo))
-- Freshen WIP InfluxDB 0.9 support [\#608](https://github.com/riemann/riemann/pull/608) ([bwilber](https://github.com/bwilber))
+- Freshen WIP InfluxDB 0.9 support [\#608](https://github.com/riemann/riemann/pull/608) ([ghost](https://github.com/ghost))
 - Xymon: ability to support more message types. Enable/Disable messages implementation [\#607](https://github.com/riemann/riemann/pull/607) ([Anvil](https://github.com/Anvil))
 - fill-in-last\*: apply arbitrary function to last event [\#606](https://github.com/riemann/riemann/pull/606) ([Anvil](https://github.com/Anvil))
 - Add -v and version command to display Lein or POM version [\#604](https://github.com/riemann/riemann/pull/604) ([aphyr](https://github.com/aphyr))
@@ -560,6 +616,7 @@
 - kill leftover println [\#421](https://github.com/riemann/riemann/pull/421) ([pyr](https://github.com/pyr))
 - Provide a websocket transport separated from aleph [\#420](https://github.com/riemann/riemann/pull/420) ([pyr](https://github.com/pyr))
 - Debian packaging improvements [\#419](https://github.com/riemann/riemann/pull/419) ([benley](https://github.com/benley))
+- Changed to give the influxdb series name as the first word of the servic... [\#401](https://github.com/riemann/riemann/pull/401) ([pradeepchhetri](https://github.com/pradeepchhetri))
 
 ## [0.2.6](https://github.com/riemann/riemann/tree/0.2.6) (2014-07-18)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.5...0.2.6)
@@ -583,7 +640,6 @@
 - Don't use default port names for transport test [\#408](https://github.com/riemann/riemann/pull/408) ([eric](https://github.com/eric))
 - Ensure that indexes are retained across reloads [\#407](https://github.com/riemann/riemann/pull/407) ([eric](https://github.com/eric))
 - Extend changed to optionally capture previous value [\#404](https://github.com/riemann/riemann/pull/404) ([blalor](https://github.com/blalor))
-- Changed to give the influxdb series name as the first word of the servic... [\#401](https://github.com/riemann/riemann/pull/401) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Minor edit to clients.html - borntyping/python-riemann-client now supports TLS and attributes [\#400](https://github.com/riemann/riemann/pull/400) ([borntyping](https://github.com/borntyping))
 - When recursively loading configuration files, only include those files with a `.clj` or `.config` extension [\#399](https://github.com/riemann/riemann/pull/399) ([dbriones](https://github.com/dbriones))
 - Εxtended formatter for slack using message attachments [\#397](https://github.com/riemann/riemann/pull/397) ([alkar](https://github.com/alkar))
