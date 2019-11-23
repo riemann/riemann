@@ -1,3 +1,11 @@
+# Version 0.3.5
+
+This is a bug fix release to address a regression caused by an http-kit dependency upgrade.
+
+## Bug Fixes
+
+Thanks to Dave Cottlehuber for a fix to Websockets being broken in 0.3.4 [\#959](https://github.com/riemann/riemann/issues/959).
+
 # Version 0.3.4
 
 This is a bug fix release to address further isues with dynamic class loading.
