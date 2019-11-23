@@ -1,5 +1,20 @@
 # Change Log
 
+## [0.3.5](https://github.com/riemann/riemann/tree/0.3.5) (2019-11-23)
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.4...0.3.5)
+
+**Closed issues:**
+
+- websockets stream broken in 0.3.4 [\#959](https://github.com/riemann/riemann/issues/959)
+- Explicit Java requirements [\#958](https://github.com/riemann/riemann/issues/958)
+- Unable to use Env variables in riemann.config - Riemann 0.3.2 [\#956](https://github.com/riemann/riemann/issues/956)
+- Trouble including functions in Riemann 0.3.3 [\#954](https://github.com/riemann/riemann/issues/954)
+- Receiving exception on reload: java.lang.IllegalStateException: Could not find a suitable classloader to modify from clojure.lang.LazySeq@aa452d23 [\#950](https://github.com/riemann/riemann/issues/950)
+
+**Merged pull requests:**
+
+- revert http-kit to eliminate websocket interleaving bug [\#960](https://github.com/riemann/riemann/pull/960) ([dch](https://github.com/dch))
+
 ## [0.3.4](https://github.com/riemann/riemann/tree/0.3.4) (2019-09-27)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.3...0.3.4)
 
@@ -13,6 +28,7 @@
 - Add predict-linear stream [\#953](https://github.com/riemann/riemann/pull/953) ([boernd](https://github.com/boernd))
 - Added circleci config [\#952](https://github.com/riemann/riemann/pull/952) ([jamtur01](https://github.com/jamtur01))
 - riemann.bin: Refactor ensure-dynamic-classloader and call on reload [\#951](https://github.com/riemann/riemann/pull/951) ([198d](https://github.com/198d))
+- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
 
 ## [0.3.3](https://github.com/riemann/riemann/tree/0.3.3) (2019-06-22)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.2...0.3.3)
@@ -70,7 +86,6 @@
 
 **Merged pull requests:**
 
-- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
 - Support for Opsgenie v2 API [\#925](https://github.com/riemann/riemann/pull/925) ([mcorbin](https://github.com/mcorbin))
 - Docker documentation [\#924](https://github.com/riemann/riemann/pull/924) ([xrstf](https://github.com/xrstf))
 - Docker improvements [\#923](https://github.com/riemann/riemann/pull/923) ([xrstf](https://github.com/xrstf))
@@ -540,7 +555,6 @@
 - Fix init script output on RedHat-based distros [\#491](https://github.com/riemann/riemann/pull/491) ([pharaujo](https://github.com/pharaujo))
 - upgrade to high-scale-lib v1.0.6 in Maven Central [\#490](https://github.com/riemann/riemann/pull/490) ([bfritz](https://github.com/bfritz))
 - update version for clj-time [\#489](https://github.com/riemann/riemann/pull/489) ([sgran](https://github.com/sgran))
-- Include original event when capturing call rescue exception [\#485](https://github.com/riemann/riemann/pull/485) ([tcrayford](https://github.com/tcrayford))
 
 ## [0.2.8](https://github.com/riemann/riemann/tree/0.2.8) (2015-01-09)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.7...0.2.8)
@@ -573,6 +587,7 @@
 
 **Merged pull requests:**
 
+- Include original event when capturing call rescue exception [\#485](https://github.com/riemann/riemann/pull/485) ([tcrayford](https://github.com/tcrayford))
 - Stackdriver plugin bug-fixes [\#484](https://github.com/riemann/riemann/pull/484) ([k7d](https://github.com/k7d))
 - Remove extra travis config [\#483](https://github.com/riemann/riemann/pull/483) ([budnik](https://github.com/budnik))
 - Fixed formatting and extraneous \) [\#482](https://github.com/riemann/riemann/pull/482) ([jamtur01](https://github.com/jamtur01))
@@ -616,7 +631,6 @@
 - kill leftover println [\#421](https://github.com/riemann/riemann/pull/421) ([pyr](https://github.com/pyr))
 - Provide a websocket transport separated from aleph [\#420](https://github.com/riemann/riemann/pull/420) ([pyr](https://github.com/pyr))
 - Debian packaging improvements [\#419](https://github.com/riemann/riemann/pull/419) ([benley](https://github.com/benley))
-- Changed to give the influxdb series name as the first word of the servic... [\#401](https://github.com/riemann/riemann/pull/401) ([pradeepchhetri](https://github.com/pradeepchhetri))
 
 ## [0.2.6](https://github.com/riemann/riemann/tree/0.2.6) (2014-07-18)
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.5...0.2.6)
@@ -640,6 +654,7 @@
 - Don't use default port names for transport test [\#408](https://github.com/riemann/riemann/pull/408) ([eric](https://github.com/eric))
 - Ensure that indexes are retained across reloads [\#407](https://github.com/riemann/riemann/pull/407) ([eric](https://github.com/eric))
 - Extend changed to optionally capture previous value [\#404](https://github.com/riemann/riemann/pull/404) ([blalor](https://github.com/blalor))
+- Changed to give the influxdb series name as the first word of the servic... [\#401](https://github.com/riemann/riemann/pull/401) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Minor edit to clients.html - borntyping/python-riemann-client now supports TLS and attributes [\#400](https://github.com/riemann/riemann/pull/400) ([borntyping](https://github.com/borntyping))
 - When recursively loading configuration files, only include those files with a `.clj` or `.config` extension [\#399](https://github.com/riemann/riemann/pull/399) ([dbriones](https://github.com/dbriones))
 - Εxtended formatter for slack using message attachments [\#397](https://github.com/riemann/riemann/pull/397) ([alkar](https://github.com/alkar))
