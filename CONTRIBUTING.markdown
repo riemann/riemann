@@ -175,12 +175,13 @@ Thank you!
 7. Update links in the `quickstart.html`.
 8. Create a [new GitHub
    release](https://github.com/riemann/riemann/releases/new).
-9. Build the `lein pkg` packages and upload to the release.
-10. Create new tag with release.
-11. Added release changes to release notes section.
-12. Publish release and push up docs changes.
-13. Publish to Clojars with `lein deploy clojars`.
-14. Create new Docker image and push to Hub.
-15. Send email to mailing list.
-16. Increment version in `project.clj` to add `-SNAPSHOT`.
+9. Build the `lein pkg` packages using the `build.sh` script and Dockewr.
+10. Upload packages to the release.
+11. Create new tag with release.
+12. Added release changes to release notes section.
+13. Publish release and push up docs changes.
+14. Publish to Clojars with `lein deploy clojars`.
+15. Create new Docker image and push to Hub.
+16. Send email to mailing list.
+17. Increment version in `project.clj` to add `-SNAPSHOT`.
 
