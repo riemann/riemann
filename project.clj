@@ -26,7 +26,7 @@
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.2.0"]
-    [http-kit "2.4.0-alpha3"]
+    [http-kit "2.2.0"]
     [clj-http "3.10.0"]
     [cheshire "5.8.0"]
     [clj-librato "0.0.5"]
