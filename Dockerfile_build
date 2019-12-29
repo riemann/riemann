@@ -3,6 +3,9 @@ FROM clojure:lein AS builder
 RUN apt-get -qq update && apt-get -qy install rpm fakeroot
 
 WORKDIR /riemann
-ADD . .
 
+ADD project.clj project.clj
+RUN lein install
+
+ADD . .
 RUN lein pkg

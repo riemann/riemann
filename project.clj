@@ -82,6 +82,7 @@
                    :hipchat :hipchat
                    :nagios :nagios
                    :opentsdb :opentsdb
+                   :rabbitmq :rabbitmq
                    :time :time
                    :bench :bench
                    :focus :focus
