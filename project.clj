@@ -44,7 +44,8 @@
     [cljr-nsca "0.0.4"]
     [amazonica "0.3.95" :exclusions [joda-time]]
     [spootnik/kinsky "0.1.20"]
-    [pjstadig/humane-test-output "0.8.3"]]
+    [pjstadig/humane-test-output "0.8.3"]
+    [com.novemberain/langohr "5.1.0"]]
   :plugins [[lein-codox "0.10.6"]
             [lein-difftest "2.0.0"]
             [lein-ancient "0.6.15"]
@@ -81,6 +82,7 @@
                    :hipchat :hipchat
                    :nagios :nagios
                    :opentsdb :opentsdb
+                   :rabbitmq :rabbitmq
                    :time :time
                    :bench :bench
                    :focus :focus

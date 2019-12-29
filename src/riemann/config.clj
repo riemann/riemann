@@ -57,7 +57,8 @@
                                [websockets :as websockets]
                                [sse        :as sse]
                                [graphite   :as graphite]
-                               [opentsdb   :as opentsdb]]
+                               [opentsdb   :as opentsdb]
+                               [rabbitmq   :as rabbitmq]]
             [cemerick.pomegranate :refer [add-dependencies]]
             [clojure.java.io :refer [file]]
             [clojure.tools.nrepl.server :as repl]
@@ -178,6 +179,17 @@
   (sse-server {:port 5556})"
   [& opts]
   (service! (sse/sse-server (kwargs-or-map opts))))
+
+(defn rabbitmq-transport
+  "Add a new RabbitMQ transport to the default core.
+  
+  (rabbitmq-transport {:host \"127.0.0.1\"
+                       :port 5672
+                       :ex-name \"riemann\"
+                       :ex-type \"topic\"
+                       :routing-key \"#\"})"
+  [& opts]
+  (service! (rabbitmq/rabbitmq-transport (kwargs-or-map opts))))
 
 (defn kafka-consumer
   "Add a new kafka consumer with opts to the default core.
