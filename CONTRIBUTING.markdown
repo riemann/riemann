@@ -175,7 +175,7 @@ Thank you!
 7. Update links in the `quickstart.html`.
 8. Create a [new GitHub
    release](https://github.com/riemann/riemann/releases/new).
-9. Build the `lein pkg` packages using the `build.sh` script and Dockewr.
+9. Build the `lein pkg` packages using the `build.sh` script and Docker.
 10. Upload packages to the release.
 11. Create new tag with release.
 12. Added release changes to release notes section.
