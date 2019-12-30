@@ -15,10 +15,10 @@
         [riemann.instrumentation :only [Instrumented]]
         [riemann.service :only [Service ServiceEquiv]]))
 
-(def pb->msg
+(def ^{:doc "Converts a protobuf byte array into an Msg map."} pb->msg
   #(-> % (io/input-stream) (decode-inputstream)))
 
-(defn gen-message-handler
+(defn- gen-message-handler
   [core stats]
   (fn [channel {:keys [routing-key] :as meta} ^bytes payload]
     (let [msg (pb->msg payload)]
