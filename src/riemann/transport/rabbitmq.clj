@@ -1,30 +1,38 @@
 (ns riemann.transport.rabbitmq
   "Consumes messages from RabbitMQ. Associated with a core. Sends events
-  to the core's streams. DOES NOT query the core's index for states."
+  to the core's streams, queries the core's index for states."
   (:require [langohr.core :as rmq]
             [langohr.channel :as lch]
             [langohr.queue :as lq]
             [langohr.exchange :as le]
             [langohr.consumers :as lc]
+            [langohr.basic :as lb]
             [riemann.test :as test]
             [interval-metrics.core :as metrics]
             [clojure.java.io :as io])
   (:use [clojure.tools.logging :only [warn info]]
         [riemann.core :only [stream!]]
-        [riemann.common :only [decode-inputstream]]
+        [riemann.common :only [decode-inputstream encode]]
         [riemann.instrumentation :only [Instrumented]]
-        [riemann.service :only [Service ServiceEquiv]]))
+        [riemann.service :only [Service ServiceEquiv]]
+        [riemann.transport :only [handle]]))
 
 (def ^{:doc "Converts a protobuf byte array into an Msg map."} pb->msg
   #(-> % (io/input-stream) (decode-inputstream)))
 
+(def ^{:doc "Converts an Msg map into a protobuf byte array"} msg->pb
+  #(encode %))
+
 (defn- gen-message-handler
-  [core stats]
-  (fn [channel {:keys [routing-key] :as meta} ^bytes payload]
-    (let [msg (pb->msg payload)]
+  [core stats ex-name]
+  (fn [channel {:keys [delivery-tag reply-to correlation-id] :as meta} ^bytes payload]
+    (let [msg (pb->msg payload)
+          result (handle core msg)]
       (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))
-      (doseq [event (:states msg)] (stream! core event))
-      (doseq [event (:events msg)] (stream! core event)))))
+      (when reply-to
+        (lb/publish channel ex-name reply-to (msg->pb result) {:content-type "application/octet-stream"
+                                                               :correlation-id correlation-id}))
+      (lb/ack channel delivery-tag))))
 
 (defrecord RabbitMQTransport [host port ex-name ex-type routing-key core stats connection channel]
   ServiceEquiv
@@ -57,7 +65,7 @@
           (le/declare @channel ex-name ex-type {:durable false :auto-delete true})
           (let [q-name (.getQueue (lq/declare @channel "" {:exclusive false :auto-delete true}))]
             (lq/bind @channel q-name ex-name {:routing-key routing-key})
-            (lc/subscribe @channel q-name (gen-message-handler @core stats) {:auto-ack true}))
+            (lc/subscribe @channel q-name (gen-message-handler @core stats ex-name)))
           (info "rabbitmq-transport connected to the server" host port)))))
  
   (stop! [this]
