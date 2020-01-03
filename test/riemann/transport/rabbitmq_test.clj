@@ -48,9 +48,9 @@
           routing-key "test"
           reply-to "queries"
           transport (rabbitmq-transport {:host host
-                                         :ex-name ex-name
-                                         :ex-type ex-type
-                                         :routing-key routing-key})
+                                         :riemann.exchange-name ex-name
+                                         :riemann.exchange-type ex-type
+                                         :riemann.routing-key routing-key})
           index (core/wrap-index (index/index))
           sink (promise)
           query-result (promise)
@@ -58,20 +58,20 @@
                                               :services [transport]
                                               :streams [index (partial deliver sink)]})
           conn (atom nil)
-          ch (atom nil)
-          payload (msg->pb {:events [(event (:bee events))]
-                            :query {:string "service = \"busybee\""}})]
+          ch (atom nil)]
       (try
         (reset! conn (rmq/connect {:host host}))
         (reset! ch (lch/open @conn))
         (le/declare @ch ex-name ex-type {:durable false :auto-delete true})
-        (let [q-name (.getQueue (lq/declare @ch "" {:exclusive false :auto-delete true}))]
+        (let [q-name (.getQueue (lq/declare @ch "" {:exclusive true}))]
           (lq/bind @ch q-name ex-name {:routing-key reply-to})
           (lc/subscribe @ch q-name (gen-query-result-handler query-result) {:auto-ack true}))
-        (lb/publish @ch ex-name routing-key payload {:content-type "application/octet-stream"
-                                                     :reply-to reply-to
-                                                     :correlation-id "hi"
-                                                     :type "riemann.test"})
+        (let [payload (msg->pb {:events [(event (:bee events))]
+                                :query {:string "service = \"busybee\""}})]
+          (lb/publish @ch ex-name routing-key payload {:content-type "application/octet-stream"
+                                                       :reply-to reply-to
+                                                       :correlation-id "hi"
+                                                       :type "riemann.test"}))
         (is (map-matches? (:bee events) (deref sink 1000 :timed-out)))
         (let [{message :message meta :meta} (deref query-result 1000 :timed-out)]
           (is (= (:correlation-id meta) "hi"))

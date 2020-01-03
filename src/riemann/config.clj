@@ -185,9 +185,9 @@
   
   (rabbitmq-transport {:host \"127.0.0.1\"
                        :port 5672
-                       :ex-name \"riemann\"
-                       :ex-type \"topic\"
-                       :routing-key \"#\"})"
+                       :riemann.exchange-name \"riemann\"
+                       :riemann.exchange-type \"topic\"
+                       :riemann.routing-key \"#\"})"
   [& opts]
   (service! (rabbitmq/rabbitmq-transport (kwargs-or-map opts))))
 
