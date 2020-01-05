@@ -34,24 +34,18 @@
                                                                :correlation-id correlation-id}))
       (lb/ack channel delivery-tag))))
 
-(defrecord RabbitMQTransport [host port ex-name ex-type routing-key core stats connection channel]
+(defrecord RabbitMQTransport [opts core stats connection channel]
   ServiceEquiv
   (equiv? [this other]
     (and (instance? RabbitMQTransport other)
-         (= host (:host other))
-         (= port (:port other))
-         (= ex-name (:ex-name other))
-         (= ex-type (:ex-type other))
-         (= routing-key (:routing-key other))))
+         (= (.getId @connection)
+            (-> other :connection (deref) (.getId)))))
  
   Service
   (conflict? [this other]
     (and (instance? RabbitMQTransport other)
-         (= host (:host other))
-         (= port (:port other))
-         (= ex-name (:ex-name other))
-         (= ex-type (:ex-type other))
-         (= routing-key (:routing-key other))))
+         (= (.getId @connection)
+            (-> other :connection (deref) (.getId)))))
  
   (reload! [this new-core]
     (reset! core new-core))
@@ -60,26 +54,32 @@
     (when-not test/*testing*
       (locking this
         (when-not @connection
-          (reset! connection (rmq/connect {:host host :port port}))
+          (reset! connection (rmq/connect opts))
+          (->> (java.util.UUID/randomUUID) (.toString) (.setId @connection))
           (reset! channel (lch/open @connection))
-          (le/declare @channel ex-name ex-type {:durable false :auto-delete true})
-          (let [q-name (.getQueue (lq/declare @channel "" {:exclusive false :auto-delete true}))]
+          (let [{ex-name :riemann.exchange-name
+                 ex-type :riemann.exchange-type
+                 routing-key :riemann.routing-key} opts
+                q-name (.getQueue (lq/declare @channel "" {:exclusive true}))]
+            (le/declare @channel ex-name ex-type {:durable false :auto-delete true})
             (lq/bind @channel q-name ex-name {:routing-key routing-key})
             (lc/subscribe @channel q-name (gen-message-handler @core stats ex-name)))
-          (info "rabbitmq-transport connected to the server" host port)))))
+          (info "rabbitmq-transport connected to the server" (.getAddress @connection) (.getPort @connection))))))
  
   (stop! [this]
     (locking this
       (when @connection
-        (rmq/close @channel)
-        (rmq/close @connection)
-        (reset! channel nil)
-        (reset! connection nil)
-        (info "rabbitmq-transport disconnected from the server" host port))))
+        (let [host (.getAddress @connection)
+              port (.getPort @connection)]
+          (rmq/close @channel)
+          (rmq/close @connection)
+          (reset! channel nil)
+          (reset! connection nil)
+          (info "rabbitmq-transport disconnected from the server" host port)))))
  
   Instrumented
   (events [this]
-    (let [svc (str "riemann transport rabbitmq " host ":" port)
+    (let [svc (str "riemann transport rabbitmq " (.getAddress @connection) ":" (.getPort @connection))
           in (metrics/snapshot! stats)
           base {:state "ok"
                 :tags ["riemann"]
@@ -95,21 +95,23 @@
 (defn rabbitmq-transport
   "Start consuming messages from RabbitMQ, applying them into the current core.
   Requires (service/start!).
+
+  Configure it via connection parameters described here: http://clojurerabbitmq.info/articles/connecting.html
+
+  Additional settings are:
   
-  Options:
-  
-  - :host \"127.0.0.1\"
-  - :port 5672
-  - :ex-name \"riemann\"
-  - :ex-type \"topic\"
-  - :routing-key \"#\""
+  - :riemann.exchange-name \"riemann\"
+  - :riemann.exchange-type \"topic\"
+  - :riemann.routing-key \"#\"
+
+  Use message properties (https://www.rabbitmq.com/consumers.html#message-properties)
+  such as \"Reply To\" and \"Correlation ID\" when publishing to receive statuses and query results."
   ([] (rabbitmq-transport {}))
   ([opts]
-    (let [core (get opts :core (atom nil))
-          stats (metrics/rate+latency)
-          host (get opts :host "127.0.0.1")
-          port (get opts :port 5672)
-          ex-name (get opts :ex-name "riemann")
-          ex-type (get opts :ex-type "topic")
-          routing-key (get opts :routing-key "#")]
-      (RabbitMQTransport. host port ex-name ex-type routing-key core stats (atom nil) (atom nil)))))
+    (let [opts (-> opts
+                   (update :riemann.exchange-name (fnil identity "riemann"))
+                   (update :riemann.exchange-type (fnil identity "topic"))
+                   (update :riemann.routing-key (fnil identity "#")))
+          core (get opts :core (atom nil))
+          stats (metrics/rate+latency)]
+      (RabbitMQTransport. opts core stats (atom nil) (atom nil)))))
