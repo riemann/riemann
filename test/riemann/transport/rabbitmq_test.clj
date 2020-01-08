@@ -3,6 +3,7 @@
             [riemann.config :refer [service!]]
             [riemann.core :as core]
             [riemann.index :as index]
+            [riemann.service :as service]
             [riemann.transport.rabbitmq :refer :all]
             [clojure.test :refer :all]
             [langohr.core :as rmq]
@@ -37,6 +38,16 @@
     (is (map-matches? (:bee events) e1))
     (is (map-matches? (:cat events) e2))
     (is (contains? result :decode-time))))
+
+(deftest ^:rabbitmq both-equiv-and-conflict-checks-must-work-without-starting-the-service
+  (let [host "rabbitmq.example.com"
+        port 1234
+        one (rabbitmq-transport {:host host
+                                 :port port
+                                 :vhost "/test"})
+        two (rabbitmq-transport {:uri (format "amqp://%s:%d/%s" host port "%2Ftest")})]
+    (is (service/equiv? one two))
+    (is (service/conflict? one two))))
 
 (deftest ^:rabbitmq ^:integration rabbitmq-transport-integration-test
   (riemann.logging/suppress ["riemann.transport"
