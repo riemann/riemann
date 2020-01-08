@@ -34,18 +34,24 @@
                                                                :correlation-id correlation-id}))
       (lb/ack channel delivery-tag))))
 
-(defrecord RabbitMQTransport [opts core stats connection channel]
+(defn- same-settings?
+  [one two]
+  (let [ks [:host :port :vhost :riemann.exchange-name :riemann.exchange-type :riemann.routing-key]
+        [one two] (->> [one two]
+                       (map rmq/normalize-settings)
+                       (map #(select-keys % ks)))]
+    (= one two)))
+
+(defrecord RabbitMQTransport [settings core stats connection channel]
   ServiceEquiv
   (equiv? [this other]
     (and (instance? RabbitMQTransport other)
-         (= (.getId @connection)
-            (-> other :connection (deref) (.getId)))))
+         (same-settings? settings (:settings other))))
  
   Service
   (conflict? [this other]
     (and (instance? RabbitMQTransport other)
-         (= (.getId @connection)
-            (-> other :connection (deref) (.getId)))))
+         (same-settings? settings (:settings other))))
  
   (reload! [this new-core]
     (reset! core new-core))
@@ -54,12 +60,11 @@
     (when-not test/*testing*
       (locking this
         (when-not @connection
-          (reset! connection (rmq/connect opts))
-          (->> (java.util.UUID/randomUUID) (.toString) (.setId @connection))
+          (reset! connection (rmq/connect settings))
           (reset! channel (lch/open @connection))
           (let [{ex-name :riemann.exchange-name
                  ex-type :riemann.exchange-type
-                 routing-key :riemann.routing-key} opts
+                 routing-key :riemann.routing-key} settings
                 q-name (.getQueue (lq/declare @channel "" {:exclusive true}))]
             (le/declare @channel ex-name ex-type {:durable false :auto-delete true})
             (lq/bind @channel q-name ex-name {:routing-key routing-key})
@@ -107,11 +112,11 @@
   Use message properties (https://www.rabbitmq.com/consumers.html#message-properties)
   such as \"Reply To\" and \"Correlation ID\" when publishing to receive statuses and query results."
   ([] (rabbitmq-transport {}))
-  ([opts]
-    (let [opts (-> opts
+  ([settings]
+    (let [settings (-> settings
                    (update :riemann.exchange-name (fnil identity "riemann"))
                    (update :riemann.exchange-type (fnil identity "topic"))
                    (update :riemann.routing-key (fnil identity "#")))
-          core (get opts :core (atom nil))
+          core (get settings :core (atom nil))
           stats (metrics/rate+latency)]
-      (RabbitMQTransport. opts core stats (atom nil) (atom nil)))))
+      (RabbitMQTransport. settings core stats (atom nil) (atom nil)))))
