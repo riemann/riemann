@@ -182,12 +182,15 @@
 
 (defn rabbitmq-transport
   "Add a new RabbitMQ transport to the default core.
-  
-  (rabbitmq-transport {:host \"127.0.0.1\"
+
+  ```
+  (rabbitmq-transport {:host \"localhost\"
                        :port 5672
-                       :riemann.exchange-name \"riemann\"
-                       :riemann.exchange-type \"topic\"
-                       :riemann.routing-key \"#\"})"
+                       :riemann.exchange-settings {:name \"riemann\"
+                                                   :auto-delete true}
+                       :riemann.routing-key \"riemann.events\"})
+  ```
+  "
   [& opts]
   (service! (rabbitmq/rabbitmq-transport (kwargs-or-map opts))))
 
