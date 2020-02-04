@@ -55,12 +55,10 @@
                              "riemann.core"]
     (let [host "rabbitmq.local"
           ex-name "riemann-test"
-          ex-type "topic"
           routing-key "test"
           reply-to "queries"
           transport (rabbitmq-transport {:host host
-                                         :riemann.exchange-name ex-name
-                                         :riemann.exchange-type ex-type
+                                         :riemann.exchange-settings {:name ex-name :auto-delete true}
                                          :riemann.routing-key routing-key})
           index (core/wrap-index (index/index))
           sink (promise)
@@ -73,7 +71,7 @@
       (try
         (reset! conn (rmq/connect {:host host}))
         (reset! ch (lch/open @conn))
-        (le/declare @ch ex-name ex-type {:durable false :auto-delete true})
+        (le/declare @ch ex-name "topic" {:auto-delete true})
         (let [q-name (.getQueue (lq/declare @ch "" {:exclusive true}))]
           (lq/bind @ch q-name ex-name {:routing-key reply-to})
           (lc/subscribe @ch q-name (gen-query-result-handler query-result) {:auto-ack true}))
