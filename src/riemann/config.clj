@@ -34,6 +34,7 @@
                      [plugin      :refer [load-plugin load-plugins]]
                      [pubsub      :as pubsub]
                      [pushover    :refer [pushover]]
+                     [rabbitmq    :refer [rabbitmq]]
                      [repl]
                      [service     :as service]
                      [shinken     :refer [shinken]]
