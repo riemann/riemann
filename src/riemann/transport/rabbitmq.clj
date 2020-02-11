@@ -17,10 +17,10 @@
         [riemann.service :only [Service ServiceEquiv]]
         [riemann.transport :only [handle]]))
 
-(def ^{:doc "Converts a protobuf byte array into an Msg map."} pb->msg
+(def ^:no-doc pb->msg
   #(-> % (io/input-stream) (decode-inputstream)))
 
-(def ^{:doc "Converts an Msg map into a protobuf byte array"} msg->pb
+(def ^:no-doc msg->pb
   #(encode %))
 
 (defn- gen-message-handler
@@ -109,17 +109,26 @@
   "Start consuming messages from RabbitMQ, applying them into the current core.
   Requires (service/start!).
 
-  Configure it via connection parameters described here: http://clojurerabbitmq.info/articles/connecting.html
+  Configure it via connection parameters described [here](http://clojurerabbitmq.info/articles/connecting.html).
 
   Additional settings are:
 
-  - :riemann.exchange-settings {:name \"riemann\" :type \"topic\" :durable false :auto-delete false :internal false}
-  - :riemann.routing-key \"#\"
+  - :riemann.exchange-settings Settings an exchange is declared with, defaults are:
+  
+  ```clojure
+  {:name \"riemann\"
+   :type \"topic\"
+   :durable false
+   :auto-delete false
+   :internal false}
+  ```
 
-  For details on exchange declaration options see http://reference.clojurerabbitmq.info/langohr.exchange.html#var-declare
+  - :riemann.routing-key Routing key to match with, default is \"#\" (get everything)
 
-  Use message properties such as \"Reply To\" and \"Correlation ID\" when publishing to receive statuses and query results,
-  refer https://www.rabbitmq.com/consumers.html#message-properties for details."
+  For details on exchange declaration options see [this](http://reference.clojurerabbitmq.info/langohr.exchange.html#var-declare).
+
+  Use [message properties](https://www.rabbitmq.com/consumers.html#message-properties) such as
+  \"Reply To\" and \"Correlation ID\" when publishing to receive statuses and query results."
   ([] (rabbitmq-transport {}))
   ([settings]
     (let [base {:riemann.exchange-settings {:name "riemann" :type "topic"}
