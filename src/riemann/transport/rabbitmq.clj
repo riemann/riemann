@@ -26,13 +26,21 @@
 (defn- gen-message-handler
   [core stats ex-name]
   (fn [channel {:keys [delivery-tag reply-to correlation-id] :as meta} ^bytes payload]
-    (let [msg (pb->msg payload)
-          result (handle core msg)]
-      (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))
-      (when reply-to
-        (lb/publish channel ex-name reply-to (msg->pb result) {:content-type "application/octet-stream"
-                                                               :correlation-id correlation-id}))
-      (lb/ack channel delivery-tag))))
+    (letfn [(reply-with [msg]
+              (lb/publish channel ex-name reply-to (msg->pb msg) {:content-type "application/octet-stream" :correlation-id correlation-id}))]
+      (try
+        (let [msg (pb->msg payload)
+              result (handle core msg)]
+          (metrics/update! stats (- (System/nanoTime) (:decode-time msg)))
+          (when reply-to
+            (reply-with result)))
+        (catch Exception e
+          (let [errmsg (.getMessage e)]
+            (when reply-to
+              (reply-with {:ok false :error errmsg}))
+            (warn "rabbitmq-transport caught an exception:" errmsg)))
+        (finally
+          (lb/ack channel delivery-tag))))))
 
 (defn- same-settings?
   [one two]
