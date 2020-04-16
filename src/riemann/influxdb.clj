@@ -1,5 +1,5 @@
 (ns riemann.influxdb
-  "Forwards events to InfluxDB. Supports InfluxDB 0.9 or Higher"
+  "Forwards events to InfluxDB. Supports InfluxDB 0.9 or higher."
   (:require
     [clojure.set :as set])
   (:import
@@ -48,7 +48,7 @@
 
 (defn get-trust-manager
   "Returns an array with an instance of `X509TrustManager`
-  Used for trust all certs in the influxdb `insecure` mode."
+  Used for trust all certs in the InfluxDB `insecure` mode."
   []
   (let [trust-manager (proxy [X509TrustManager] []
                         (checkServerTrusted [_ _])
@@ -57,21 +57,21 @@
     (into-array (list trust-manager))))
 
 (defn get-ssl-factory
-  "Get an instance of `javax.net.ssl.SSLSocketFactory`"
+  "Get an instance of `javax.net.ssl.SSLSocketFactory`."
   []
   (let [ssl-context (SSLContext/getInstance "TLS")]
     (.init ssl-context nil (get-trust-manager) (new SecureRandom))
     (.getSocketFactory ssl-context)))
 
 (defn get-hostname-verifier
-  "Get an instance of `javax.net.ssl.HostnameVerifier`"
+  "Get an instance of `javax.net.ssl.HostnameVerifier`."
   []
   (let [verifier (proxy [HostnameVerifier] []
                    (verify [_ _] true))]
     verifier))
 
 (defn get-builder
-  "Returns a new okhttp3.OkHttpClient$Builder"
+  "Returns a new okhttp3.OkHttpClient$Builder."
   [{:keys [timeout insecure]}]
   (let [builder (new okhttp3.OkHttpClient$Builder)]
     (when insecure
@@ -83,13 +83,13 @@
       (.connectTimeout timeout TimeUnit/MILLISECONDS))))
 
 (defn get-client
-  "Returns an `org.influxdb.InfluxDB` instance"
+  "Returns an `org.influxdb.InfluxDB` instance."
   [{:keys [scheme host port username password] :as opts}]
   (let [url (str scheme "://" host ":" port)]
     (InfluxDBFactory/connect url username password (get-builder opts))))
 
 (defn get-batchpoint
-  "Returns a `org.influxdb.dto.BatchPoints` instance"
+  "Returns a `org.influxdb.dto.BatchPoints` instance."
   [{:keys [tags db retention consistency]}]
   (let [builder (doto (BatchPoints/database db)
                       (.consistency (InfluxDB$ConsistencyLevel/valueOf consistency)))]
@@ -98,11 +98,11 @@
     (.build builder)))
 
 (defn get-time-unit
-  "returns a value from the TimeUnit enum depending of the `precision` parameters.
+  "Returns a value from the TimeUnit enum depending of the `precision` parameters.
 
-  The `precision` parameter is a keyword whose possibles values are `:seconds`, `:milliseconds` and `:microseconds`.
+  The `precision` parameter is a keyword whose possible values are `:seconds`, `:milliseconds` and `:microseconds`.
 
-  Returns `TimeUnit/SECONDS` by default"
+  Returns `TimeUnit/SECONDS` by default."
   [precision]
   (cond
     (= precision :milliseconds) TimeUnit/MILLISECONDS
@@ -113,9 +113,9 @@
 (defn convert-time
   "Converts the `time-event` parameter (which is time second) in a new time unit specified by the `precision` parameter. It also converts the time to long.
 
-  The `precision` parameter is a keyword whose possibles values are `:seconds`, `:milliseconds` and `:microseconds`.
+  The `precision` parameter is a keyword whose possible values are `:seconds`, `:milliseconds` and `:microseconds`.
 
-  Returns time in seconds by default"
+  Returns time in seconds by default."
   [time-event precision]
   (cond
     (= precision :milliseconds) (long (* 1000 time-event))
@@ -124,7 +124,7 @@
     true (long time-event)))
 
 (defn converts-double
-  "if n if a ratio or a BigInt, converts it to double. Returns n otherwise"
+  "if n if a ratio or a BigInt, converts it to double. Returns n otherwise."
   [n]
   (if (or (ratio? n) (instance? clojure.lang.BigInt n))
     (double n)
@@ -135,7 +135,7 @@
   "Converts a Riemann event into an InfluxDB Point (an instance of `org.influxdb.dto.Point`.
 
   - The first parameter is the event. The `:precision` key of the event is used to converts the event `time` into the correct time unit (default seconds).
-  - The second parameter is the option map passed to the influxdb stream."
+  - The second parameter is the option map passed to the InfluxDB stream."
   [event opts]
   (when (and (:time event) (:service event) (:metric event))
     (let [precision (:precision event (:precision opts))
@@ -186,7 +186,7 @@
    :insecure false})
 
 (defn write-batch-point
-  "Write to influxdb the `batch-point` using the `connection`"
+  "Write to InfluxDB the `batch-point` using the `connection`."
   [^InfluxDB connection batch-point]
   (.write connection batch-point))
 
@@ -213,7 +213,7 @@
 (defn partition-events
   "`events` is a list of events.
 
-  partition `events` depending of the `db`, `retention` and `consistency` keys
+  Partition `events` depending of the `db`, `retention` and `consistency` keys
   returns a list, each element being a list of events (the result of the partitioning)."
   [events]
   (->> (if (sequential? events) events (list events))
@@ -224,14 +224,14 @@
   "Returns a function which accepts an event, or sequence of events, and writes
   them to InfluxDB.
 
-  streams receive an event or a list of events. Each event can have these keys :
+  Streams receive an event or a list of events. Each event can have these keys:
 
-  - `:measurement`     The influxdb measurement.
-  - `:influxdb-tags`   A map of influxdb tags. Exemple : `{:foo \"bar\"}`
-  - `:influxdb-fields` A map of influxdb fields. Exemple : `{:bar \"baz\"}`
+  - `:measurement`     The InfluxDB measurement.
+  - `:influxdb-tags`   A map of InfluxDB tags. Example: `{:foo \"bar\"}`
+  - `:influxdb-fields` A map of InfluxDB fields. Example: `{:bar \"baz\"}`
   - `:precision`       The time precision. Possibles values are `:seconds`, `:milliseconds` and `:microseconds` (default `:seconds`). The event `time` will be converted.
-  - `:db`              Name of the database to write to. (optional)
-  - `:retention`       Name of retention policy to use. (optional)
+  - `:db`              Name of the database to write to (optional).
+  - `:retention`       Name of retention policy to use (optional).
   - `:consistency`     The InfluxDB consistency level (default: `\"ONE\"`). Possibles values are ALL, ANY, ONE, QUORUM."
   [opts]
   (let [opts (merge default-opts opts)
@@ -247,14 +247,14 @@
   "Returns a function which accepts an event, or sequence of events, and writes
   them to InfluxDB.
 
-  influxdb-deprecated specifics options :
+  InfluxDB-deprecated specifics options:
 
   - `:tag-fields`     A set of event fields to map into InfluxDB series tags.
                     (default: `#{:host}`).
 
-  Each event can have these keys :
+  Each event can have these keys:
 
-  - `:tag-fields`     A set of event fields to map into InfluxDB series tags..
+  - `:tag-fields`     A set of event fields to map into InfluxDB series tags.
   - `:precision`       The time precision. Possibles values are `:seconds`, `:milliseconds` and `:microseconds` (default `:seconds`). The event `time` will be converted."
   [opts]
   (let [opts (merge default-opts opts)
@@ -273,12 +273,12 @@
   them to InfluxDB as a batch of measurement points. For performance, you should
   wrap this stream with `batch` or an asynchronous queue.
 
-  Support InfluxdbDB 0.9 and higher.
+  Support InfluxDB 0.9 and higher.
 
   ```clojure
   (influxdb {:host \"influxdb.example.com\"
              :db \"my_db\"
-             :user \"riemann\"
+             :username \"riemann\"
              :password \"secret\"})
   ```
 
