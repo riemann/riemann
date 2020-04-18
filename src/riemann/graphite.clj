@@ -58,7 +58,11 @@
       (.send ^DatagramSocket (:socket this) datagram)))
   (send-lines [this lines]
     (doseq [line lines]
-      (send-line this line)))
+      (let [bytes (.getBytes ^String line)
+            length (count line)
+            addr (InetAddress/getByName (:host this))
+            datagram (DatagramPacket. bytes length ^InetAddress addr port)]
+        (.send ^DatagramSocket (:socket this) datagram))))
   (close [this]
     (.close ^DatagramSocket (:socket this))))
 
