@@ -36,9 +36,9 @@
   [name child]
   (fn stream [event]
     ; Record event
-    (-> *results*
-        (get name)
-        (swap! conj event))
+    (some-> *results*
+            (get name)
+            (swap! conj event))
 
     ; Forward downstream
     (child event)))
