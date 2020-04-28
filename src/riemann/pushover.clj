@@ -12,6 +12,18 @@
                {:form-params
                 params}))
 
+(defn- pushover-priority-set
+  "Convert riemann event state to pushover priority"
+  [event]
+  (case (str (:state event))
+    "ok" 0
+    "info" -2
+    "warning" -1
+    "error" 0
+    "critical" 1
+    "emergency" 2
+    -1))
+
 (defn- default-event-formatter
   "Formats an event for Pushover"
   [event]
@@ -19,7 +31,11 @@
    :message (str (:host event) " "
                  (:service event) " is "
                  (:state event) " ("
-                 (:metric event) ")")})
+                 (:metric event) ")")
+   :priority (pushover-priority-set event)
+   :expire 180
+   :retry 60
+   :timestamp (:time event)})
 
 (defn pushover
   "Returns a function which accepts an event and sends it to Pushover.
@@ -49,6 +65,10 @@
                                           :token token
                                           :user user
                                           :title (:title pushover-event)
-                                          :message (:message pushover-event))
+                                          :message (:message pushover-event)
+                                          :priority (str (:priority pushover-event))
+                                          :expire (str (:expire pushover-event))
+                                          :retry (str (:retry pushover-event))
+                                          :timestamp (str (:timestamp pushover-event)))
                                    :formatter)]
        (post pushover-params)))))
