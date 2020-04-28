@@ -28,7 +28,11 @@
                 {:form-params {:token "token"
                                :user "user"
                                :title "testhost testservice"
-                               :message "testhost testservice is ok ()"}}])))
+                               :message "testhost testservice is ok ()"
+                               :priority "0"
+                               :expire "180"
+                               :retry "60"
+                               :timestamp ""}}])))
 
       (testing "an event with opts"
         (pshvr-custom {:host "testhost"
@@ -43,4 +47,8 @@
                                :user "user"
                                :title "critical - testservice@myproject"
                                :message "<b>prod</b>\nrequest rate is critical"
+                               :priority "1"
+                               :expire "180"
+                               :retry "60"
+                               :timestamp ""
                                :html 1}}]))))))
