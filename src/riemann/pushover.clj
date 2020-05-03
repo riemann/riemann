@@ -33,8 +33,6 @@
                  (:state event) " ("
                  (:metric event) ")")
    :priority (pushover-priority-set event)
-   :expire 180
-   :retry 60
    :timestamp (:time event)})
 
 (defn pushover
@@ -66,9 +64,9 @@
                                           :user user
                                           :title (:title pushover-event)
                                           :message (:message pushover-event)
-                                          :priority (str (:priority pushover-event))
-                                          :expire (str (:expire pushover-event))
-                                          :retry (str (:retry pushover-event))
-                                          :timestamp (str (:timestamp pushover-event)))
+                                          :priority (str (:priority pushover-event 0))
+                                          :expire (str (:expire pushover-event 2400))
+                                          :retry (str (:retry pushover-event 600))
+                                          :timestamp (str (:timestamp pushover-event) ""))
                                    :formatter)]
        (post pushover-params)))))

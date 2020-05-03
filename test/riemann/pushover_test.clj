@@ -22,16 +22,16 @@
       (testing "an event without metric"
         (pshvr {:host "testhost"
                 :service "testservice"
-                :state "ok"})
+                :state "emergency"})
         (is (= (last @calls)
                ["https://api.pushover.net/1/messages.json"
                 {:form-params {:token "token"
                                :user "user"
                                :title "testhost testservice"
-                               :message "testhost testservice is ok ()"
-                               :priority "0"
-                               :expire "180"
-                               :retry "60"
+                               :message "testhost testservice is emergency ()"
+                               :priority "2"
+                               :expire "2400"
+                               :retry "600"
                                :timestamp ""}}])))
 
       (testing "an event with opts"
@@ -47,8 +47,8 @@
                                :user "user"
                                :title "critical - testservice@myproject"
                                :message "<b>prod</b>\nrequest rate is critical"
-                               :priority "1"
-                               :expire "180"
-                               :retry "60"
+                               :priority "0"
+                               :expire "2400"
+                               :retry "600"
                                :timestamp ""
                                :html 1}}]))))))
