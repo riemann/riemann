@@ -2,6 +2,7 @@
   (:require [riemann.elasticsearch :refer :all]
             [riemann.logging :as logging]
             [riemann.test-utils :refer [with-mock]]
+            [riemann.time]
             [cheshire.core :as json]
             [clj-http.client :as http]
             [clojure.test :refer :all]))
