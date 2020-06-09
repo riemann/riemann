@@ -47,6 +47,7 @@
   - :type            Type to send to index, default is \"event\".
   - :username        Username to authenticate with.
   - :password        Password to authenticate with.
+  - :http-options    Http options (like proxy). See https://github.com/dakrone/clj-http for option list.
 
   Example:
 
@@ -65,7 +66,8 @@
   (let [opts (merge {:es-endpoint "http://127.0.0.1:9200"
                      :es-index "riemann"
                      :index-suffix "-yyyy.MM.dd"
-                     :type "event"}
+                     :type "event"
+                     :http-options {}}
                     opts)
         event-formatter (if (first maybe-formatter) (first maybe-formatter) format-event)]
     (fn [event]
@@ -79,7 +81,7 @@
                                   ""
                                   (time-format/unparse (time-format/formatter (:index-suffix opts)) (datetime-from-event event)))
                                 (:type opts))
-            http-options {}]
+            http-options (:http-options opts)]
         (post
          credentials
          es-endpoint

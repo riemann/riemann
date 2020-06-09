@@ -43,7 +43,8 @@
     (let [elastic (elasticsearch {:es-endpoint "https://example-elastic.com"
                                   :es-index "test-riemann"
                                   :index-suffix "-yyyy.MM"
-                                  :type "test-type"})
+                                  :type "test-type"
+                                  :http-options {:connection-manager 'cm}})
           json-event (json/generate-string output-event)]
 
       (testing "correct index/type formatting with custom elasticsearch opts"
@@ -54,7 +55,8 @@
                  :content-type :json
                  :conn-timeout 5000
                  :socket-timeout 5000
-                 :throw-entire-message? true}]))))))
+                 :throw-entire-message? true
+                 :connection-manager 'cm}]))))))
 
 (deftest ^:elasticsearch elasticsearch-event-formatter-test
   (with-mock [calls clj-http.client/post]
