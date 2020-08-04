@@ -3,6 +3,7 @@
         [leiningen.fatdeb :only [fatdeb]]
         [leiningen.fatrpm6 :only [fatrpm6]]
         [leiningen.fatrpm7 :only [fatrpm7]]
+        [leiningen.fatrpm8 :only [fatrpm7]]
         [leiningen.tar :only [tar]]))
 
 (defn pkg [project]
@@ -11,4 +12,5 @@
     (tar false)
     (fatrpm6 false)
     (fatrpm7 false)
+    (fatrpm8 false)
     (fatdeb false)))
