@@ -2,7 +2,7 @@
 
 Riemann aggregates events from your servers and applications with a powerful stream processing language.
 
-Find out more at [http://riemann.io](http://riemann.io)
+Find out more at [https://riemann.io](https://riemann.io)
 
 ## Build Status
 
