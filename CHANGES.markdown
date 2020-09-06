@@ -1,3 +1,9 @@
+# Version 0.3.6
+
+This is a periodic release of Riemann.
+
+For the full changelog see CHANGELOG.md
+
 # Version 0.3.5
 
 This is a bug fix release to address a regression caused by an http-kit dependency upgrade.

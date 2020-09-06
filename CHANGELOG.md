@@ -1,6 +1,37 @@
-# Change Log
+# Changelog
+
+## [Unreleased](https://github.com/riemann/riemann/tree/HEAD)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.5...HEAD)
+
+**Closed issues:**
+
+- Query Regarding async-queue! [\#979](https://github.com/riemann/riemann/issues/979)
+- Inconsistency in time across streams [\#948](https://github.com/riemann/riemann/issues/948)
+- Forward events if one of downstream down\(unreachable\). [\#771](https://github.com/riemann/riemann/issues/771)
+
+**Merged pull requests:**
+
+- Update issue templates [\#982](https://github.com/riemann/riemann/pull/982) ([jamtur01](https://github.com/jamtur01))
+- Create CODE\_OF\_CONDUCT.md [\#981](https://github.com/riemann/riemann/pull/981) ([jamtur01](https://github.com/jamtur01))
+- Update packaging to produce EL8 packages too [\#978](https://github.com/riemann/riemann/pull/978) ([faxm0dem](https://github.com/faxm0dem))
+- Pass http options to elasticsearch [\#976](https://github.com/riemann/riemann/pull/976) ([smortex](https://github.com/smortex))
+- added pushover priorities support [\#975](https://github.com/riemann/riemann/pull/975) ([mrkooll](https://github.com/mrkooll))
+- Do not record events if \*results\* is nil. [\#974](https://github.com/riemann/riemann/pull/974) ([sanel](https://github.com/sanel))
+- refactoring send-lines fn in GraphiteUDPClient [\#972](https://github.com/riemann/riemann/pull/972) ([ertugrulcetin](https://github.com/ertugrulcetin))
+- Fix InfluxDB typo and improve copy [\#971](https://github.com/riemann/riemann/pull/971) ([maddenp](https://github.com/maddenp))
+- fix\(transport\): potential msg decoding error is handled in rabbitmq-transport [\#970](https://github.com/riemann/riemann/pull/970) ([serge-medvedev](https://github.com/serge-medvedev))
+- docs\(rabbitmq-transport\): comments are tidied up [\#969](https://github.com/riemann/riemann/pull/969) ([serge-medvedev](https://github.com/serge-medvedev))
+- feat\(stream\): rabbitmq stream is introduced [\#968](https://github.com/riemann/riemann/pull/968) ([serge-medvedev](https://github.com/serge-medvedev))
+- refactor\(rabbitmq-transport\): configuration made even more flexible [\#967](https://github.com/riemann/riemann/pull/967) ([serge-medvedev](https://github.com/serge-medvedev))
+- fix\(transport\): service/conflict? doesn't fail if rabbitmq-transport isn't started [\#965](https://github.com/riemann/riemann/pull/965) ([serge-medvedev](https://github.com/serge-medvedev))
+- refactor\(transport\): rabbitmq-transport configuration made more flexible [\#964](https://github.com/riemann/riemann/pull/964) ([serge-medvedev](https://github.com/serge-medvedev))
+- feat\(transport\): rabbitmq-transport got index querying support [\#963](https://github.com/riemann/riemann/pull/963) ([serge-medvedev](https://github.com/serge-medvedev))
+- docs: typo's fixed; rabbitmq-related functions are either documented or made private [\#962](https://github.com/riemann/riemann/pull/962) ([serge-medvedev](https://github.com/serge-medvedev))
+- feat\(transport\): rabbitmq consumer is introduced [\#961](https://github.com/riemann/riemann/pull/961) ([serge-medvedev](https://github.com/serge-medvedev))
 
 ## [0.3.5](https://github.com/riemann/riemann/tree/0.3.5) (2019-11-23)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.4...0.3.5)
 
 **Closed issues:**
@@ -16,6 +47,7 @@
 - revert http-kit to eliminate websocket interleaving bug [\#960](https://github.com/riemann/riemann/pull/960) ([dch](https://github.com/dch))
 
 ## [0.3.4](https://github.com/riemann/riemann/tree/0.3.4) (2019-09-27)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.3...0.3.4)
 
 **Closed issues:**
@@ -28,9 +60,9 @@
 - Add predict-linear stream [\#953](https://github.com/riemann/riemann/pull/953) ([boernd](https://github.com/boernd))
 - Added circleci config [\#952](https://github.com/riemann/riemann/pull/952) ([jamtur01](https://github.com/jamtur01))
 - riemann.bin: Refactor ensure-dynamic-classloader and call on reload [\#951](https://github.com/riemann/riemann/pull/951) ([198d](https://github.com/198d))
-- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
 
 ## [0.3.3](https://github.com/riemann/riemann/tree/0.3.3) (2019-06-22)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.2...0.3.3)
 
 **Closed issues:**
@@ -49,6 +81,7 @@
 - Modernize rpm packaging [\#947](https://github.com/riemann/riemann/pull/947) ([smortex](https://github.com/smortex))
 
 ## [0.3.2](https://github.com/riemann/riemann/tree/0.3.2) (2019-05-12)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.1...0.3.2)
 
 **Closed issues:**
@@ -73,6 +106,7 @@
 - Allow for using Riemann as a dependency [\#881](https://github.com/riemann/riemann/pull/881) ([derekchiang](https://github.com/derekchiang))
 
 ## [0.3.1](https://github.com/riemann/riemann/tree/0.3.1) (2018-05-23)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.0...0.3.1)
 
 **Closed issues:**
@@ -86,26 +120,21 @@
 
 **Merged pull requests:**
 
+- Upgraded to netty 4.1.25 [\#926](https://github.com/riemann/riemann/pull/926) ([jamtur01](https://github.com/jamtur01))
 - Support for Opsgenie v2 API [\#925](https://github.com/riemann/riemann/pull/925) ([mcorbin](https://github.com/mcorbin))
-- Docker documentation [\#924](https://github.com/riemann/riemann/pull/924) ([xrstf](https://github.com/xrstf))
 - Docker improvements [\#923](https://github.com/riemann/riemann/pull/923) ([xrstf](https://github.com/xrstf))
 - Provide a Docker image [\#922](https://github.com/riemann/riemann/pull/922) ([xrstf](https://github.com/xrstf))
 - Pull in less-awful-ssl 1.0.3 [\#921](https://github.com/riemann/riemann/pull/921) ([MichaelDoyle](https://github.com/MichaelDoyle))
 - Fix incorrect assertions in tests [\#919](https://github.com/riemann/riemann/pull/919) ([Mongey](https://github.com/Mongey))
-- Add default TLS port in documentation [\#916](https://github.com/riemann/riemann/pull/916) ([mcorbin](https://github.com/mcorbin))
 - Improve the formatting of the API documentation [\#915](https://github.com/riemann/riemann/pull/915) ([mcorbin](https://github.com/mcorbin))
 - config: lexicographically sort files before including them [\#912](https://github.com/riemann/riemann/pull/912) ([pyr](https://github.com/pyr))
 - Enable TCP-TLS in logstash plugins [\#911](https://github.com/riemann/riemann/pull/911) ([epabced](https://github.com/epabced))
 - Add multiple events support to the Graphite stream [\#910](https://github.com/riemann/riemann/pull/910) ([mcorbin](https://github.com/mcorbin))
 - Add support for tags in Graphite input and output [\#909](https://github.com/riemann/riemann/pull/909) ([mcorbin](https://github.com/mcorbin))
 - Add missing atom deref to properly close kafka client [\#908](https://github.com/riemann/riemann/pull/908) ([peffenberger](https://github.com/peffenberger))
-- Add riemann-discovery on the plugin list [\#906](https://github.com/riemann/riemann/pull/906) ([mcorbin](https://github.com/mcorbin))
-- Fix doc typo [\#905](https://github.com/riemann/riemann/pull/905) ([mcorbin](https://github.com/mcorbin))
-- Add documentation for the core in the test framework [\#904](https://github.com/riemann/riemann/pull/904) ([mcorbin](https://github.com/mcorbin))
-- Add documentation for the not-expired stream [\#903](https://github.com/riemann/riemann/pull/903) ([mcorbin](https://github.com/mcorbin))
-- Add pagerduty v2 documentation [\#902](https://github.com/riemann/riemann/pull/902) ([mcorbin](https://github.com/mcorbin))
 
 ## [0.3.0](https://github.com/riemann/riemann/tree/0.3.0) (2018-01-15)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.14...0.3.0)
 
 **Closed issues:**
@@ -123,7 +152,6 @@
 - KQueue [\#851](https://github.com/riemann/riemann/issues/851)
 - Catch exceptions during event expiration [\#850](https://github.com/riemann/riemann/issues/850)
 - \[regression\] InfluxDB lib should be fed consistent data type [\#848](https://github.com/riemann/riemann/issues/848)
-- Package gogs-0.11.19-1500937836.643c85e9.centos7.x86\_64.rpm is not signed [\#841](https://github.com/riemann/riemann/issues/841)
 - inject-intervals! test helper [\#839](https://github.com/riemann/riemann/issues/839)
 - Add index support in test mode [\#838](https://github.com/riemann/riemann/issues/838)
 - Question: how to replace multi pattern [\#835](https://github.com/riemann/riemann/issues/835)
@@ -139,7 +167,6 @@
 **Merged pull requests:**
 
 - Fix logsize-rotate [\#900](https://github.com/riemann/riemann/pull/900) ([asonix](https://github.com/asonix))
-- Adds OpenTSBD and Graphite default ports [\#895](https://github.com/riemann/riemann/pull/895) ([mcorbin](https://github.com/mcorbin))
 - initiates controlled time in with-test-env [\#893](https://github.com/riemann/riemann/pull/893) ([mcorbin](https://github.com/mcorbin))
 - Add a modifiable classloader for pomegranate. [\#892](https://github.com/riemann/riemann/pull/892) ([mcorbin](https://github.com/mcorbin))
 - bump kinsky dependency [\#891](https://github.com/riemann/riemann/pull/891) ([mcorbin](https://github.com/mcorbin))
@@ -147,39 +174,30 @@
 - fix ws out rate metric and remove ws latency metric [\#888](https://github.com/riemann/riemann/pull/888) ([mcorbin](https://github.com/mcorbin))
 - Refactor test imports [\#887](https://github.com/riemann/riemann/pull/887) ([mcorbin](https://github.com/mcorbin))
 - Upgrade kinsky to 0.1.20 [\#885](https://github.com/riemann/riemann/pull/885) ([boernd](https://github.com/boernd))
-- Improve kafka docs [\#883](https://github.com/riemann/riemann/pull/883) ([boernd](https://github.com/boernd))
 - Add a not-expired stream [\#882](https://github.com/riemann/riemann/pull/882) ([mcorbin](https://github.com/mcorbin))
 - Updates to support Java9 [\#879](https://github.com/riemann/riemann/pull/879) ([jamtur01](https://github.com/jamtur01))
 - Use clj-nsca fork [\#878](https://github.com/riemann/riemann/pull/878) ([mcorbin](https://github.com/mcorbin))
-- Add samplerr to plugins doc [\#877](https://github.com/riemann/riemann/pull/877) ([boernd](https://github.com/boernd))
-- Add riemann-cond-dt plugin documentation [\#876](https://github.com/riemann/riemann/pull/876) ([mcorbin](https://github.com/mcorbin))
 - Allow for not using `index-suffix` [\#875](https://github.com/riemann/riemann/pull/875) ([derekchiang](https://github.com/derekchiang))
 - Refactor test imports and fix indentation [\#873](https://github.com/riemann/riemann/pull/873) ([mcorbin](https://github.com/mcorbin))
 - Modify the :host configuration in influx tests [\#872](https://github.com/riemann/riemann/pull/872) ([mcorbin](https://github.com/mcorbin))
 - Mock a core in test mode, refactoring reaper [\#871](https://github.com/riemann/riemann/pull/871) ([mcorbin](https://github.com/mcorbin))
 - Add the "riemann" tag in index instrumentation [\#869](https://github.com/riemann/riemann/pull/869) ([mcorbin](https://github.com/mcorbin))
-- Document exception-stream [\#868](https://github.com/riemann/riemann/pull/868) ([mcorbin](https://github.com/mcorbin))
 - Remove campfire integration [\#867](https://github.com/riemann/riemann/pull/867) ([mcorbin](https://github.com/mcorbin))
-- Fix \#796: add scrollbar when code line is too long [\#864](https://github.com/riemann/riemann/pull/864) ([thachmai](https://github.com/thachmai))
-- Add new elixir client [\#863](https://github.com/riemann/riemann/pull/863) ([hazardfn](https://github.com/hazardfn))
 - Allows to generate test results in junit format [\#862](https://github.com/riemann/riemann/pull/862) ([mcorbin](https://github.com/mcorbin))
 - Refactoring the telegram output [\#861](https://github.com/riemann/riemann/pull/861) ([mcorbin](https://github.com/mcorbin))
-- Document the tag stream [\#860](https://github.com/riemann/riemann/pull/860) ([mcorbin](https://github.com/mcorbin))
 - Fix the where macro for clojure 1.9 [\#858](https://github.com/riemann/riemann/pull/858) ([mcorbin](https://github.com/mcorbin))
 - Catch AssertionError in stream.clj and time.clj [\#855](https://github.com/riemann/riemann/pull/855) ([mcorbin](https://github.com/mcorbin))
 - Add a try/catch where events are expired [\#854](https://github.com/riemann/riemann/pull/854) ([mcorbin](https://github.com/mcorbin))
 - Adds Netty Kqueue support [\#852](https://github.com/riemann/riemann/pull/852) ([jamtur01](https://github.com/jamtur01))
 - Converts clojure.lang.BigInt to double in influx stream [\#849](https://github.com/riemann/riemann/pull/849) ([mcorbin](https://github.com/mcorbin))
-- Updated docs for JDK 8 and 9 and removing JDK 7 [\#847](https://github.com/riemann/riemann/pull/847) ([jamtur01](https://github.com/jamtur01))
 - Remove support for JDK7 and add JDK9 [\#846](https://github.com/riemann/riemann/pull/846) ([jamtur01](https://github.com/jamtur01))
-- Document the Elasticsearch streams [\#845](https://github.com/riemann/riemann/pull/845) ([mcorbin](https://github.com/mcorbin))
 - Fix by-builder stream [\#843](https://github.com/riemann/riemann/pull/843) ([mcorbin](https://github.com/mcorbin))
 - Replace Throwable by Exception [\#842](https://github.com/riemann/riemann/pull/842) ([mcorbin](https://github.com/mcorbin))
 - Upgrade influxdb-java dependency [\#840](https://github.com/riemann/riemann/pull/840) ([mcorbin](https://github.com/mcorbin))
 - Add Pagerduty v2 API support [\#837](https://github.com/riemann/riemann/pull/837) ([mcorbin](https://github.com/mcorbin))
-- Update the IRC log url [\#836](https://github.com/riemann/riemann/pull/836) ([mcorbin](https://github.com/mcorbin))
 
 ## [0.2.14](https://github.com/riemann/riemann/tree/0.2.14) (2017-07-10)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.13...0.2.14)
 
 **Closed issues:**
@@ -208,23 +226,15 @@
 - Remove all \*warn-on-reflection\* warning in the influxdb stream [\#829](https://github.com/riemann/riemann/pull/829) ([mcorbin](https://github.com/mcorbin))
 - Add sflatten stream [\#825](https://github.com/riemann/riemann/pull/825) ([mcorbin](https://github.com/mcorbin))
 - Added some env variables for Travis testing [\#823](https://github.com/riemann/riemann/pull/823) ([jamtur01](https://github.com/jamtur01))
-- Add link to riemann-go-client in clients.html [\#815](https://github.com/riemann/riemann/pull/815) ([mcorbin](https://github.com/mcorbin))
 - bump clj-http to 3.5.0 - http-integrations over a sniproxy \o/ [\#814](https://github.com/riemann/riemann/pull/814) ([andrerocker](https://github.com/andrerocker))
 - Replace refs in moving-time-window by an atom [\#811](https://github.com/riemann/riemann/pull/811) ([mcorbin](https://github.com/mcorbin))
-- Fix typo in kafka howto doc [\#810](https://github.com/riemann/riemann/pull/810) ([boernd](https://github.com/boernd))
-- Extend pushover functionality [\#808](https://github.com/riemann/riemann/pull/808) ([boernd](https://github.com/boernd))
-- Add Kafka output documentation [\#807](https://github.com/riemann/riemann/pull/807) ([mcorbin](https://github.com/mcorbin))
-- \[gh-pages\] Add missing api html files [\#806](https://github.com/riemann/riemann/pull/806) ([boernd](https://github.com/boernd))
 - Refactoring Elasticsearch output [\#804](https://github.com/riemann/riemann/pull/804) ([mcorbin](https://github.com/mcorbin))
-- Fix code block render in quickstart.html [\#803](https://github.com/riemann/riemann/pull/803) ([sudoankit](https://github.com/sudoankit))
-- Add documentation on time\_micros [\#802](https://github.com/riemann/riemann/pull/802) ([mcorbin](https://github.com/mcorbin))
-- Fix quickstart tar command args [\#801](https://github.com/riemann/riemann/pull/801) ([mreinhardt](https://github.com/mreinhardt))
 - Updated a number of project dependencies [\#800](https://github.com/riemann/riemann/pull/800) ([jamtur01](https://github.com/jamtur01))
-- Fix download links [\#799](https://github.com/riemann/riemann/pull/799) ([Ben-M](https://github.com/Ben-M))
 - replace refs in fixed-time-window-fn by an atom [\#797](https://github.com/riemann/riemann/pull/797) ([mcorbin](https://github.com/mcorbin))
-- \[Ready\] Add influxdb documentation [\#770](https://github.com/riemann/riemann/pull/770) ([mcorbin](https://github.com/mcorbin))
+- Fix version discrepancy in quickstart guide [\#786](https://github.com/riemann/riemann/pull/786) ([cddr](https://github.com/cddr))
 
 ## [0.2.13](https://github.com/riemann/riemann/tree/0.2.13) (2017-04-06)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.12...0.2.13)
 
 **Closed issues:**
@@ -247,23 +257,15 @@
 
 **Merged pull requests:**
 
-- Add a section to explain how to configure Logback from a file [\#798](https://github.com/riemann/riemann/pull/798) ([Mogztter](https://github.com/Mogztter))
 - Fix "bootstrap.servers" typo [\#795](https://github.com/riemann/riemann/pull/795) ([mcorbin](https://github.com/mcorbin))
 - Configure logging via logback.configurationFile environment variable [\#794](https://github.com/riemann/riemann/pull/794) ([Mogztter](https://github.com/Mogztter))
-- fix Maximum typo [\#793](https://github.com/riemann/riemann/pull/793) ([mcorbin](https://github.com/mcorbin))
-- Fix max-pool-size typo [\#792](https://github.com/riemann/riemann/pull/792) ([boernd](https://github.com/boernd))
 - uses humane-test-output to pretty print test outputs [\#790](https://github.com/riemann/riemann/pull/790) ([mcorbin](https://github.com/mcorbin))
-- Fix version discrepancy in quickstart guide [\#786](https://github.com/riemann/riemann/pull/786) ([cddr](https://github.com/cddr))
-- Document inject! on specific streams [\#785](https://github.com/riemann/riemann/pull/785) ([mcorbin](https://github.com/mcorbin))
-- Add pagerduty `:options` key doc and fix jekyll command [\#784](https://github.com/riemann/riemann/pull/784) ([mcorbin](https://github.com/mcorbin))
 - add kafka as input option [\#781](https://github.com/riemann/riemann/pull/781) ([boernd](https://github.com/boernd))
 - Remove trailing whitespaces on the netuitive code [\#779](https://github.com/riemann/riemann/pull/779) ([mcorbin](https://github.com/mcorbin))
 - add ability to run single test \(namespace\), fixes \#775 [\#776](https://github.com/riemann/riemann/pull/776) ([andrusieczko](https://github.com/andrusieczko))
 - Remove capacitor dependency [\#774](https://github.com/riemann/riemann/pull/774) ([mcorbin](https://github.com/mcorbin))
 - Add an `:options` parameter to the pagerduty stream [\#773](https://github.com/riemann/riemann/pull/773) ([mcorbin](https://github.com/mcorbin))
-- Fix pagerduty documentation \(:service-key parameter\) [\#772](https://github.com/riemann/riemann/pull/772) ([mcorbin](https://github.com/mcorbin))
 - Bump nrepl to 0.2.12 [\#769](https://github.com/riemann/riemann/pull/769) ([mcorbin](https://github.com/mcorbin))
-- Fix service name for netty queue size [\#766](https://github.com/riemann/riemann/pull/766) ([mcorbin](https://github.com/mcorbin))
 - Fix some tests for time micro [\#765](https://github.com/riemann/riemann/pull/765) ([mcorbin](https://github.com/mcorbin))
 - Revert coalesce stream state storage [\#763](https://github.com/riemann/riemann/pull/763) ([mcorbin](https://github.com/mcorbin))
 - Twilio : refactor options [\#762](https://github.com/riemann/riemann/pull/762) ([mcorbin](https://github.com/mcorbin))
@@ -273,17 +275,16 @@
 - Fix typo in the doc string of Instrumented protocol. [\#755](https://github.com/riemann/riemann/pull/755) ([avichalp](https://github.com/avichalp))
 - Allow specifying HTTP basic authentication credentials when writing to Elasticsearch [\#754](https://github.com/riemann/riemann/pull/754) ([dhruvbansal](https://github.com/dhruvbansal))
 - Add Netuitive plugin [\#753](https://github.com/riemann/riemann/pull/753) ([joepusateri](https://github.com/joepusateri))
-- Clarify splitting into multiple files. [\#752](https://github.com/riemann/riemann/pull/752) ([Ben-M](https://github.com/Ben-M))
 - Clarify throttle doc-string [\#751](https://github.com/riemann/riemann/pull/751) ([Ben-M](https://github.com/Ben-M))
 - Slack : cast event :tags into vector [\#749](https://github.com/riemann/riemann/pull/749) ([mcorbin](https://github.com/mcorbin))
 - coalesce: simplify coalesce state storage [\#748](https://github.com/riemann/riemann/pull/748) ([pyr](https://github.com/pyr))
 - Prometheus label / body only support some char. [\#747](https://github.com/riemann/riemann/pull/747) ([shinji62](https://github.com/shinji62))
-- Fix typo [\#746](https://github.com/riemann/riemann/pull/746) ([mcorbin](https://github.com/mcorbin))
 - Keep coalesce state between reloads [\#744](https://github.com/riemann/riemann/pull/744) ([mcorbin](https://github.com/mcorbin))
 - \[Need review\] Refactoring influxdb [\#741](https://github.com/riemann/riemann/pull/741) ([mcorbin](https://github.com/mcorbin))
 - Telegram notification support [\#714](https://github.com/riemann/riemann/pull/714) ([islander](https://github.com/islander))
 
 ## [0.2.12](https://github.com/riemann/riemann/tree/0.2.12) (2016-12-06)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.11...0.2.12)
 
 **Implemented enhancements:**
@@ -324,7 +325,6 @@
 
 **Merged pull requests:**
 
-- Add Crabby to Toolbox section of clients.html [\#745](https://github.com/riemann/riemann/pull/745) ([chrissnell](https://github.com/chrissnell))
 - Fix sse listening address [\#737](https://github.com/riemann/riemann/pull/737) ([mcorbin](https://github.com/mcorbin))
 - Fix RuntimeException in udp graphite-server [\#736](https://github.com/riemann/riemann/pull/736) ([mcorbin](https://github.com/mcorbin))
 - fix websocket listening address [\#735](https://github.com/riemann/riemann/pull/735) ([mcorbin](https://github.com/mcorbin))
@@ -334,28 +334,22 @@
 - Add riemann.elasticsearch [\#722](https://github.com/riemann/riemann/pull/722) ([eguven](https://github.com/eguven))
 - Add HTML body support for mailgun [\#719](https://github.com/riemann/riemann/pull/719) ([jerray](https://github.com/jerray))
 - Fix nested escaping of strings [\#717](https://github.com/riemann/riemann/pull/717) ([frankiesardo](https://github.com/frankiesardo))
-- Link to '/' rather than index.html [\#711](https://github.com/riemann/riemann/pull/711) ([macalinao](https://github.com/macalinao))
-- Fix fraction divisor in generating events example [\#708](https://github.com/riemann/riemann/pull/708) ([guillaumebreton](https://github.com/guillaumebreton))
 - Add ChannelOption/SO\_BACKLOG to TCP server [\#706](https://github.com/riemann/riemann/pull/706) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Clarify GC behavior of \(by\) streams [\#704](https://github.com/riemann/riemann/pull/704) ([blalor](https://github.com/blalor))
-- Correction in maintenance-mode function [\#702](https://github.com/riemann/riemann/pull/702) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Add the ability to read SNS credentials from the default credential chain [\#701](https://github.com/riemann/riemann/pull/701) ([hexedpackets](https://github.com/hexedpackets))
 - Removed deprecated functions: within, without and combine [\#696](https://github.com/riemann/riemann/pull/696) ([jamtur01](https://github.com/jamtur01))
 - Fixes \#374 - Librato error without metric [\#695](https://github.com/riemann/riemann/pull/695) ([jamtur01](https://github.com/jamtur01))
 - Updating netty to 4.1.0 [\#694](https://github.com/riemann/riemann/pull/694) ([pradeepchhetri](https://github.com/pradeepchhetri))
-- Added documentation for CLASSPATH-based include and deprecated `include` approach [\#693](https://github.com/riemann/riemann/pull/693) ([jamtur01](https://github.com/jamtur01))
 - Added Prometheus Plugin [\#692](https://github.com/riemann/riemann/pull/692) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Added Druid plugin [\#691](https://github.com/riemann/riemann/pull/691) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Renamed com.aphyr to io.riemann in Riemann core [\#685](https://github.com/riemann/riemann/pull/685) ([jamtur01](https://github.com/jamtur01))
-- Renamed com.aphyr to io.riemann in Documentation [\#684](https://github.com/riemann/riemann/pull/684) ([jamtur01](https://github.com/jamtur01))
 - Include api changes to help others in upgrading [\#683](https://github.com/riemann/riemann/pull/683) ([agile](https://github.com/agile))
-- Added HOWTO entry for ports documentation [\#682](https://github.com/riemann/riemann/pull/682) ([jamtur01](https://github.com/jamtur01))
 - Allow explicit config of Slack HTTP connection params [\#681](https://github.com/riemann/riemann/pull/681) ([dbriones](https://github.com/dbriones))
 - Add batch forwarding for datadog [\#679](https://github.com/riemann/riemann/pull/679) ([thearthur](https://github.com/thearthur))
-- Fixed deprecation warning to use correct new function. [\#678](https://github.com/riemann/riemann/pull/678) ([jamtur01](https://github.com/jamtur01))
 - slack: fix tags handling [\#677](https://github.com/riemann/riemann/pull/677) ([mfournier](https://github.com/mfournier))
 
 ## [0.2.11](https://github.com/riemann/riemann/tree/0.2.11) (2016-04-20)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.10...0.2.11)
 
 **Implemented enhancements:**
@@ -434,25 +428,16 @@
 **Merged pull requests:**
 
 - test.clj: test-stream-intervals: minor typo [\#680](https://github.com/riemann/riemann/pull/680) ([Anvil](https://github.com/Anvil))
-- fix mistakes in credits [\#674](https://github.com/riemann/riemann/pull/674) ([mfournier](https://github.com/mfournier))
-- howto: provide a debugging config example [\#673](https://github.com/riemann/riemann/pull/673) ([pyr](https://github.com/pyr))
 - Updated CHANGELOG for 0.2.11 [\#672](https://github.com/riemann/riemann/pull/672) ([jamtur01](https://github.com/jamtur01))
 - hipchat: remove threading as dissoc takes key sequnce as arguments [\#670](https://github.com/riemann/riemann/pull/670) ([thenonameguy](https://github.com/thenonameguy))
 - slack: properly setup :fallback in bundled formatters [\#667](https://github.com/riemann/riemann/pull/667) ([mfournier](https://github.com/mfournier))
-- thanks: add gfv [\#665](https://github.com/riemann/riemann/pull/665) ([mfournier](https://github.com/mfournier))
 - Twilio REST API POST parameter names are updated. [\#663](https://github.com/riemann/riemann/pull/663) ([metebalci](https://github.com/metebalci))
-- fixed maintenance-mode function name in example [\#656](https://github.com/riemann/riemann/pull/656) ([youngderekm](https://github.com/youngderekm))
 - folds: add modes and mode, fixes \#363 [\#652](https://github.com/riemann/riemann/pull/652) ([pyr](https://github.com/pyr))
-- Docs updates [\#649](https://github.com/riemann/riemann/pull/649) ([jamtur01](https://github.com/jamtur01))
-- typo fixed in concepts.html [\#647](https://github.com/riemann/riemann/pull/647) ([paweloczadly](https://github.com/paweloczadly))
-- Fixed mistake regarding vector versus vec [\#644](https://github.com/riemann/riemann/pull/644) ([jamtur01](https://github.com/jamtur01))
 - Fixed PagerDuty documentation [\#641](https://github.com/riemann/riemann/pull/641) ([jamtur01](https://github.com/jamtur01))
 - Added support for a PagerDuty formatter for events [\#639](https://github.com/riemann/riemann/pull/639) ([jamtur01](https://github.com/jamtur01))
-- Fixed column formatting for percentage of events HOWTO [\#636](https://github.com/riemann/riemann/pull/636) ([jamtur01](https://github.com/jamtur01))
 - Fix percentiles documentation for correct service name [\#626](https://github.com/riemann/riemann/pull/626) ([jamtur01](https://github.com/jamtur01))
 - Allow overriding graphite metric conversion method [\#625](https://github.com/riemann/riemann/pull/625) ([agile](https://github.com/agile))
 - howto.html: fix slack example [\#621](https://github.com/riemann/riemann/pull/621) ([pdericson](https://github.com/pdericson))
-- Fixed some code formatting [\#620](https://github.com/riemann/riemann/pull/620) ([jamtur01](https://github.com/jamtur01))
 - Bump the nREPL dep to 0.2.11 [\#619](https://github.com/riemann/riemann/pull/619) ([bbatsov](https://github.com/bbatsov))
 - Xymon: fixes, scalability, multiple xymon host, error handling [\#615](https://github.com/riemann/riemann/pull/615) ([Anvil](https://github.com/Anvil))
 - VictorOps integration [\#614](https://github.com/riemann/riemann/pull/614) ([mallman](https://github.com/mallman))
@@ -464,13 +449,14 @@
 - fill-in-last\*: apply arbitrary function to last event [\#606](https://github.com/riemann/riemann/pull/606) ([Anvil](https://github.com/Anvil))
 - Add -v and version command to display Lein or POM version [\#604](https://github.com/riemann/riemann/pull/604) ([aphyr](https://github.com/aphyr))
 - Add ChannelOption/RCVBUF\_ALLOCATOR to UDP server [\#603](https://github.com/riemann/riemann/pull/603) ([MichaelDoyle](https://github.com/MichaelDoyle))
-- Update Ganglia client wiki link [\#599](https://github.com/riemann/riemann/pull/599) ([satterly](https://github.com/satterly))
 - Fix logging, use logback instead log4j [\#598](https://github.com/riemann/riemann/pull/598) ([juise](https://github.com/juise))
 - Updating netty to 4.0.30.Final [\#595](https://github.com/riemann/riemann/pull/595) ([hiloboy0119](https://github.com/hiloboy0119))
+- logging: fallback to "riemann" when an unknown layout is provided [\#586](https://github.com/riemann/riemann/pull/586) ([vincentbernat](https://github.com/vincentbernat))
 - Allow graphite to take a function as host name [\#582](https://github.com/riemann/riemann/pull/582) ([joerayme](https://github.com/joerayme))
 - \[WIP\] Add first draft of encoding influxdb line protocol [\#575](https://github.com/riemann/riemann/pull/575) ([timbuchwaldt](https://github.com/timbuchwaldt))
 
 ## [0.2.10](https://github.com/riemann/riemann/tree/0.2.10) (2015-07-21)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.9...0.2.10)
 
 **Closed issues:**
@@ -485,41 +471,22 @@
 
 **Merged pull requests:**
 
-- logging: fallback to "riemann" when an unknown layout is provided [\#586](https://github.com/riemann/riemann/pull/586) ([vincentbernat](https://github.com/vincentbernat))
 - JVM opt for disabling epoll [\#584](https://github.com/riemann/riemann/pull/584) ([pharaujo](https://github.com/pharaujo))
 - Convert TSDB tags to custom fields [\#583](https://github.com/riemann/riemann/pull/583) ([pharaujo](https://github.com/pharaujo))
 - Do not escape slack markup formatting in custom formatter. [\#580](https://github.com/riemann/riemann/pull/580) ([zackdever](https://github.com/zackdever))
-- Fix smap example: return a new event instead of a map [\#579](https://github.com/riemann/riemann/pull/579) ([nberger](https://github.com/nberger))
-- Typo [\#577](https://github.com/riemann/riemann/pull/577) ([mausch](https://github.com/mausch))
-- Fix filter by state [\#576](https://github.com/riemann/riemann/pull/576) ([mausch](https://github.com/mausch))
-- Fix riemann-java-client protobuf link [\#568](https://github.com/riemann/riemann/pull/568) ([moshe](https://github.com/moshe))
-- Fixes link to full grammar [\#567](https://github.com/riemann/riemann/pull/567) ([viniciushana](https://github.com/viniciushana))
 - add test/lookup [\#566](https://github.com/riemann/riemann/pull/566) ([mfournier](https://github.com/mfournier))
 - fixing problem with “name” change and rejected null values in influxdb rc31/rc32 [\#562](https://github.com/riemann/riemann/pull/562) ([mbuczko](https://github.com/mbuczko))
 - email: allow sequentials as input [\#560](https://github.com/riemann/riemann/pull/560) ([pyr](https://github.com/pyr))
-- dashboard.html: Add a link to Potential Happiness [\#559](https://github.com/riemann/riemann/pull/559) ([algernon](https://github.com/algernon))
 - Updated slack default-formatter and extended-formatter [\#557](https://github.com/riemann/riemann/pull/557) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Add InfluxDB 0.9 output [\#555](https://github.com/riemann/riemann/pull/555) ([greglook](https://github.com/greglook))
 - Add support for private servers; Migrate to v2 API [\#553](https://github.com/riemann/riemann/pull/553) ([jjungnickel](https://github.com/jjungnickel))
 - Add Pushover [\#549](https://github.com/riemann/riemann/pull/549) ([amir](https://github.com/amir))
-- Minor typos [\#548](https://github.com/riemann/riemann/pull/548) ([jamtur01](https://github.com/jamtur01))
-- Added first draft of Clojure article [\#546](https://github.com/riemann/riemann/pull/546) ([jamtur01](https://github.com/jamtur01))
-- Fix typo in doc-example for async-queue [\#544](https://github.com/riemann/riemann/pull/544) ([joelapatatechaude](https://github.com/joelapatatechaude))
-- check emails recipients are strings [\#543](https://github.com/riemann/riemann/pull/543) ([tcrayford](https://github.com/tcrayford))
-- Fixed Slack URL sizing [\#542](https://github.com/riemann/riemann/pull/542) ([jamtur01](https://github.com/jamtur01))
-- instrument the number of unique events in the index [\#541](https://github.com/riemann/riemann/pull/541) ([tcrayford](https://github.com/tcrayford))
 - Faxmodem so rcvbuf [\#540](https://github.com/riemann/riemann/pull/540) ([faxm0dem](https://github.com/faxm0dem))
 - bump jdk version dependency [\#536](https://github.com/riemann/riemann/pull/536) ([mfournier](https://github.com/mfournier))
-- More fixes [\#533](https://github.com/riemann/riemann/pull/533) ([jamtur01](https://github.com/jamtur01))
-- This is why I shouldn't be allowed near HTML [\#532](https://github.com/riemann/riemann/pull/532) ([jamtur01](https://github.com/jamtur01))
-- Fixed row divs to add last [\#531](https://github.com/riemann/riemann/pull/531) ([jamtur01](https://github.com/jamtur01))
-- Not sure colons make sense now [\#530](https://github.com/riemann/riemann/pull/530) ([jamtur01](https://github.com/jamtur01))
-- Documentation updates [\#529](https://github.com/riemann/riemann/pull/529) ([jamtur01](https://github.com/jamtur01))
-- Added links for changed-state variable. [\#528](https://github.com/riemann/riemann/pull/528) ([jamtur01](https://github.com/jamtur01))
-- clients.html: Add a short note about riemoon [\#527](https://github.com/riemann/riemann/pull/527) ([algernon](https://github.com/algernon))
 - expire by branch if event is expired [\#525](https://github.com/riemann/riemann/pull/525) ([itaifrenkel](https://github.com/itaifrenkel))
 
 ## [0.2.9](https://github.com/riemann/riemann/tree/0.2.9) (2015-03-09)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.8...0.2.9)
 
 **Closed issues:**
@@ -536,12 +503,9 @@
 
 **Merged pull requests:**
 
-- Added section about where's syntactic sugar [\#523](https://github.com/riemann/riemann/pull/523) ([jamtur01](https://github.com/jamtur01))
-- fix typo in require [\#521](https://github.com/riemann/riemann/pull/521) ([rhysr](https://github.com/rhysr))
 - Put EXTRA\_CLASSPATH after riemann.jar [\#520](https://github.com/riemann/riemann/pull/520) ([md5](https://github.com/md5))
 - Specify seconds resolution in output to InfluxDB [\#517](https://github.com/riemann/riemann/pull/517) ([fhalim](https://github.com/fhalim))
 - Retain time specified in event [\#516](https://github.com/riemann/riemann/pull/516) ([fhalim](https://github.com/fhalim))
-- Add Thanks for James Turnbull. [\#515](https://github.com/riemann/riemann/pull/515) ([gsandie](https://github.com/gsandie))
 - Fix :ttl conversion to LIFETIME in xymon forward [\#512](https://github.com/riemann/riemann/pull/512) ([mirwan](https://github.com/mirwan))
 - An example of what I'd like to achieve with extra properties from katja [\#511](https://github.com/riemann/riemann/pull/511) ([robashton](https://github.com/robashton))
 - Enable native epoll on Linux/amd64 only [\#508](https://github.com/riemann/riemann/pull/508) ([msantos](https://github.com/msantos))
@@ -555,8 +519,10 @@
 - Fix init script output on RedHat-based distros [\#491](https://github.com/riemann/riemann/pull/491) ([pharaujo](https://github.com/pharaujo))
 - upgrade to high-scale-lib v1.0.6 in Maven Central [\#490](https://github.com/riemann/riemann/pull/490) ([bfritz](https://github.com/bfritz))
 - update version for clj-time [\#489](https://github.com/riemann/riemann/pull/489) ([sgran](https://github.com/sgran))
+- Include original event when capturing call rescue exception [\#485](https://github.com/riemann/riemann/pull/485) ([tcrayford](https://github.com/tcrayford))
 
 ## [0.2.8](https://github.com/riemann/riemann/tree/0.2.8) (2015-01-09)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.7...0.2.8)
 
 **Closed issues:**
@@ -569,6 +535,7 @@
 - Fix Netty native transport issue [\#487](https://github.com/riemann/riemann/pull/487) ([dbriones](https://github.com/dbriones))
 
 ## [0.2.7](https://github.com/riemann/riemann/tree/0.2.7) (2015-01-06)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.6...0.2.7)
 
 **Closed issues:**
@@ -587,20 +554,11 @@
 
 **Merged pull requests:**
 
-- Include original event when capturing call rescue exception [\#485](https://github.com/riemann/riemann/pull/485) ([tcrayford](https://github.com/tcrayford))
 - Stackdriver plugin bug-fixes [\#484](https://github.com/riemann/riemann/pull/484) ([k7d](https://github.com/k7d))
 - Remove extra travis config [\#483](https://github.com/riemann/riemann/pull/483) ([budnik](https://github.com/budnik))
-- Fixed formatting and extraneous \) [\#482](https://github.com/riemann/riemann/pull/482) ([jamtur01](https://github.com/jamtur01))
-- Added example of stable to down service detection [\#481](https://github.com/riemann/riemann/pull/481) ([jamtur01](https://github.com/jamtur01))
-- Correct + add credits [\#480](https://github.com/riemann/riemann/pull/480) ([mfournier](https://github.com/mfournier))
-- Service expiry example updated [\#479](https://github.com/riemann/riemann/pull/479) ([jamtur01](https://github.com/jamtur01))
 - Make with handle lists of events [\#478](https://github.com/riemann/riemann/pull/478) ([tcrayford](https://github.com/tcrayford))
-- Tweaked code format [\#477](https://github.com/riemann/riemann/pull/477) ([jamtur01](https://github.com/jamtur01))
-- Added HOWTO about the include variable [\#476](https://github.com/riemann/riemann/pull/476) ([jamtur01](https://github.com/jamtur01))
-- Updated description of editing pane [\#474](https://github.com/riemann/riemann/pull/474) ([jamtur01](https://github.com/jamtur01))
 - Add OpenTSDB server support [\#470](https://github.com/riemann/riemann/pull/470) ([pharaujo](https://github.com/pharaujo))
 - streams/sdo: Special case for 0 and 1 arg versions [\#469](https://github.com/riemann/riemann/pull/469) ([algernon](https://github.com/algernon))
-- Mention wireshark dissector [\#468](https://github.com/riemann/riemann/pull/468) ([mfournier](https://github.com/mfournier))
 - Add twilio forwarder [\#466](https://github.com/riemann/riemann/pull/466) ([johndagostino](https://github.com/johndagostino))
 - Fix example and add a hint [\#465](https://github.com/riemann/riemann/pull/465) ([iggy](https://github.com/iggy))
 - Make opsgenie more readable [\#463](https://github.com/riemann/riemann/pull/463) ([avsej](https://github.com/avsej))
@@ -615,16 +573,12 @@
 - Add test cases for reload bug in riemann.config/index [\#446](https://github.com/riemann/riemann/pull/446) ([dlobue](https://github.com/dlobue))
 - Add riemann.xymon feature and corresponding tests [\#445](https://github.com/riemann/riemann/pull/445) ([mirwan](https://github.com/mirwan))
 - Added event-forwarder for Blueflood metric processing system [\#444](https://github.com/riemann/riemann/pull/444) ([GeorgeJahad](https://github.com/GeorgeJahad))
-- Updated "writing tests" to mention that reinject, [\#443](https://github.com/riemann/riemann/pull/443) ([GeorgeJahad](https://github.com/GeorgeJahad))
 - Fixed the doc of defaults in threadpool-service [\#442](https://github.com/riemann/riemann/pull/442) ([GeorgeJahad](https://github.com/GeorgeJahad))
 - Remove unneeded info logging [\#440](https://github.com/riemann/riemann/pull/440) ([strika](https://github.com/strika))
 - Logentries integration [\#439](https://github.com/riemann/riemann/pull/439) ([strika](https://github.com/strika))
-- Added bigdatadev clients for Go and C++ [\#435](https://github.com/riemann/riemann/pull/435) ([cjgdev](https://github.com/cjgdev))
-- Support external log4j configuration [\#434](https://github.com/riemann/riemann/pull/434) ([dlobue](https://github.com/dlobue))
 - Upgrade to netty 4.0.21 [\#432](https://github.com/riemann/riemann/pull/432) ([udoprog](https://github.com/udoprog))
 - Fix: Cannot use shinken adapter in config [\#431](https://github.com/riemann/riemann/pull/431) ([aviau](https://github.com/aviau))
 - Add support for passing a map to sorted-sample [\#430](https://github.com/riemann/riemann/pull/430) ([SegFaultAX](https://github.com/SegFaultAX))
-- Add Katja to the list of available Erlang clients [\#429](https://github.com/riemann/riemann/pull/429) ([nifoc](https://github.com/nifoc))
 - Add support for the `test` command to the startup scripts [\#428](https://github.com/riemann/riemann/pull/428) ([dbriones](https://github.com/dbriones))
 - Allow dynamically loaded namespace and provide \(depend\) [\#427](https://github.com/riemann/riemann/pull/427) ([pyr](https://github.com/pyr))
 - Send events to Logstash, even if they don't have metrics [\#426](https://github.com/riemann/riemann/pull/426) ([blalor](https://github.com/blalor))
@@ -633,6 +587,7 @@
 - Debian packaging improvements [\#419](https://github.com/riemann/riemann/pull/419) ([benley](https://github.com/benley))
 
 ## [0.2.6](https://github.com/riemann/riemann/tree/0.2.6) (2014-07-18)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.5...0.2.6)
 
 **Closed issues:**
@@ -655,21 +610,17 @@
 - Ensure that indexes are retained across reloads [\#407](https://github.com/riemann/riemann/pull/407) ([eric](https://github.com/eric))
 - Extend changed to optionally capture previous value [\#404](https://github.com/riemann/riemann/pull/404) ([blalor](https://github.com/blalor))
 - Changed to give the influxdb series name as the first word of the servic... [\#401](https://github.com/riemann/riemann/pull/401) ([pradeepchhetri](https://github.com/pradeepchhetri))
-- Minor edit to clients.html - borntyping/python-riemann-client now supports TLS and attributes [\#400](https://github.com/riemann/riemann/pull/400) ([borntyping](https://github.com/borntyping))
 - When recursively loading configuration files, only include those files with a `.clj` or `.config` extension [\#399](https://github.com/riemann/riemann/pull/399) ([dbriones](https://github.com/dbriones))
 - Εxtended formatter for slack using message attachments [\#397](https://github.com/riemann/riemann/pull/397) ([alkar](https://github.com/alkar))
 - Fixes \#392, update tests so that Unix time is calculated in seconds [\#394](https://github.com/riemann/riemann/pull/394) ([jwinter](https://github.com/jwinter))
 - Option to supply a custom message formatter for Slack integration [\#393](https://github.com/riemann/riemann/pull/393) ([dm3](https://github.com/dm3))
-- add himpy snmp poller [\#387](https://github.com/riemann/riemann/pull/387) ([pyr](https://github.com/pyr))
-- Howto: Connect to Riemann server using secured connection [\#386](https://github.com/riemann/riemann/pull/386) ([tendant](https://github.com/tendant))
 - Use a set to filter services. [\#385](https://github.com/riemann/riemann/pull/385) ([ulises](https://github.com/ulises))
-- howto: fix example using smap [\#383](https://github.com/riemann/riemann/pull/383) ([maxthoursie](https://github.com/maxthoursie))
 - Document the use of sets as predicates to \(where...\) [\#382](https://github.com/riemann/riemann/pull/382) ([ulises](https://github.com/ulises))
 - Added map matching to common Match protocl [\#378](https://github.com/riemann/riemann/pull/378) ([kurtstoll](https://github.com/kurtstoll))
-- remove throttle from coalesce example [\#376](https://github.com/riemann/riemann/pull/376) ([mfournier](https://github.com/mfournier))
 - Add ewma stream [\#346](https://github.com/riemann/riemann/pull/346) ([DanielleSucher](https://github.com/DanielleSucher))
 
 ## [0.2.5](https://github.com/riemann/riemann/tree/0.2.5) (2014-04-30)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.4...0.2.5)
 
 **Closed issues:**
@@ -716,11 +667,9 @@
 - little tidying for hipchat [\#364](https://github.com/riemann/riemann/pull/364) ([stuarth](https://github.com/stuarth))
 - update dependencies, with report from lein-ancient [\#359](https://github.com/riemann/riemann/pull/359) ([pyr](https://github.com/pyr))
 - Fix two bugs [\#358](https://github.com/riemann/riemann/pull/358) ([pyr](https://github.com/pyr))
-- Add documentation for event generation changes. [\#356](https://github.com/riemann/riemann/pull/356) ([pyr](https://github.com/pyr))
 - Add slack notifications [\#354](https://github.com/riemann/riemann/pull/354) ([gsandie](https://github.com/gsandie))
 - Expose `event` in config and catch events missing time [\#353](https://github.com/riemann/riemann/pull/353) ([pyr](https://github.com/pyr))
 - Fix indentation in index [\#352](https://github.com/riemann/riemann/pull/352) ([eric](https://github.com/eric))
-- there's no such thing as folds/max [\#350](https://github.com/riemann/riemann/pull/350) ([mfournier](https://github.com/mfournier))
 - Coalesce docstring [\#349](https://github.com/riemann/riemann/pull/349) ([mfournier](https://github.com/mfournier))
 - Optimize query for host and service [\#345](https://github.com/riemann/riemann/pull/345) ([eric](https://github.com/eric))
 - add support for size based log rotation [\#344](https://github.com/riemann/riemann/pull/344) ([jespada](https://github.com/jespada))
@@ -731,15 +680,12 @@
 - Switch more streams from refs to atoms [\#339](https://github.com/riemann/riemann/pull/339) ([pyr](https://github.com/pyr))
 - Switch changed to rely on an atom instead of a ref [\#337](https://github.com/riemann/riemann/pull/337) ([pyr](https://github.com/pyr))
 - Handle spaces in graphite metric names [\#335](https://github.com/riemann/riemann/pull/335) ([sblask](https://github.com/sblask))
-- Fixed typo in howto page [\#334](https://github.com/riemann/riemann/pull/334) ([falzm](https://github.com/falzm))
 - Experimental support for more scalable coalesce [\#333](https://github.com/riemann/riemann/pull/333) ([dgrnbrg](https://github.com/dgrnbrg))
 - Riemann initscript minor improvements [\#332](https://github.com/riemann/riemann/pull/332) ([mfournier](https://github.com/mfournier))
 - Add kairosdb support [\#329](https://github.com/riemann/riemann/pull/329) ([baloo](https://github.com/baloo))
-- gh-pages: mention nagios + small cleanup [\#328](https://github.com/riemann/riemann/pull/328) ([mfournier](https://github.com/mfournier))
 - websockets: Minor bug fixes [\#326](https://github.com/riemann/riemann/pull/326) ([udoprog](https://github.com/udoprog))
 - make rpm default config same as deb/tar [\#324](https://github.com/riemann/riemann/pull/324) ([mfournier](https://github.com/mfournier))
 - Hipchat multi event [\#323](https://github.com/riemann/riemann/pull/323) ([gsandie](https://github.com/gsandie))
-- fix broken links to riemann test suite [\#320](https://github.com/riemann/riemann/pull/320) ([jespada](https://github.com/jespada))
 - correctly implement IFn for indexes through a wrapper [\#319](https://github.com/riemann/riemann/pull/319) ([pyr](https://github.com/pyr))
 - Use sysconfig for RPM bin [\#311](https://github.com/riemann/riemann/pull/311) ([BobbyRyterski](https://github.com/BobbyRyterski))
 - top: keep events not values, demotions to top&bottom streams [\#309](https://github.com/riemann/riemann/pull/309) ([pyr](https://github.com/pyr))
@@ -755,15 +701,13 @@
 - More flexible logging configuration, JSONEvent support [\#295](https://github.com/riemann/riemann/pull/295) ([pyr](https://github.com/pyr))
 - avoid extra blank lines in logs [\#294](https://github.com/riemann/riemann/pull/294) ([pyr](https://github.com/pyr))
 - Give the vm a bit more time, helps openjdk6 not failing [\#293](https://github.com/riemann/riemann/pull/293) ([pyr](https://github.com/pyr))
-- add plugin section in clients.html [\#292](https://github.com/riemann/riemann/pull/292) ([pyr](https://github.com/pyr))
 - Load hipchat into riemann namespace [\#291](https://github.com/riemann/riemann/pull/291) ([gsandie](https://github.com/gsandie))
 - Query: Add support for regexp queries with ~= [\#290](https://github.com/riemann/riemann/pull/290) ([algernon](https://github.com/algernon))
-- clients.html: Add a link to another C client library [\#289](https://github.com/riemann/riemann/pull/289) ([algernon](https://github.com/algernon))
 - Add riemann.folds/count-unexpired [\#288](https://github.com/riemann/riemann/pull/288) ([DanielleSucher](https://github.com/DanielleSucher))
-- Add info about a chef reporting handler for riemann [\#287](https://github.com/riemann/riemann/pull/287) ([gsandie](https://github.com/gsandie))
 - Add a persistent connection for librato [\#285](https://github.com/riemann/riemann/pull/285) ([hugoduncan](https://github.com/hugoduncan))
 
 ## [0.2.4](https://github.com/riemann/riemann/tree/0.2.4) (2013-11-25)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.3...0.2.4)
 
 **Closed issues:**
@@ -773,13 +717,12 @@
 
 **Merged pull requests:**
 
-- OCD moment. [\#286](https://github.com/riemann/riemann/pull/286) ([AshtonKem](https://github.com/AshtonKem))
-- Misc doc updates [\#284](https://github.com/riemann/riemann/pull/284) ([mfournier](https://github.com/mfournier))
 - Add a name attribute to riemann.bin [\#283](https://github.com/riemann/riemann/pull/283) ([kanakb](https://github.com/kanakb))
 - Fix path to the clojure client [\#281](https://github.com/riemann/riemann/pull/281) ([richo](https://github.com/richo))
 - Begin adding in testing helpers [\#280](https://github.com/riemann/riemann/pull/280) ([AshtonKem](https://github.com/AshtonKem))
 
 ## [0.2.3](https://github.com/riemann/riemann/tree/0.2.3) (2013-11-12)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.2...0.2.3)
 
 **Closed issues:**
@@ -808,7 +751,6 @@
 - typo in test-sse [\#274](https://github.com/riemann/riemann/pull/274) ([pyr](https://github.com/pyr))
 - add graphite client and server test code [\#273](https://github.com/riemann/riemann/pull/273) ([pyr](https://github.com/pyr))
 - Add SSE test. create a pubsub, publish to it and match received. [\#272](https://github.com/riemann/riemann/pull/272) ([pyr](https://github.com/pyr))
-- fix "adjust" example as per API reference [\#270](https://github.com/riemann/riemann/pull/270) ([mfournier](https://github.com/mfournier))
 - server-sent event transport [\#269](https://github.com/riemann/riemann/pull/269) ([pyr](https://github.com/pyr))
 - Fix logstash host [\#268](https://github.com/riemann/riemann/pull/268) ([carlyeks](https://github.com/carlyeks))
 - Add support for passive Nagios checks [\#267](https://github.com/riemann/riemann/pull/267) ([bracki](https://github.com/bracki))
@@ -816,11 +758,8 @@
 - Load defaults from /etc/default [\#265](https://github.com/riemann/riemann/pull/265) ([overthink](https://github.com/overthink))
 - add missing param stats to graphite-handler [\#262](https://github.com/riemann/riemann/pull/262) ([schnipseljagd](https://github.com/schnipseljagd))
 - Fix start-stop-daemon not working on older Debian versions [\#261](https://github.com/riemann/riemann/pull/261) ([bracki](https://github.com/bracki))
-- Thank Federico Borgnia [\#260](https://github.com/riemann/riemann/pull/260) ([gsandie](https://github.com/gsandie))
 - Added support for HipChat [\#258](https://github.com/riemann/riemann/pull/258) ([neotyk](https://github.com/neotyk))
 - Exception handling [\#257](https://github.com/riemann/riemann/pull/257) ([neotyk](https://github.com/neotyk))
-- Concurrency fix for example in "Count number of hosts by application gro... [\#256](https://github.com/riemann/riemann/pull/256) ([jeroenvandijk](https://github.com/jeroenvandijk))
-- Remove error in "count number of hosts" example query [\#255](https://github.com/riemann/riemann/pull/255) ([jeroenvandijk](https://github.com/jeroenvandijk))
 - added a standard deviation fold [\#253](https://github.com/riemann/riemann/pull/253) ([chillitom](https://github.com/chillitom))
 - Add missing close-paren in streams docstring [\#252](https://github.com/riemann/riemann/pull/252) ([bitprophet](https://github.com/bitprophet))
 - Rename riemann.common/attributes -\> custom-attributes [\#247](https://github.com/riemann/riemann/pull/247) ([samn](https://github.com/samn))
@@ -828,13 +767,12 @@
 - Add directoy support to 'include' [\#242](https://github.com/riemann/riemann/pull/242) ([paulgoldbaum](https://github.com/paulgoldbaum))
 - fixed a typo in pkg/deb/riemann [\#241](https://github.com/riemann/riemann/pull/241) ([mburger](https://github.com/mburger))
 - Exclude path information from md5 checksum file. [\#240](https://github.com/riemann/riemann/pull/240) ([asemt](https://github.com/asemt))
-- Add information about the REPL and hot code reloading [\#239](https://github.com/riemann/riemann/pull/239) ([gsandie](https://github.com/gsandie))
 - Include custom attributes in emails & SNS notifications [\#238](https://github.com/riemann/riemann/pull/238) ([samn](https://github.com/samn))
 - bumps to clojure 1.5.1 for memory leak patch [\#237](https://github.com/riemann/riemann/pull/237) ([bmabey](https://github.com/bmabey))
-- fixes typo in exception example [\#236](https://github.com/riemann/riemann/pull/236) ([bmabey](https://github.com/bmabey))
 - Add support for vector of events in Librato [\#235](https://github.com/riemann/riemann/pull/235) ([mentalblock](https://github.com/mentalblock))
 
 ## [0.2.2](https://github.com/riemann/riemann/tree/0.2.2) (2013-06-05)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.1...0.2.2)
 
 **Closed issues:**
@@ -855,17 +793,11 @@
 - allow extra jars on the classpath [\#229](https://github.com/riemann/riemann/pull/229) ([pyr](https://github.com/pyr))
 - Support for multiple tags in where test expressions [\#228](https://github.com/riemann/riemann/pull/228) ([samn](https://github.com/samn))
 - Allow tagged-any & tagged-all to be used in where exprs [\#227](https://github.com/riemann/riemann/pull/227) ([samn](https://github.com/samn))
-- Scala client description update [\#226](https://github.com/riemann/riemann/pull/226) ([benmur](https://github.com/benmur))
 - Add campfire output [\#222](https://github.com/riemann/riemann/pull/222) ([gsandie](https://github.com/gsandie))
 - scale wraps a common smap idiom [\#221](https://github.com/riemann/riemann/pull/221) ([pyr](https://github.com/pyr))
-- Added thanks for LWF [\#218](https://github.com/riemann/riemann/pull/218) ([gsandie](https://github.com/gsandie))
 - Use tagged release nrepl-0.2.2 instead of 0.2.0-RC1 [\#217](https://github.com/riemann/riemann/pull/217) ([dch](https://github.com/dch))
-- Explain how to match tags against expired events [\#215](https://github.com/riemann/riemann/pull/215) ([wjlroe](https://github.com/wjlroe))
-- Add more thanks [\#214](https://github.com/riemann/riemann/pull/214) ([gsandie](https://github.com/gsandie))
-- Documentation: Introduction to streams [\#213](https://github.com/riemann/riemann/pull/213) ([rrees](https://github.com/rrees))
 - Add some type hints [\#211](https://github.com/riemann/riemann/pull/211) ([banjiewen](https://github.com/banjiewen))
 - Lookup an event directly from the index [\#210](https://github.com/riemann/riemann/pull/210) ([rrees](https://github.com/rrees))
-- Add a howto on alerting when % thresholds breached [\#209](https://github.com/riemann/riemann/pull/209) ([gsandie](https://github.com/gsandie))
 - streams/where\*: should only evaluate children once [\#204](https://github.com/riemann/riemann/pull/204) ([sihil](https://github.com/sihil))
 - Add UDP transport to graphite-server [\#201](https://github.com/riemann/riemann/pull/201) ([sihil](https://github.com/sihil))
 - Remove openjdk dependency from fatdeb to improve flexibility [\#200](https://github.com/riemann/riemann/pull/200) ([knuckolls](https://github.com/knuckolls))
@@ -873,6 +805,7 @@
 - Fix count-string-bytes [\#198](https://github.com/riemann/riemann/pull/198) ([richo](https://github.com/richo))
 
 ## [0.2.1](https://github.com/riemann/riemann/tree/0.2.1) (2013-04-08)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.2.0...0.2.1)
 
 **Closed issues:**
@@ -883,12 +816,10 @@
 
 **Merged pull requests:**
 
-- Eric Lindvall worked on riemann-ruby-client. [\#196](https://github.com/riemann/riemann/pull/196) ([mblair](https://github.com/mblair))
 - Bump Aleph so Lamina can be unpinned. [\#195](https://github.com/riemann/riemann/pull/195) ([mblair](https://github.com/mblair))
 - fixes documentation errors in folds.clj [\#192](https://github.com/riemann/riemann/pull/192) ([spazm](https://github.com/spazm))
 - Add tests for streams/runs [\#191](https://github.com/riemann/riemann/pull/191) ([mblair](https://github.com/mblair))
 - adds a teaser intro to the README [\#189](https://github.com/riemann/riemann/pull/189) ([spazm](https://github.com/spazm))
-- adds md5sum link to quickstart [\#188](https://github.com/riemann/riemann/pull/188) ([spazm](https://github.com/spazm))
 - Fix docstring consistency issue [\#187](https://github.com/riemann/riemann/pull/187) ([bmhatfield](https://github.com/bmhatfield))
 - Run of same [\#185](https://github.com/riemann/riemann/pull/185) ([bmhatfield](https://github.com/bmhatfield))
 - Adds a CONTRIBUTING file [\#184](https://github.com/riemann/riemann/pull/184) ([spazm](https://github.com/spazm))
@@ -901,6 +832,7 @@
 - Add aws sns notifier [\#171](https://github.com/riemann/riemann/pull/171) ([ento](https://github.com/ento))
 
 ## [0.2.0](https://github.com/riemann/riemann/tree/0.2.0) (2013-03-17)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.5...0.2.0)
 
 **Closed issues:**
@@ -969,32 +901,28 @@
 
 **Merged pull requests:**
 
-- Rieman -\> Riemann :-\) [\#170](https://github.com/riemann/riemann/pull/170) ([mblair](https://github.com/mblair))
 - Tell Emacs that riemann configs are Clojure code. [\#166](https://github.com/riemann/riemann/pull/166) ([mblair](https://github.com/mblair))
 - Fix type error in graphite server. [\#164](https://github.com/riemann/riemann/pull/164) ([PeterScott](https://github.com/PeterScott))
-- Update concepts.html [\#152](https://github.com/riemann/riemann/pull/152) ([fcuny](https://github.com/fcuny))
 - Very small documentation fix [\#151](https://github.com/riemann/riemann/pull/151) ([fcuny](https://github.com/fcuny))
-- clients.html wasn't mentioning graphite and logstash. [\#148](https://github.com/riemann/riemann/pull/148) ([mfournier](https://github.com/mfournier))
 - repl/start-server! should take a hash-map instead of a vector [\#144](https://github.com/riemann/riemann/pull/144) ([PeterScott](https://github.com/PeterScott))
 - Update netty to 3.6.1, fixes leaking thread pools [\#140](https://github.com/riemann/riemann/pull/140) ([gmanika](https://github.com/gmanika))
-- Add Working with dashboard section in howto [\#121](https://github.com/riemann/riemann/pull/121) ([aaronfeng](https://github.com/aaronfeng))
 - Fix graphite-server method name bug [\#107](https://github.com/riemann/riemann/pull/107) ([PeterScott](https://github.com/PeterScott))
 - Add delete-by stream primitive and test case [\#102](https://github.com/riemann/riemann/pull/102) ([lwf](https://github.com/lwf))
 - Graphite client improvements [\#101](https://github.com/riemann/riemann/pull/101) ([lwf](https://github.com/lwf))
 - Catch exceptions when processing expired events [\#100](https://github.com/riemann/riemann/pull/100) ([lwf](https://github.com/lwf))
-- Fix missing endquotes. [\#98](https://github.com/riemann/riemann/pull/98) ([clee](https://github.com/clee))
 - Do not try to encode back packets in protobuf when talking graphite [\#97](https://github.com/riemann/riemann/pull/97) ([pyr](https://github.com/pyr))
 - produce unique names for snapshot debs [\#96](https://github.com/riemann/riemann/pull/96) ([pyr](https://github.com/pyr))
-- wrong paren placement in howto.html - results in parse errors: [\#94](https://github.com/riemann/riemann/pull/94) ([manos](https://github.com/manos))
 - Add split\* and split, as described in aphyr/riemann/\#77 [\#85](https://github.com/riemann/riemann/pull/85) ([pyr](https://github.com/pyr))
 - silence closed channel exceptions [\#84](https://github.com/riemann/riemann/pull/84) ([pyr](https://github.com/pyr))
 - first phase of refactor to allow pluggable transports [\#82](https://github.com/riemann/riemann/pull/82) ([pyr](https://github.com/pyr))
 - Proposed implementation for aphyr/riemann/\#78 [\#80](https://github.com/riemann/riemann/pull/80) ([pyr](https://github.com/pyr))
 
 ## [0.1.5](https://github.com/riemann/riemann/tree/0.1.5) (2012-12-04)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.4...0.1.5)
 
 ## [0.1.4](https://github.com/riemann/riemann/tree/0.1.4) (2012-12-04)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.3...0.1.4)
 
 **Closed issues:**
@@ -1005,9 +933,9 @@
 **Merged pull requests:**
 
 - graphite was forgotten in the move to atoms :-\( [\#70](https://github.com/riemann/riemann/pull/70) ([pyr](https://github.com/pyr))
-- lein run requires -- to pass additional parameters like /usr/local/etc/riemann.custom.config through to riemann [\#68](https://github.com/riemann/riemann/pull/68) ([dch](https://github.com/dch))
 
 ## [0.1.3](https://github.com/riemann/riemann/tree/0.1.3) (2012-11-13)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.2...0.1.3)
 
 **Closed issues:**
@@ -1056,6 +984,7 @@
 - Add streams/fold-interval and test [\#18](https://github.com/riemann/riemann/pull/18) ([b](https://github.com/b))
 
 ## [0.1.2](https://github.com/riemann/riemann/tree/0.1.2) (2012-06-17)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.1...0.1.2)
 
 **Merged pull requests:**
@@ -1064,6 +993,7 @@
 - more portable bash shebang [\#14](https://github.com/riemann/riemann/pull/14) ([brianshumate](https://github.com/brianshumate))
 
 ## [0.1.1](https://github.com/riemann/riemann/tree/0.1.1) (2012-05-24)
+
 [Full Changelog](https://github.com/riemann/riemann/compare/0.1.0...0.1.1)
 
 **Merged pull requests:**
@@ -1074,9 +1004,11 @@
 - I'm an asshole, sorry. [\#9](https://github.com/riemann/riemann/pull/9) ([sjl](https://github.com/sjl))
 - Two more minor tweaks [\#8](https://github.com/riemann/riemann/pull/8) ([sjl](https://github.com/sjl))
 - Minor tweaks [\#7](https://github.com/riemann/riemann/pull/7) ([sjl](https://github.com/sjl))
-- Fix typo in query string [\#6](https://github.com/riemann/riemann/pull/6) ([paulbutcher](https://github.com/paulbutcher))
 
 ## [0.1.0](https://github.com/riemann/riemann/tree/0.1.0) (2012-03-08)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/d87e6dfa1a8d9cd12de324d60b4adfa37afa0d4f...0.1.0)
+
 **Closed issues:**
 
 - Typo in Quickstart [\#5](https://github.com/riemann/riemann/issues/5)
@@ -1086,8 +1018,7 @@
 
 - Bernhard Riemann, 1826-1866, RIP [\#4](https://github.com/riemann/riemann/pull/4) ([jdmaturen](https://github.com/jdmaturen))
 - Reimman now supports Clojure 1.3 [\#3](https://github.com/riemann/riemann/pull/3) ([snewman](https://github.com/snewman))
-- Use map destructuring instead of \(or\) and \(let\) [\#2](https://github.com/riemann/riemann/pull/2) ([reiddraper](https://github.com/reiddraper))
 
 
 
-\* *This Change Log was automatically generated by [github_changelog_generator](https://github.com/skywinder/Github-Changelog-Generator)*
+\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
