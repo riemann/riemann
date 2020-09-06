@@ -3,7 +3,7 @@
         [leiningen.fatdeb :only [fatdeb]]
         [leiningen.fatrpm6 :only [fatrpm6]]
         [leiningen.fatrpm7 :only [fatrpm7]]
-        [leiningen.fatrpm8 :only [fatrpm7]]
+        [leiningen.fatrpm8 :only [fatrpm8]]
         [leiningen.tar :only [tar]]))
 
 (defn pkg [project]
