@@ -4,7 +4,7 @@ if [ -f /etc/default/riemann ]; then
     . /etc/default/riemann
 fi
 
-JAVA_VERSION=$(java -version 2>&1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*"/\1\2/p;')
+JAVA_VERSION=$(java -version 2>&1 | sed -n ';s/.* version "\(.*\)\.\(.*\)\..*/\1\2/p;')
 JAR="/usr/share/riemann/riemann.jar:$EXTRA_CLASSPATH"
 CONFIG="/etc/riemann/riemann.config"
 COMMAND="start"
