@@ -100,4 +100,19 @@
           (is (= ex-name "bus"))
           (is (= routing-key "one.two.three"))
           (is (= payload 42))
-          (is (= content-type "test"))))))))))
+          (is (= content-type "test")))))
+    (testing "routing key as a function"
+      (let [rmq (rabbitmq)
+            s (rmq {:routing-key #(str (:service %) "." (:description %))})
+            e {:host "a"
+               :service "b"
+               :description "c"
+               :metric 42
+               :state "ok"}]
+        (s e)
+        (is (= 3 (count @publish')))
+        (let [[_ ex-name routing-key payload {:keys [content-type]}] (last @publish')]
+          (is (= ex-name "riemann"))
+          (is (= routing-key "b.c"))
+          (is (= payload "{\"host\":\"a\",\"service\":\"b\",\"description\":\"c\",\"metric\":42,\"state\":\"ok\"}"))
+          (is (= content-type "application/json"))))))))))

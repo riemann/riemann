@@ -30,7 +30,7 @@
    :internal false}
   ```
 
-  - :routing-key Routing key messages to be published with, default is \"riemann.events\".
+  - :routing-key Routing key messages to be published with; it can be a function or a string, default is \"riemann.events\".
   - :message-properties Properties of messages to publish, defaults are:
   
   ```clojure
@@ -71,5 +71,6 @@
               {ex-name :name ex-type :type} exchange-settings]
           (le/declare channel ex-name ex-type exchange-settings)
           (fn stream [e]
-            (let [payload (message-formatter e)]
-              (lb/publish channel ex-name routing-key payload message-properties)))))))))
+            (let [payload (message-formatter e)
+                  r-key (if (fn? routing-key) (routing-key e) routing-key)]
+              (lb/publish channel ex-name r-key payload message-properties)))))))))
