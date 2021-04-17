@@ -285,6 +285,7 @@
              event in the expired event. Defaults to [:host :service], which
              means that when an event expires, its :host and :service are
              copied to a new event, but no other keys are preserved.
+             If :keep-keys is :all, all event keys will be preserved.
              The state of an expired event is always \"expired\", and its time
              is always the time that the event expired."
   ([] (reaper 10))
@@ -297,7 +298,8 @@
          (when-let [i (:index core)]
            (doseq [state (index/expire i)]
              (try
-               (let [e (-> (select-keys state keep-keys)
+               (let [filtered-state (if (= keep-keys :all) state (select-keys state keep-keys))
+                     e (-> filtered-state
                          (merge {:state "expired"
                                  :time (unix-time)}))]
                  (when-let [registry (:pubsub core)]
