@@ -273,7 +273,7 @@
   them to InfluxDB as a batch of measurement points. For performance, you should
   wrap this stream with `batch` or an asynchronous queue.
 
-  Support InfluxDB 0.9 and higher.
+  Support InfluxDB 0.9 to InfluxDB 1.7.
 
   ```clojure
   (influxdb {:host \"influxdb.example.com\"

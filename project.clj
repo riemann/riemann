@@ -21,7 +21,8 @@
     [ch.qos.logback/logback-classic "1.2.3"]
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "6.4"]
-    [org.influxdb/influxdb-java "2.8"]
+    [org.influxdb/influxdb-java "2.21"]
+    [com.influxdb/influxdb-client-java "2.2.0"]
     [com.cemerick/pomegranate "1.0.0"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
@@ -79,6 +80,7 @@
                    :sns :sns
                    :graphite :graphite
                    :influxdb :influxdb
+                   :influxdb2 :influxdb2
                    :kairosdb :kairosdb
                    :librato :librato
                    :hipchat :hipchat

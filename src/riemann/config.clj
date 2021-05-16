@@ -17,6 +17,7 @@
                      [hipchat     :refer [hipchat]]
                      [index       :as index]
                      [influxdb    :refer [influxdb]]
+                     [influxdb2   :refer [influxdb2]]
                      [kafka       :as kafka :refer [kafka]]
                      [kairosdb    :refer [kairosdb]]
                      [keenio      :refer [keenio]]
