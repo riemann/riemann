@@ -253,12 +253,10 @@
           ; when core transition takes place.
           new-index (-> (apply riemann.index/index opts)
                         (core/wrap-index (:pubsub @core)))
-
           ; If the new index is equivalent to the old one, preserve the old one.
           chosen-index (if (service/equiv? current-index new-index)
                          current-index
                          new-index)]
-
       ; If the current core has no index, add the newly created one.
       (when (nil? current-index) (swap! core assoc :index chosen-index))
       ; Always add the chosen index to the next core, ready for core transition.
