@@ -231,12 +231,12 @@
            (reduce conj (:streams @next-core) things))))
 
 (defn index
-  "Create a new index and add it to the core and next core as needed.
+  "Create a new index and add it to the current core and next core as needed.
 
   If the current core has no index, add the new index to it.
 
-  If the next core has no index, add the current core's index (when equivalent)
-  or add the new index (when not equivalent).
+  To the next core, add the current core's index (when equivalent) or add the
+  new index (when not equivalent).
 
   In practice, because Riemann currently has only one index type (NBHM), only a
   single index will ever be created. It will be preserved across all future
