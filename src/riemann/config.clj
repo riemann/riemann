@@ -246,7 +246,7 @@
   [& opts]
   (locking core
     (let [current-index (:index @core)
-          ; Create a new index, later we'll decide whether it needs to be added
+          ; Create a new index. Later we'll decide whether it needs to be added
           ; to the current core, next core, or both.
           ; Note that we need to wrap the *current* core's pubsub; the next
           ; core's pubsub module will be discarded in favor of the current one
