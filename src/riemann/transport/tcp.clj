@@ -92,7 +92,7 @@
 
 (def netty-implementation
   (let [mac-or-freebsd? (re-find #"(mac|freebsd)" (System/getProperty "os.name"))
-       linux? (re-find  #"linux" (System/getProperty "os.name"))
+       linux? (re-find  #"(linux|Linux)" (System/getProperty "os.name"))
        sfbit? (re-find #"(x86_64|amd64)" (System/getProperty "os.arch"))
        native?  (= (System/getProperty "netty.native.implementation") "true")]
     (cond (and native? sfbit? linux?) (epoll-netty-implementation)
