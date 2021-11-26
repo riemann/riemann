@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.7](https://github.com/riemann/riemann/tree/0.3.7) (2021-11-26)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.6...0.3.7)
+
+- Fix Linux detection for Netty
+- InfluxDB v2 support
+- Add reaper option to keep all keys
+- feat(stream): rabbitmq stream to use function or string as routing key
+- fix bash get JAVA_VERSION
+- Bump jackson-databind to mitigate vulnerabilities
+
 ## [0.3.6](https://github.com/riemann/riemann/tree/0.3.6) (2020-09-06)
 
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.5...0.3.6)
