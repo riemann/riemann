@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.8](https://github.com/riemann/riemann/tree/0.3.8) (2021-12-13)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.7...0.3.8)
+ 
+- Updated slf4j-over-log4j to 1.7.32
+- Updated cloure/tools.logging to 1.2.1
+
 ## [0.3.7](https://github.com/riemann/riemann/tree/0.3.7) (2021-11-26)
 
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.6...0.3.7)
