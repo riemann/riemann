@@ -32,6 +32,10 @@ shared: &shared
         path: target/test2junit
 
 jobs:
+  jdk15:
+    docker: # run the steps with Docker
+      - image: circleci/clojure:openjdk-15-lein-2.9.5-buster
+    <<: *shared
   jdk13:
     docker: # run the steps with Docker
       - image: circleci/clojure:openjdk-13-lein-2.9.1-buster
@@ -51,4 +55,5 @@ workflows:
     jobs:
       - jdk8
       - jdk11
-      - jdk13 
+      - jdk13
+      - jdk15
