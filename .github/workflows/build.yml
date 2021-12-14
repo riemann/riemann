@@ -30,8 +30,9 @@ jobs:
         uses: softprops/action-gh-release@v1
         if: ${{ github.event.release.tag_name }}
         with:
+          name: artifacts
           draft: true
-          files: ./target/**
+          files: ./target/*${{ github.event.release.tag_name }}*
 
   clojars:
     runs-on: ubuntu-latest
