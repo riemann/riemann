@@ -24,8 +24,13 @@ jobs:
           lein pkg
       - uses: actions/upload-artifact@v2
         with:
-          name:  ${{ github.event.release.tag_name }}
-          path: ./target/**
+          name: artifacts
+          path: |
+            ./target/*.deb
+            ./target/*.rpm
+            ./target/*.md5
+            ./target/*.jar
+            ./target/*.bz2
       - name: Release
         uses: softprops/action-gh-release@v1
         if: ${{ github.event.release.tag_name }}
