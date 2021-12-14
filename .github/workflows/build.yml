@@ -42,6 +42,7 @@ jobs:
   clojars:
     runs-on: ubuntu-latest
     container: clojure:lein
+    if: ${{ github.event.release.tag_name }}
     needs: build
     steps:
       - uses: actions/checkout@v2
@@ -53,6 +54,7 @@ jobs:
   docker:
     runs-on: ubuntu-latest
     needs: build
+    if: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v2
       - name: Set up QEMU
