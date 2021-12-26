@@ -35,7 +35,8 @@
                              cancel]]
         clojure.math.numeric-tower
         clojure.tools.logging)
-  (:require [riemann.folds :as folds]
+  (:require [expiring-map.core :as exmap]
+            [riemann.folds :as folds]
             [riemann.index :as index]
             riemann.client
             riemann.logging
@@ -1574,13 +1575,30 @@
   Be aware that (by) over unbounded values can result in
   *many* substreams being created, so you wouldn't want to write
   (by metric prn): you'd get a separate prn for *every* unique metric that
-  came in.  Also, (by) streams are never garbage-collected."
+  came in.
+
+  By default, (by) streams are never garbage-collected. If the distinuishing
+  value continuously changes, (by) will consume more and more memory over time.
+
+  To combat this, you can pass a timeout value via an options map:
+
+  (by [:host] {:timeout 300} prn)
+
+  If 5 minutes elapse without an event arriving for a known host, its
+  substreams will be deleted, freeing up the memory they consumed. If the host
+  later starts reporting again, a fresh set of substreams will be created (any
+  state from the previous set is lost).
+  "
   [fields & children]
+  ; options is a map of options (eg. {:timeout 300}).
   ; new-fork is a function which gives us a new copy of our children.
   ; table is a reference which maps (field event) to a fork (or list of
   ; children).
-  `(let [new-fork# (fn [_#] [~@children])]
-     (by-fn ~fields new-fork#)))
+  `(let [options# ~(if (map? (first children)) (first children) {})
+         new-fork# (fn [_#] ~(into [] (if (map? (first children))
+                                           (rest children)
+                                           children)))]
+     (by-fn ~fields options# new-fork#)))
 
 (defmacro by-builder
   "Splits stream by provided function.
@@ -1591,25 +1609,44 @@
    the output of the given fields.
 
    (by-builder [host :host] (forward (get relay-by-host host)))
+
+   The options map from `by` is supported.
+
+   (by-builder [host :host] {:timeout 300} (forward [...])
    "
   [[sym fields] & forms]
-  `(let [new-fork# (fn [~sym] [~@forms])]
-     (by-fn ~fields new-fork#)))
+  `(let [options# ~(if (map? (first forms)) (first forms) {})
+         new-fork# (fn [~sym] ~(into [] (if (map? (first forms))
+                                          (rest forms)
+                                          forms)))]
+     (by-fn ~fields options# new-fork#)))
 
-(defn by-fn [fields new-fork]
+(defn by-fn [fields options new-fork]
   (let [fields (flatten [fields])
+        timeout (or (:timeout options) 0)
+        expire-forks? (pos? timeout)
         f (if (= 1 (count fields))
             ; Just use the first function given applied to the event
             (first fields)
             ; Return a vec of *each* function given, applied to the event
             (apply juxt fields))
-        table (atom {})]
-     (fn stream [event]
-       (let [fork-name (f event)
-             fork (if-let [fork (@table fork-name)]
-                    fork
-                    ((swap! table assoc fork-name (new-fork fork-name)) fork-name))]
-         (call-rescue event fork)))))
+        table (if expire-forks?
+                (atom (exmap/expiring-map timeout {:expiration-policy :access}))
+                (atom {}))]
+    (fn stream [event]
+      (let [fork-name (f event)
+            fork (if-let [existing-fork (get @table fork-name)]
+                   existing-fork
+                   ; Else, no pre-existing fork, so create a new one.
+                   (let [created-fork (new-fork fork-name)]
+                     (if expire-forks?
+                       ; The table is an ExpiringMap. Add the new fork to it
+                       ; using the appropriate semantics.
+                       (exmap/assoc! @table fork-name created-fork)
+                       ; The table is a standard map. Just swap in the new fork.
+                       (swap! table assoc fork-name created-fork))
+                     created-fork))]
+        (call-rescue event fork)))))
 
 (defn changed
   "Passes on events only when (f event) differs from that of the previous

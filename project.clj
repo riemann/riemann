@@ -36,6 +36,7 @@
     [com.boundary/high-scale-lib "1.0.6"]
     [com.draines/postal "2.0.2"]
     [com.amazonaws/aws-java-sdk "1.11.116" :exclusions [joda-time]]
+    [expiring-map "0.1.9"]
     [interval-metrics "1.0.0"]
     [clj-antlr "0.2.4"]
     [io.netty/netty-all "4.1.41.Final"]

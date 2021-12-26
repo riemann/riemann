@@ -730,7 +730,20 @@
                events (map (fn [h] {:host h}) [:a :a :b :a :c :b])]
            (doseq [event events]
              (s event))
-           (is (= (count events) (deref i)))))
+           (is (= (count events) (deref i))))
+
+  (testing "timeout option resets stream state"
+    (let [history (atom [])
+          stream (by :host {:timeout 1}
+                     (let [per-fork-counter (atom 0)]
+                       (fn [event]
+                         (swap! per-fork-counter inc)
+                         (swap! history conj @per-fork-counter))))
+          inject (fn [] (stream {:host "localhost"}))]
+      (dotimes [n 5] (inject))
+      (Thread/sleep 2000)
+      (dotimes [n 5] (inject))
+      (is (= [1 2 3 4 5, 1 2 3 4 5] @history)))))
 
 (deftest by-multiple
          ; Each test stream keeps track of the first host/service it sees, and
@@ -831,7 +844,20 @@
                        [1 :b]])]
       (doseq [event events]
         (s event))
-      (is (= (count events) (deref i))))))
+      (is (= (count events) (deref i)))))
+
+  (testing "timeout option resets stream state"
+    (let [history (atom [])
+          stream (by-builder [host :host] {:timeout 1} (identity host)
+                             (let [per-fork-counter (atom 0)]
+                               (fn [event]
+                                 (swap! per-fork-counter inc)
+                                 (swap! history conj @per-fork-counter))))
+          inject (fn [] (stream {:host "localhost"}))]
+      (dotimes [n 5] (inject))
+      (Thread/sleep 2000)
+      (dotimes [n 5] (inject))
+      (is (= [1 2 3 4 5, 1 2 3 4 5] @history)))))
 
 (deftest by-evaluates-children-once-per-branch
          (let [i (atom 0)
