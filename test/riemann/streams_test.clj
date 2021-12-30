@@ -740,9 +740,9 @@
                          (swap! per-fork-counter inc)
                          (swap! history conj @per-fork-counter))))
           inject (fn [] (stream {:host "localhost"}))]
-      (dotimes [n 5] (inject))
+      (dotimes [_ 5] (inject))
       (Thread/sleep 2000)
-      (dotimes [n 5] (inject))
+      (dotimes [_ 5] (inject))
       (is (= [1 2 3 4 5, 1 2 3 4 5] @history)))))
 
 (deftest by-multiple
@@ -848,15 +848,15 @@
 
   (testing "timeout option resets stream state"
     (let [history (atom [])
-          stream (by-builder [host :host] {:timeout 1} (identity host)
+          stream (by-builder [host :host] {:timeout 1}
                              (let [per-fork-counter (atom 0)]
                                (fn [event]
                                  (swap! per-fork-counter inc)
                                  (swap! history conj @per-fork-counter))))
           inject (fn [] (stream {:host "localhost"}))]
-      (dotimes [n 5] (inject))
+      (dotimes [_ 5] (inject))
       (Thread/sleep 2000)
-      (dotimes [n 5] (inject))
+      (dotimes [_ 5] (inject))
       (is (= [1 2 3 4 5, 1 2 3 4 5] @history)))))
 
 (deftest by-evaluates-children-once-per-branch
