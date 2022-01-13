@@ -18,7 +18,7 @@
     [org.clojure/java.classpath "0.3.0"]
     [org.slf4j/log4j-over-slf4j "1.7.32"]
     [javax.xml.bind/jaxb-api "2.4.0-b180830.0359"]
-    [ch.qos.logback/logback-classic "1.2.3"]
+    [ch.qos.logback/logback-classic "1.2.10"]
     [com.github.juise/logstash-logback-layout "1.0"]
     [net.logstash.logback/logstash-logback-encoder "6.4"]
     [org.influxdb/influxdb-java "2.21"]
