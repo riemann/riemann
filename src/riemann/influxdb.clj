@@ -47,20 +47,20 @@
         (assoc "value" (:metric event)))))
 
 (defn get-trust-manager
-  "Returns an array with an instance of `X509TrustManager`
+  "Returns an instance of `X509TrustManager`
   Used for trust all certs in the InfluxDB `insecure` mode."
   []
   (let [trust-manager (proxy [X509TrustManager] []
                         (checkServerTrusted [_ _])
                         (checkClientTrusted [_ _] )
                         (getAcceptedIssuers [] (make-array X509Certificate 0)))]
-    (into-array (list trust-manager))))
+    trust-manager))
 
 (defn get-ssl-factory
   "Get an instance of `javax.net.ssl.SSLSocketFactory`."
-  []
+  [trust-manager]
   (let [ssl-context (SSLContext/getInstance "TLS")]
-    (.init ssl-context nil (get-trust-manager) (new SecureRandom))
+    (.init ssl-context nil (into-array (list trust-manager)) (new SecureRandom))
     (.getSocketFactory ssl-context)))
 
 (defn get-hostname-verifier
@@ -73,9 +73,10 @@
 (defn get-builder
   "Returns a new okhttp3.OkHttpClient$Builder."
   [{:keys [timeout insecure]}]
-  (let [builder (new okhttp3.OkHttpClient$Builder)]
+  (let [builder (new okhttp3.OkHttpClient$Builder)
+        trust-manager (get-trust-manager)]
     (when insecure
-      (.sslSocketFactory builder (get-ssl-factory))
+      (.sslSocketFactory builder (get-ssl-factory trust-manager) trust-manager)
       (.hostnameVerifier builder (get-hostname-verifier)))
     (doto builder
       (.readTimeout timeout TimeUnit/MILLISECONDS)
