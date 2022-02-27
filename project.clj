@@ -107,6 +107,7 @@
                    :kafka :kafka
                    :pushover :pushover
                    :msteams :msteams
+                   :clickhouse :clickhouse
                    :all (fn [_] true)}
 ;;  :javac-options     ["-target" "1.6" "-source" "1.6"]
   :java-source-paths ["src/riemann/"]
