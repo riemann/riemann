@@ -49,6 +49,7 @@
     [com.novemberain/langohr "5.1.0"]
     [com.fasterxml.jackson.core/jackson-core "2.10.0"]
     [com.fasterxml.jackson.core/jackson-databind "2.10.0"]]
+  :managed-dependencies [[org.jsoup/jsoup "1.14.3"]]
   :plugins [[lein-codox "0.10.6"]
             [lein-difftest "2.0.0"]
             [lein-ancient "0.6.15"]
