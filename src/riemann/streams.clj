@@ -1298,7 +1298,7 @@
   (tagged-all [\"foo\" \"bar\"] prn)
   ```"
   [tags & children]
-  (let [tag-coll (flatten [tags])]
+  (let [tag-coll (set (flatten [tags]))]
     (fn stream [event]
       (when (tagged-all? tag-coll event)
         (call-rescue event children)
@@ -1321,7 +1321,7 @@
   (tagged-all [\"foo\" \"bar\"] prn)
   ```"
   [tags & children]
-  (let [tag-coll (flatten [tags])]
+  (let [tag-coll (set (flatten [tags]))]
     (fn stream [event]
       (when (tagged-any? tag-coll event)
         (call-rescue event children)
