@@ -6,6 +6,7 @@
   (:import (java.io File))
   (:require [riemann [boundary    :refer [boundary]]
                      [client      :refer [udp-client tcp-client multi-client]]
+                     [clickhouse  :refer [clickhouse]]
                      [cloudwatch  :refer [cloudwatch]]
                      [common      :as common :refer [event]]
                      [core        :as core]
