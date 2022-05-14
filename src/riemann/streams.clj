@@ -1294,7 +1294,6 @@
   Can be used as a predicate in a where form.
 
   ```clojure
-  (tagged-all \"foo\" prn)
   (tagged-all [\"foo\" \"bar\"] prn)
   ```"
   [tags & children]
@@ -1317,8 +1316,7 @@
   Can be used as a predicate in a where form.
 
   ```clojure
-  (tagged-any \"foo\" prn)
-  (tagged-all [\"foo\" \"bar\"] prn)
+  (tagged-any [\"foo\" \"bar\"] prn)
   ```"
   [tags & children]
   (let [tag-coll (flatten [tags])]
