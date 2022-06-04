@@ -23,7 +23,7 @@
     [net.logstash.logback/logstash-logback-encoder "6.4"]
     [org.influxdb/influxdb-java "2.21"]
     [com.influxdb/influxdb-client-java "2.2.0"]
-    [com.cemerick/pomegranate "1.0.0"
+    [clj-commons/pomegranate "1.2.1"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.2.0"]
@@ -51,6 +51,7 @@
     [com.fasterxml.jackson.core/jackson-databind "2.10.0"]]
   :managed-dependencies [[org.jsoup/jsoup "1.14.3"]]
   :plugins [[lein-codox "0.10.6"]
+
             [lein-difftest "2.0.0"]
             [lein-ancient "0.6.15"]
             [lein-rpm "0.0.6"
