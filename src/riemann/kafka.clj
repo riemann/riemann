@@ -6,7 +6,7 @@
   (:use [riemann.common        :only [event]]
         [riemann.core          :only [stream!]]
         [riemann.service       :only [Service ServiceEquiv ServiceStatus]]
-        [clojure.tools.logging :only [info error]]))
+        [clojure.tools.logging :only [debug info error]]))
 
 (defn kafka
   "Returns a function that is invoked with a topic name and an optional message key and returns a stream. That stream is a function which takes an event or a sequence of events and sends them to Kafka.
@@ -82,8 +82,11 @@
                 msgs-by-topic (get msgs :by-topic)]
             (doseq [records msgs-by-topic
                     record (last records)]
-              (let [event (event (get record :value))]
-                (stream! @core event)))))
+              (try
+                (let [event (event (get record :value))]
+                  (stream! @core event))
+                (catch java.lang.NullPointerException e
+                  (debug (str "Invalid message: " record)))))))
         (catch Exception e
           (do
             (reset! running? false)
