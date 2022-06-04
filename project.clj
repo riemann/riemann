@@ -23,7 +23,7 @@
     [net.logstash.logback/logstash-logback-encoder "6.4"]
     [org.influxdb/influxdb-java "2.21"]
     [com.influxdb/influxdb-client-java "2.2.0"]
-    [com.cemerick/pomegranate "1.0.0"
+    [clj-commons/pomegranate "1.2.1"
      :exclusions [org.codehaus.plexus/plexus-utils]]
     ; for pomegranate
     [org.codehaus.plexus/plexus-utils "3.2.0"]
@@ -44,7 +44,7 @@
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.4"]
     [amazonica "0.3.95" :exclusions [joda-time]]
-    [spootnik/kinsky "0.1.20"]
+    [spootnik/kinsky "0.1.26"]
     [pjstadig/humane-test-output "0.8.3"]
     [com.novemberain/langohr "5.1.0"]
     [com.fasterxml.jackson.core/jackson-core "2.10.0"]
