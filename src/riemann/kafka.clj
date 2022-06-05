@@ -5,7 +5,7 @@
             [riemann.test :as test])
   (:use [riemann.common        :only [event]]
         [riemann.core          :only [stream!]]
-        [riemann.service       :only [Service ServiceEquiv]]
+        [riemann.service       :only [Service ServiceEquiv ServiceStatus]]
         [clojure.tools.logging :only [info error]]))
 
 (defn kafka
@@ -85,7 +85,9 @@
               (let [event (event (get record :value))]
                 (stream! @core event)))))
         (catch Exception e
-          (error e "Interrupted consumption"))
+          (do
+            (reset! running? false)
+            (error e "Interrupted consumption")))
         (finally
           (client/close! consumer))))))
 
@@ -104,6 +106,8 @@
       ServiceEquiv
       (equiv? [this other]
         (= opts (:opts other)))
+      ServiceStatus
+      (running? [this] @running?)
       Service
       (conflict? [this other]
         (= opts (:opts other)))
