@@ -21,9 +21,16 @@
                            :state "warning"
                            :time (unix-time)})
 
+(def consumer-timeout-ms 5000)  ; 5s seems necessary on an average developer workstation
+(def burst-event-count 5000000)
+(def burst-consumer-timeout-ms 10000)
+
 ; These tests assume that you have a single server kafka instance running on localhost:9092 (plain) 
-; and localhost:9093 (SSL) and the topics  "riemann" and "custom" configured:
-; ./bin/kafka-topics --create --topic riemann/custom --partitions 1 --replication-factor 1 --zookeeper localhost:2181
+; and localhost:9093 (SSL) and the topics  "riemann", "custom", and "burst" configured:
+; $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --partitions 1 --replication-factor 1 --topic riemann
+; $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --partitions 1 --replication-factor 1 --topic custom
+; $KAFKA_HOME/bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --partitions 1 --replication-factor 1 --topic burst \
+;   --config segment.bytes=$((10*1024*1024)) --config retention.bytes=$((100*1024*1024)) --config compression.type=lz4
 ;
 ; Important Kafka server.properties settings:
 ; listeners=PLAINTEXT://localhost:9092,SSL://localhost:9093
@@ -49,7 +56,7 @@
         ; Producer writes to riemann topic
         (kafka-output first-event)
         ; Verify event arrives
-        (let [event (deref sink 1000 :timed-out)]
+        (let [event (deref sink consumer-timeout-ms :timed-out)]
           (is (= "firstservice"
                  (:service event)))
           (is (= "myhost"
@@ -86,7 +93,7 @@
     (try
       (testing "kafka ssl with edn serializer, custom topic and nil key"
         (kafka-output second-event)
-        (let [event (deref sink 1000 :timed-out)]
+        (let [event (deref sink consumer-timeout-ms :timed-out)]
           (is (= "secondservice" 
                  (:service event)))
           (is (= "myhost" 
@@ -95,6 +102,40 @@
                  (:metric event)))
           (is (= "warning" 
                  (:state event)))))
+      (finally
+        ; Wait for kafka auto commit
+        (Thread/sleep 1000)
+        (core/stop! core)))))
+
+(defn counting-sink [consumer-counter]
+  (fn stream [event] (swap! consumer-counter inc)))
+
+(deftest ^:kafka ^:integration kafka-integration-burst-test
+  (let [consumer (kafka-consumer {:consumer.config {:bootstrap.servers "localhost:9092"
+                                                    :group.id "burstgroup"
+                                                    :auto.commit.interval.ms 1000}
+                                  :topics ["burst"]
+                                  :poll.timeout.ms 1000})
+
+        consumer-counter (atom 0)
+        time-elapsed-ms (atom 0)
+        time-interval-ms 1000
+        core (core/transition! (core/core)
+                               {:services [consumer]
+                                :streams [(counting-sink consumer-counter)]})
+        producer (kafka)
+        kafka-output (producer "burst")]
+    (try
+      (testing "kafka plain with json serializer and burst topic"
+        (dotimes [n burst-event-count] (kafka-output first-event))
+        (do
+          (while (and (< @time-elapsed-ms burst-consumer-timeout-ms) (< @consumer-counter burst-event-count))
+            (do
+              (Thread/sleep time-interval-ms)
+              (swap! time-elapsed-ms + time-interval-ms)
+              (println (str "Consumed events: " @consumer-counter "/" burst-event-count " in " @time-elapsed-ms "ms"
+                (if (.running? consumer) " (running)" " (stopped)")))))
+          (is (.running? consumer))))
       (finally
         ; Wait for kafka auto commit
         (Thread/sleep 1000)
