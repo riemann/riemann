@@ -13,7 +13,7 @@ Will be made on the [Riemann mailing list](https://groups.google.com/g/riemann-u
 
 We're extremely grateful for security researchers and users that report vulnerabilities to Riemann. All reports are thoroughly investigated by the maintainers.
 
-To make a report, you can also email the private security@riemann.io list with the security details.
+To make a report, you should email the private security@riemann.io list with the security details.
 
 ## When Should I Report a Vulnerability?
 
