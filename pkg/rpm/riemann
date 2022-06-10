@@ -12,7 +12,7 @@ if [[ "$JAVA_VERSION" -le 18 ]]; then
   AGGRESSIVE_OPTS="-server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseFastAccessorMethods -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
 else
   AGGRESSIVE_OPTS="-server -XX:+CMSParallelRemarkEnabled -XX:+AggressiveOpts -XX:+UseCompressedOops -XX:+CMSClassUnloadingEnabled"
-  EXTRA_JAVA_OPTIONS="$EXTRA_JAVA_OPTIONS --add-modules=java.xml.bind"
+  EXTRA_JAVA_OPTIONS="$EXTRA_JAVA_OPTIONS --add-modules=com.sun.xml.bind"
 fi
 
 usage()
