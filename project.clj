@@ -43,7 +43,7 @@
     [less-awful-ssl "1.0.4"]
     [slingshot "0.12.2"]
     [cljr-nsca "0.0.4"]
-    [amazonica "0.3.95" :exclusions [joda-time]]
+    [amazonica "0.3.161" :exclusions [joda-time]]
     [spootnik/kinsky "0.1.26"]
     [pjstadig/humane-test-output "0.8.3"]
     [com.novemberain/langohr "5.1.0"]
