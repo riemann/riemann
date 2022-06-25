@@ -8,6 +8,7 @@ jobs:
     strategy:
       matrix:
         java: [ '8', '11', '13', '15', '16', '17' ]
+      fail-fast: false
     name: Java ${{ matrix.Java }}
 
     runs-on: ubuntu-latest
