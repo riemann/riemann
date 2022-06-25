@@ -113,24 +113,27 @@
 
 (deftest ^:prometheus prometheus-batch-test-without-tags
   (with-mock [calls client/post]
-             (let [d (prometheus/prometheus-batch {:host "localhost"})]
+    (let [d (prometheus/prometheus-batch {:host "localhost"
+                                          :exclude-fields #{:service :metric :tags :time :ttl :state}})]
 
-               (testing "an event without tag batch")
-               (d [{:host    "testhost"
-                   :service "testservice"
-                   :metric  42
-                   :time    123456789
-                   :state   "ok"}
-                   {:host    "testhost"
-                    :service "testserviceyet"
-                    :metric  43
-                    :time    123456789
-                    :state   "ok"}])
-               (is (= 1 (count @calls)))
-               (is (= (vec (last @calls))
-                      ["http://localhost:9091/metrics/job/riemann"
-                       {:body "testservice{host=testhost,service=testservice,metric=42,time=123456789,state=ok} 42.0\ntestserviceyet{host=testhost,service=testserviceyet,metric=43,time=123456789,state=ok} 43.0\n"
-                        :socket-timeout 5000
-                        :conn-timeout 5000
-                        :content-type :json
-                        :throw-entire-message? true}])))))
+      (testing "an event without tag batch")
+      (d [{:host    "testhost"
+           :service "testservice"
+           :metric  42
+           :time    123456789
+           :ttl     3600
+           :state   "ok"}
+          {:host    "testhost"
+           :service "testserviceyet"
+           :metric  43
+           :time    123456789
+           :ttl     3600
+           :state   "ok"}])
+      (is (= 1 (count @calls)))
+      (is (= (vec (last @calls))
+             ["http://localhost:9091/metrics/job/riemann"
+              {:body                  "testservice{host=testhost} 42.0\ntestserviceyet{host=testhost} 43.0\n"
+               :socket-timeout        5000
+               :conn-timeout          5000
+               :content-type          :json
+               :throw-entire-message? true}])))))

@@ -9,6 +9,13 @@
   "A set of event fields in Riemann with special handling logic."
   #{:service :metric :tags :time :ttl})
 
+(defn filter-event
+  "Filter attributes from a Riemann event."
+  [opts event]
+  (->> (keys event)
+       (filter #(if-not (contains? (:exclude-fields opts) %) %))
+       (select-keys event)))
+
 (defn replace-disallowed
   "Replaces all existence of disallowed characters with underscore."
   [field]
@@ -23,8 +30,9 @@
 
 (defn generate-labels-batch
   "Generates the Prometheus labels from Riemann event attributes."
-  [event]
+  [opts event]
   (let [labels (->> event
+                    (filter-event opts)
                     create-label-batch)]
     (str "{" labels "}")))
 
@@ -43,14 +51,14 @@
 
 (defn generate-datapoint-with-labels
   "Accepts riemann event and converts it into prometheus datapoint."
-  [event]
+  [opts event]
   (when (and (:metric event) (:service event))
-    (str (generate-metricname event) (generate-labels-batch event) \space (float (:metric event)) \newline)))
+    (str (generate-metricname event) (generate-labels-batch opts event) \space (float (:metric event)) \newline)))
 
 (defn generate-datapoint-batch
   "Accepts riemann event and converts it into prometheus datapoint."
-  [events]
-  (let [processed-events (map generate-datapoint-with-labels events)]
+  [opts events]
+  (let [processed-events (map #(generate-datapoint-with-labels opts %) events)]
     (str/join "" processed-events)))
 
 (defn create-label
@@ -59,13 +67,6 @@
   (->> filtered-event
        (map #(if-not (nil? (second %)) (str "/" (replace-disallowed (name (first %))) "/" (second %))))
        (str/join "")))
-
-(defn filter-event
-  "Filter attributes from a Riemann event."
-  [opts event]
-  (->> (keys event)
-       (filter #(if-not (contains? (:exclude-fields opts) %) %))
-       (select-keys event)))
 
 (defn generate-labels
   "Generates the Prometheus labels from Riemann event attributes."
@@ -165,6 +166,6 @@
                     opts)]
     (fn [events]
       (let [url (generate-url-batch opts)
-            datapoint (generate-datapoint-batch events)]
+            datapoint (generate-datapoint-batch opts events)]
         (if-not (nil? datapoint)
           (post-datapoint url datapoint))))))
