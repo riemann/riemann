@@ -1,4 +1,4 @@
-name: Build new artifacts
+name: Build artifacts
 
 on:  
   push:
