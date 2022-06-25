@@ -6,6 +6,6 @@ Find out more at [https://riemann.io](https://riemann.io)
 
 ## Build Status
 
-[![CircleCI](https://circleci.com/gh/riemann/riemann.svg?style=svg)](https://circleci.com/gh/riemann/riemann)
+[![Riemann testing](https://github.com/riemann/riemann/actions/workflows/test.yml/badge.svg)](https://github.com/riemann/riemann/actions/workflows/test.yml)
 
-
+[![Clojars Project](https://img.shields.io/clojars/v/riemann.svg)](https://clojars.org/riemann)
