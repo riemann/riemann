@@ -47,7 +47,7 @@
   "Post datapoint to InfluxDB endpoint."
   [connection data]
   (try
-    (let [api (.getWriteApi connection)]
+    (let [api (.getWriteApiBlocking connection)]
       (.writePoints api data))
     (catch Exception e
       (println "caught exception" (.getMessage e)))))
