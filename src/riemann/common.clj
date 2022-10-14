@@ -139,8 +139,7 @@
 (defn event
   "Create a new event from a map."
   [opts]
-  (let [t (long (round (or (opts :time)
-                           (unix-time))))]
+  (let [t (long (round (or (:time opts) (unix-time))))]
     (map->Event (merge opts {:time t}))))
 
 (defn exception->event
