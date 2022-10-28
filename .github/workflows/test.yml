@@ -1,0 +1,79 @@
+name: Riemann testing
+
+on: [push]
+
+jobs:
+  test:
+
+    strategy:
+      matrix:
+        java: [ '8', '11', '13', '15', '16', '17' ]
+      fail-fast: false
+    name: Java ${{ matrix.Java }}
+
+    runs-on: ubuntu-latest
+
+    env:
+      JVM_OPTS: -Xmx3200m
+      LEIN_ROOT: nbd
+      DATADOG_API_KEY: 9775a026f1ca7d1c6c5af9d94d9595a4
+      HIPCHAT_SERVER: api.hipchat.com
+      HIPCHAT_API_KEY: 2YotnFZFEjr1zCsicMWpAA
+      HIPCHAT_ALERT_ROOM: "#fake"
+      LIBRATO_METRICS_USER: "faker"
+      LIBRATO_METRICS_API_KEY: "75AFDB82"
+      OPSGENIE_SERVICE_KEY: "eb243592-faa2-4ba2-a551q-1afdf565c889"
+      OPSGENIE_RECIPIENTS: fakebob
+      SLACK_API_KEY: "xoxp-113552566178-113639658309-193597780375-2a4e44931d4827e06f495cbca9d6e7b5"
+      SLACK_ALERT_ROOM: "#fake"
+      SLACK_ALERT_ACCOUNT: "@fakebob"
+      TELEGRAM_API_TOKEN": "1233456789ABC"
+      TELEGRAM_CHAT_ID: "1234"
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: ${{ matrix.java }}
+      - name: Install clojure tools
+        uses: DeLaGuardo/setup-clojure@7.0
+        with:
+          cli: 1.10.1.693       # Clojure CLI based on tools.deps
+          lein: 2.9.1           # Leiningen
+      - name: Install deps
+        run: lein deps
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ matrix.java }}-maven-${{ hashFiles('**/project.clj') }}
+      - name: Run test2junit
+        run: lein test2junit
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (Java ${{ matrix.java }})
+          path: target/test2junit/
+
+  publish-test-results:
+    name: "Publish Tests Results"
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+    if: always()
+
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: artifacts
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        with:
+          files: "artifacts/**/*.xml"

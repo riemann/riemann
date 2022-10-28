@@ -44,6 +44,10 @@
   (equiv? [s1 s2]
     (nil? s2)))
 
+(defprotocol ServiceStatus
+  (running? [service]
+          "Queries the running state of the service."))
+
 (defrecord ScheduledTaskService [name equiv-key interval delay f core task]
   ServiceEquiv
   (equiv? [this other]
