@@ -2,6 +2,7 @@
   "The query parser. Parses strings into ASTs, and converts ASTs to functions
   which match events."
   (:require [clojure.core.cache :as cache]
+            [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clj-antlr.core :as antlr]
             [riemann.common :refer :all]
@@ -97,7 +98,7 @@
     :long       (Long/parseLong (first terms))
     :float      (Double/parseDouble (first terms))
     :bign       (bigint (subs (first terms) 0 (dec (.length (first terms)))))
-    :string     (read-string (first terms))
+    :string     (edn/read-string (first terms))
     :field      (keyword (first terms))
     :true       true
     :false      false
