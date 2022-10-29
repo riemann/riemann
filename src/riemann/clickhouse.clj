@@ -24,15 +24,45 @@
   (let [processed-events (map generate-datapoint events)]
     (str/join "" processed-events)))
 
-(defn generate-url
+(defn generate-create-query
+  "ClickHouse query for creating table"
+  [opts]
+  (let [database (:database opts)
+        table    (:table opts)]
+    (str "CREATE TABLE IF NOT EXISTS " database "." table "(
+            `timestamp` DateTime,
+            `host` String,
+            `service` String,
+            `metric` Float32,
+            `tags` Array(String)
+         )
+         ENGINE = MergeTree
+         PARTITION BY toYYYYMM(timestamp)
+         ORDER BY (timestamp, host, service)
+         SETTINGS index_granularity = 8192;")))
+
+(defn generate-create-url
+  "Generates the URL to which create table query should be posted."
+  [opts]
+  (let [scheme   (:scheme opts)
+        host     (:host opts)
+        port     (:port opts)
+        username (:username opts)
+        password (:password opts)]
+    (str scheme username ":" password "@" host ":" port)))
+
+(defn generate-insert-url
   "Generates the URL to which datapoint should be posted."
   [opts]
   (let [scheme   (:scheme opts)
         host     (:host opts)
         port     (:port opts)
         database (:database opts)
-        table    (:table opts)]
-    (str scheme host ":" port "/?query=INSERT%20INTO%20" database "." table "%20FORMAT%20CSV")))
+        table    (:table opts)
+        username (:username opts)
+        password (:password opts)
+        param    (str "INSERT INTO " database "." table " FORMAT CSV")]
+    (str scheme username ":" password "@" host ":" port "/?query=" param)))
 
 (defn post-datapoint
   "Post the riemann event as clickhouse datapoint."
@@ -58,10 +88,12 @@
    - `:port`           ClickHouse Server Port (default: 8123)
    - `:database`       ClickHouse Database Name (default: \"default\")
    - `:table`          ClickHouse Table Name (default: \"riemann\")
+   - `:username`       ClickHouse User Name (default: \"default\")
+   - `:password`       ClickHouse Password (default: \"\")
 
-   You need to first create a clickhouse table:
+   It will create the clickhouse table using the following query:
 
-   CREATE TABLE default.riemann
+   CREATE TABLE IF NOT EXISTS default.riemann
    (
       `timestamp` DateTime,
       `host` String,
@@ -79,10 +111,13 @@
                      :host "localhost"
                      :port 8123
                      :database "default"
-                     :table "riemann"}
-                    opts)]
+                     :table "riemann"
+                     :username "default"
+                     :password ""}
+                    opts)
+        _ (post-datapoint (generate-create-url opts) (generate-create-query opts))]
     (fn [events]
-      (let [url (generate-url opts)
+      (let [insert-url (generate-insert-url opts)
             datapoint (generate-datapoint-batch events)]
         (if-not (nil? datapoint)
-          (post-datapoint url datapoint))))))
+          (post-datapoint insert-url datapoint))))))
