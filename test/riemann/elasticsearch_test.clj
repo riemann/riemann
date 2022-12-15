@@ -115,50 +115,50 @@
                  :throw-entire-message? true}]))))))
 
 (deftest ^:elasticsearch gen-request-bulk-body-reduce-test
-  (is (= "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
-         (gen-request-bulk-body-reduce "" {:es-action "index"
-                              :es-metadata {:_index "test"
-                                            :_type "type1"
-                                            :_id "1"}
-                              :es-source {:field1 "value1"}})))
-  (is (= "{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}\n"
-         (gen-request-bulk-body-reduce "" {:es-action "delete"
-                              :es-metadata {:_index "test"
-                                            :_type "type1"
-                                            :_id "2"}}))))
+  (is (= ["{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}" "{\"field1\":\"value1\"}"]
+         (gen-request-bulk-body-reduce {:es-action "index"
+                                        :es-metadata {:_index "test"
+                                                      :_type "type1"
+                                                      :_id "1"}
+                                        :es-source {:field1 "value1"}})))
+  (is (= ["{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}"]
+         (gen-request-bulk-body-reduce {:es-action "delete"
+                                        :es-metadata {:_index "test"
+                                                      :_type "type1"
+                                                      :_id "2"}}))))
 
 (deftest ^:elasticsearch gen-request-bulk-body-test
   (is (= "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
          (gen-request-bulk-body [{:es-action "index"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "1"}
-                          :es-source {:field1 "value1"}}])))
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "1"}
+                                  :es-source {:field1 "value1"}}])))
   (is (= "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}\n"
          (gen-request-bulk-body [{:es-action "index"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "1"}
-                          :es-source {:field1 "value1"}}
-                         {:es-action "delete"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "2"}}])))
-    (is (= "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}\n{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "1"}
+                                  :es-source {:field1 "value1"}}
+                                 {:es-action "delete"
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "2"}}])))
+  (is (= "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}\n{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
          (gen-request-bulk-body [{:es-action "index"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "1"}
-                          :es-source {:field1 "value1"}}
-                         {:es-action "delete"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "2"}}
-                         {:es-action "index"
-                          :es-metadata {:_index "test"
-                                        :_type "type1"
-                                        :_id "1"}
-                          :es-source {:field1 "value1"}}]))))
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "1"}
+                                  :es-source {:field1 "value1"}}
+                                 {:es-action "delete"
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "2"}}
+                                 {:es-action "index"
+                                  :es-metadata {:_index "test"
+                                                :_type "type1"
+                                                :_id "1"}
+                                  :es-source {:field1 "value1"}}]))))
 
 (deftest ^:elasticsearch elasticsearch-bulk-test
   (with-mock [calls clj-http.client/post]
@@ -169,13 +169,13 @@
                                 :_type "type1"
                                 :_id "1"}
                   :es-source {:field1 "value1"}})
-        (is (= (last @calls)
-               ["http://127.0.0.1:9200/_bulk"
+        (is (= ["http://127.0.0.1:9200/_bulk"
                 {:body "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
                  :content-type "application/x-ndjson"
                  :conn-timeout 5000
                  :socket-timeout 5000
-                 :throw-entire-message? true}]))
+                 :throw-entire-message? true}]
+               (last @calls)))
         (elastic [{:es-action "index"
                    :es-metadata {:_index "test"
                                  :_type "type1"
@@ -190,13 +190,13 @@
                                  :_type "type1"
                                  :_id "1"}
                    :es-source {:field1 "value1"}}])
-        (is (= (last @calls)
-               ["http://127.0.0.1:9200/_bulk"
+        (is (= ["http://127.0.0.1:9200/_bulk"
                 {:body "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n{\"delete\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"2\"}}\n{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
                  :content-type "application/x-ndjson"
                  :conn-timeout 5000
                  :socket-timeout 5000
-                 :throw-entire-message? true}]))))
+                 :throw-entire-message? true}]
+               (last @calls)))))
     (testing "with auth"
       (let [elastic (elasticsearch-bulk {:username "elastic"
                                          :password "changeme"})]
@@ -205,14 +205,14 @@
                                 :_type "type1"
                                 :_id "1"}
                   :es-source {:field1 "value1"}})
-        (is (= (last @calls)
-               ["http://127.0.0.1:9200/_bulk"
+        (is (= ["http://127.0.0.1:9200/_bulk"
                 {:body "{\"index\":{\"_index\":\"test\",\"_type\":\"type1\",\"_id\":\"1\"}}\n{\"field1\":\"value1\"}\n"
                  :content-type "application/x-ndjson"
                  :conn-timeout 5000
                  :socket-timeout 5000
                  :basic-auth ["elastic" "changeme"]
-                 :throw-entire-message? true}]))))
+                 :throw-entire-message? true}]
+               (last @calls)))))
     (testing "with formatter"
       (let [formatter (default-bulk-formatter {:es-index "riemann"
                                                :type "foo"
@@ -229,14 +229,14 @@
                   :tags ["t1"]
                   :es-id "3"
                   :ttl 30})
-        (is (= (last @calls)
-               ["http://127.0.0.1:9300/_bulk"
+        (is (= ["http://127.0.0.1:9300/_bulk"
                 {:body "{\"index\":{\"_index\":\"riemann-2017.04.07\",\"_type\":\"foo\",\"_id\":\"3\"}}\n{\"host\":\"foo\",\"metric\":10,\"tags\":[\"t1\"],\"ttl\":30,\"@timestamp\":\"2017-04-07T12:16:22.000Z\"}\n"
                  :content-type "application/x-ndjson"
                  :conn-timeout 1000
                  :socket-timeout 5000
                  :basic-auth ["elastic" "changeme"]
-                 :throw-entire-message? true}]))))))
+                 :throw-entire-message? true}]
+               (last @calls)))))))
 
 (deftest ^:elasticsearch default-bulk-formatter-test
   (let [formatter (default-bulk-formatter {:es-index "riemann"
