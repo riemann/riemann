@@ -3,7 +3,8 @@
   (:require [clj-http.client :as http]
             [cheshire.core :as json]
             [clj-time.coerce :as time-coerce]
-            [clj-time.format :as time-format]))
+            [clj-time.format :as time-format]
+            [clojure.string :as string]))
 
 (defn- datetime-from-event
   "Returns the datetime from event correcting (secs -> millisecs) before conversion."
@@ -90,19 +91,19 @@
 
 (defn gen-request-bulk-body-reduce
   "Reduction fn used in `gen-request-bulk-body` to generate the body request"
-  [result elem]
-  (str
-   result
-   ;;action and metadata
-   (json/generate-string {(:es-action elem) (:es-metadata elem)}) "\n"
-   ;; source (optional)
-   (when (:es-source elem)
-     (str (json/generate-string (:es-source elem)) "\n"))))
+  [elem]
+  (concat
+    [;;action and metadata
+     (json/generate-string {(:es-action elem) (:es-metadata elem)})]
+    ;; source (optional)
+    (when (:es-source elem)
+      [(json/generate-string (:es-source elem))])))
 
 (defn gen-request-bulk-body
   "Takes a list of events, generates the body request for Elasticsearch"
   [events]
-  (reduce gen-request-bulk-body-reduce "" events))
+  (when (not-empty events)
+    (str (string/join "\n" (mapcat gen-request-bulk-body-reduce events)) "\n")))
 
 (defn default-bulk-formatter
   "Returns a function which accepts an event and formats it for the Elasticsearch bulk API.
