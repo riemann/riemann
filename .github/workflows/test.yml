@@ -31,14 +31,14 @@ jobs:
       TELEGRAM_CHAT_ID: "1234"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.java }}
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@7.0
+        uses: DeLaGuardo/setup-clojure@12.1
         with:
           cli: 1.10.1.693       # Clojure CLI based on tools.deps
           lein: 2.9.1           # Leiningen
@@ -69,11 +69,11 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: artifacts
 
       - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v1
+        uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: "artifacts/**/*.xml"
