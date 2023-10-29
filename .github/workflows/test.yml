@@ -7,7 +7,7 @@ jobs:
 
     strategy:
       matrix:
-        java: [ '8', '11', '13', '15', '16', '17', '20', '21' ]
+        java: [ '8', '11', '16', '17', '20', '21' ]
       fail-fast: false
     name: Java ${{ matrix.Java }}
 
