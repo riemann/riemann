@@ -7,7 +7,7 @@ RUN lein uberjar && \
     mv target/riemann-*-standalone.jar target/riemann.jar && \
     sed -i 's/127.0.0.1/0.0.0.0/g' pkg/tar/riemann.config
 
-FROM openjdk:10.0-jre-slim
+FROM eclipse-temurin:21-jre-jammy
 MAINTAINER james+riemann@lovedthanlost.net
 
 EXPOSE 5555/tcp 5555/udp 5556
