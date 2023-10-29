@@ -903,11 +903,12 @@ java -Dlogback.configurationFile=file:///path/to/logback.xml \
 {% highlight clj %}
 (tests
   (deftest index-test
-    (is (= (inject! [{:service "test"
-                      :time    1}])
-           {:index [{:service "test"
+    (is (= {:index [{:service "test"
                      :time    1
-                     :ttl     3}]}))))
+                     :ttl     3}]}
+           (inject! [{:service "test"
+                      :time    1}])
+           ))))
 {% endhighlight %}
 
 {% highlight clj %}
@@ -922,9 +923,10 @@ java -Dlogback.configurationFile=file:///path/to/logback.xml \
                    [{:host "localhost"
                      :service "foo"
                      :metric 10}])]
-      (is (= (:foo result) [{:host "localhost"
-                             :service "foo"
-                             :metric 10}])))))
+      (is (= [{:host "localhost"
+               :service "foo"
+               :metric 10}]
+              (:foo result))))))
 {% endhighlight %}
 
 {% highlight sh %}
