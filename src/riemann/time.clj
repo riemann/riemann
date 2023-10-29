@@ -179,7 +179,7 @@
     (reset! running false)
     (while (some #(.isAlive ^Thread %) @threadpool)
       ; Allow at most 1/10th park-interval to pass after all threads exit.
-      (Thread/sleep (* park-interval 100)))
+      (Thread/sleep (long (* park-interval 100))))
     (reset! threadpool [])))
 
 (defn start!
