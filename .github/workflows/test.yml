@@ -7,7 +7,7 @@ jobs:
 
     strategy:
       matrix:
-        java: [ '8', '11', '13', '15', '16', '17' ]
+        java: [ '8', '11', '13', '15', '16', '17', '20', '21' ]
       fail-fast: false
     name: Java ${{ matrix.Java }}
 
@@ -35,7 +35,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
-          distribution: 'zulu'
+          distribution: 'temurin'
           java-version: ${{ matrix.java }}
       - name: Install clojure tools
         uses: DeLaGuardo/setup-clojure@7.0
