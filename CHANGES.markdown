@@ -1,3 +1,5 @@
+All changes moved to CHANGELOG.md
+
 # Version 0.3.6
 
 This is a periodic release of Riemann.

@@ -1,5 +1,40 @@
 # Changelog
 
+# Changelog
+
+## [0.3.9](https://github.com/riemann/riemann/tree/0.3.9) (2023-10-29)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.8...0.3.9)
+
+**Closed issues:**
+
+- `influxdb2` keeps accumulating background threads [\#1027](https://github.com/riemann/riemann/issues/1027)
+- amazonica throws RuntimeException on jdk 17/18 [\#1021](https://github.com/riemann/riemann/issues/1021)
+- "Interrupted consumption" from riemann.kafka and it never recovers [\#1016](https://github.com/riemann/riemann/issues/1016)
+- Has 0.3.8 been retagged? [\#1013](https://github.com/riemann/riemann/issues/1013)
+- \[influxdb.clj\] SSLSocketfactory not supported on JDK 9+ [\#1007](https://github.com/riemann/riemann/issues/1007)
+- Logback needs update to 1.2.10 [\#1006](https://github.com/riemann/riemann/issues/1006)
+- Docker image builds switched architecture [\#1002](https://github.com/riemann/riemann/issues/1002)
+
+**Merged pull requests:**
+
+- Update Docker base image to Temurin 21 JRE [\#1035](https://github.com/riemann/riemann/pull/1035) ([pgilad](https://github.com/pgilad))
+- Increase performance of Elasticsearch bulk forwarder. [\#1033](https://github.com/riemann/riemann/pull/1033) ([cresh](https://github.com/cresh))
+- Improvements in clickhouse plugin [\#1031](https://github.com/riemann/riemann/pull/1031) ([chhetripradeep](https://github.com/chhetripradeep))
+- avoid using nil as a function [\#1030](https://github.com/riemann/riemann/pull/1030) ([pyr](https://github.com/pyr))
+- Use getWriteApiBlocking to post data to InfluxDB [\#1028](https://github.com/riemann/riemann/pull/1028) ([node13h](https://github.com/node13h))
+- Added gh actions testing workflow [\#1024](https://github.com/riemann/riemann/pull/1024) ([jamtur01](https://github.com/jamtur01))
+- Filter excluded fields in prometheus with batch processing. [\#1023](https://github.com/riemann/riemann/pull/1023) ([cresh](https://github.com/cresh))
+- Upgrade amazonica to play nice with JDK17 [\#1022](https://github.com/riemann/riemann/pull/1022) ([nukemberg](https://github.com/nukemberg))
+- Updated to non-deprecared CircleCI images [\#1019](https://github.com/riemann/riemann/pull/1019) ([jamtur01](https://github.com/jamtur01))
+- Upgraded pom to 1.2.1 and kinsky to 0.1.26 [\#1018](https://github.com/riemann/riemann/pull/1018) ([jamtur01](https://github.com/jamtur01))
+- Improve riemann.kafka resilience to empty messages \(\#1016\) [\#1017](https://github.com/riemann/riemann/pull/1017) ([szrumi](https://github.com/szrumi))
+- Fix cut-n-paste error in tagged-any docstring [\#1015](https://github.com/riemann/riemann/pull/1015) ([jarpy](https://github.com/jarpy))
+- Improve performance of tagged streams [\#1011](https://github.com/riemann/riemann/pull/1011) ([nukemberg](https://github.com/nukemberg))
+- Use jsoup version 1.14.3 [\#1010](https://github.com/riemann/riemann/pull/1010) ([arpitjindal97](https://github.com/arpitjindal97))
+- Add ClickHouse Support [\#1009](https://github.com/riemann/riemann/pull/1009) ([chhetripradeep](https://github.com/chhetripradeep))
+- Fix SSLSocketfactory not supported on JDK 9+ issue [\#1008](https://github.com/riemann/riemann/pull/1008) ([chhetripradeep](https://github.com/chhetripradeep))
+
 ## [0.3.8](https://github.com/riemann/riemann/tree/0.3.8) (2021-12-13)
 
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.7...0.3.8)
