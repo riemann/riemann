@@ -1,6 +1,12 @@
 # Changelog
 
-# Changelog
+## [0.3.10](https://github.com/riemann/riemann/tree/0.3.10) (2023-10-30)
+
+[Full Changelog](https://github.com/riemann/riemann/compare/0.3.9...0.3.10)
+
+**Merged pull requests:**
+
+- Forced long to Thread/sleep duration to avoid reflection error [\#1036](https://github.com/riemann/riemann/pull/1036) ([jamtur01](https://github.com/jamtur01))
 
 ## [0.3.9](https://github.com/riemann/riemann/tree/0.3.9) (2023-10-29)
 
@@ -38,7 +44,7 @@
 ## [0.3.8](https://github.com/riemann/riemann/tree/0.3.8) (2021-12-13)
 
 [Full Changelog](https://github.com/riemann/riemann/compare/0.3.7...0.3.8)
- 
+
 - Updated slf4j-over-log4j to 1.7.32
 - Updated cloure/tools.logging to 1.2.1
 
@@ -66,7 +72,7 @@
 **Merged pull requests:**
 
 - Update issue templates [\#982](https://github.com/riemann/riemann/pull/982) ([jamtur01](https://github.com/jamtur01))
-- Create CODE\_OF\_CONDUCT.md [\#981](https://github.com/riemann/riemann/pull/981) ([jamtur01](https://github.com/jamtur01))
+- Create CODE_OF_CONDUCT.md [\#981](https://github.com/riemann/riemann/pull/981) ([jamtur01](https://github.com/jamtur01))
 - Update packaging to produce EL8 packages too [\#978](https://github.com/riemann/riemann/pull/978) ([faxm0dem](https://github.com/faxm0dem))
 - Pass http options to elasticsearch [\#976](https://github.com/riemann/riemann/pull/976) ([smortex](https://github.com/smortex))
 - added pushover priorities support [\#975](https://github.com/riemann/riemann/pull/975) ([mrkooll](https://github.com/mrkooll))
@@ -120,9 +126,9 @@
 
 **Closed issues:**
 
-- Might need to rebuild RPM package for v0.3.2  [\#946](https://github.com/riemann/riemann/issues/946)
+- Might need to rebuild RPM package for v0.3.2 [\#946](https://github.com/riemann/riemann/issues/946)
 - InfluxDB new-stream missing fields [\#943](https://github.com/riemann/riemann/issues/943)
-- Getting data from influxDB to Riemann Streams to use the metrics ?  [\#942](https://github.com/riemann/riemann/issues/942)
+- Getting data from influxDB to Riemann Streams to use the metrics ? [\#942](https://github.com/riemann/riemann/issues/942)
 - many netty warning in log file [\#937](https://github.com/riemann/riemann/issues/937)
 - folds/quotient-sloppy divides by zero [\#934](https://github.com/riemann/riemann/issues/934)
 - Reloading configuration with OpenJDK 10 throws a java.lang.NoClassDefFoundError [\#928](https://github.com/riemann/riemann/issues/928)
@@ -144,7 +150,7 @@
 - Is Riemann able to detect a service is up ?? [\#931](https://github.com/riemann/riemann/issues/931)
 - adding a new tool [\#930](https://github.com/riemann/riemann/issues/930)
 - Question: How to determine fields exist and give default value? [\#927](https://github.com/riemann/riemann/issues/927)
-- Meet java.util.concurrent.RejectedExecutionException  after running some days [\#913](https://github.com/riemann/riemann/issues/913)
+- Meet java.util.concurrent.RejectedExecutionException after running some days [\#913](https://github.com/riemann/riemann/issues/913)
 
 **Merged pull requests:**
 
@@ -200,7 +206,7 @@
 - Lein deps fails with lein 2.8.1 [\#870](https://github.com/riemann/riemann/issues/870)
 - Error using clojure 1.9 / campfire integration [\#866](https://github.com/riemann/riemann/issues/866)
 - Java Classloading [\#859](https://github.com/riemann/riemann/issues/859)
-- riemann index   name a bit repetition puzzle [\#857](https://github.com/riemann/riemann/issues/857)
+- riemann index name a bit repetition puzzle [\#857](https://github.com/riemann/riemann/issues/857)
 - Reimann fails Installation on Cent OS using RPM [\#856](https://github.com/riemann/riemann/issues/856)
 - Extract riemann.streams to a separate library [\#853](https://github.com/riemann/riemann/issues/853)
 - KQueue [\#851](https://github.com/riemann/riemann/issues/851)
@@ -212,7 +218,7 @@
 - java.lang.NullPointerException: null in Riemann [\#834](https://github.com/riemann/riemann/issues/834)
 - riemann.streams/call-rescue is catching java.lang.Error [\#833](https://github.com/riemann/riemann/issues/833)
 - Riemann internal metrics from haproxy to graphite [\#832](https://github.com/riemann/riemann/issues/832)
-- gh-pages: quickstart, syntax highlighting bug  [\#796](https://github.com/riemann/riemann/issues/796)
+- gh-pages: quickstart, syntax highlighting bug [\#796](https://github.com/riemann/riemann/issues/796)
 - provide streams like runs but on duration [\#788](https://github.com/riemann/riemann/issues/788)
 - Notification from zombie events [\#768](https://github.com/riemann/riemann/issues/768)
 - riemann executor rejected rate is always 0 [\#727](https://github.com/riemann/riemann/issues/727)
@@ -259,7 +265,7 @@
 
 - When using keepalived+ LVS TCP check , Riemann will have Connection reset by peer error [\#828](https://github.com/riemann/riemann/issues/828)
 - How to change Riemann internal metrics interval [\#827](https://github.com/riemann/riemann/issues/827)
-- \[Feature Request\]  Add support for routing SNMP events  [\#824](https://github.com/riemann/riemann/issues/824)
+- \[Feature Request\] Add support for routing SNMP events [\#824](https://github.com/riemann/riemann/issues/824)
 - Add dummy environment variables to TravisCI [\#822](https://github.com/riemann/riemann/issues/822)
 - Riemann output support multi graphite? [\#820](https://github.com/riemann/riemann/issues/820)
 - Email not getting triggered in logstash 5.2.1 [\#819](https://github.com/riemann/riemann/issues/819)
@@ -270,7 +276,7 @@
 - Riemann-health not working [\#809](https://github.com/riemann/riemann/issues/809)
 - \[feature request\] Support batch functionality in elasticsearch output [\#791](https://github.com/riemann/riemann/issues/791)
 - Reload not working on RHEL 7.1 [\#780](https://github.com/riemann/riemann/issues/780)
-- \[InfluxDB\] Allow :tag-fields to be set per-event  [\#742](https://github.com/riemann/riemann/issues/742)
+- \[InfluxDB\] Allow :tag-fields to be set per-event [\#742](https://github.com/riemann/riemann/issues/742)
 - Document supported influxdb versions [\#723](https://github.com/riemann/riemann/issues/723)
 - Riemann notifications seems to be delayed [\#713](https://github.com/riemann/riemann/issues/713)
 
@@ -365,7 +371,7 @@
 - TCP backlog [\#705](https://github.com/riemann/riemann/issues/705)
 - REST interface for integrating with local services [\#703](https://github.com/riemann/riemann/issues/703)
 - \[question\] forward "mapped" metrics into influxdb [\#700](https://github.com/riemann/riemann/issues/700)
-- Question : lein run on the cloned Riemann git  [\#698](https://github.com/riemann/riemann/issues/698)
+- Question : lein run on the cloned Riemann git [\#698](https://github.com/riemann/riemann/issues/698)
 - Question : Riemann to InfluxDB connection [\#697](https://github.com/riemann/riemann/issues/697)
 - Query : Riemann Slack integration [\#688](https://github.com/riemann/riemann/issues/688)
 - Its not an issue but a question [\#687](https://github.com/riemann/riemann/issues/687)
@@ -388,7 +394,7 @@
 - Add riemann.elasticsearch [\#722](https://github.com/riemann/riemann/pull/722) ([eguven](https://github.com/eguven))
 - Add HTML body support for mailgun [\#719](https://github.com/riemann/riemann/pull/719) ([jerray](https://github.com/jerray))
 - Fix nested escaping of strings [\#717](https://github.com/riemann/riemann/pull/717) ([frankiesardo](https://github.com/frankiesardo))
-- Add ChannelOption/SO\_BACKLOG to TCP server [\#706](https://github.com/riemann/riemann/pull/706) ([pradeepchhetri](https://github.com/pradeepchhetri))
+- Add ChannelOption/SO_BACKLOG to TCP server [\#706](https://github.com/riemann/riemann/pull/706) ([pradeepchhetri](https://github.com/pradeepchhetri))
 - Clarify GC behavior of \(by\) streams [\#704](https://github.com/riemann/riemann/pull/704) ([blalor](https://github.com/blalor))
 - Removed deprecated functions: within, without and combine [\#696](https://github.com/riemann/riemann/pull/696) ([jamtur01](https://github.com/jamtur01))
 - Fixes \#374 - Librato error without metric [\#695](https://github.com/riemann/riemann/pull/695) ([jamtur01](https://github.com/jamtur01))
@@ -428,7 +434,7 @@
 - RejectedExecutionException in logs [\#655](https://github.com/riemann/riemann/issues/655)
 - API documentation is missing [\#642](https://github.com/riemann/riemann/issues/642)
 - java.lang.NullPointerException Sending an email [\#638](https://github.com/riemann/riemann/issues/638)
-- support for influxdb subscriptions  [\#635](https://github.com/riemann/riemann/issues/635)
+- support for influxdb subscriptions [\#635](https://github.com/riemann/riemann/issues/635)
 - Why is version specific influxdb constructors not private [\#634](https://github.com/riemann/riemann/issues/634)
 - stream with http REST to send SMS，just like email [\#631](https://github.com/riemann/riemann/issues/631)
 - Undefined behavior in index expire [\#616](https://github.com/riemann/riemann/issues/616)
@@ -454,13 +460,13 @@
 - Process locks up when receiving too much information [\#554](https://github.com/riemann/riemann/issues/554)
 - Riemann testing gives unexpected output [\#552](https://github.com/riemann/riemann/issues/552)
 - logging to multiple files breaks when using :logsize-rotate [\#551](https://github.com/riemann/riemann/issues/551)
--  \(depend plugin artifact version options\) seems broken whith {offline? false} [\#547](https://github.com/riemann/riemann/issues/547)
+- \(depend plugin artifact version options\) seems broken whith {offline? false} [\#547](https://github.com/riemann/riemann/issues/547)
 - Sending reserved protocol-buffer fields results in weird behaviour [\#545](https://github.com/riemann/riemann/issues/545)
 - Hyperloglog Stream [\#537](https://github.com/riemann/riemann/issues/537)
 - Enhancement: RPM init scripts return proper errors when startup fails \(but not reload\) [\#524](https://github.com/riemann/riemann/issues/524)
 - links to source in api docs broken [\#519](https://github.com/riemann/riemann/issues/519)
 - rollup on slack does not show event details [\#510](https://github.com/riemann/riemann/issues/510)
-- riemann-health:  NoMethodError undefined method `map' for \#\<Riemann::Event:0x000000024c9e90\> [\#506](https://github.com/riemann/riemann/issues/506)
+- riemann-health: NoMethodError undefined method `map' for \#\<Riemann::Event:0x000000024c9e90\> [\#506](https://github.com/riemann/riemann/issues/506)
 - java.util.concurrent.ExecutionException: java.lang.UnsatisfiedLinkError: /tmp/libnetty-transport-native-epoll6734735497094555703.so: /tmp/libnetty-transport-native-epoll6734735497094555703.so: wrong ELF class: ELFCLASS64 \(Possible cause: architecture word width mismatch\) [\#505](https://github.com/riemann/riemann/issues/505)
 - UDP issue in 0.2.7 [\#488](https://github.com/riemann/riemann/issues/488)
 - Init script returns OK on reload with errors in the configuration [\#467](https://github.com/riemann/riemann/issues/467)
@@ -500,7 +506,7 @@
 - Xymon: ability to support more message types. Enable/Disable messages implementation [\#607](https://github.com/riemann/riemann/pull/607) ([Anvil](https://github.com/Anvil))
 - fill-in-last\*: apply arbitrary function to last event [\#606](https://github.com/riemann/riemann/pull/606) ([Anvil](https://github.com/Anvil))
 - Add -v and version command to display Lein or POM version [\#604](https://github.com/riemann/riemann/pull/604) ([aphyr](https://github.com/aphyr))
-- Add ChannelOption/RCVBUF\_ALLOCATOR to UDP server [\#603](https://github.com/riemann/riemann/pull/603) ([MichaelDoyle](https://github.com/MichaelDoyle))
+- Add ChannelOption/RCVBUF_ALLOCATOR to UDP server [\#603](https://github.com/riemann/riemann/pull/603) ([MichaelDoyle](https://github.com/MichaelDoyle))
 - Fix logging, use logback instead log4j [\#598](https://github.com/riemann/riemann/pull/598) ([juise](https://github.com/juise))
 - Updating netty to 4.0.30.Final [\#595](https://github.com/riemann/riemann/pull/595) ([hiloboy0119](https://github.com/hiloboy0119))
 - logging: fallback to "riemann" when an unknown layout is provided [\#586](https://github.com/riemann/riemann/pull/586) ([vincentbernat](https://github.com/vincentbernat))
@@ -515,7 +521,7 @@
 
 - tapped index allows duplicate host/service pairs [\#565](https://github.com/riemann/riemann/issues/565)
 - Events' reinjection and expiration not working correctly [\#538](https://github.com/riemann/riemann/issues/538)
-- Start up failure on OpenJDK 1.6.0\_34 [\#535](https://github.com/riemann/riemann/issues/535)
+- Start up failure on OpenJDK 1.6.0_34 [\#535](https://github.com/riemann/riemann/issues/535)
 - Riemann API docs site shows 0.2.7 instead of 0.2.8 [\#518](https://github.com/riemann/riemann/issues/518)
 - InfluxDB should be async [\#411](https://github.com/riemann/riemann/issues/411)
 - \*config-file\* does not get bound to an included file when processing a directory [\#403](https://github.com/riemann/riemann/issues/403)
@@ -550,14 +556,14 @@
 - RPM package depends on the daemonize package which is not available in CentOS 7 / RHEL 7 and EPEL 7 [\#504](https://github.com/riemann/riemann/issues/504)
 - doc improvement suggestion: which is the authoritative protocol buffer definition? [\#503](https://github.com/riemann/riemann/issues/503)
 - fixed time window null point exceptions [\#498](https://github.com/riemann/riemann/issues/498)
-- Add EXTRA\_CLASSPATH to tarball script [\#461](https://github.com/riemann/riemann/issues/461)
+- Add EXTRA_CLASSPATH to tarball script [\#461](https://github.com/riemann/riemann/issues/461)
 - RPM package does not work on CentOS 7 [\#453](https://github.com/riemann/riemann/issues/453)
 - where\* evaluates predicate expression every time [\#381](https://github.com/riemann/riemann/issues/381)
 - deprecation notices should only print once [\#362](https://github.com/riemann/riemann/issues/362)
 
 **Merged pull requests:**
 
-- Put EXTRA\_CLASSPATH after riemann.jar [\#520](https://github.com/riemann/riemann/pull/520) ([md5](https://github.com/md5))
+- Put EXTRA_CLASSPATH after riemann.jar [\#520](https://github.com/riemann/riemann/pull/520) ([md5](https://github.com/md5))
 - Specify seconds resolution in output to InfluxDB [\#517](https://github.com/riemann/riemann/pull/517) ([fhalim](https://github.com/fhalim))
 - Retain time specified in event [\#516](https://github.com/riemann/riemann/pull/516) ([fhalim](https://github.com/fhalim))
 - Fix :ttl conversion to LIFETIME in xymon forward [\#512](https://github.com/riemann/riemann/pull/512) ([mirwan](https://github.com/mirwan))
@@ -581,7 +587,7 @@
 
 **Closed issues:**
 
-- Question on configuration - pipeline event  [\#486](https://github.com/riemann/riemann/issues/486)
+- Question on configuration - pipeline event [\#486](https://github.com/riemann/riemann/issues/486)
 - Prevent TLS renegotiation attacks [\#475](https://github.com/riemann/riemann/issues/475)
 
 **Merged pull requests:**
@@ -838,7 +844,7 @@
 - Apdex stream [\#202](https://github.com/riemann/riemann/issues/202)
 - \(throttle ...\) does not seem to pass expired events [\#178](https://github.com/riemann/riemann/issues/178)
 - :keep-keys does not properly update on 'reload' [\#173](https://github.com/riemann/riemann/issues/173)
-- riemann website quickstart : no checksum  [\#172](https://github.com/riemann/riemann/issues/172)
+- riemann website quickstart : no checksum [\#172](https://github.com/riemann/riemann/issues/172)
 - Investigate possible lack of error handling in netty pipeline [\#126](https://github.com/riemann/riemann/issues/126)
 - streams/rate should stop its internal poller when TTLs go negative [\#117](https://github.com/riemann/riemann/issues/117)
 
@@ -865,7 +871,7 @@
 
 **Closed issues:**
 
-- Riemann interaction with custom service ?  [\#197](https://github.com/riemann/riemann/issues/197)
+- Riemann interaction with custom service ? [\#197](https://github.com/riemann/riemann/issues/197)
 - Debian init script tries to let you start multiple Riemanns [\#181](https://github.com/riemann/riemann/issues/181)
 - Remove paths from md5 checksum files [\#167](https://github.com/riemann/riemann/issues/167)
 
@@ -945,7 +951,7 @@
 - streams/split, streams/splitp [\#77](https://github.com/riemann/riemann/issues/77)
 - Riemann 0.1.3, java 1.6 & i686 [\#76](https://github.com/riemann/riemann/issues/76)
 - Riemann won't start with Oracle JDK 1.6.27 [\#74](https://github.com/riemann/riemann/issues/74)
-- Riemann won't start with Icedtea 1.7.0\_09 [\#73](https://github.com/riemann/riemann/issues/73)
+- Riemann won't start with Icedtea 1.7.0_09 [\#73](https://github.com/riemann/riemann/issues/73)
 - 2 cases of either invalid or no JSON produced off events [\#72](https://github.com/riemann/riemann/issues/72)
 - int64 metrics [\#69](https://github.com/riemann/riemann/issues/69)
 - FAIL in \(rate-fast\) \(streams.clj:523\) [\#49](https://github.com/riemann/riemann/issues/49)
@@ -1018,7 +1024,7 @@
 - Switch servers from localhost to 127.0.0.1 [\#59](https://github.com/riemann/riemann/issues/59)
 - Release 0.1.3 [\#58](https://github.com/riemann/riemann/issues/58)
 - Write release notes [\#57](https://github.com/riemann/riemann/issues/57)
--  Write a proper debian package script. [\#54](https://github.com/riemann/riemann/issues/54)
+- Write a proper debian package script. [\#54](https://github.com/riemann/riemann/issues/54)
 
 **Merged pull requests:**
 
@@ -1076,6 +1082,4 @@
 - Reimman now supports Clojure 1.3 [\#3](https://github.com/riemann/riemann/pull/3) ([snewman](https://github.com/snewman))
 - Use map destructuring instead of \(or\) and \(let\) [\#2](https://github.com/riemann/riemann/pull/2) ([reiddraper](https://github.com/reiddraper))
 
-
-
-\* *This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)*
+\* _This Changelog was automatically generated by [github_changelog_generator](https://github.com/github-changelog-generator/github-changelog-generator)_

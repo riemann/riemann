@@ -1,4 +1,4 @@
-(defproject riemann "0.3.9"
+(defproject riemann "0.3.10"
   :description
 "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "https://github.com/riemann/riemann"
@@ -50,7 +50,7 @@
     [com.fasterxml.jackson.core/jackson-core "2.10.0"]
     [com.fasterxml.jackson.core/jackson-databind "2.10.0"]]
   :managed-dependencies [[org.jsoup/jsoup "1.14.3"]]
-  :plugins [[lein-codox "0.10.6"]
+  :plugins [[lein-codox "0.10.8"]
 
             [lein-difftest "2.0.0"]
             [lein-ancient "0.6.15"]
