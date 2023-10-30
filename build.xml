@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="create_html_report" name="test2junit-html-report-generator">
+    <target name="create_html_report">
+        <junitreport todir="target/test2junit/tmp">
+            <fileset dir="target/test2junit/xml" />
+            <report todir="target/test2junit/html" />
+        </junitreport>
+    </target>
+</project>
