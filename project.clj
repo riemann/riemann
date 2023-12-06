@@ -9,7 +9,7 @@
   :maintainer {:email "aphyr@aphyr.com"}
   :dependencies [
     [org.clojure/algo.generic "0.1.2"]
-    [org.clojure/clojure "1.9.0"]
+    [org.clojure/clojure "1.11.1"]
     [org.clojure/math.numeric-tower "0.0.4"]
     [org.clojure/tools.logging "1.2.1"]
     [org.clojure/tools.nrepl "0.2.13"]
