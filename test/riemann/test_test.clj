@@ -19,7 +19,7 @@
                        (tap :bar prn)
                        (tap :foo nil))))
               (catch RuntimeException e
-                (.getMessage e)))]
+                (.getMessage (ex-cause e))))]
     (is (re-find #"Tap :foo \(.+?:\) already defined at :" err))))
 
 (deftest tap-captures-events
