@@ -35,3 +35,4 @@ target/**
 /target/
 config.edn
 riemann.config
+.vscode

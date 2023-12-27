@@ -1,13 +1,13 @@
-name: Build artifacts
+name: Release
 
-on:  
+on:
   push:
     tags:
-      - '*.*.*'
+      - "*.*.*"
 
   workflow_dispatch:
 
-jobs:  
+jobs:
   build:
     runs-on: ubuntu-latest
     container: clojure:lein
@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install os deps
         run: |
-          apt-get -qq update && apt-get -qy install rpm fakeroot
+          apt-get -qq update && apt-get -qy install rpm fakeroot bzip2
       - name: install lein deps
         run: |
           lein install
@@ -33,28 +33,73 @@ jobs:
             ./target/*.bz2
       - name: Release
         uses: softprops/action-gh-release@v1
-        if: ${{ github.event.release.tag_name }}
         with:
-          name: artifacts
+          name: ${{ github.ref_name }}
           draft: true
-          files: ./target/*${{ github.event.release.tag_name }}*
+          generate_release_notes: true
+          files: ./target/*${{ github.ref_name }}*
 
-  clojars:
+  api_docs:
     runs-on: ubuntu-latest
     container: clojure:lein
-    if: ${{ github.event.release.tag_name }}
     needs: build
     steps:
       - uses: actions/checkout@v4
-      - uses: jlesquembre/clojars-publish-action@0.3
-        env:
-          CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
-          CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}   
+      - name: install os deps
+        run: |
+          apt-get -qq update && apt-get -qy install git
+      - name: Fetch all tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - name: Set environment variable for the current tag
+        run: echo "CURRENT_TAG=${{ github.ref_name }}" >> $GITHUB_ENV
+      - name: Retrieve previous tag
+        run: echo "PREVIOUS_TAG=$(git describe --tags --abbrev=0 ${{ env.CURRENT_TAG }}^)" >> $GITHUB_ENV
+      - name: install lein deps
+        run: |
+          lein install
+      - name: build docs
+        run: |
+          lein codox
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Update version in files
+        run: |
+          cd gh-pages
+          sed -i 's/${{ env.PREVIOUS_TAG }}/${{ env.CURRENT_TAG }}/g' index.html
+          sed -i 's/${{ env.PREVIOUS_TAG }}/${{ env.CURRENT_TAG }}/g' quickstart.html
+      - name: Commit and push changes
+        run: |
+          cd gh-pages
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Update version from ${{ env.PREVIOUS_TAG }} to ${{ env.CURRENT_TAG }}"
+          git push origin gh-pages
+
+  # clojars:
+  #   runs-on: ubuntu-latest
+  #   container: clojure:lein
+  #   needs: build
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - name: install os deps
+  #       run: apt-get -qq update
+  #     - name: install lein deps
+  #       run: |
+  #         lein install
+  #     - name: deploy to clojars
+  #       env:
+  #         LEIN_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+  #         LEIN_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+  #       run: |
+  #         lein deploy clojars
 
   docker:
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ github.event.release.tag_name }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -62,7 +107,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Login to DockerHub
-        uses: docker/login-action@v3 
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -72,6 +117,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: | 
-            riemann/riemann:latest
-            riemann/riemann:${{ github.event.release.tag_name }}
+          tags: |
+            riemannio/riemann:latest
+            riemannio/riemann:${{ github.ref_name }}
