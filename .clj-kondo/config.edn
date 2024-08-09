@@ -1,13 +1,106 @@
 {:linters
- {:unresolved-symbol
-  {:exclude [_
-             ]}
-
+ {:unresolved-symbol {:exclude [_]}
   :redundant-do {:level :off}}
 
- :unresolved-var
-  {:exclude []}
+ ;:unresolved-var {:exclude []}
 
  :skip-comments true
- :lint-as {riemann.streams/where clojure.core/when}
- }
+
+ :lint-as
+ {riemann.streams/where clojure.core/when}
+
+ :ns-groups [{:pattern "riemann\\.config*" :name riemann-config}]
+
+ :config-in-ns
+ {;; riemann.config* is a special namespace, because it imports a lot
+  ;; of functions so they are visible in riemann.config as part of DSL. This also
+  ;; disable (require :refer :all) linter, because some namespaces imports all
+  ;; symbols inside riemann.config
+  riemann-config
+  {:linters
+   {:refer-all {:level :off}
+    :unused-namespace
+    {:exclude [clojure.tools.nrepl.server
+               riemann.boundary
+               riemann.client
+               riemann.clickhouse
+               riemann.cloudwatch
+               riemann.datadog
+               riemann.druid
+               riemann.email
+               riemann.folds
+               riemann.graphite
+               riemann.hipchat
+               riemann.influxdb
+               riemann.influxdb2
+               riemann.kairosdb
+               riemann.keenio
+               riemann.librato
+               riemann.logentries
+               riemann.logstash
+               riemann.mailgun
+               riemann.msteams
+               riemann.nagios
+               riemann.netuitive
+               riemann.opentsdb
+               riemann.opsgenie
+               riemann.pagerduty
+               riemann.pushover
+               riemann.rabbitmq
+               riemann.shinken
+               riemann.slack
+               riemann.sns
+               riemann.stackdriver
+               riemann.prometheus
+               riemann.elasticsearch
+               riemann.telegram
+               riemann.test
+               riemann.time
+               riemann.twilio
+               riemann.victorops
+               riemann.xymon
+               riemann.zabbix]}
+
+    :unused-referred-var
+    {:exclude {riemann.boundary [boundary]
+               riemann.client [udp-client tcp-client multi-client]
+               riemann.clickhouse [clickhouse]
+               riemann.cloudwatch [cloudwatch]
+               riemann.common [event]
+               riemann.datadog [datadog]
+               riemann.druid [druid]
+               riemann.email [mailer]
+               riemann.graphite [graphite]
+               riemann.hipchat [hipchat]
+               riemann.influxdb [influxdb]
+               riemann.influxdb2 [influxdb2]
+               riemann.kafka [kafka]
+               riemann.kairosdb [kairosdb]
+               riemann.keenio [keenio]
+               riemann.librato [librato-metrics]
+               riemann.logentries [logentries]
+               riemann.logstash [logstash]
+               riemann.mailgun [mailgun]
+               riemann.msteams [msteams]
+               riemann.nagios [nagios]
+               riemann.netuitive [netuitive]
+               riemann.opentsdb [opentsdb]
+               riemann.opsgenie [opsgenie]
+               riemann.pagerduty [pagerduty]
+               riemann.plugin [load-plugins]
+               riemann.pushover [pushover]
+               riemann.rabbitmq [rabbitmq]
+               riemann.shinken [shinken]
+               riemann.slack [slack]
+               riemann.sns [sns-publisher]
+               riemann.stackdriver [stackdriver]
+               riemann.prometheus [prometheus]
+               riemann.elasticsearch [elasticsearch default-bulk-formatter elasticsearch-bulk]
+               riemann.telegram [telegram]
+               riemann.test [tap io tests]
+               riemann.time [unix-time linear-time once! every!]
+               riemann.twilio [twilio]
+               riemann.victorops [victorops]
+               riemann.xymon [xymon]
+               riemann.zabbix [zabbix]}}}}}
+}
