@@ -1,6 +1,5 @@
 (defproject riemann "0.3.11"
-  :description
-"A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
+  :description "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "https://github.com/riemann/riemann"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -68,11 +67,16 @@
             [classworlds "1.1"]
             [test2junit "1.3.3"]]
   :test2junit-output-dir "target/test2junit"
+  :aliases {"lint" ["with-profile" "lint" "run" "-m" "clj-kondo.main" "--lint" "src"]}
   :profiles {:dev {:jvm-opts ["-XX:-OmitStackTraceInFastThrow"]
 ;                              "-Dcom.sun.management.jmxremote"
 ;                              "-XX:+UnlockCommercialFeatures"
 ;                              "-XX:+FlightRecorder"]
                    :dependencies [[criterium "0.4.4"]]}
+
+             :lint {:dependencies [[clj-kondo/clj-kondo "2024.05.24"]]
+                    ;; do not spin another JVM instance, faster startup
+                    :eval-in :classloader}
              :uberjar {:aot :all}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
