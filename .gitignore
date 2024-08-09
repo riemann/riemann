@@ -33,6 +33,7 @@ site/**
 bench/**
 target/**
 /target/
-config.edn
+/config.edn
 riemann.config
 .vscode
+/.clj-kondo/.cache

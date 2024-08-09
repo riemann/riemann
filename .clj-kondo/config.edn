@@ -1,0 +1,13 @@
+{:linters
+ {:unresolved-symbol
+  {:exclude [_
+             ]}
+
+  :redundant-do {:level :off}}
+
+ :unresolved-var
+  {:exclude []}
+
+ :skip-comments true
+ :lint-as {riemann.streams/where clojure.core/when}
+ }
