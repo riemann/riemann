@@ -1,8 +1,7 @@
 (ns riemann.cloudwatch
   "Forwards riemann events to Amazon CloudWatch"
   (:import org.joda.time.DateTime)
-  (:require [amazonica.core :as core]
-            [amazonica.aws.cloudwatch :as cloudwatch]))
+  (:require [amazonica.aws.cloudwatch :as cloudwatch]))
 
 (defn generate-datapoint
   "Accepts riemann event and converts it into cloudwatch datapoint."

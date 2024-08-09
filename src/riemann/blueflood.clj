@@ -45,7 +45,7 @@
       :throw-entire-message? true})
     (streams/call-rescue evs children)))
 
-(defn blueflood-ingest [opts & children]
+(defn blueflood-ingest
   "A stream which creates a batch, optionally asynchronous, of events to 
   forward to BF
 
@@ -71,6 +71,7 @@
   or for synchronous, just:
      (blueflood-ingest {:host \"blueflood-server\" 
                         :tenant-id \"tenant\"})"
+  [opts & children]
   (let [opts (merge defaults opts)
         {:keys [n dt host port tenant-id
                 async-queue-name threadpool-service-opts]} opts

@@ -119,5 +119,5 @@
     (fn [events]
       (let [insert-url (generate-insert-url opts)
             datapoint (generate-datapoint-batch events)]
-        (if-not (nil? datapoint)
+        (when-not (nil? datapoint)
           (post-datapoint insert-url datapoint))))))
