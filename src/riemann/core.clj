@@ -1,15 +1,14 @@
 (ns riemann.core
   "Binds together an index, servers, and streams."
-  (:use [riemann.time :only [unix-time]]
-        [riemann.common :only [deprecated localhost event]]
-        clojure.tools.logging
-        [riemann.instrumentation :only [Instrumented]])
-  (:require riemann.streams
+  (:require [riemann.time :refer [unix-time]]
+            [riemann.common :refer [deprecated localhost event]]
+            riemann.streams
             [riemann.service :as service :refer [Service ServiceEquiv]]
             [riemann.index :as index :refer [Index]]
             [riemann.pubsub :as ps]
             [riemann.test :as test]
-            [riemann.instrumentation :as instrumentation]
+            [riemann.instrumentation :as instrumentation :refer [Instrumented]]
+            [clojure.tools.logging :refer [warn info]]
             clojure.set))
 
 (defn stream!

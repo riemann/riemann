@@ -1,6 +1,7 @@
 {:linters
  {:unresolved-symbol {:exclude [_]}
-  :redundant-do {:level :off}}
+  :unused-binding    {:exclude-patterns ["^this"]}
+  :redundant-do      {:level :off}}
 
  ;:unresolved-var {:exclude []}
 
