@@ -2,9 +2,8 @@
   "Send email about events. Create a mailer with (mailer opts), then create
   streams which send email with (your-mailer \"shodan@tau.ceti.five\"). Or
   simply call email-event directly."
-  (:use [riemann.common :only [deprecated body subject human-uniq]])
-  (:use postal.core)
-  (:use [clojure.string :only [join]]))
+  (:require [riemann.common :refer [body subject]]
+            [postal.core :refer [send-message]]))
 
 (defn email-event
   "Send an event, or a sequence of events, with the given smtp and msg
