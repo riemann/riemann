@@ -7,8 +7,12 @@
 
  :skip-comments true
 
- :lint-as
- {riemann.streams/where clojure.core/when}
+ ;:lint-as
+ ;{riemann.streams/where clojure.core/when}
+
+ :hooks
+ {:analyze-call
+  {riemann.streams/where hooks.streams/where}}
 
  :ns-groups [{:pattern "riemann\\.config*" :name riemann-config}]
 
