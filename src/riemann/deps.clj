@@ -70,10 +70,11 @@
 (defn depends [a & bs]
   (Depends. a (All. bs)))
 
-(defn deps-tag [index rule & children]
+(defn deps-tag
   "Returns a stream which accepts events, checks whether they satisfy the given
   rule, and associates those which have their dependencies satisfied with
   {:deps-satisfied true}, and false for those which are satisfied."
+  [index rule & children]
   (fn [event]
     (streams/call-rescue
       (assoc event :deps-satisfied? (match rule index event))
