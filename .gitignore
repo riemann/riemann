@@ -36,3 +36,4 @@ target/**
 config.edn
 riemann.config
 .vscode
+/.clj-kondo/.cache
