@@ -4,9 +4,10 @@
   (:require [clj-http.client :as client]
             [clojure.string :refer [join]]))
 
-(defn- message-colour [ev]
+(defn- message-colour
   "Set the colour to be used in the
   hipchat message."
+  [ev]
   (let [state (or (:state ev) (:state (first ev)))]
     (get {"ok"        "green"
           "critical"  "red"
@@ -17,9 +18,10 @@
 (defn ^:private chat-url [server room]
   (str "https://" server "/v2/room/" room "/notification"))
 
-(defn- format-message [ev]
+(defn- format-message
   "Formats a message, accepts a single
   event or a sequence of events."
+  [ev]
   (join "\n\n"
         (map
           (fn [e]
@@ -30,8 +32,9 @@
               " \nMetric: " (:metric e)
               " \nDescription: " (:description e))) ev)))
 
-(defn- format-event [{:keys [message] :as conf} event]
+(defn- format-event
   "Creates an event suitable for posting to hipchat."
+  [{:keys [message] :as conf} event]
   (merge {:color (message-colour event) :from "riemann"}
          (dissoc conf :server :room_id)
          (when-not message
@@ -67,7 +70,7 @@
     (changed-state hc))
   ```"
   [{:keys [server token room notify]}]
-  (if (not (= 40 (count token)))
+  (when-not (= 40 (count token))
     (throw (IllegalArgumentException. "This adapter now requires a v2 API key")))
   (fn [e] (post token
                 {:server  (or server "api.hipchat.com")
