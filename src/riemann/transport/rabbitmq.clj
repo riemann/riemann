@@ -24,7 +24,7 @@
 
 (defn- gen-message-handler
   [core stats ex-name]
-  (fn [channel {:keys [delivery-tag reply-to correlation-id] :as meta} ^bytes payload]
+  (fn [channel {:keys [delivery-tag reply-to correlation-id]} ^bytes payload]
     (letfn [(reply-with [msg]
               (lb/publish channel ex-name reply-to (msg->pb msg) {:content-type "application/octet-stream" :correlation-id correlation-id}))]
       (try
