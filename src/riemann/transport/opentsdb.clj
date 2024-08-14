@@ -1,25 +1,23 @@
 (ns riemann.transport.opentsdb
   (:import
-    [io.netty.util CharsetUtil]
-    [io.netty.handler.codec MessageToMessageDecoder]
-    [io.netty.handler.codec.string StringDecoder
-                                   StringEncoder]
-    [io.netty.handler.codec DelimiterBasedFrameDecoder
-                            Delimiters]
-    [io.netty.channel ChannelHandlerContext])
-  (:require [interval-metrics.core :as metrics])
-  (:use [riemann.core :only [stream!]]
-        [riemann.common :only [event]]
-        [riemann.transport.tcp :only [tcp-server
-                                      gen-tcp-handler]]
-        [riemann.transport :only [channel-initializer
-                                  channel-group
-                                  shared-event-executor]]
-        [interval-metrics.measure :only [measure-latency]]
-        [slingshot.slingshot :only [try+ throw+]]
-        [clojure.string :only [split join replace-first trimr]]
-        [clojure.walk :only [keywordize-keys]]
-        [clojure.tools.logging :only [warn]]))
+   [io.netty.util CharsetUtil]
+   [io.netty.handler.codec MessageToMessageDecoder]
+   [io.netty.handler.codec.string StringDecoder
+    StringEncoder]
+   [io.netty.handler.codec DelimiterBasedFrameDecoder
+    Delimiters]
+   [io.netty.channel ChannelHandlerContext])
+  (:require [interval-metrics.core :as metrics]
+            [riemann.core :refer [stream!]]
+            [riemann.common :refer [event]]
+            [riemann.transport.tcp :refer [tcp-server
+                                           gen-tcp-handler]]
+            [riemann.transport :refer [channel-initializer
+                                       channel-group
+                                       shared-event-executor]]
+            [slingshot.slingshot :refer [try+ throw+]]
+            [clojure.string :refer [split join replace-first trimr]]
+            [clojure.walk :refer [keywordize-keys]]))
 
 (defn decode-opentsdb-line
   "Parse an OpenTSDB message string into an event."
@@ -46,10 +44,10 @@
           (throw+ "NaN metric"))
 
     (let [metric (try (Double. metric)
-                      (catch NumberFormatException e
+                      (catch NumberFormatException _
                         (throw+ "invalid metric")))
           timestamp (try (Long. timestamp)
-                         (catch NumberFormatException e
+                         (catch NumberFormatException _
                            (throw+ "invalid timestamp")))
           description service
           service (if-let [tagstr (when-not (empty? tags) (join " " tags))]
@@ -99,7 +97,7 @@
 (defn opentsdb-handler
   "Messages to this handler are either :version or an event. Responds to
   version requests, and applies events to the core."
-  [core stats ^ChannelHandlerContext ctx message]
+  [core _ ^ChannelHandlerContext ctx message]
   (if (= :version message)
     ; Respond with version
     (.writeAndFlush ctx "net.opentsdb\nBuilt on ... (riemann-opentsdb)\n")
