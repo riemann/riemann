@@ -21,7 +21,8 @@
   ;; macros are stored in 'macros' folder and should match namespace where
   ;; where original macro is defined
   :macroexpand
-  {riemann.pool/with-pool riemann.pool/with-pool}}
+  {riemann.pool/with-pool riemann.pool/with-pool
+   riemann.service/all-equal? riemann.service/all-equal?}}
 
  :ns-groups [{:pattern "riemann\\.config*" :name riemann-config}]
 

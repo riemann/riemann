@@ -1,20 +1,15 @@
 (ns riemann.service
   "Lifecycle protocol for stateful services bound to a core."
   (:require wall.hack
-            riemann.instrumentation)
-  (:use clojure.tools.logging
-        [riemann.time :only [unix-time every! cancel]])
+            riemann.instrumentation
+            [riemann.time :refer [unix-time every! cancel]]
+            [clojure.tools.logging :refer [info]])
   (:import (riemann.instrumentation Instrumented)
            (java.util.concurrent TimeUnit
-                                 ThreadFactory
-                                 AbstractExecutorService
                                  Executor
                                  ExecutorService
-                                 BlockingQueue
                                  LinkedBlockingQueue
                                  RejectedExecutionException
-                                 ArrayBlockingQueue
-                                 SynchronousQueue
                                  ThreadPoolExecutor)))
 
 (defprotocol Service
@@ -41,7 +36,7 @@
 
 (extend-protocol ServiceEquiv
   nil
-  (equiv? [s1 s2]
+  (equiv? [_ s2]
     (nil? s2)))
 
 (defprotocol ServiceStatus
@@ -103,7 +98,7 @@
                                  (while @running
                                    (try
                                      (f @core)
-                                     (catch InterruptedException e
+                                     (catch InterruptedException _
                                        :interrupted)))))]
                 (reset! thread t)
                 (.start t)))))
@@ -188,7 +183,7 @@
                          (class)
                          (.name)))
 
-  (reload! [this new-core])
+  (reload! [this _])
 
   (start! [this]
           (locking this
