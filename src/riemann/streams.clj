@@ -24,22 +24,19 @@
 
   Some common patterns for defining child streams are (fn [e] (println e))
   and (partial log :info)."
-  (:use [riemann.common :exclude [match]]
-        [riemann.time :only [unix-time
-                             linear-time
-                             every!
-                             once!
-                             after!
-                             next-tick
-                             defer
-                             cancel]]
-        clojure.math.numeric-tower
-        clojure.tools.logging)
-  (:require [riemann.folds :as folds]
+  (:require [riemann.common :refer [member? expire deprecated] :exclude [match]]
+            [clojure.math.numeric-tower :refer [middle expt]]
+            [riemann.folds :as folds]
             [riemann.index :as index]
             riemann.client
             riemann.logging
-            [clojure.set :as set])
+            [clojure.set :as set]
+            [riemann.time :refer [unix-time
+                                  every!
+                                  once!
+                                  next-tick
+                                  defer
+                                  cancel]])
   (:import (java.util.concurrent Executor)))
 
 (def  infinity (/  1.0 0))
@@ -122,7 +119,7 @@
 
 (defn bit-bucket
   "Discards arguments."
-  [args])
+  [_])
 
 (defn dual
   "A stream which splits events into two mirror-images streams, based on
@@ -394,7 +391,7 @@
                              (assoc :windows nil))
 
                          ; Above window
-                         true
+                         :else
                          (let [delta (- (:time event) start-time)
                                dstart (- delta (mod delta n))
                                empties (dec (/ dstart n))
@@ -415,7 +412,7 @@
 
   Events without times accrue in the current window."
   [n & children]
-  (apply fixed-time-window-fn n (fn [n event] (:time event)) children))
+  (apply fixed-time-window-fn n (fn [_ event] (:time event)) children))
 
 (defn fixed-offset-time-window
   "Like fixed-time-window, but divides wall clock time into discrete windows.
@@ -450,6 +447,8 @@
 ; agents or involves fewer STM ops. Assuming all events have local time might
 ; actually be more useful than correctly binning/expiring multiple times.
 ; Also: broken?
+
+#_{:clj-kondo/ignore [:unused-private-var]}
 (defn- part-time-fn [interval create add finish]
   ; All intervals are [start, end)
   (let [; The oldest time we are allowed to flush rates for.
@@ -616,7 +615,7 @@
 
   When no events arrive in a given time window, no functions are called."
   ([dt reset add finish]
-   (part-time-simple dt reset add (fn [state event]) finish))
+   (part-time-simple dt reset add (fn [_ _]) finish))
   ([dt reset add side-effects finish]
    (let [anchor (unix-time)
          state (atom {:window (reset nil)})
@@ -667,9 +666,9 @@
   (part-time-fast interval
                   (fn create [] (atom []))
                   (fn add [r event]
-                    (when-let [ek (event-key event)]
+                    (when (event-key event)
                       (swap! r conj event)))
-                  (fn finish [r start end]
+                  (fn finish [r _ _]
                     (let [events @r
                           stat  (folder (map event-key events))
                           event (assoc (last events) event-key stat)]
@@ -779,7 +778,7 @@
   (let [state (atom (list nil))  ; Events at t3, t2, and t1.
         swap (bound-fn swap []
                (let [[_ e2 e1] (swap! state
-                                      (fn swap [[e3 e2 e1 :as state]]
+                                      (fn swap [[e3 e2 _e1]]
                                         ; If no events have come in this
                                         ; interval, we preserve the last event
                                         ; in both places, which means we emit
@@ -803,7 +802,7 @@
 
     (fn stream [event]
       (when (:metric event)
-        (swap! state (fn swap [[most-recent & more]] (cons event more))))
+        (swap! state (fn swap [[_ & more]] (cons event more))))
       (poller event))))
 
 (defn ddt-events
@@ -851,7 +850,7 @@
 
         add-sum  (fn add-sum [[current previous] addend]
                               (list (+ current addend) previous))
-        swap-sum (fn swap-sum [[current previous]]
+        swap-sum (fn swap-sum [[current _]]
                                (list 0 current))
 
         swap-event (fn swap-event [e sum]
@@ -893,7 +892,7 @@
   (part-time-fast interval
                 (fn setup [] (atom []))
                 (fn add [r event] (swap! r conj event))
-                (fn finish [r start end]
+                (fn finish [r _ _]
                   (let [samples (folds/sorted-sample @r points)]
                     (doseq [event samples] (call-rescue event children))))))
 
@@ -939,7 +938,7 @@
               (let [sum (atom 0)]
                 (fn stream [event]
                   (let [s (when-let [m (:metric event)]
-                            (swap! sum + (:metric event)))
+                            (swap! sum + m))
                         event (assoc event :metric s)]
                     (call-rescue event children))))))
 
@@ -1109,13 +1108,13 @@
     dt
     (fn reset [_] 0)
 
-    (fn add [sent event] (inc sent))
+    (fn add [sent _] (inc sent))
 
     (fn side-effects [sent event]
       (when-not (< n sent)
         (call-rescue event children)))
 
-    (fn finish [sent start end])))
+    (fn finish [_ _ _])))
 
 (defn rollup
   "Invokes children with events at most n times per dt second interval. Passes
@@ -1135,7 +1134,7 @@
   (part-time-simple
     dt
 
-    (fn reset [[sent buffer]]
+    (fn reset [[_ buffer]]
       (if (empty? buffer)
         ; We didn't carry over any events from the last window
         [0 []]
@@ -1147,11 +1146,11 @@
         [(inc sent) buffer]
         [(inc sent) (conj buffer event)]))
 
-    (fn side-effects [[sent buffer] event]
+    (fn side-effects [[sent _] event]
       (when (<= sent n)
         (call-rescue [event] children)))
 
-    (fn finish [[sent buffer] _ _]
+    (fn finish [[_sent buffer] _ _]
       (when-not (empty? buffer)
         (call-rescue buffer children)))))
 
@@ -1167,7 +1166,7 @@
 
     ; Conj new elements into the batch, and spill over if necessary
     ; when we overflow.
-    (fn add [[batch done] event]
+    (fn add [[batch _] event]
       (let [batch (conj batch event)]
         (if (<= n (count batch))
           ; Full!
@@ -1176,11 +1175,11 @@
           [batch nil])))
 
     ; If we're full, flush the buffer early.
-    (fn side-effects [[_ done] event]
+    (fn side-effects [[_ done] _]
       (when done (call-rescue done children)))
 
     ; And flush incomplete buffers once the time interval has elapsed
-    (fn flush [[batch _] start-time end-time]
+    (fn flush [[batch _] _start-time _end-time]
       (when (seq batch)
         (call-rescue batch children)))))
 
@@ -1457,7 +1456,7 @@
   [factor & children]
   (let [scale-event (fn [{:keys [metric] :as event}]
                       (assoc event :metric
-                             (if metric (* metric factor))))]
+                             (when metric (* metric factor))))]
     (apply smap scale-event children)))
 
 (defn untag
@@ -1812,7 +1811,7 @@
 (defn split*-match
   [event [pred stream]]
   (let [stream (or stream pred)]
-    (if (or (= stream pred) (pred event))
+    (when (or (= stream pred) (pred event))
       stream)))
 
 (defn split*
@@ -1892,13 +1891,13 @@
         stream-syms (repeatedly (count clauses) #(gensym "stream__"))
 
         ; Binding symbols to stream expressions
-        stream-bindings (mapcat (fn [stream-sym [stream test-expr]]
+        stream-bindings (mapcat (fn [stream-sym [stream _]]
                                   [stream-sym stream])
                                 stream-syms
                                 clauses)
 
         ; Transform clauses into a form for condp
-        condp-clauses (mapcat (fn [stream-sym [stream test-expr :as clause]]
+        condp-clauses (mapcat (fn [stream-sym [_ test-expr :as clause]]
                                 (if (= 1 (count clause))
                                   [`(~stream-sym ~event-sym)]
                                   [test-expr `(~stream-sym ~event-sym)]))
@@ -1928,9 +1927,9 @@
     len-run
     (smap
       (fn [events]
-        (if (>= (count events) len-run 1)
-          (if (apply = (map field events))
-              (last events))))
+        (when (>= (count events) len-run 1)
+          (when (apply = (map field events))
+            (last events))))
       (apply sdo children))))
 
 (defn stable
@@ -2066,7 +2065,7 @@
                                  (conj indices i)
                                  indices))))]
         ; Apply changes atomically and call
-        (when (not (empty? indices))
+        (when (seq indices)
           (let [[_ events] (swap! state update indices event)]
             (call-rescue events children)))))))
 
@@ -2242,7 +2241,7 @@
                                (= 0 @last-rebuild)
                                (> (- (System/currentTimeMillis) @last-rebuild) rebuild-interval))
                            (model events)
-                           @coefs)]
-              (let [prediction (+ (:intercept params) (* (+ (:time (last events)) s) (:slope params)))
-                    event (assoc (last events) :metric prediction)]
-                (call-rescue event children)))))))))
+                           @coefs)
+                  prediction (+ (:intercept params) (* (+ (:time (last events)) s) (:slope params)))
+                  event (assoc (last events) :metric prediction)]
+              (call-rescue event children))))))))
