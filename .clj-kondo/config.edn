@@ -1,4 +1,6 @@
-{:linters
+{:config-paths ["macros"]
+
+ :linters
  {:unresolved-symbol {:exclude [_]}
   :unused-binding    {:exclude-patterns ["^this"]}
   :redundant-do      {:level :off}}
@@ -7,12 +9,19 @@
 
  :skip-comments true
 
- ;:lint-as
- ;{riemann.streams/where clojure.core/when}
+ :lint-as
+ {;riemann.pool/with-pool clj-kondo.lint-as/def-catch-all
+  ;riemann.pool/with-pool clojure.core/with-open
+  }
 
  :hooks
  {:analyze-call
-  {riemann.streams/where hooks.streams/where}}
+  {riemann.streams/where  hooks.streams/where}
+
+  ;; macros are stored in 'macros' folder and should match namespace where
+  ;; where original macro is defined
+  :macroexpand
+  {riemann.pool/with-pool riemann.pool/with-pool}}
 
  :ns-groups [{:pattern "riemann\\.config*" :name riemann-config}]
 
