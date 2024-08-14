@@ -24,8 +24,9 @@
 
   Some common patterns for defining child streams are (fn [e] (println e))
   and (partial log :info)."
-  (:require [riemann.common :refer [member? expire deprecated] :exclude [match]]
-            [clojure.math.numeric-tower :refer [middle expt]]
+  (:require [riemann.common :refer [member? expire deprecated middle exception->event]]
+            [clojure.math.numeric-tower :refer [expt]]
+            [clojure.tools.logging :refer [warn]]
             [riemann.folds :as folds]
             [riemann.index :as index]
             riemann.client
