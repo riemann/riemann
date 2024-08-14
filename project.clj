@@ -74,9 +74,7 @@
 ;                              "-XX:+FlightRecorder"]
                    :dependencies [[criterium "0.4.4"]]}
 
-             :lint {:dependencies [[clj-kondo/clj-kondo "2024.05.24"]]
-                    ;; do not spin another JVM instance, faster startup
-                    :eval-in :classloader}
+             :lint {:dependencies [[clj-kondo/clj-kondo "2024.08.01"]]}
              :uberjar {:aot :all}}
   :test-selectors {:default (fn [x] (not (or (:integration x)
                                              (:time x)
