@@ -17,7 +17,9 @@
 
  :hooks
  {:analyze-call
-  {riemann.streams/where  hooks.streams/where}
+  {riemann.streams/where           hooks.streams/where
+   org.httpkit.server/with-channel hooks.httpkit/with-channel
+   }
 
   ;; macros are stored in 'macros' folder and should match namespace where
   ;; where original macro is defined
