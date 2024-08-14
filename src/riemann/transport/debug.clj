@@ -1,7 +1,6 @@
 (ns riemann.transport.debug
   "It is very dark. You are likely to be eaten a grue."
-  (:require [clojure.tools.logging :refer :all]
-            [riemann.transport :refer [retain]])
+  (:require [riemann.transport :refer [retain]])
   (:import [io.netty.channel ChannelHandler
                              ChannelInboundHandler
                              ChannelOutboundHandler]
@@ -35,8 +34,9 @@
 
     (isSharable [] true)))
 
-(defn tap [n]
+(defn tap
   "Log fucking everything, prefixed by `n`."
+  [n]
   (reify
     ChannelHandler
     ChannelInboundHandler
