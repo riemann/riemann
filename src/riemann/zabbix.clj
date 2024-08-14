@@ -2,11 +2,9 @@
   "Forwards events to Zabbix"
   (:require
     [cheshire.core :as json]
-    [clojure.java.io :as io]
-    [clojure.string :as s]
-    [clojure.tools.logging :refer [error]])
+    [clojure.java.io :as io])
   (:import
-    (java.io ByteArrayOutputStream OutputStream)
+    (java.io ByteArrayOutputStream)
     (java.nio ByteBuffer ByteOrder)
     (java.net Socket)))
 
@@ -27,8 +25,9 @@
 ;; In a nutshell, a frame contains a request, which contains one or more
 ;; datapoints.
 
-(defn- long->buf [n]
+(defn- long->buf
   "Converts a long int n to a 64-bit little-endian ByteBuffer."
+  [n]
   (-> (ByteBuffer/wrap (byte-array 8))
       (.order ByteOrder/LITTLE_ENDIAN)
       (.putLong n)
@@ -53,8 +52,9 @@
   {:request "sender data"
    :data datapoints})
 
-(defn make-datapoint [event]
+(defn make-datapoint
   "Converts a Riemann event into a Zabbix datapoint."
+  [event]
   {:host (:host event)
    :key (:service event)
    :value (str (:metric event))
