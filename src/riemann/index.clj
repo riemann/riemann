@@ -14,10 +14,10 @@
   (:require [riemann.query :as query]
             [riemann.common :refer [deprecated]]
             [riemann.instrumentation :refer [Instrumented]]
-            [clojure.tools.logging :refer [error]])
-  (:use [riemann.time :only [unix-time]]
-         riemann.service)
-  (:import (org.cliffc.high_scale_lib NonBlockingHashMap)))
+            [clojure.tools.logging :refer [error]]
+            [riemann.time :refer [unix-time]]
+            [riemann.service :refer [Service ServiceEquiv]])
+  (:import [org.cliffc.high_scale_lib NonBlockingHashMap]))
 
 (defprotocol Index
   (clear [this]
@@ -44,15 +44,15 @@
 (defn query-for-host-and-service
   "Check if the AST is only searching for the host and service"
   [query-ast]
-  (if (and (list? query-ast)
-           (= 'and (first query-ast)))
+  (when (and (list? query-ast)
+             (= 'and (first query-ast)))
     (let [and-exprs (rest query-ast)]
-      (if (and (= 2 (count and-exprs))
-               (every? list? and-exprs)
-               (= 2 (count (filter #(= (first %) '=) and-exprs))))
+      (when (and (= 2 (count and-exprs))
+                 (every? list? and-exprs)
+                 (= 2 (count (filter #(= (first %) '=) and-exprs))))
         (let [host    (first (filter #(= (second %) :host) and-exprs))
               service (first (filter #(= (second %) :service) and-exprs))]
-          (if (and host service)
+          (when (and host service)
             [(last host) (last service)]))))))
 
 (defn nbhm-index
@@ -120,8 +120,8 @@
       (equiv? [this other] (= (class this) (class other)))
 
       Service
-      (conflict? [this other] false)
-      (reload! [this new-core])
+      (conflict? [this _other] false)
+      (reload! [this _new-core])
       (start! [this])
       (stop! [this]))))
 
