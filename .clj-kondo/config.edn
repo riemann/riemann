@@ -1,9 +1,10 @@
 {:config-paths ["macros"]
 
  :linters
- {:unresolved-symbol {:exclude [_]}
-  :unused-binding    {:exclude-patterns ["^this"]}
-  :redundant-do      {:level :off}}
+ {:unresolved-symbol            {:exclude [_]}
+  :unused-binding               {:exclude-patterns ["^this"]}
+  :non-arg-vec-return-type-hint {:level :off}
+  :redundant-do                 {:level :off}}
 
  ;:unresolved-var {:exclude []}
 
