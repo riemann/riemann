@@ -4,19 +4,18 @@
            [io.netty.handler.codec.string StringDecoder StringEncoder]
            [io.netty.handler.codec DelimiterBasedFrameDecoder
                                    Delimiters])
-  (:use [riemann.core :only [stream!]]
-        [riemann.codec :only [->Event]]
-        [riemann.transport.tcp :only [tcp-server
-                                      gen-tcp-handler]]
-        [riemann.transport.udp :only [udp-server
-                                      gen-udp-handler]]
-        [riemann.transport :only [channel-initializer
-                                  channel-group
-                                  shared-event-executor]]
-        [slingshot.slingshot :only [try+ throw+]]
-        [clojure.string :only [split
-                               join]]
-        [clojure.tools.logging :only [warn]]))
+  (:require [riemann.core :refer [stream!]]
+            [riemann.codec :refer [->Event]]
+            [riemann.transport.tcp :refer [tcp-server
+                                           gen-tcp-handler]]
+            [riemann.transport.udp :refer [udp-server
+                                           gen-udp-handler]]
+            [riemann.transport :refer [channel-initializer
+                                       channel-group
+                                       shared-event-executor]]
+            [slingshot.slingshot :refer [try+ throw+]]
+            [clojure.string :refer [split]]
+            [clojure.tools.logging :refer [warn]]))
 
 (defn tags->attributes
   "Converts a sequence of Graphite tag (key=val) into a Clojure map."
@@ -66,10 +65,10 @@
 
     ; Parse numbers
     (let [metric (try (Double. metric)
-                      (catch NumberFormatException e
+                      (catch NumberFormatException _
                         (throw+ "invalid metric")))
           timestamp (try (Long. timestamp)
-                         (catch NumberFormatException e
+                         (catch NumberFormatException _
                            (throw+ "invalid timestamp")))
           ; Construct event
           event (->Event nil
@@ -114,7 +113,7 @@
 
 (defn graphite-handler
   "Given a core, channel, and a message, applies the message to core."
-  [core stats ctx message]
+  [core _stats _ctx message]
   (stream! core message))
 
 (defn graphite-server
