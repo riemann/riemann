@@ -6,20 +6,12 @@
   :non-arg-vec-return-type-hint {:level :off}
   :redundant-do                 {:level :off}}
 
- ;:unresolved-var {:exclude []}
-
  :skip-comments true
-
- :lint-as
- {;riemann.pool/with-pool clj-kondo.lint-as/def-catch-all
-  ;riemann.pool/with-pool clojure.core/with-open
-  }
 
  :hooks
  {:analyze-call
   {riemann.streams/where           hooks.streams/where
-   org.httpkit.server/with-channel hooks.httpkit/with-channel
-   }
+   org.httpkit.server/with-channel hooks.httpkit/with-channel}
 
   ;; macros are stored in 'macros' folder and should match namespace where
   ;; where original macro is defined
