@@ -5,8 +5,7 @@
              Level
              Logger)
            (ch.qos.logback.core
-             ConsoleAppender
-             FileAppender)
+             ConsoleAppender)
            (ch.qos.logback.core.util
              FileSize)
            (ch.qos.logback.core.encoder
@@ -41,25 +40,25 @@
 (defmulti encoder identity)
 
 (defmethod encoder :json
-  [type]
+  [_]
   (LogstashEncoder.))
 
 (defmethod encoder :json-event
-  [type]
+  [_]
   (encoder :json-event-v0))
 
 (defmethod encoder :json-event-v0
-  [type]
+  [_]
   (doto (LayoutWrappingEncoder.)
     (.setLayout (JSONEventLayoutV0.))))
 
 (defmethod encoder :json-event-v1
-  [type]
+  [_]
   (doto (LayoutWrappingEncoder.)
     (.setLayout (JSONEventLayoutV1.))))
 
 (defmethod encoder :riemann
-  [type]
+  [_]
   (doto (PatternLayoutEncoder.)
     (.setPattern "%p [%d] %t - %c - %m%n%throwable")))
 
