@@ -1,7 +1,7 @@
 (ns riemann.pool
   "A generic thread-safe resource pool."
-  (:use clojure.tools.logging
-        [slingshot.slingshot :only [throw+]])
+  (:require [slingshot.slingshot :refer [throw+]]
+            [clojure.tools.logging :refer [warn]])
   (:import [java.util.concurrent LinkedBlockingQueue TimeUnit]))
 
 ; THIS IS A MUTABLE STATE OF AFFAIRS. WHICH IS TO SAY, IT IS FUCKING TERRIBLE.
@@ -21,7 +21,7 @@
   Pool
   (grow [this]
         (loop []
-          (if-let [thingy (try (open) (catch Exception t nil))]
+          (if-let [thingy (try (open) (catch Exception _ nil))]
             (.put ^LinkedBlockingQueue queue thingy)
             (do
               (Thread/sleep (* 1000 regenerate-interval))
@@ -35,7 +35,7 @@
            (or
              (try
                (.poll ^LinkedBlockingQueue queue timeout TimeUnit/MILLISECONDS)
-               (catch java.lang.InterruptedException e
+               (catch java.lang.InterruptedException _
                  nil))
              (throw+
                {:type ::timeout
