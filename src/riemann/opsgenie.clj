@@ -1,7 +1,8 @@
 (ns riemann.opsgenie
   "Forwards events to OpsGenie"
-  (:require [clj-http.client :as client])
-  (:require [cheshire.core :as json]))
+  (:require [clj-http.client :as client]
+            [cheshire.core :as json]
+            [clojure.string :refer [join]]))
 
 (def alerts-url
   "https://api.opsgenie.com/v2/alerts")
@@ -41,7 +42,7 @@
   "Generate OpsGenie alias based on event"
   [event]
   (hash (str (:host event) \uffff (:service event) \uffff
-       (clojure.string/join \uffff (sort (:tags event))))))
+       (join \uffff (sort (:tags event))))))
 
 (defn default-body
   [event]

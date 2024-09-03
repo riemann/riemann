@@ -1,28 +1,23 @@
 (ns riemann.transport
   "Functions used in several transports. Some netty parts transpire
   here since netty is the preferred method of providing transports"
-  (:use [slingshot.slingshot :only [try+]]
-        [riemann.core        :only [stream!]]
-        [riemann.common      :only [decode-msg]]
-        [riemann.codec       :only [encode-pb-msg]]
-        [riemann.index       :only [search]]
-        [riemann.instrumentation :only [Instrumented]]
-        [riemann.time         :only [unix-time]]
-        clojure.tools.logging)
-  (:require [riemann.query       :as query])
+  (:require [slingshot.slingshot     :refer [try+]]
+            [riemann.core            :refer [stream!]]
+            [riemann.common          :refer [decode-msg]]
+            [riemann.codec           :refer [encode-pb-msg]]
+            [riemann.index           :refer [search]]
+            [riemann.instrumentation :refer [Instrumented]]
+            [riemann.time            :refer [unix-time]]
+            [riemann.query           :as query])
   (:import
     (java.util List)
-    (java.util.concurrent TimeUnit
-                          Executors)
+    (java.util.concurrent TimeUnit)
     (io.riemann.riemann Proto$Msg)
     (io.netty.channel ChannelInitializer
                       Channel
-                      ChannelPipeline
-                      ChannelHandler)
-    (io.netty.channel.group ChannelGroup
-                            DefaultChannelGroup)
+                      ChannelPipeline)
+    (io.netty.channel.group DefaultChannelGroup)
     (io.netty.channel.socket DatagramPacket)
-    (io.netty.buffer ByteBufInputStream)
     (io.netty.handler.codec MessageToMessageDecoder
                             MessageToMessageEncoder)
     (io.netty.handler.codec.protobuf ProtobufDecoder
@@ -182,9 +177,12 @@
       ; Otherwise just return an ack
       {:ok true})
 
+    ;; let clj-kondo ignore unresolved-symbol without rewritting try+ macro
+    #_{:clj-kondo/ignore [:unresolved-symbol]}
     ;; Some kind of error happened
     (catch [:type :riemann.query/parse-error] {:keys [message]}
       {:ok false :error (str "parse error: " message)})
+    #_{:clj-kondo/ignore [:unresolved-symbol]}
     (catch Exception ^Exception e
       {:ok false :error (.getMessage e)})))
 
@@ -193,5 +191,5 @@
   [host]
   (try
     (.getHostAddress (rand-nth (InetAddress/getAllByName host)))
-    (catch UnknownHostException e
+    (catch UnknownHostException _
       host)))

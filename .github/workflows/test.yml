@@ -55,6 +55,8 @@ jobs:
         with:
           path: ~/.m2/repository
           key: ${{ matrix.java }}-maven-${{ hashFiles('**/project.clj') }}
+      - name: Run lint
+        run: lein lint
       - name: Run test2junit
         run: lein test2junit
       - name: Upload Test Results

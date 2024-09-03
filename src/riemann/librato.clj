@@ -1,10 +1,10 @@
 (ns riemann.librato
   "Forwards events to Librato Metrics."
-  (:require [clojure.string :as string])
-  (:use [clj-librato.metrics :only [collate annotate connection-manager
-                                    update-annotation]]
-        [clojure.tools.logging :only [error]]
-        clojure.math.numeric-tower))
+  (:require [clojure.string :as string]
+            [clj-librato.metrics :refer [collate annotate connection-manager
+                                         update-annotation]]
+            [clojure.tools.logging :refer [error]]
+            [clojure.math.numeric-tower :refer [round]]))
 
 (defn safe-name
   "Converts a string into a safe name for Librato's metrics and streams.

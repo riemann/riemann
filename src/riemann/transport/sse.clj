@@ -5,7 +5,7 @@
             [interval-metrics.core    :as metrics]
             [org.httpkit.server       :as http]
             [riemann.common           :as common]
-            [riemann.test              :as test]
+            [riemann.test             :as test]
             [riemann.pubsub           :refer [subscribe! unsubscribe!]]
             [riemann.instrumentation  :refer [Instrumented]]
             [riemann.service          :refer [Service ServiceEquiv]]
@@ -38,7 +38,7 @@
   "Yield a function that given an incoming event will
    test for a given predicate and when it matches will
    format it for sending it over a SSE channel."
-  [{:keys [out] :as stats} ch pred]
+  [_ ch pred]
   (fn [event]
     ;; Send event to client, measuring write latency
     (when (pred event)
@@ -71,7 +71,7 @@
 
             (http/on-close
              ch
-             (fn [status]
+             (fn [_]
                (info "Closing SSE channel " remote-addr query)
                (unsubscribe! pubsub sub)))))
         (sse-error-uri ch uri)))))

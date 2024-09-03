@@ -1,7 +1,7 @@
 (ns riemann.datadog
   "Forward events to Datadog."
-  (:use [clojure.string :only [join split]])
-  (:require [clj-http.client :as client]
+  (:require [clojure.string :refer [join split]]
+            [clj-http.client :as client]
             [cheshire.core :refer [generate-string]]))
 
 (def ^:private gateway-url "https://app.datadoghq.com/api/v1/series")

@@ -1,29 +1,23 @@
 (ns riemann.transport.websockets
   "Accepts messages from external sources. Associated with a core. Sends
   incoming events to the core's streams, queries the core's index for states."
-  (:require [riemann.query         :as query]
-            [riemann.index         :as index]
-            [riemann.pubsub        :as p]
-            [riemann.test          :as test]
-            [cheshire.core         :as json]
-            [interval-metrics.core :as metrics]
-            [org.httpkit.server    :as http])
-  (:use [riemann.common        :only [event-to-json ensure-event-time]]
-        [riemann.core          :only [stream!]]
-        [riemann.instrumentation :only [Instrumented]]
-        [riemann.service       :only [Service ServiceEquiv]]
-        [riemann.time          :only [unix-time]]
-        [interval-metrics.measure :only [measure-latency]]
-        [clojure.java.io       :only [reader]]
-        [clojure.tools.logging :only [info warn debug]]
-        [clj-http.util         :only [url-decode]]
-        [clojure.string        :only [split]])
-  (:import (java.io OutputStream
-                    BufferedWriter
-                    OutputStreamWriter
-                    InputStreamReader
-                    PipedInputStream
-                    PipedOutputStream)))
+  (:require [riemann.query            :as query]
+            [riemann.index            :as index]
+            [riemann.pubsub           :as p]
+            [riemann.test             :as test]
+            [cheshire.core            :as json]
+            [interval-metrics.core    :as metrics]
+            [org.httpkit.server       :as http]
+            [riemann.common           :refer [event-to-json ensure-event-time]]
+            [riemann.core             :refer [stream!]]
+            [riemann.instrumentation  :refer [Instrumented]]
+            [riemann.service          :refer [Service ServiceEquiv]]
+            [riemann.time             :refer [unix-time]]
+            [interval-metrics.measure :refer [measure-latency]]
+            [clojure.java.io          :refer [reader]]
+            [clojure.tools.logging    :refer [info warn debug]]
+            [clj-http.util            :refer [url-decode]]
+            [clojure.string           :refer [split]]))
 
 (defn http-query-map
   "Converts a URL query string into a map."
@@ -132,9 +126,10 @@
           (recur (.readLine body))))
       (http/close ch))))
 
-(defn ws-handler [core stats]
+(defn ws-handler
   "Returns a function which is called with new websocket connections.
   Responsible for routing requests to the appropriate handler."
+  [core stats]
   (fn handle [req]
     (http/with-channel req ch
       (try

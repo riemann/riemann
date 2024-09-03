@@ -1,11 +1,10 @@
 (ns riemann.logentries
   "Forwards events to Logentries."
   (:import
-   (java.net Socket)
-   (java.io OutputStreamWriter))
-  (:use clojure.tools.logging
-        riemann.pool
-        riemann.common))
+   [java.net Socket]
+   [java.io OutputStreamWriter])
+  (:require [riemann.pool :refer [fixed-pool with-pool]]
+            [clojure.tools.logging :refer [info]]))
 
 (defn format-event-data [data]
   (apply str

@@ -10,7 +10,7 @@
 
   Called with an empty list, folds which would return a single event return
   nil."
-  (:use [riemann.common])
+  (:require [riemann.common :as c])
   (:refer-clojure :exclude [count]))
 
 (defn sorted-sample-extract
@@ -84,7 +84,7 @@
   (when-let [e (first events)]
     (try
       (assoc e :metric (reduce f (map :metric events)))
-      (catch NullPointerException ex
+      (catch NullPointerException _
         (merge e
                {:metric nil
                 :description "An event or metric was nil."})))))
@@ -139,7 +139,7 @@
   (when-let [event (first events)]
     (try
       (fold-all / events)
-      (catch ArithmeticException e
+      (catch ArithmeticException _
         (merge event
                {:metric nil
                 :description "Can't divide by zero"})))))
@@ -213,11 +213,10 @@
   "calculates standard deviation across a seq of events"
   [events]
   (when-let [e (some identity events)]
-    (let [
-      samples (non-nil-metrics events)
-      n (clojure.core/count samples)
-      mean (/ (reduce + samples) n)
-      intermediate (map #(Math/pow (- %1 mean) 2) samples)]
+    (let [samples (non-nil-metrics events)
+          n (clojure.core/count samples)
+          mean (/ (reduce + samples) n)
+          intermediate (map #(Math/pow (- %1 mean) 2) samples)]
       (assoc e :metric (Math/sqrt (/ (reduce + intermediate) n))))))
 
 (defn count
@@ -226,4 +225,4 @@
   (let [events (remove nil? events)]
     (if-let [e (first events)]
       (assoc e :metric (clojure.core/count events))
-      (event {:metric 0}))))
+      (c/event {:metric 0}))))

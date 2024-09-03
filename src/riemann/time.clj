@@ -4,9 +4,8 @@
   threadpool for task execution, controlled by (start!) and (stop!)."
   (:import [java.util.concurrent ConcurrentSkipListSet]
            [java.util.concurrent.locks LockSupport])
-  (:use [clojure.math.numeric-tower :only [ceil]]
-        [clojure.stacktrace         :only [print-stack-trace]]
-        [clojure.tools.logging      :only [warn]]))
+  (:require [clojure.math.numeric-tower :refer [ceil]]
+            [clojure.tools.logging      :refer [warn]]))
 
 (defprotocol Task
   (succ [task]
@@ -142,7 +141,7 @@
 (defn run-tasks!
   "While running, takes tasks from the queue and executes them when ready. Will
   park the current thread when no tasks are available."
-  [i]
+  [_]
   (while @running
     (try
       (if-let [task (poll-task!)]
