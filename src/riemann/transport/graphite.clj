@@ -23,7 +23,7 @@
   [tags]
   (reduce (fn [state tag]
          (let [[name value] (split tag #"=")]
-           (assoc state (keyword name) value)))
+           (assoc state (keyword (join [ "tag_" name ])) value)))
           {}
           tags))
 
