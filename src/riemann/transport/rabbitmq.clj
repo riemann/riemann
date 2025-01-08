@@ -9,13 +9,12 @@
             [langohr.basic :as lb]
             [riemann.test :as test]
             [interval-metrics.core :as metrics]
-            [clojure.java.io :as io])
-  (:use [clojure.tools.logging :only [warn info]]
-        [riemann.core :only [stream!]]
-        [riemann.common :only [decode-inputstream encode]]
-        [riemann.instrumentation :only [Instrumented]]
-        [riemann.service :only [Service ServiceEquiv]]
-        [riemann.transport :only [handle]]))
+            [clojure.java.io :as io]
+            [clojure.tools.logging :refer [warn info]]
+            [riemann.common :refer [decode-inputstream encode]]
+            [riemann.instrumentation :refer [Instrumented]]
+            [riemann.service :refer [Service ServiceEquiv]]
+            [riemann.transport :refer [handle]]))
 
 (def ^:no-doc pb->msg
   #(-> % (io/input-stream) (decode-inputstream)))
@@ -25,7 +24,7 @@
 
 (defn- gen-message-handler
   [core stats ex-name]
-  (fn [channel {:keys [delivery-tag reply-to correlation-id] :as meta} ^bytes payload]
+  (fn [channel {:keys [delivery-tag reply-to correlation-id]} ^bytes payload]
     (letfn [(reply-with [msg]
               (lb/publish channel ex-name reply-to (msg->pb msg) {:content-type "application/octet-stream" :correlation-id correlation-id}))]
       (try

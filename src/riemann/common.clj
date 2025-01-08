@@ -1,22 +1,19 @@
 (ns riemann.common
   "Utility functions. Time/date, some flow control constructs, protocol buffer
   definitions and codecs, some vector set ops, etc."
-  (:import [java.util Date]
-           (java.io InputStream)
-           [io.riemann.riemann Proto$Query Proto$Event Proto$Msg]
-           [java.net InetAddress])
+  (:import [java.io InputStream]
+           [io.riemann.riemann Proto$Msg])
   (:require clj-time.core
             clj-time.format
             clj-time.coerce
             clojure.set
             [cheshire.core :as json]
-            [clojure.java.io :as io])
-  (:use [clojure.string :only [split join]]
-        [riemann.time :only [unix-time]]
-        [clojure.java.shell :only [sh]]
-        clojure.tools.logging
-        riemann.codec
-        clojure.math.numeric-tower))
+            [clojure.string :refer [join]]
+            [riemann.time :refer [unix-time]]
+            [clojure.java.shell :refer [sh]]
+            [clojure.tools.logging :refer [info]]
+            [clojure.math.numeric-tower :refer [round]]
+            [riemann.codec :refer [decode-pb-msg encode-pb-msg map->Event event-keys]]))
 
 (defprotocol Match
   (match [pred object]
@@ -47,7 +44,7 @@
    [age val]
    [(System/currentTimeMillis)
     (let [{:keys [exit out]} (sh "hostname")]
-      (if (= exit 0)
+      (when (= exit 0)
         (.trim out)))]))
 
 ; Platform
@@ -162,7 +159,7 @@
   (approx-equal x y 0.01))
 ([x, y, tol]
   (if (= x y) true
-    (let [f (try (/ x y) (catch java.lang.ArithmeticException e (/ y x)))]
+    (let [f (try (/ x y) (catch java.lang.ArithmeticException _ (/ y x)))]
       (< (- 1 tol) f (inc tol))))))
 
 (defn re-matches?

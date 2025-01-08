@@ -1,16 +1,11 @@
 (ns riemann.opentsdb
   "Forwards events to OpenTSDB."
   (:refer-clojure :exclude [replace])
-  (:import
-   (java.net Socket
-             DatagramSocket
-             DatagramPacket
-             InetAddress)
-   (java.io Writer OutputStreamWriter))
-  (:use [clojure.string :only [split join replace]]
-        clojure.tools.logging
-        riemann.pool
-        riemann.common))
+  (:import [java.net Socket]
+           [java.io OutputStreamWriter])
+  (:require [clojure.string :refer [split join]]
+            [riemann.pool :refer [fixed-pool with-pool]]
+            [clojure.tools.logging :refer [info]]))
 
 (defprotocol OpenTSDBClient
   (open [client]

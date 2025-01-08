@@ -3,6 +3,8 @@
   (sns-publisher opts), then create streams which publish to topic(s) with
   (your-publisher \"your::arn\"). Or simply call sns-publish or
   sns-publish-async directly."
+  (:require [clojure.set :refer [union]]
+            [riemann.common :refer [truncate-bytes]])
   (:import (com.amazonaws AmazonWebServiceClient)
            (com.amazonaws.auth BasicAWSCredentials
                                DefaultAWSCredentialsProviderChain)
@@ -11,10 +13,7 @@
            (com.amazonaws.services.sns AmazonSNS
                                        AmazonSNSClient
                                        AmazonSNSAsyncClient)
-           [com.amazonaws.services.sns.model PublishRequest])
-  (:use [clojure.set :only [union]]
-        [clojure.string :only [join]]
-        riemann.common))
+           [com.amazonaws.services.sns.model PublishRequest]))
 
 (def max-subject-bytes 100)
 (def max-body-bytes 8092)
@@ -184,7 +183,7 @@
             msg-opts   :msg-opts} (sift-opts opts)]
        (sns-publisher aws-opts msg-opts async-opts)))
   ([aws-opts msg-opts & [async-opts]]
-     (if (and async-opts (:async async-opts))
+     (when (and async-opts (:async async-opts))
        (assert (or
                 (and (nil? (:error async-opts)) (nil? (:success async-opts)))
                 (and (:error async-opts) (:success async-opts)))

@@ -1,8 +1,9 @@
 (ns riemann.netuitive
   "Forward events to Netuitive."
-  (:use [clojure.string :only [join split]])
   (:require [clj-http.client :as client]
-            [cheshire.core :refer [generate-string]]))
+            [cheshire.core :refer [generate-string]]
+            [clojure.set :as set]
+            [clojure.string :refer [join split]]))
 
 (def ^:private gateway-url "https://api.app.netuitive.com/ingest/")
 
@@ -33,9 +34,9 @@
 (defn combine-elements
    "Combine two elements"
    [element1 element2]
-   (assoc element1 :metrics (clojure.set/union (:metrics element1) (:metrics element2))
+   (assoc element1 :metrics (set/union (:metrics element1) (:metrics element2))
                    :samples (concat (:samples element1) (:samples element2))
-                   :tags    (clojure.set/union (:tags element1) (:tags element2))))
+                   :tags    (set/union (:tags element1) (:tags element2))))
 
 (defn generate-event
    "Structure for ingest to Netuitive as JSON"

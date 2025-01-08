@@ -2,15 +2,10 @@
   "Accepts messages from external sources. Associated with a core. Sends
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
-           [java.util.concurrent Executors]
-           [java.nio.channels ClosedChannelException]
-           (javax.net.ssl SSLContext)
+           [javax.net.ssl SSLContext]
            [io.netty.bootstrap ServerBootstrap]
-           [io.netty.buffer ByteBufUtil]
-           [io.netty.channel Channel
-                             ChannelOption
+           [io.netty.channel ChannelOption
                              ChannelInitializer
-                             ChannelHandler
                              ChannelHandlerContext
                              ChannelFutureListener
                              ChannelInboundHandlerAdapter]
@@ -24,22 +19,20 @@
            [io.netty.channel.socket.nio NioServerSocketChannel])
   (:require [less.awful.ssl :as ssl]
             [riemann.test :as test]
-            [interval-metrics.core :as metrics])
-  (:use [clojure.tools.logging :only [info warn]]
-        [interval-metrics.measure :only [measure-latency]]
-        [riemann.instrumentation :only [Instrumented]]
-        [riemann.service :only [Service ServiceEquiv]]
-        [riemann.time :only [unix-time]]
-        [riemann.transport :only [handle
-                                  ioutil-lock
-                                  protobuf-decoder
-                                  protobuf-encoder
-                                  msg-decoder
-                                  msg-encoder
-                                  shared-event-executor
-                                  shutdown-event-executor-group
-                                  channel-group
-                                  channel-initializer]]))
+            [interval-metrics.core :as metrics]
+            [clojure.tools.logging :refer [info warn]]
+            [riemann.instrumentation :refer [Instrumented]]
+            [riemann.service :refer [Service ServiceEquiv]]
+            [riemann.transport :refer [handle
+                                       ioutil-lock
+                                       protobuf-decoder
+                                       protobuf-encoder
+                                       msg-decoder
+                                       msg-encoder
+                                       shared-event-executor
+                                       shutdown-event-executor-group
+                                       channel-group
+                                       channel-initializer]]))
 
 (defn int32-frame-decoder
   []
@@ -66,7 +59,7 @@
     (channelRead [^ChannelHandlerContext ctx ^Object message]
       (try
         (handler @core stats ctx message)
-        (catch java.nio.channels.ClosedChannelException e
+        (catch java.nio.channels.ClosedChannelException _
           (warn "channel closed"))))
 
     (exceptionCaught [^ChannelHandlerContext ctx ^Throwable cause]
@@ -111,7 +104,7 @@
       ; Record time from parse to write completion
       (addListener
         (reify ChannelFutureListener
-          (operationComplete [this fut]
+          (operationComplete [this _]
             (metrics/update! stats
                              (- (System/nanoTime) t1))))))))
 

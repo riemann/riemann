@@ -3,15 +3,15 @@
   channel, which has n subscribers. Each subscriber subscribes to a channel
   with an optional predicate function. Events which match the predicate are
   sent to the subscriber."
-  (:use clojure.tools.logging)
-  (:import (riemann.service Service
-                            ServiceEquiv)))
+  (:require [clojure.tools.logging :refer [info]])
+  (:import [riemann.service Service
+                            ServiceEquiv]))
 
 (defn dissoc-in
   "Dissociates an entry from a nested associative structure returning a new
   nested structure. keys is a sequence of keys. Any empty maps that result
   will not be present in the new structure."
-  [m [k & ks :as keys]]
+  [m [k & ks]]
   (if ks
     (if-let [nextmap (get m k)]
       (let [newmap (dissoc-in nextmap ks)]
@@ -66,7 +66,7 @@
                 (swap! channels dissoc-in [(:channel sub) (:id sub)]))
 
   (publish! [this channel event]
-            (doseq [[id ^Subscription sub] (get @channels channel)]
+            (doseq [[_ ^Subscription sub] (get @channels channel)]
               ((.f sub) event)))
 
   (sweep! [this]
@@ -89,7 +89,7 @@
   (equiv? [a b] (= (class a) (class b)))
 
   Service
-  (conflict? [a b] false)
+  (conflict? [_ _] false)
 
   (start! [this])
 

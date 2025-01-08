@@ -2,37 +2,30 @@
   "Accepts messages from external sources. Associated with a core. Sends
   incoming events to the core's streams, queries the core's index for states."
   (:import [java.net InetSocketAddress]
-           [java.util.concurrent Executors]
            [io.netty.bootstrap Bootstrap]
-           [io.netty.channel Channel
-                             ChannelHandler
-                             ChannelInitializer
+           [io.netty.channel ChannelHandler
                              ChannelOption
                              ChannelHandlerContext
                              DefaultMessageSizeEstimator
-                             ChannelOutboundHandler
-                             ChannelInboundHandler
                              ChannelInboundHandlerAdapter
                              FixedRecvByteBufAllocator]
            [io.netty.channel.group ChannelGroup]
            [io.netty.channel.socket.nio NioDatagramChannel]
            [io.netty.channel.nio NioEventLoopGroup])
   (:require [interval-metrics.core :as metrics]
-            [riemann.test :as test])
-  (:use [clojure.tools.logging :only [warn info]]
-        [clojure.string        :only [split]]
-        [riemann.instrumentation :only [Instrumented]]
-        [riemann.service       :only [Service ServiceEquiv]]
-        [riemann.time          :only [unix-time]]
-        [riemann.transport     :only [handle
-                                      ioutil-lock
-                                      channel-group
-                                      datagram->byte-buf-decoder
-                                      protobuf-decoder
-                                      msg-decoder
-                                      shutdown-event-executor-group
-                                      shared-event-executor
-                                      channel-initializer]]))
+            [riemann.test :as test]
+            [clojure.tools.logging :refer [warn info]]
+            [riemann.instrumentation :refer [Instrumented]]
+            [riemann.service       :refer [Service ServiceEquiv]]
+            [riemann.transport     :refer [handle
+                                           ioutil-lock
+                                           channel-group
+                                           datagram->byte-buf-decoder
+                                           protobuf-decoder
+                                           msg-decoder
+                                           shutdown-event-executor-group
+                                           shared-event-executor
+                                           channel-initializer]]))
 
 (defn gen-udp-handler
   [core stats ^ChannelGroup channel-group handler]
@@ -50,7 +43,7 @@
 
 (defn udp-handler
   "Given a core, a channel, and a message, applies the message to core."
-  [core stats ctx message]
+  [core stats _ctx message]
   (handle core message)
   (metrics/update! stats (- (System/nanoTime) (:decode-time message))))
 
@@ -105,7 +98,7 @@
                       (.handler handler))
 
                     ; Setup Channel options
-                    (if (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
+                    (when (> so-rcvbuf 0) (.option bootstrap ChannelOption/SO_RCVBUF so-rcvbuf))
 
                     ; Start bootstrap
                     (->> (InetSocketAddress. host port)

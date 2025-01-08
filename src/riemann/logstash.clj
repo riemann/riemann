@@ -1,17 +1,12 @@
 (ns riemann.logstash
   "Forwards events to LogStash."
   (:refer-clojure :exclude [replace])
-  (:import
-   (java.net Socket
-             DatagramSocket
-             DatagramPacket
-             InetAddress)
-   (java.io Writer OutputStreamWriter BufferedWriter))
-  (:use [clojure.string :only [split join replace]]
-        clojure.tools.logging
-        riemann.pool
-        riemann.common
-        less.awful.ssl))
+  (:import [java.net Socket DatagramSocket DatagramPacket InetAddress]
+           [java.io OutputStreamWriter BufferedWriter])
+  (:require [riemann.pool :refer [fixed-pool with-pool]]
+            [riemann.common :refer [event-to-json]]
+            [clojure.tools.logging :refer [info]]
+            [less.awful.ssl :refer [socket ssl-context]]))
 
 (defprotocol LogStashClient
   (open [client]
