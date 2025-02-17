@@ -13,7 +13,7 @@
   "Filter attributes from a Riemann event."
   [opts event]
   (->> (keys event)
-       (filter #(if-not (contains? (:exclude-fields opts) %) %))
+       (filter #(when-not (contains? (:exclude-fields opts) %) %))
        (select-keys event)))
 
 (defn replace-disallowed
@@ -25,7 +25,7 @@
   "Creates a Prometheus label out of a Riemann event."
   [filtered-event]
   (->> filtered-event
-       (map #(if-not (nil? (second %)) (str (replace-disallowed (name (first %))) "=" (second %))))
+       (map #(when-not (nil? (second %)) (str (replace-disallowed (name (first %))) "=" (second %))))
        (str/join ",")))
 
 (defn generate-labels-batch
@@ -65,7 +65,7 @@
   "Creates a Prometheus label out of a Riemann event."
   [filtered-event]
   (->> filtered-event
-       (map #(if-not (nil? (second %)) (str "/" (replace-disallowed (name (first %))) "/" (second %))))
+       (map #(when-not (nil? (second %)) (str "/" (replace-disallowed (name (first %))) "/" (second %))))
        (str/join "")))
 
 (defn generate-labels
@@ -74,11 +74,11 @@
   (let [instance (->> opts
                       :host
                       (str "/instance/"))
-        tags (if-not (-> event
-                         :tags
-                         empty?) (->> (:tags event)
-                                      (str/join (:separator opts))
-                                      (str "/tags/")))
+        tags (when-not (-> event
+                           :tags
+                           empty?) (->> (:tags event)
+                                        (str/join (:separator opts))
+                                        (str "/tags/")))
         labels (->> event
                     (filter-event opts)
                     create-label)]
@@ -140,7 +140,7 @@
     (fn [event]
       (let [url (generate-url opts event)
             datapoint (generate-datapoint event)]
-        (if-not (nil? datapoint)
+        (when-not (nil? datapoint)
           (post-datapoint url datapoint))))))
 
 (defn prometheus-batch
@@ -167,5 +167,5 @@
     (fn [events]
       (let [url (generate-url-batch opts)
             datapoint (generate-datapoint-batch opts events)]
-        (if-not (nil? datapoint)
+        (when-not (nil? datapoint)
           (post-datapoint url datapoint))))))

@@ -1,13 +1,12 @@
 (ns riemann.influxdb2
   "Forwards events to InfluxDB v2."
-  (:import
-    (com.influxdb.client InfluxDBClient InfluxDBClientFactory WriteApi)
-    (com.influxdb.client.domain WritePrecision)
-    (com.influxdb.client.write Point)))
+  (:import [com.influxdb.client InfluxDBClientFactory]
+           [com.influxdb.client.domain WritePrecision]
+           [com.influxdb.client.write Point]))
 
 (defn create-client
   "Returns a `com.influxdb.client.InfluxDBClient` instance."
-  [{:keys [organization bucket scheme host port token] :as opts}]
+  [{:keys [organization bucket scheme host port token]}]
   (let [url (str scheme "://" host ":" port)]
     (InfluxDBClientFactory/create url (char-array token) organization bucket)))
 
@@ -18,7 +17,7 @@
     (= precision :microseconds) WritePrecision/US
     (= precision :nanoseconds) WritePrecision/NS
     (= precision :seconds) WritePrecision/S
-    true WritePrecision/S))
+    :else WritePrecision/S))
 
 (defn convert-time
   [time-event precision]
@@ -27,7 +26,7 @@
     (= precision :microseconds) (long (* 1000000 time-event))
     (= precision :nanoseconds) (long (* 1000000000 time-event))
     (= precision :seconds) (long time-event)
-    true (long time-event)))
+    :else (long time-event)))
 
 (defn event->point
   "Returns a `com.influxdb.client.write.Point` instance."

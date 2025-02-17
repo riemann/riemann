@@ -5,8 +5,7 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clj-antlr.core :as antlr]
-            [riemann.common :refer :all]
-            [slingshot.slingshot :refer [throw+ try+]]))
+            [slingshot.slingshot :refer [throw+]]))
 
 (def antlr-parser (-> "query.g4" io/resource slurp antlr/parser))
 
@@ -36,7 +35,7 @@
               (list 'and (antlr->ast t1) (antlr->ast t2))))
 
         ; The grammar should never generate these trees, but for completeness...
-        true
+        :else
         (throw+ {:type ::parse-error
                  :message (str "Unexpected predicate structure: "
                                (pr-str terms))})))
@@ -178,7 +177,7 @@
     ast
 
     ; Lists, on the other hand
-    true
+    :else
     (let [[node-type & terms] ast]
       (case node-type
         =               (apply list '= (map clj-ast terms))

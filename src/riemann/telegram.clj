@@ -1,7 +1,6 @@
 (ns ^{:doc "Send events to Telegram"}
   riemann.telegram
-  (:require [clj-http.client :as client]
-            [clojure.string :refer [escape join]]))
+  (:require [clj-http.client :as client]))
 
 (def ^:private api-url "https://api.telegram.org/bot%s/%s")
 
@@ -31,7 +30,7 @@
   (cond
     message-formatter (message-formatter event)
     (= "HTML" parse-mode) (html-parse-mode event)
-    :default (markdown-parse-mode event)))
+    :else (markdown-parse-mode event)))
 
 (defn- post
   "POST to the Telegram API."

@@ -1,8 +1,8 @@
 (ns riemann.msteams
   "Post alerts to Microsoft Teams"
   (:require [clj-http.client :as client]
-            [cheshire.core :as json])
-  (:use [clojure.string :only [join]]))
+            [cheshire.core :as json]
+            [clojure.string :refer [join]]))
 
 (defn- default-formatter
   "Default formatter for rendering events as a message card."

@@ -4,11 +4,12 @@
             [riemann.logging :as logging]
             riemann.time
             [riemann.test :as test]
-            riemann.pubsub
+            [clojure.test :as clj-test]
             [clojure.test.junit :refer [with-junit-output]]
+            riemann.pubsub
             [cemerick.pomegranate :as pom]
             [clojure.java.io :as io]
-            [clojure.tools.logging :refer :all])
+            [clojure.tools.logging :refer [info error]])
   (:import (clojure.lang DynamicClassLoader))
   (:gen-class :name riemann.bin))
 
@@ -66,7 +67,7 @@
 (defn handle-signals
   "Sets up POSIX signal handlers."
   []
-  (if (not (.contains (. System getProperty "os.name") "Windows"))
+  (when-not (.contains (. System getProperty "os.name") "Windows")
     (sun.misc.Signal/handle
      (sun.misc.Signal. "HUP")
      (proxy [sun.misc.SignalHandler] []
@@ -97,7 +98,7 @@
                  (.getName))]
     (try
       (get (re-find #"^(\d+).*" name) 1)
-      (catch Exception e name))))
+      (catch Exception _ name))))
 
 (defn run-tests-with-format
   "Run all tests matching `test-name-pattern`.
@@ -107,8 +108,8 @@
   (if (= (System/getProperty "test.output.format")
          "junit")
     (with-junit-output
-      (clojure.test/run-all-tests test-name-pattern))
-    (clojure.test/run-all-tests test-name-pattern)))
+      (clj-test/run-all-tests test-name-pattern))
+    (clj-test/run-all-tests test-name-pattern)))
 
 (defn run-tests
   "Run all tests matching `test-name-pattern`.
@@ -116,7 +117,7 @@
   [test-name-pattern]
   (if-let [file-path (System/getProperty "test.output.file")]
     (with-open [w (java.io.FileWriter. file-path)]
-      (binding [clojure.test/*test-out* w]
+      (binding [clj-test/*test-out* w]
         (run-tests-with-format test-name-pattern)))
     (run-tests-with-format test-name-pattern)))
 
@@ -159,7 +160,9 @@
                     (if (and (zero? (:error results))
                              (zero? (:fail results)))
                       (System/exit 0)
-                      (System/exit 1))))))
+                      (System/exit 1)))))
+              (catch Exception e
+                (error e "Couldn't run tests")))
 
      "version" (try
                  (println (version))

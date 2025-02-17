@@ -27,7 +27,7 @@
   a string key/value entry in the tag map."
   [tag-fields event]
   (->> (select-keys event tag-fields)
-       (remove (fn [[k v]] (nil-or-empty-str v)))
+       (remove (fn [[_ v]] (nil-or-empty-str v)))
        (map #(vector (name (key %)) (str (val %))))
        (into {})))
 
@@ -41,7 +41,7 @@
   (let [ignored-fields (set/union special-fields tag-fields)]
     (-> event
         (->> (remove (comp ignored-fields key))
-             (remove (fn [[k v]] (nil-or-empty-str v)))
+             (remove (fn [[_ v]] (nil-or-empty-str v)))
              (map #(vector (name (key %)) (val %)))
              (into {}))
         (assoc "value" (:metric event)))))
@@ -109,7 +109,7 @@
     (= precision :milliseconds) TimeUnit/MILLISECONDS
     (= precision :microseconds) TimeUnit/MICROSECONDS
     (= precision :seconds) TimeUnit/SECONDS
-    true TimeUnit/SECONDS))
+    :else TimeUnit/SECONDS))
 
 (defn convert-time
   "Converts the `time-event` parameter (which is time second) in a new time unit specified by the `precision` parameter. It also converts the time to long.
@@ -122,7 +122,7 @@
     (= precision :milliseconds) (long (* 1000 time-event))
     (= precision :microseconds) (long (* 1000000 time-event))
     (= precision :seconds) (long time-event)
-    true (long time-event)))
+    :else (long time-event)))
 
 (defn converts-double
   "if n if a ratio or a BigInt, converts it to double. Returns n otherwise."

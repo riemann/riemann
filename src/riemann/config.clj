@@ -252,7 +252,7 @@
 (defn update-index
   "Updates the given index with all events received. Also publishes to the
   index pubsub channel."
-  [index]
+  [_]
   (common/deprecated "(update-index idx) is unnecessary; use idx directly instead. Indexes are now streams themselves, so it's not necessary to wrap them in update-index."
     (fn update [event] (core/update-index @core event))))
 
@@ -339,7 +339,7 @@
   as your other streams, like (publish)."
   [channel f]
   (let [sub (pubsub/subscribe! (:pubsub @core) channel f)]
-    (fn discard [event] sub)))
+    (fn discard [_] sub)))
 
 (defn clear!
   "Resets the next core."

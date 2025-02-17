@@ -1,18 +1,14 @@
 (ns riemann.kairosdb
   "Forwards events to KairosDB."
   (:refer-clojure :exclude [replace])
-  (:import
-   (java.net Socket
-             DatagramSocket
-             DatagramPacket
-             InetAddress)
-   (java.io Writer OutputStreamWriter))
+  (:import [java.net Socket]
+           [java.io OutputStreamWriter])
   (:require [clj-http.client :as client]
-            [cheshire.core :as json])
-  (:use [clojure.string :only [split join replace]]
-        clojure.tools.logging
-        riemann.pool
-        riemann.common))
+            [cheshire.core :as json]
+            [clojure.string :refer [split join]]
+            [clojure.tools.logging :refer [info]]
+            [clj-http.conn-mgr :as conn-mgr]
+            [riemann.pool :refer [fixed-pool with-pool]]))
 
 (defprotocol KairosDBClient
   (open [client]
@@ -56,9 +52,9 @@
   KairosDBClient
   (open [this]
     ;; Using Riemann's pool management, hence :threads 1 and :default-per-route 1 here.
-    (let [conn-mgr (clj-http.conn-mgr/make-reusable-conn-manager {:threads 1
-                                                                  :timeout 0
-                                                                  :default-per-route 1})]
+    (let [conn-mgr (conn-mgr/make-reusable-conn-manager {:threads 1
+                                                         :timeout 0
+                                                         :default-per-route 1})]
       (assoc this :conn-mgr conn-mgr)))
   (send-metrics [this metrics]
     (let [metric-json (json/generate-string metrics)]

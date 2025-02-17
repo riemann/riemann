@@ -3,7 +3,8 @@
   (:require [clj-http.client :as client]
             [cheshire.core :as json]
             [clj-time.format :as f]
-            [clj-time.coerce :as coerce]))
+            [clj-time.coerce :as coerce]
+            [riemann.time :refer [unix-time]]))
 
 (def ^:private event-url-v1
   "https://events.pagerduty.com/generic/2010-04-15/create_event.json")
@@ -45,7 +46,7 @@
                  (:metric event) ")")
    :source (:host event)
    :severity (:state event)
-   :timestamp (->> (long (or (:time event) (long (riemann.time/unix-time))))
+   :timestamp (->> (long (or (:time event) (long (unix-time))))
                    (coerce/from-long)
                    (f/unparse timestamp-formatter))
    :custom_details event})

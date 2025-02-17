@@ -1,17 +1,17 @@
 (ns riemann.graphite
   "Forwards events to Graphite."
   (:refer-clojure :exclude [replace])
-  (:import
-   (java.net Socket
-             DatagramSocket
-             DatagramPacket
-             InetAddress)
-   (java.io Writer OutputStreamWriter))
-  (:use [clojure.string :only [split join replace]]
+  (:require [clojure.string :refer [split join replace]]
+            [riemann.transport :refer [resolve-host]]
+            [riemann.pool :refer [fixed-pool with-pool]]
+            [clojure.tools.logging :refer [info]]
+            #_[riemann.common :refer [client]])
+  (:import [java.net Socket DatagramSocket DatagramPacket InetAddress]
+           [java.io OutputStreamWriter])
+  #_(:use 
         clojure.tools.logging
-        riemann.pool
         riemann.common
-        [riemann.transport :only [resolve-host]]))
+        ))
 
 (defprotocol GraphiteClient
   (open [client]
@@ -79,11 +79,11 @@
   (graphite-path-basic
     (if-let [service (:service event)]
       (assoc event :service
-             ; hack hack hack hack
              (replace service
                       #"(\d+)\.(\d+)$"
-                      (fn [[_ whole frac]] (str (when-not (= "0" whole))
-                                                frac))))
+                      (fn [[_ whole frac]]
+                        (str (when-not (= "0" whole) whole)
+                             frac))))
       event)))
 
 (defn graphite-path-tags

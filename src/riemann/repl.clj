@@ -4,8 +4,8 @@
   above them. While you usually *start* a repl server from the config file, it
   is not bound to the usual config lifecycle and won't be shut down or
   interrupted during config reload."
-  (:use clojure.tools.logging)
-  (:require [clojure.tools.nrepl.server :as nrepl]))
+  (:require [clojure.tools.nrepl.server :as nrepl]
+            [clojure.tools.logging :refer [info]]))
 
 (def server nil)
 
@@ -14,6 +14,7 @@
   []
   (when-let [s server]
     (nrepl/stop-server s))
+  #_{:clj-kondo/ignore [:inline-def]}
   (def server nil))
 
 (defn start-server!
@@ -24,6 +25,7 @@
   [opts]
   (stop-server!)
   (let [opts (merge {:port 5557 :host "127.0.0.1"} opts)]
+    #_{:clj-kondo/ignore [:inline-def]}
     (def server (nrepl/start-server
                   :port (:port opts)
                   :bind (:host opts)))

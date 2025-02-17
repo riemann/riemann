@@ -4,7 +4,7 @@
   The expiration tracker provides a stateful data structure for tracking new
   events, figuring out when expirations should be emitted, and calling back
   when they need to occur."
-  (:require [riemann [time   :as time :refer [unix-time every!]]
+  (:require [riemann [time   :as time]
                      [common :refer [pkey]]]
             [clojure.data.priority-map :refer [priority-map]]))
 
@@ -13,7 +13,7 @@
   [event]
   ; TODO: bring this back--it breaks a bunch of tests tho
   ; (assert (:time event))
-  (let [time (get event :time (unix-time))]
+  (let [time (get event :time (time/unix-time))]
     (if (= "expired" (:state event))
       time
       (if-let [ttl (:ttl event)]
@@ -24,7 +24,7 @@
   "Is this event expired? Events are expired if their state is \"expired\" and
   time is past, if their time + ttl is less than the current time."
   [event]
-  (< (expiration-time event) (unix-time)))
+  (< (expiration-time event) (time/unix-time)))
 
 (defprotocol Tracker
   (update! [t event]   "Update a tracker with a new event.")
@@ -36,11 +36,11 @@
   ; events is an atom wrapping a priority map
   ; task is a reference to a Task for expiring events
   Tracker
-  (update! [t event]
+  (update! [this event]
     (let [t (expiration-time event)]
       (swap! events assoc (pkey event) t)))
 
-  (expired-events! [t]
+  (expired-events! [this]
     (let [e (atom nil)]
       (swap! events (fn puller [events]
                       (let [[[host service] expiration-time :as p]
@@ -61,9 +61,9 @@
                                              :time    expiration-time})
                                   (pop events))))))
       (when-let [expired @e]
-        (cons expired (lazy-seq (expired-events! t))))))
+        (cons expired (lazy-seq (expired-events! this))))))
 
-  (shutdown! [t]
+  (shutdown! [this]
     (time/cancel @task)))
 
 (defn tracker!

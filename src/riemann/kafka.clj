@@ -2,11 +2,11 @@
   "Receives events from and forwards events to Kafka."
   (:require [kinsky.client :as client]
             [cheshire.core :as json]
-            [riemann.test :as test])
-  (:use [riemann.common        :only [event]]
-        [riemann.core          :only [stream!]]
-        [riemann.service       :only [Service ServiceEquiv ServiceStatus]]
-        [clojure.tools.logging :only [debug info error]]))
+            [riemann.test :as test]
+            [riemann.common :refer [event]]
+            [riemann.core :refer [stream!]]
+            [riemann.service :refer [Service ServiceEquiv ServiceStatus]]
+            [clojure.tools.logging :refer [debug info error]]))
 
 (defn kafka
   "Returns a function that is invoked with a topic name and an optional message key and returns a stream. That stream is a function which takes an event or a sequence of events and sends them to Kafka.
@@ -85,7 +85,7 @@
               (try
                 (let [event (event (get record :value))]
                   (stream! @core event))
-                (catch java.lang.NullPointerException e
+                (catch java.lang.NullPointerException _
                   (debug (str "Invalid message: " record)))))))
         (catch Exception e
           (do
