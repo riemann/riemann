@@ -10,10 +10,9 @@ on:
 
 jobs:
   test:
-
     strategy:
       matrix:
-        java: [ '8', '11', '16', '17', '20', '21' ]
+        java: ["8", "11", "16", "17", "20", "21"]
       fail-fast: false
     name: Java ${{ matrix.Java }}
 
@@ -39,19 +38,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
+          distribution: "temurin"
           java-version: ${{ matrix.java }}
       - name: Install clojure tools
-        uses: DeLaGuardo/setup-clojure@12.1
+        uses: DeLaGuardo/setup-clojure@13.0
         with:
-          cli: 1.10.1.693       # Clojure CLI based on tools.deps
-          lein: 2.9.1           # Leiningen
+          cli: 1.10.1.693 # Clojure CLI based on tools.deps
+          lein: 2.9.1 # Leiningen
       - name: Install deps
         run: lein deps
       - name: Cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.m2/repository
           key: ${{ matrix.java }}-maven-${{ hashFiles('**/project.clj') }}
@@ -59,7 +58,7 @@ jobs:
         run: lein test2junit
       - name: Upload Test Results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Test Results (Java ${{ matrix.java }})
           path: target/test2junit/
@@ -75,7 +74,7 @@ jobs:
 
     steps:
       - name: Download Artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
           path: artifacts
 
