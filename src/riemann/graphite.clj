@@ -79,11 +79,11 @@
   (graphite-path-basic
     (if-let [service (:service event)]
       (assoc event :service
-             ; hack hack hack hack
              (replace service
                       #"(\d+)\.(\d+)$"
-                      (fn [[_ whole frac]] (str (when-not (= "0" whole))
-                                                frac))))
+                      (fn [[_ whole frac]]
+                        (str (when-not (= "0" whole) whole)
+                             frac))))
       event)))
 
 (defn graphite-path-tags
