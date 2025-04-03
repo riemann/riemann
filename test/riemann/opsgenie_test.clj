@@ -3,7 +3,8 @@
             [riemann.opsgenie :refer :all]
             [riemann.test-utils :refer [with-mock]]
             [cheshire.core :as json]
-            [clojure.test :refer :all]))
+            [clojure.test :refer :all]
+            [clj-http.util :refer [url-encode]]))
 
 (def service-key (System/getenv "OPSGENIE_SERVICE_KEY"))
 
@@ -50,7 +51,7 @@
         ((:resolve og) event)
         (is (= (first (second @calls))
                (str "https://api.opsgenie.com/v2/alerts/"
-                    (api-alias event)
+                    (url-encode (str (api-alias event)))
                     "/close?identifierType=alias")))
         (is (= (second (second @calls))
                {:body (json/generate-string {:user "Riemann"})
@@ -81,7 +82,7 @@
         ((:resolve og) event)
         (is (= (first (second @calls))
                (str "https://api.opsgenie.com/v2/alerts/"
-                    (:alias (body-fn event))
+                    (url-encode (:alias (body-fn event)))
                     "/close?identifierType=alias")))
         (is (= (second (second @calls))
                {:body (json/generate-string {:user "Riemann"})

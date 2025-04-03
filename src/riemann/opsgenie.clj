@@ -1,6 +1,7 @@
 (ns riemann.opsgenie
   "Forwards events to OpsGenie"
   (:require [clj-http.client :as client]
+            [clj-http.util :refer [url-encode]]
             [cheshire.core :as json]
             [clojure.string :refer [join]]))
 
@@ -62,7 +63,7 @@
 (defn close-alert
   "Close alert in OpsGenie"
   [api-key event body-fn]
-  (post (str alerts-url "/" (:alias (body-fn event)) "/close?identifierType=alias")
+  (post (str alerts-url "/" (url-encode (str (:alias (body-fn event)))) "/close?identifierType=alias")
         (json/generate-string {:user "Riemann"})
         {"Authorization" (str "GenieKey " api-key)}))
 
