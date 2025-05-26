@@ -99,18 +99,20 @@
  
   Instrumented
   (events [this]
-    (let [svc (str "riemann transport rabbitmq " (conn->addr @connection))
-          in (metrics/snapshot! stats)
-          base {:state "ok"
-                :tags ["riemann"]
-                :time (:time in)}]
-      (map (partial merge base)
-           (concat [{:service (str svc " in rate")
-                     :metric (:rate in)}]
-                   (map (fn [[q latency]]
-                          {:service (str svc " in latency " q)
-                           :metric latency})
-                        (:latencies in)))))))
+    (if-let [conn @connection]
+      (let [svc (str "riemann transport rabbitmq " (conn->addr conn))
+            in (metrics/snapshot! stats)
+            base {:state "ok"
+                  :tags ["riemann"]
+                  :time (:time in)}]
+        (map (partial merge base)
+             (concat [{:service (str svc " in rate")
+                       :metric (:rate in)}]
+                     (map (fn [[q latency]]
+                            {:service (str svc " in latency " q)
+                             :metric latency})
+                          (:latencies in)))))
+      [])))
 
 (defn rabbitmq-transport
   "Start consuming messages from RabbitMQ, applying them into the current core.
