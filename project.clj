@@ -1,4 +1,4 @@
-(defproject riemann "0.3.11"
+(defproject riemann "0.3.12"
   :description "A network event stream processor. Intended for analytics, metrics, and alerting; and to glue various monitoring systems together."
   :url "https://github.com/riemann/riemann"
   :license {:name "Eclipse Public License"
