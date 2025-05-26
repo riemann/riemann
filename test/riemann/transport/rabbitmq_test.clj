@@ -49,6 +49,11 @@
     (is (service/equiv? one two))
     (is (service/conflict? one two))))
 
+(deftest ^:rabbitmq events-returns-empty-when-connection-is-nil
+  ;; When the transport is not started, connection should be nil, and events should return an empty list.
+  (let [transport (rabbitmq-transport {})]
+    (is (= [] (.events transport)))))
+
 (deftest ^:rabbitmq ^:integration rabbitmq-transport-integration-test
   (riemann.logging/suppress ["riemann.transport"
                              "riemann.pubsub"
