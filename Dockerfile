@@ -7,8 +7,8 @@ RUN lein uberjar && \
     mv target/riemann-*-standalone.jar target/riemann.jar && \
     sed -i 's/127.0.0.1/0.0.0.0/g' pkg/tar/riemann.config
 
-FROM eclipse-temurin:21-jre-jammy
-MAINTAINER james+riemann@lovedthanlost.net
+FROM eclipse-temurin:21-jre-noble
+LABEL org.opencontainers.image.authors="james+riemann@lovedthanlost.net"
 
 EXPOSE 5555/tcp 5555/udp 5556
 CMD ["/bin/riemann", "/etc/riemann.config"]
