@@ -4,14 +4,16 @@ chown -R root:root /usr/share/riemann
 chown root:root /usr/bin/riemann
 chown riemann:riemann /var/log/riemann
 chown -R riemann:riemann /etc/riemann
-chown root:root /etc/init.d/riemann
 chown root:root /etc/default/riemann
 
-# Start riemann on boot
-if [ -x "/etc/init.d/riemann" ]; then
-  if [ ! -e "/etc/init/riemann.conf" ]; then
-    update-rc.d riemann defaults >/dev/null
-  fi
-fi
+action="$1"
 
-invoke-rc.d riemann start
+if [ "$action" = configure ]; then
+	old_version="$2"
+
+	if [ -z "$old_version" ]; then
+		systemctl enable riemann.service
+	else
+		systemctl try-restart riemann.service
+	fi
+fi

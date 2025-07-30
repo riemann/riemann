@@ -1,3 +1,8 @@
 #!/bin/sh -e
 
-invoke-rc.d riemann stop
+action="$1"
+
+if [ "$action" = remove ]; then
+	systemctl --no-reload disable riemann.service
+	systemctl stop riemann.service
+fi
