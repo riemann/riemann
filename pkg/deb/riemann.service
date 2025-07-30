@@ -1,5 +1,5 @@
 [Unit]
-Description=
+Description=Riemann monitors distributed systems
 After=
 Wants=
 
