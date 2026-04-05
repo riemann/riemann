@@ -74,7 +74,7 @@
     (write (file dir "DEBIAN" "conffiles")
            (join "\n" ["/etc/riemann/riemann.config"
                        "/etc/default/riemann"
-                       "/etc/init.d/riemann"]))
+                       "/usr/lib/systemd/system/riemann.service"]))
 
     ; Preinst
     (copy (file (:root project) "pkg" "deb" "preinst.sh")
@@ -122,10 +122,9 @@
           (file dir "etc" "default" "riemann"))
 
     ; Init script
-    (.mkdirs (file dir "etc" "init.d"))
-    (copy (file (:root project) "pkg" "deb" "init.sh")
-          (file dir "etc" "init.d" "riemann"))
-    (.setExecutable (file dir "etc" "init.d" "riemann") true false)
+    (.mkdirs (file dir "usr" "lib" "systemd" "system"))
+    (copy (file (:root project) "pkg" "deb" "riemann.service")
+          (file dir "usr" "lib" "systemd" "system" "riemann.service"))
 
     dir))
 

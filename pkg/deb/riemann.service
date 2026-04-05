@@ -4,7 +4,7 @@ After=
 Wants=
 
 [Service]
-EnvironmentFile=/etc/sysconfig/riemann
+EnvironmentFile=/etc/default/riemann
 ExecStart=/usr/bin/riemann $RIEMANN_OPTS $RIEMANN_CONFIG
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
