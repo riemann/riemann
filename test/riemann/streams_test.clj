@@ -1851,6 +1851,10 @@
                [{:metric 100 :time 0}
                 {:metric 100 :time 1}]
                [{:metric 100 :time 1}])
+  (test-stream (predict-linear 2 60)
+               [{:metric 1 :time 1}
+                {:metric 3 :time 1}]
+               [{:metric 2 :time 1}])
   (test-stream (predict-linear 5 60 60)
                [{:metric 1 :time 1}
                 {:metric 2 :time 2}

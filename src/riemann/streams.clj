@@ -2201,6 +2201,9 @@
   (in seconds) is specified the model will be rebuild periodically and
   not on every arriving event.
 
+  If every event in the window has the same timestamp, uses a constant
+  prediction equal to the mean metric; no time trend can be identified.
+
   E.g. predict the metric of service \"fs-usage\" 30 minutes in the
   future grouped by host:
 
@@ -2230,11 +2233,13 @@
                                 y-avg (/ (reduce + y) (count y))
                                 x-sub (map #(- % x-avg) x)
                                 y-sub (map #(- % y-avg) y)
-                                m (/
-                                   (reduce + (map * x-sub y-sub))
-                                   (reduce + (map * x-sub x-sub)))
-                                b (- y-avg (* m x-avg))]
-                            (reset! coefs {:slope m :intercept b})
+                                x-variance (reduce + (map * x-sub x-sub))
+                                slope (if (zero? x-variance)
+                                        0
+                                        (/ (reduce + (map * x-sub y-sub))
+                                           x-variance))
+                                b (- y-avg (* slope x-avg))]
+                            (reset! coefs {:slope slope :intercept b})
                             (reset! last-rebuild (System/currentTimeMillis))
                             @coefs))
                   params (if (or
