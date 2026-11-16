@@ -224,7 +224,7 @@
       ^:shared msg-decoder         (msg-decoder)
       ^:shared msg-encoder         (msg-encoder)
       ^{:shared true :executor shared-event-executor} handler
-      (gen-tcp-handler core stats channel-group tcp-handler))
+      ^:shared (gen-tcp-handler core stats channel-group tcp-handler))
 
     (channel-initializer
                int32-frame-decoder  (int32-frame-decoder)
@@ -234,7 +234,7 @@
       ^:shared msg-decoder          (msg-decoder)
       ^:shared msg-encoder          (msg-encoder)
       ^{:shared true :executor shared-event-executor} handler
-      (gen-tcp-handler core stats channel-group tcp-handler))))
+      ^:shared (gen-tcp-handler core stats channel-group tcp-handler))))
 
 (defn tcp-server
   "Create a new TCP server. Doesn't start until (service/start!).
